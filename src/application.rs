@@ -1,4 +1,5 @@
 use adw::subclass::prelude::*;
+use gettextrs::gettext;
 use gtk::{
     gio,
     glib::{self, clone},
@@ -104,16 +105,19 @@ impl Application {
 
     fn show_about_dialog(&self) {
         let dialog = gtk::AboutDialogBuilder::new()
-            .program_name("Noteworthy")
-            .logo_icon_name(APP_ID)
-            .license_type(gtk::License::Gpl30)
-            // Insert your website here
-            // .website("https://gitlab.gnome.org/bilelmoussaoui/noteworthy/")
-            .version(VERSION)
             .transient_for(&self.main_window())
             .modal(true)
+            .program_name(&gettext("Noteworthy"))
+            // .comments(&gettext("Elegantly record your screen"))
+            .version(VERSION)
+            .logo_icon_name(APP_ID)
             .authors(vec!["Dave Patrick".into()])
-            .artists(vec!["Dave Patrick".into()])
+            // Translators: Replace "translator-credits" with your names. Put a comma between.
+            .translator_credits(&gettext("translator-credits"))
+            .copyright(&gettext("Copyright 2021 Dave Patrick"))
+            .license_type(gtk::License::Gpl30)
+            .website("https://github.com/SeaDve/Noteworthy")
+            .website_label(&gettext("GitHub"))
             .build();
 
         dialog.show();
