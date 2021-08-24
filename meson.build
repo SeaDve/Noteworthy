@@ -2,6 +2,7 @@ project(
   'noteworthy',
   'rust',
   version: '0.0.1',
+  license: 'GPL-3.0-or-later',
   meson_version: '>= 0.50',
 )
 

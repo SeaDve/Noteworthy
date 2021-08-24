@@ -2,6 +2,7 @@
 name = "noteworthy"
 version = "0.1.0"
 authors = ["Dave Patrick <davecruz48@gmail.com>"]
+license = "GPL-3.0-or-later"
 edition = "2018"
 
 [dependencies]
@@ -9,4 +10,5 @@ log = "0.4"
 pretty_env_logger = "0.4"
 gettext-rs = { version = "0.7", features = ["gettext-system"] }
 once_cell = "1.5"
-gtk = {version = "0.2", package = "gtk4"}
+gtk = { package = "gtk4", version = "0.2" }
+adw = { package = "libadwaita", version = "0.1.0-alpha-3" }

@@ -11,6 +11,7 @@
         "--device=dri",
         "--talk-name=org.a11y.Bus",
         "--env=RUST_LOG=noteworthy=debug",
+        "--env=RUST_BACKTRACE=1",
         "--env=G_MESSAGES_DEBUG=none"
     ],
     "build-options" : {
@@ -21,12 +22,29 @@
         "test-args": [
             "--socket=x11",
             "--share=network"
-        ],
-        "env" : {
-            "RUST_BACKTRACE": "1"
-        }
+        ]
     },
     "modules": [
+        {
+            "name" : "libadwaita",
+            "buildsystem" : "meson",
+            "config-opts": [
+                "-Dtests=false",
+                "-Dexamples=false",
+                "-Dvapi=false"
+            ],
+            "cleanup": [
+                "/include",
+                "/lib/pkgconfig"
+            ],
+            "sources" : [
+                {
+                    "type" : "git",
+                    "url" : "https://gitlab.gnome.org/GNOME/libadwaita.git",
+                    "branch" : "main"
+                }
+            ]
+        },
         {
             "name": "noteworthy",
             "buildsystem": "meson",

@@ -1,7 +1,8 @@
+use adw::subclass::prelude::*;
 use glib::clone;
 use gtk::prelude::*;
 use gtk::subclass::prelude::*;
-use gtk::{gdk, gio, glib};
+use gtk::{gio, glib};
 use log::{debug, info};
 
 use crate::config::{APP_ID, PKGDATADIR, PROFILE, VERSION};
@@ -21,7 +22,7 @@ mod imp {
     impl ObjectSubclass for ExampleApplication {
         const NAME: &'static str = "ExampleApplication";
         type Type = super::ExampleApplication;
-        type ParentType = gtk::Application;
+        type ParentType = adw::Application;
     }
 
     impl ObjectImpl for ExampleApplication {}
@@ -52,18 +53,18 @@ mod imp {
             // Set icons for shell
             gtk::Window::set_default_icon_name(APP_ID);
 
-            app.setup_css();
             app.setup_gactions();
             app.setup_accels();
         }
     }
 
     impl GtkApplicationImpl for ExampleApplication {}
+    impl AdwApplicationImpl for ExampleApplication {}
 }
 
 glib::wrapper! {
     pub struct ExampleApplication(ObjectSubclass<imp::ExampleApplication>)
-        @extends gio::Application, gtk::Application,
+        @extends gio::Application, gtk::Application, adw::Application,
         @implements gio::ActionMap, gio::ActionGroup;
 }
 
@@ -72,10 +73,7 @@ impl ExampleApplication {
         glib::Object::new(&[
             ("application-id", &Some(APP_ID)),
             ("flags", &gio::ApplicationFlags::empty()),
-            (
-                "resource-base-path",
-                &Some("/io/github/seadve/Noteworthy/"),
-            ),
+            ("resource-base-path", &Some("/io/github/seadve/Noteworthy/")),
         ])
         .expect("Application initialization failed...")
     }
@@ -106,18 +104,6 @@ impl ExampleApplication {
     // Sets up keyboard shortcuts
     fn setup_accels(&self) {
         self.set_accels_for_action("app.quit", &["<primary>q"]);
-    }
-
-    fn setup_css(&self) {
-        let provider = gtk::CssProvider::new();
-        provider.load_from_resource("/io/github/seadve/Noteworthy/style.css");
-        if let Some(display) = gdk::Display::default() {
-            gtk::StyleContext::add_provider_for_display(
-                &display,
-                &provider,
-                gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
-            );
-        }
     }
 
     fn show_about_dialog(&self) {
