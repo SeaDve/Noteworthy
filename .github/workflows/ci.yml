@@ -1,18 +1,36 @@
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
+
 name: CI
+
 jobs:
+  rustfmt:
+    name: Rustfmt
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: rustfmt
+      - name: "Create blank versions of configured file"
+        run: echo -e "" >> src/config.rs
+      - name: "Run rustfmt"
+        run: cargo fmt --all -- --check
+
   flatpak:
-    name: "Flatpak"
+    name: Flatpak
     runs-on: ubuntu-20.04
     container:
-      image: bilelmoussaoui/flatpak-github-actions:gnome-40
+      image: bilelmoussaoui/flatpak-github-actions:gnome-nightly
       options: --privileged
     steps:
     - uses: actions/checkout@v2
-    - uses: bilelmoussaoui/flatpak-github-actions/flatpak-builder@v3
+    - uses: bilelmoussaoui/flatpak-github-actions/flatpak-builder@v4
       with:
         bundle: noteworthy.flatpak
         manifest-path: build-aux/io.github.seadve.Noteworthy.Devel.json
