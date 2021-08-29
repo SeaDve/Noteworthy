@@ -18,12 +18,14 @@ run_command(
   check: true
 )
 
-sources = files(
+rust_sources = files(
   'application.rs',
   'config.rs',
   'main.rs',
   'window.rs',
 )
+
+sources = [rust_sources, cargo_sources]
 
 custom_target(
   'cargo-build',
