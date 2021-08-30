@@ -90,7 +90,15 @@ impl Note {
         self.set_property("title", title).unwrap();
     }
 
+    pub fn title(&self) -> String {
+        self.property("title").unwrap().get().unwrap()
+    }
+
     pub fn set_content(&self, content: &str) {
         self.set_property("content", content).unwrap();
+    }
+
+    pub fn content(&self) -> String {
+        self.property("content").unwrap().get().unwrap()
     }
 }

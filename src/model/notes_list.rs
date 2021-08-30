@@ -56,7 +56,7 @@ impl NotesList {
         glib::Object::new(&[]).expect("Failed to create NotesList.")
     }
 
-    pub fn add_note(&self, note: Note) {
+    pub fn append(&self, note: Note) {
         let imp = &imp::NotesList::from_instance(self);
         imp.list.borrow_mut().push(note);
     }

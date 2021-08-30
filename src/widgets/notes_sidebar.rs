@@ -51,7 +51,24 @@ impl NotesSidebar {
     }
 
     pub fn set_model(&self, model: Option<&impl IsA<gtk::SelectionModel>>) {
-        let imp = &imp::NotesSidebar::from_instance(self);
+        let imp = self.private();
         imp.listview.set_model(model);
+    }
+
+    pub fn model(&self) -> Option<impl IsA<gtk::SelectionModel>> {
+        let imp = self.private();
+        imp.listview.model()
+    }
+
+    pub fn connect_activate(
+        &self,
+        f: impl Fn(&gtk::ListView, u32) + 'static,
+    ) -> glib::SignalHandlerId {
+        let imp = self.private();
+        imp.listview.connect_activate(f)
+    }
+
+    fn private(&self) -> &imp::NotesSidebar {
+        imp::NotesSidebar::from_instance(self)
     }
 }

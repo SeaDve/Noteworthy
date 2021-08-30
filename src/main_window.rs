@@ -62,19 +62,27 @@ mod imp {
 
             obj.load_window_size();
 
-            let note1 = Note::new();
-            note1.set_title("A note");
-            note1.set_content("This note contains a note");
-
-            let note2 = Note::new();
-            note2.set_title("Another note");
-            note2.set_content("This note contains another note");
-
             let notes_list = NotesList::new();
-            notes_list.add_note(note1);
-            notes_list.add_note(note2);
+            for i in 0..100 {
+                let note = Note::new();
+                note.set_title(&format!("Note {}", i));
+                note.set_content(&format!("Content of note {}", i));
+                notes_list.append(note);
+            }
             self.notes_sidebar
                 .set_model(Some(&gtk::SingleSelection::new(Some(&notes_list))));
+
+            self.notes_sidebar.connect_activate(|notes_sidebar, pos| {
+                let selected_note: Note = notes_sidebar
+                    .model()
+                    .unwrap()
+                    .item(pos)
+                    .unwrap()
+                    .downcast()
+                    .unwrap();
+                dbg!(selected_note.title());
+                dbg!(selected_note.content());
+            });
         }
     }
 
