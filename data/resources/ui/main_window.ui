@@ -46,6 +46,9 @@
           </object>
         </child>
         <child>
+          <object class="GtkSeparator"/>
+        </child>
+        <child>
           <object class="AdwLeafletPage">
             <property name="child">
               <object class="GtkBox">

@@ -3,16 +3,26 @@
   <template class="NwtyNoteRow" parent="AdwBin">
     <property name="child">
       <object class="GtkBox">
+        <property name="margin-start">3</property>
+        <property name="margin-end">3</property>
+        <property name="margin-top">6</property>
+        <property name="margin-bottom">6</property>
+        <property name="spacing">6</property>
         <property name="orientation">vertical</property>
         <child>
           <object class="GtkLabel" id="title_label">
+            <property name="halign">start</property>
             <binding name="label">
               <lookup name="title">NwtyNoteRow</lookup>
             </binding>
+            <style>
+              <class name="heading"/>
+            </style>
           </object>
         </child>
         <child>
           <object class="GtkLabel" id="subtitle_label">
+            <property name="halign">start</property>
             <binding name="label">
               <lookup name="subtitle">NwtyNoteRow</lookup>
             </binding>
