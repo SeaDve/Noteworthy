@@ -19,12 +19,12 @@ run_command(
 )
 
 rust_sources = files(
-  'model/mod.rs',
-  'model/note.rs',
-  'model/notes_list.rs',
-  'widgets/mod.rs',
-  'widgets/note_row.rs',
-  'widgets/notes_sidebar.rs',
+  'session/note_content_view/mod.rs',
+  'session/notes_sidebar/mod.rs',
+  'session/notes_sidebar/note_row.rs',
+  'session/mod.rs',
+  'session/note.rs',
+  'session/notes_list.rs',
   'application.rs',
   'config.rs',
   'main.rs',

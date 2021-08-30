@@ -9,8 +9,7 @@ use gtk::{
 use crate::{
     application::Application,
     config::{APP_ID, PROFILE},
-    model::{Note, NotesList},
-    widgets::{NoteView, NotesSidebar},
+    session::{Note, NoteContentView, NotesList, NotesSidebar},
 };
 
 mod imp {
@@ -24,7 +23,7 @@ mod imp {
         #[template_child]
         pub notes_sidebar: TemplateChild<NotesSidebar>,
         #[template_child]
-        pub note_view: TemplateChild<NoteView>,
+        pub note_view: TemplateChild<NoteContentView>,
 
         pub settings: gio::Settings,
     }
@@ -54,7 +53,7 @@ mod imp {
             obj.init_template();
 
             NotesSidebar::static_type();
-            NoteView::static_type();
+            NoteContentView::static_type();
         }
     }
 

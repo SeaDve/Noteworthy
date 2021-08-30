@@ -57,7 +57,7 @@
                   </object>
                 </child>
                 <child>
-                  <object class="NwtyNoteView" id="note_view">
+                  <object class="NwtyNoteContentView" id="note_view">
                   </object>
                 </child>
               </object>

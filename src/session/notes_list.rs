@@ -1,9 +1,9 @@
 use adw::subclass::prelude::*;
 use gtk::{gio, glib, prelude::*};
 
-use crate::model::Note;
-
 use std::cell::RefCell;
+
+use super::Note;
 
 mod imp {
     use super::*;

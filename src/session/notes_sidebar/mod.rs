@@ -1,7 +1,9 @@
+mod note_row;
+
 use adw::subclass::prelude::*;
 use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
-use crate::widgets::NoteRow;
+use note_row::NoteRow;
 
 mod imp {
     use super::*;
