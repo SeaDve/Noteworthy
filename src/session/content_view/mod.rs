@@ -8,7 +8,7 @@ mod imp {
 
     #[derive(Debug, Default, CompositeTemplate)]
     #[template(resource = "/io/github/seadve/Noteworthy/ui/note_view.ui")]
-    pub struct NoteContentView {
+    pub struct ContentView {
         #[template_child]
         pub label: TemplateChild<gtk::Label>,
 
@@ -16,9 +16,9 @@ mod imp {
     }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for NoteContentView {
-        const NAME: &'static str = "NwtyNoteContentView";
-        type Type = super::NoteContentView;
+    impl ObjectSubclass for ContentView {
+        const NAME: &'static str = "NwtyContentView";
+        type Type = super::ContentView;
         type ParentType = adw::Bin;
 
         fn class_init(klass: &mut Self::Class) {
@@ -30,7 +30,7 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for NoteContentView {
+    impl ObjectImpl for ContentView {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
         }
@@ -74,18 +74,18 @@ mod imp {
         }
     }
 
-    impl WidgetImpl for NoteContentView {}
-    impl BinImpl for NoteContentView {}
+    impl WidgetImpl for ContentView {}
+    impl BinImpl for ContentView {}
 }
 
 glib::wrapper! {
-    pub struct NoteContentView(ObjectSubclass<imp::NoteContentView>)
+    pub struct ContentView(ObjectSubclass<imp::ContentView>)
         @extends gtk::Widget, adw::Bin;
 }
 
-impl NoteContentView {
+impl ContentView {
     pub fn new() -> Self {
-        glib::Object::new(&[]).expect("Failed to create NoteContentView.")
+        glib::Object::new(&[]).expect("Failed to create ContentView.")
     }
 
     pub fn set_content(&self, content: &str) {

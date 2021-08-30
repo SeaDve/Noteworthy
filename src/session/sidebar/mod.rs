@@ -10,15 +10,15 @@ mod imp {
 
     #[derive(Debug, Default, CompositeTemplate)]
     #[template(resource = "/io/github/seadve/Noteworthy/ui/notes_sidebar.ui")]
-    pub struct NotesSidebar {
+    pub struct Sidebar {
         #[template_child]
         pub listview: TemplateChild<gtk::ListView>,
     }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for NotesSidebar {
-        const NAME: &'static str = "NwtyNotesSidebar";
-        type Type = super::NotesSidebar;
+    impl ObjectSubclass for Sidebar {
+        const NAME: &'static str = "NwtySidebar";
+        type Type = super::Sidebar;
         type ParentType = adw::Bin;
 
         fn class_init(klass: &mut Self::Class) {
@@ -32,24 +32,24 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for NotesSidebar {
+    impl ObjectImpl for Sidebar {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
         }
     }
 
-    impl WidgetImpl for NotesSidebar {}
-    impl BinImpl for NotesSidebar {}
+    impl WidgetImpl for Sidebar {}
+    impl BinImpl for Sidebar {}
 }
 
 glib::wrapper! {
-    pub struct NotesSidebar(ObjectSubclass<imp::NotesSidebar>)
+    pub struct Sidebar(ObjectSubclass<imp::Sidebar>)
         @extends gtk::Widget, adw::Bin;
 }
 
-impl NotesSidebar {
+impl Sidebar {
     pub fn new() -> Self {
-        glib::Object::new(&[]).expect("Failed to create NotesSidebar.")
+        glib::Object::new(&[]).expect("Failed to create Sidebar.")
     }
 
     pub fn set_model(&self, model: Option<&impl IsA<gtk::SelectionModel>>) {
@@ -70,7 +70,7 @@ impl NotesSidebar {
         imp.listview.connect_activate(f)
     }
 
-    fn private(&self) -> &imp::NotesSidebar {
-        imp::NotesSidebar::from_instance(self)
+    fn private(&self) -> &imp::Sidebar {
+        imp::Sidebar::from_instance(self)
     }
 }

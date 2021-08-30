@@ -38,7 +38,7 @@
                   </object>
                 </child>
                 <child>
-                  <object class="NwtyNotesSidebar" id="notes_sidebar">
+                  <object class="NwtySidebar" id="notes_sidebar">
                   </object>
                 </child>
               </object>
@@ -57,7 +57,7 @@
                   </object>
                 </child>
                 <child>
-                  <object class="NwtyNoteContentView" id="note_view">
+                  <object class="NwtyContentView" id="note_view">
                   </object>
                 </child>
               </object>

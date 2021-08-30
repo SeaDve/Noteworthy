@@ -9,7 +9,7 @@ use gtk::{
 use crate::{
     application::Application,
     config::PROFILE,
-    session::{Note, NoteContentView, NotesList, NotesSidebar},
+    session::{ContentView, Note, NotesList, Sidebar},
 };
 
 mod imp {
@@ -21,9 +21,9 @@ mod imp {
     #[template(resource = "/io/github/seadve/Noteworthy/ui/main_window.ui")]
     pub struct MainWindow {
         #[template_child]
-        pub notes_sidebar: TemplateChild<NotesSidebar>,
+        pub notes_sidebar: TemplateChild<Sidebar>,
         #[template_child]
-        pub note_view: TemplateChild<NoteContentView>,
+        pub note_view: TemplateChild<ContentView>,
     }
 
     #[glib::object_subclass]
@@ -39,8 +39,8 @@ mod imp {
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
             obj.init_template();
 
-            NotesSidebar::static_type();
-            NoteContentView::static_type();
+            Sidebar::static_type();
+            ContentView::static_type();
         }
     }
 

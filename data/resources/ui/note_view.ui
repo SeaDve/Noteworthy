@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <template class="NwtyNoteContentView" parent="AdwBin">
+  <template class="NwtyContentView" parent="AdwBin">
     <property name="child">
       <object class="GtkLabel" id="label">
         <binding name="label">
-          <lookup name="content">NwtyNoteContentView</lookup>
+          <lookup name="content">NwtyContentView</lookup>
         </binding>
       </object>
     </property>

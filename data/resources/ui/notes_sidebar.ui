@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <template class="NwtyNotesSidebar" parent="AdwBin">
+  <template class="NwtySidebar" parent="AdwBin">
     <property name="child">
       <object class="GtkScrolledWindow">
         <property name="vexpand">True</property>

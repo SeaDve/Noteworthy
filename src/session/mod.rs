@@ -1,9 +1,6 @@
+mod content_view;
 mod note;
-mod note_content_view;
 mod notes_list;
-mod notes_sidebar;
+mod sidebar;
 
-pub use {
-    note::Note, note_content_view::NoteContentView, notes_list::NotesList,
-    notes_sidebar::NotesSidebar,
-};
+pub use {content_view::ContentView, note::Note, notes_list::NotesList, sidebar::Sidebar};
