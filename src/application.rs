@@ -17,9 +17,10 @@ mod imp {
     use glib::WeakRef;
     use once_cell::sync::OnceCell;
 
-    #[derive(Debug, Default)]
+    #[derive(Debug)]
     pub struct Application {
         pub window: OnceCell<WeakRef<MainWindow>>,
+        pub settings: gio::Settings,
     }
 
     #[glib::object_subclass]
@@ -27,6 +28,13 @@ mod imp {
         const NAME: &'static str = "NoteworthyApplication";
         type Type = super::Application;
         type ParentType = adw::Application;
+
+        fn new() -> Self {
+            Self {
+                window: OnceCell::new(),
+                settings: gio::Settings::new(APP_ID),
+            }
+        }
     }
 
     impl ObjectImpl for Application {}
@@ -78,8 +86,25 @@ impl Application {
         .expect("Application initialization failed...")
     }
 
+    pub fn run(&self) {
+        log::info!("Noteworthy ({})", APP_ID);
+        log::info!("Version: {} ({})", VERSION, PROFILE);
+        log::info!("Datadir: {}", PKGDATADIR);
+
+        ApplicationExtManual::run(self);
+    }
+
+    pub fn settings(&self) -> gio::Settings {
+        let imp = self.private();
+        imp.settings.clone()
+    }
+
+    fn private(&self) -> &imp::Application {
+        imp::Application::from_instance(self)
+    }
+
     fn main_window(&self) -> MainWindow {
-        let imp = imp::Application::from_instance(self);
+        let imp = self.private();
         imp.window.get().unwrap().upgrade().unwrap()
     }
 
@@ -122,12 +147,13 @@ impl Application {
 
         dialog.show();
     }
+}
 
-    pub fn run(&self) {
-        log::info!("Noteworthy ({})", APP_ID);
-        log::info!("Version: {} ({})", VERSION, PROFILE);
-        log::info!("Datadir: {}", PKGDATADIR);
-
-        ApplicationExtManual::run(self);
+impl Default for Application {
+    fn default() -> Self {
+        gio::Application::default()
+            .unwrap()
+            .downcast::<Application>()
+            .unwrap()
     }
 }
