@@ -4,8 +4,8 @@ use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use crate::{
     application::Application,
     config::{APP_ID, PROFILE},
-    model::NotesList,
-    widgets::NoteRow,
+    model::{Note, NotesList},
+    widgets::NotesSidebar,
 };
 
 mod imp {
@@ -19,7 +19,7 @@ mod imp {
         #[template_child]
         pub headerbar: TemplateChild<gtk::HeaderBar>,
         #[template_child]
-        pub notes_view: TemplateChild<gtk::ListView>,
+        pub notes_sidebar: TemplateChild<NotesSidebar>,
 
         pub settings: gio::Settings,
     }
@@ -28,7 +28,7 @@ mod imp {
         fn default() -> Self {
             Self {
                 headerbar: TemplateChild::default(),
-                notes_view: TemplateChild::default(),
+                notes_sidebar: TemplateChild::default(),
 
                 settings: gio::Settings::new(APP_ID),
             }
@@ -48,7 +48,7 @@ mod imp {
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
             obj.init_template();
 
-            NoteRow::static_type();
+            NotesSidebar::static_type();
         }
     }
 
@@ -60,15 +60,21 @@ mod imp {
                 obj.add_css_class("devel");
             }
 
-            use crate::model::Note;
+            obj.load_window_size();
+
+            let note1 = Note::new();
+            note1.set_title("A note");
+            note1.set_content("This note contains a note");
+
+            let note2 = Note::new();
+            note2.set_title("Another note");
+            note2.set_content("This note contains another note");
 
             let notes_list = NotesList::new();
-            notes_list.add_note(Note::from_string("A note".to_string()));
-
-            self.notes_view
+            notes_list.add_note(note1);
+            notes_list.add_note(note2);
+            self.notes_sidebar
                 .set_model(Some(&gtk::SingleSelection::new(Some(&notes_list))));
-
-            obj.load_window_size();
         }
     }
 

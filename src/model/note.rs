@@ -86,7 +86,11 @@ impl Note {
         glib::Object::new::<Self>(&[]).expect("Failed to create Note.")
     }
 
-    pub fn from_string(title: String) -> Self {
-        glib::Object::new::<Self>(&[("title", &title)]).expect("Failed to create Note.")
+    pub fn set_title(&self, title: &str) {
+        self.set_property("title", title).unwrap();
+    }
+
+    pub fn set_content(&self, content: &str) {
+        self.set_property("content", content).unwrap();
     }
 }
