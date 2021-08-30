@@ -9,7 +9,7 @@ mod imp {
     use super::*;
 
     #[derive(Debug, Default, CompositeTemplate)]
-    #[template(resource = "/io/github/seadve/Noteworthy/ui/notes_sidebar.ui")]
+    #[template(resource = "/io/github/seadve/Noteworthy/ui/sidebar.ui")]
     pub struct Sidebar {
         #[template_child]
         pub listview: TemplateChild<gtk::ListView>,

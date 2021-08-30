@@ -77,7 +77,7 @@ mod imp {
                     dbg!(selected_note.title());
 
                     let imp = obj.private();
-                    imp.note_view.set_content(&selected_note.content());
+                    imp.note_view.set_note(Some(&selected_note));
                 }));
         }
     }

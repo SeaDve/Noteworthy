@@ -3,16 +3,18 @@ use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::RefCell;
 
+use super::Note;
+
 mod imp {
     use super::*;
 
     #[derive(Debug, Default, CompositeTemplate)]
-    #[template(resource = "/io/github/seadve/Noteworthy/ui/note_view.ui")]
+    #[template(resource = "/io/github/seadve/Noteworthy/ui/content_view.ui")]
     pub struct ContentView {
         #[template_child]
         pub label: TemplateChild<gtk::Label>,
 
-        pub content: RefCell<String>,
+        pub note: RefCell<Option<Note>>,
     }
 
     #[glib::object_subclass]
@@ -38,11 +40,11 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_string(
-                    "content",
-                    "Content",
-                    "Content of the view",
-                    None,
+                vec![glib::ParamSpec::new_object(
+                    "note",
+                    "Note",
+                    "Current note in the view",
+                    Note::static_type(),
                     glib::ParamFlags::READWRITE,
                 )]
             });
@@ -58,9 +60,14 @@ mod imp {
             pspec: &glib::ParamSpec,
         ) {
             match pspec.name() {
-                "content" => {
-                    let content = value.get().unwrap();
-                    self.content.replace(content);
+                "note" => {
+                    let note: Option<Note> = value.get().unwrap();
+
+                    if let Some(ref note) = note {
+                        self.label.set_label(&note.content());
+                    }
+
+                    self.note.replace(note);
                 }
                 _ => unimplemented!(),
             }
@@ -68,7 +75,7 @@ mod imp {
 
         fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "content" => self.content.borrow().to_value(),
+                "note" => self.note.borrow().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -88,7 +95,7 @@ impl ContentView {
         glib::Object::new(&[]).expect("Failed to create ContentView.")
     }
 
-    pub fn set_content(&self, content: &str) {
-        self.set_property("content", content).unwrap();
+    pub fn set_note(&self, note: Option<&Note>) {
+        self.set_property("note", note).unwrap();
     }
 }
