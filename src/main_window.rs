@@ -1,11 +1,16 @@
 use adw::subclass::prelude::*;
-use gtk::{gio, glib, prelude::*, subclass::prelude::*};
+use gtk::{
+    gio,
+    glib::{self, clone},
+    prelude::*,
+    subclass::prelude::*,
+};
 
 use crate::{
     application::Application,
     config::{APP_ID, PROFILE},
     model::{Note, NotesList},
-    widgets::NotesSidebar,
+    widgets::{NoteView, NotesSidebar},
 };
 
 mod imp {
@@ -17,9 +22,9 @@ mod imp {
     #[template(resource = "/io/github/seadve/Noteworthy/ui/main_window.ui")]
     pub struct MainWindow {
         #[template_child]
-        pub headerbar: TemplateChild<gtk::HeaderBar>,
-        #[template_child]
         pub notes_sidebar: TemplateChild<NotesSidebar>,
+        #[template_child]
+        pub note_view: TemplateChild<NoteView>,
 
         pub settings: gio::Settings,
     }
@@ -27,8 +32,8 @@ mod imp {
     impl Default for MainWindow {
         fn default() -> Self {
             Self {
-                headerbar: TemplateChild::default(),
                 notes_sidebar: TemplateChild::default(),
+                note_view: TemplateChild::default(),
 
                 settings: gio::Settings::new(APP_ID),
             }
@@ -37,7 +42,7 @@ mod imp {
 
     #[glib::object_subclass]
     impl ObjectSubclass for MainWindow {
-        const NAME: &'static str = "NoteworthyMainWindow";
+        const NAME: &'static str = "NwtyMainWindow";
         type Type = super::MainWindow;
         type ParentType = adw::ApplicationWindow;
 
@@ -49,6 +54,7 @@ mod imp {
             obj.init_template();
 
             NotesSidebar::static_type();
+            NoteView::static_type();
         }
     }
 
@@ -72,17 +78,21 @@ mod imp {
             self.notes_sidebar
                 .set_model(Some(&gtk::SingleSelection::new(Some(&notes_list))));
 
-            self.notes_sidebar.connect_activate(|notes_sidebar, pos| {
-                let selected_note: Note = notes_sidebar
-                    .model()
-                    .unwrap()
-                    .item(pos)
-                    .unwrap()
-                    .downcast()
-                    .unwrap();
-                dbg!(selected_note.title());
-                dbg!(selected_note.content());
-            });
+            self.notes_sidebar
+                .connect_activate(clone!(@weak obj => move |notes_sidebar, pos| {
+                    let selected_note: Note = notes_sidebar
+                        .model()
+                        .unwrap()
+                        .item(pos)
+                        .unwrap()
+                        .downcast()
+                        .unwrap();
+
+                    dbg!(selected_note.title());
+
+                    let imp = obj.private();
+                    imp.note_view.set_content(&selected_note.content());
+                }));
         }
     }
 
@@ -110,6 +120,10 @@ glib::wrapper! {
 impl MainWindow {
     pub fn new(app: &Application) -> Self {
         glib::Object::new(&[("application", app)]).expect("Failed to create MainWindow.")
+    }
+
+    fn private(&self) -> &imp::MainWindow {
+        imp::MainWindow::from_instance(self)
     }
 
     fn save_window_size(&self) -> Result<(), glib::BoolError> {

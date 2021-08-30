@@ -16,7 +16,7 @@
       </item>
     </section>
   </menu>
-  <template class="NoteworthyMainWindow" parent="AdwApplicationWindow">
+  <template class="NwtyMainWindow" parent="AdwApplicationWindow">
     <property name="default-width">600</property>
     <property name="default-height">400</property>
     <property name="child">
@@ -57,8 +57,7 @@
                   </object>
                 </child>
                 <child>
-                  <object class="GtkLabel">
-                    <property name="label">TextView</property>
+                  <object class="NwtyNoteView" id="note_view">
                   </object>
                 </child>
               </object>
