@@ -24,6 +24,7 @@ rust_sources = files(
   'model/notes_list.rs',
   'widgets/mod.rs',
   'widgets/note_row.rs',
+  'widgets/notes_sidebar.rs',
   'application.rs',
   'config.rs',
   'main.rs',

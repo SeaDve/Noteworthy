@@ -26,7 +26,6 @@ mod imp {
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
             obj.init_template();
 
-            // TODO try remove this
             NoteRow::static_type();
         }
     }
