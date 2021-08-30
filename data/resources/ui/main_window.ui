@@ -33,11 +33,37 @@
           </object>
         </child>
         <child>
-          <object class="GtkLabel" id="label">
-            <property name="label" translatable="yes">Hello world!</property>
-            <style>
-              <class name="title-header"/>
-            </style>
+          <object class="GtkScrolledWindow">
+            <property name="vexpand">True</property>
+            <property name="child">
+              <object class="GtkListView" id="notes_view">
+                <property name="factory">
+                  <object class="GtkBuilderListItemFactory">
+                    <property name="bytes"><![CDATA[
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="GtkListItem">
+    <property name="child">
+      <object class="NwtyNoteRow">
+        <binding name="title">
+          <lookup type="NwtyNote" name="title">
+            <lookup name="item">GtkListItem</lookup>
+          </lookup>
+        </binding>
+        <binding name="subtitle">
+          <lookup type="NwtyNote" name="content">
+            <lookup name="item">GtkListItem</lookup>
+          </lookup>
+        </binding>
+      </object>
+    </property>
+  </template>
+</interface>
+                  ]]></property>
+                  </object>
+                </property>
+              </object>
+            </property>
           </object>
         </child>
       </object>

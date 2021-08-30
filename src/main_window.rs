@@ -4,6 +4,8 @@ use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use crate::{
     application::Application,
     config::{APP_ID, PROFILE},
+    model::NotesList,
+    widgets::NoteRow,
 };
 
 mod imp {
@@ -12,10 +14,13 @@ mod imp {
     use gtk::CompositeTemplate;
 
     #[derive(Debug, CompositeTemplate)]
-    #[template(resource = "/io/github/seadve/Noteworthy/ui/window.ui")]
+    #[template(resource = "/io/github/seadve/Noteworthy/ui/main_window.ui")]
     pub struct MainWindow {
         #[template_child]
         pub headerbar: TemplateChild<gtk::HeaderBar>,
+        #[template_child]
+        pub notes_view: TemplateChild<gtk::ListView>,
+
         pub settings: gio::Settings,
     }
 
@@ -23,6 +28,8 @@ mod imp {
         fn default() -> Self {
             Self {
                 headerbar: TemplateChild::default(),
+                notes_view: TemplateChild::default(),
+
                 settings: gio::Settings::new(APP_ID),
             }
         }
@@ -40,6 +47,8 @@ mod imp {
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
             obj.init_template();
+
+            NoteRow::static_type();
         }
     }
 
@@ -50,6 +59,14 @@ mod imp {
             if PROFILE == "Devel" {
                 obj.add_css_class("devel");
             }
+
+            use crate::model::Note;
+
+            let notes_list = NotesList::new();
+            notes_list.add_note(Note::from_string("A note".to_string()));
+
+            self.notes_view
+                .set_model(Some(&gtk::SingleSelection::new(Some(&notes_list))));
 
             obj.load_window_size();
         }

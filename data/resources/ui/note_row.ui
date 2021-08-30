@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="NwtyNoteRow" parent="AdwBin">
+    <property name="child">
+      <object class="GtkBox">
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkLabel" id="title_label">
+            <binding name="label">
+              <lookup name="title">NwtyNoteRow</lookup>
+            </binding>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="subtitle_label">
+            <binding name="label">
+              <lookup name="subtitle">NwtyNoteRow</lookup>
+            </binding>
+          </object>
+        </child>
+      </object>
+    </property>
+  </template>
+</interface>

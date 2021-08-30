@@ -13,7 +13,9 @@
 
 mod application;
 mod config;
-mod window;
+mod main_window;
+mod model;
+mod widgets;
 
 use application::Application;
 use config::{GETTEXT_PACKAGE, LOCALEDIR, RESOURCES_FILE};

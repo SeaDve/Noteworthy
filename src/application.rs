@@ -9,7 +9,7 @@ use gtk::{
 
 use crate::{
     config::{APP_ID, PKGDATADIR, PROFILE, VERSION},
-    window::MainWindow,
+    main_window::MainWindow,
 };
 
 mod imp {
