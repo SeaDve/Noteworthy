@@ -19,24 +19,53 @@
   <template class="NoteworthyMainWindow" parent="AdwApplicationWindow">
     <property name="default-width">600</property>
     <property name="default-height">400</property>
-    <child>
-      <object class="GtkBox">
-        <property name="orientation">vertical</property>
+    <property name="child">
+      <object class="AdwLeaflet" id="main_leaflet">
         <child>
-          <object class="GtkHeaderBar" id="headerbar">
-            <child type="end">
-              <object class="GtkMenuButton" id="appmenu_button">
-                <property name="icon-name">open-menu-symbolic</property>
-                <property name="menu-model">primary_menu</property>
+          <object class="AdwLeafletPage">
+            <property name="child">
+              <object class="GtkBox">
+                <property name="orientation">vertical</property>
+                <child>
+                  <object class="AdwHeaderBar" id="headerbar">
+                    <property name="show-end-title-buttons" bind-source="main_leaflet" bind-property="folded" bind-flags="sync-create"/>
+                    <child type="end">
+                      <object class="GtkMenuButton" id="appmenu_button">
+                        <property name="icon-name">open-menu-symbolic</property>
+                        <property name="menu-model">primary_menu</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="NwtyNotesSidebar" id="notes_sidebar">
+                  </object>
+                </child>
               </object>
-            </child>
+            </property>
           </object>
         </child>
         <child>
-          <object class="NwtyNotesSidebar" id="notes_sidebar">
+          <object class="AdwLeafletPage">
+            <property name="child">
+              <object class="GtkBox">
+                <property name="hexpand">True</property>
+                <property name="orientation">vertical</property>
+                <child>
+                  <object class="AdwHeaderBar">
+                    <property name="show-start-title-buttons" bind-source="main_leaflet" bind-property="folded" bind-flags="sync-create"/>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="label">TextView</property>
+                  </object>
+                </child>
+              </object>
+            </property>
           </object>
         </child>
       </object>
-    </child>
+    </property>
   </template>
 </interface>
