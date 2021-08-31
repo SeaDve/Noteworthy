@@ -1,11 +1,11 @@
-mod local_manager;
+mod local_notes_manager;
 
-pub use local_manager::LocalManager;
+pub use local_notes_manager::LocalNotesManager;
 
 use super::note::{Note, NotesList};
 use crate::error::Error;
 
-pub trait ManagerExt {
+pub trait NotesManagerExt {
     fn retrive_notes(&self) -> Result<NotesList, Error>;
     fn create_note(&self, note: Note);
 }

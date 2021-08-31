@@ -9,7 +9,7 @@ use gtk::{
 
 use crate::{
     config::{APP_ID, PKGDATADIR, PROFILE, VERSION},
-    main_window::MainWindow,
+    main_window::Window,
 };
 
 mod imp {
@@ -19,7 +19,7 @@ mod imp {
 
     #[derive(Debug)]
     pub struct Application {
-        pub window: OnceCell<WeakRef<MainWindow>>,
+        pub window: OnceCell<WeakRef<Window>>,
         pub settings: gio::Settings,
     }
 
@@ -48,7 +48,7 @@ mod imp {
                 return;
             }
 
-            let window = MainWindow::new(app);
+            let window = Window::new(app);
             self.window
                 .set(window.downgrade())
                 .expect("Window already set.");
@@ -103,7 +103,7 @@ impl Application {
         imp::Application::from_instance(self)
     }
 
-    fn main_window(&self) -> MainWindow {
+    fn main_window(&self) -> Window {
         let imp = self.private();
         imp.window.get().unwrap().upgrade().unwrap()
     }

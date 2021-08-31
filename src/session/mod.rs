@@ -14,7 +14,7 @@ use std::path::Path;
 
 use self::{
     content_view::ContentView,
-    manager::{LocalManager, ManagerExt},
+    manager::{LocalNotesManager, NotesManagerExt},
     note::{Note, NoteExt},
     sidebar::Sidebar,
 };
@@ -55,8 +55,8 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
-            let note_manager = LocalManager::new(Path::new("/home/dave/Notes"));
-            let notes_list = note_manager.retrive_notes().unwrap();
+            let notes_manager = LocalNotesManager::new(Path::new("/home/dave/Notes"));
+            let notes_list = notes_manager.retrive_notes().unwrap();
 
             self.sidebar
                 .set_model(Some(&gtk::SingleSelection::new(Some(&notes_list))));

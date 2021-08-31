@@ -1,10 +1,5 @@
 use adw::subclass::prelude::*;
-use gtk::{
-    gio,
-    glib::{self, clone},
-    prelude::*,
-    subclass::prelude::*,
-};
+use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 
 use crate::{application::Application, config::PROFILE, session::Session};
 
@@ -15,15 +10,15 @@ mod imp {
 
     #[derive(Debug, Default, CompositeTemplate)]
     #[template(resource = "/io/github/seadve/Noteworthy/ui/main_window.ui")]
-    pub struct MainWindow {
+    pub struct Window {
         #[template_child]
         pub session: TemplateChild<Session>,
     }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for MainWindow {
-        const NAME: &'static str = "NwtyMainWindow";
-        type Type = super::MainWindow;
+    impl ObjectSubclass for Window {
+        const NAME: &'static str = "NwtyWindow";
+        type Type = super::Window;
         type ParentType = adw::ApplicationWindow;
 
         fn class_init(klass: &mut Self::Class) {
@@ -37,7 +32,7 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for MainWindow {
+    impl ObjectImpl for Window {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
@@ -49,8 +44,8 @@ mod imp {
         }
     }
 
-    impl WidgetImpl for MainWindow {}
-    impl WindowImpl for MainWindow {
+    impl WidgetImpl for Window {}
+    impl WindowImpl for Window {
         fn close_request(&self, window: &Self::Type) -> gtk::Inhibit {
             if let Err(err) = window.save_window_size() {
                 log::warn!("Failed to save window state, {}", &err);
@@ -60,19 +55,19 @@ mod imp {
         }
     }
 
-    impl ApplicationWindowImpl for MainWindow {}
-    impl AdwApplicationWindowImpl for MainWindow {}
+    impl ApplicationWindowImpl for Window {}
+    impl AdwApplicationWindowImpl for Window {}
 }
 
 glib::wrapper! {
-    pub struct MainWindow(ObjectSubclass<imp::MainWindow>)
+    pub struct Window(ObjectSubclass<imp::Window>)
         @extends gtk::Widget, gtk::Window, gtk::ApplicationWindow, adw::ApplicationWindow,
         @implements gio::ActionMap, gio::ActionGroup;
 }
 
-impl MainWindow {
+impl Window {
     pub fn new(app: &Application) -> Self {
-        glib::Object::new(&[("application", app)]).expect("Failed to create MainWindow.")
+        glib::Object::new(&[("application", app)]).expect("Failed to create Window.")
     }
 
     fn save_window_size(&self) -> Result<(), glib::BoolError> {

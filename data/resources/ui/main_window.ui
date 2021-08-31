@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <template class="NwtyMainWindow" parent="AdwApplicationWindow">
+  <template class="NwtyWindow" parent="AdwApplicationWindow">
     <property name="default-width">600</property>
     <property name="default-height">400</property>
     <property name="child">
