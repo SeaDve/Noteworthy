@@ -33,6 +33,22 @@ mod imp {
         type Type = Note;
     }
 
+    fn replace_title_default_trampoline(this: &NoteInstance, title: &str) -> Result<()> {
+        Note::from_instance(this).replace_title(this, title)
+    }
+
+    fn retrieve_title_default_trampoline(this: &NoteInstance) -> Result<String> {
+        Note::from_instance(this).retrieve_title(this)
+    }
+
+    fn replace_content_default_trampoline(this: &NoteInstance, content: &str) -> Result<()> {
+        Note::from_instance(this).replace_content(this, content)
+    }
+
+    fn retrieve_content_default_trampoline(this: &NoteInstance) -> Result<String> {
+        Note::from_instance(this).retrieve_content(this)
+    }
+
     pub(super) unsafe fn note_replace_title(this: &NoteInstance, title: &str) -> Result<()> {
         let klass = &*(this.class() as *const _ as *const NoteClass);
         (klass.replace_title.unwrap())(this, title)
@@ -59,12 +75,38 @@ mod imp {
         pub content: RefCell<String>,
     }
 
+    /// Default implementations
+    impl Note {
+        fn replace_title(&self, _obj: &super::Note, _title: &str) -> Result<()> {
+            unimplemented!("Replace title is not implemented")
+        }
+
+        fn retrieve_title(&self, _obj: &super::Note) -> Result<String> {
+            unimplemented!("Retrieve title is not implemented")
+        }
+
+        fn replace_content(&self, _obj: &super::Note, _title: &str) -> Result<()> {
+            unimplemented!("Replace content is not implemented")
+        }
+
+        fn retrieve_content(&self, _obj: &super::Note) -> Result<String> {
+            unimplemented!("Retrieve content is not implemented")
+        }
+    }
+
     #[glib::object_subclass]
     impl ObjectSubclass for Note {
         const NAME: &'static str = "NwtyNote";
         type Type = super::Note;
         type ParentType = glib::Object;
         type Class = NoteClass;
+
+        fn class_init(klass: &mut Self::Class) {
+            klass.replace_title = Some(replace_title_default_trampoline);
+            klass.retrieve_title = Some(retrieve_title_default_trampoline);
+            klass.replace_content = Some(replace_content_default_trampoline);
+            klass.retrieve_content = Some(retrieve_content_default_trampoline);
+        }
     }
 
     impl ObjectImpl for Note {
