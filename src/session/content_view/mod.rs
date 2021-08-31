@@ -64,7 +64,7 @@ mod imp {
                     let note: Option<Note> = value.get().unwrap();
 
                     if let Some(ref note) = note {
-                        self.label.set_label(&note.retrieve_content());
+                        self.label.set_label(&note.content());
                     }
 
                     self.note.replace(note);

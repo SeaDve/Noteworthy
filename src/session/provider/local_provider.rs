@@ -9,7 +9,7 @@ use std::{
 use super::Provider;
 use crate::{
     error::Error,
-    session::note::{LocalNote, Note, NotesList},
+    session::note::{LocalNote, NotesList},
 };
 
 mod imp {

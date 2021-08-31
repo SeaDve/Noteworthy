@@ -31,23 +31,6 @@ mod imp {
         type Type = Note;
     }
 
-    // Virtual method default implementation trampolines
-    fn replace_title_default_trampoline(this: &NoteInstance, title: &str) {
-        Note::from_instance(this).replace_title(this, title);
-    }
-
-    fn retrieve_title_default_trampoline(this: &NoteInstance) -> String {
-        Note::from_instance(this).retrieve_title(this)
-    }
-
-    fn replace_content_default_trampoline(this: &NoteInstance, content: &str) {
-        Note::from_instance(this).replace_content(this, content);
-    }
-
-    fn retrieve_content_default_trampoline(this: &NoteInstance) -> String {
-        Note::from_instance(this).retrieve_content(this)
-    }
-
     pub(super) unsafe fn note_replace_title(this: &NoteInstance, title: &str) {
         let klass = &*(this.class() as *const _ as *const NoteClass);
         (klass.replace_title.unwrap())(this, title);
@@ -72,25 +55,6 @@ mod imp {
     pub struct Note {
         pub title: RefCell<String>,
         pub content: RefCell<String>,
-    }
-
-    /// Default implementations
-    impl Note {
-        fn replace_title(&self, obj: &super::Note, title: &str) {
-            unimplemented!("Replace title is not implemented");
-        }
-
-        fn retrieve_title(&self, obj: &super::Note) -> String {
-            unimplemented!("Retrieve title is not implemented");
-        }
-
-        fn replace_content(&self, obj: &super::Note, content: &str) {
-            unimplemented!("Replace content is not implemented");
-        }
-
-        fn retrieve_content(&self, obj: &super::Note) -> String {
-            unimplemented!("Retrieve content is not implemented");
-        }
     }
 
     #[glib::object_subclass]
@@ -140,11 +104,11 @@ mod imp {
             match pspec.name() {
                 "title" => {
                     let title = value.get().unwrap();
-                    obj.replace_title(title);
+                    obj.set_title(title);
                 }
                 "content" => {
                     let content = value.get().unwrap();
-                    obj.replace_content(content);
+                    obj.set_content(content);
                 }
                 _ => unimplemented!(),
             }
@@ -152,14 +116,12 @@ mod imp {
 
         fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "title" => obj.retrieve_title().to_value(),
-                "content" => obj.retrieve_content().to_value(),
+                "title" => obj.title().to_value(),
+                "content" => obj.content().to_value(),
                 _ => unimplemented!(),
             }
         }
     }
-
-    impl NoteImpl for Note {}
 }
 
 glib::wrapper! {
@@ -173,31 +135,31 @@ impl Note {
 }
 
 pub trait NoteExt {
-    fn replace_title(&self, title: &str);
-    fn retrieve_title(&self) -> String;
+    fn set_title(&self, title: &str);
+    fn title(&self) -> String;
 
-    fn replace_content(&self, content: &str);
-    fn retrieve_content(&self) -> String;
+    fn set_content(&self, content: &str);
+    fn content(&self) -> String;
 }
 
 impl<O: IsA<Note>> NoteExt for O {
-    fn replace_title(&self, title: &str) {
+    fn set_title(&self, title: &str) {
         unsafe {
             imp::note_replace_title(self.upcast_ref::<Note>(), title);
         }
     }
 
-    fn retrieve_title(&self) -> String {
+    fn title(&self) -> String {
         unsafe { imp::note_retrieve_title(self.upcast_ref::<Note>()) }
     }
 
-    fn replace_content(&self, content: &str) {
+    fn set_content(&self, content: &str) {
         unsafe {
             imp::note_replace_content(self.upcast_ref::<Note>(), content);
         }
     }
 
-    fn retrieve_content(&self) -> String {
+    fn content(&self) -> String {
         unsafe { imp::note_retrieve_content(self.upcast_ref::<Note>()) }
     }
 }
