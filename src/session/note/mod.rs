@@ -18,7 +18,7 @@ mod imp {
 
     #[repr(C)]
     pub struct NoteClass {
-        pub parent_class: glib::object::ObjectClass,
+        pub parent_class: glib::gobject_ffi::GObjectClass,
 
         pub replace_title: Option<unsafe fn(&NoteInstance, title: &str)>,
         pub retrieve_title: Option<unsafe fn(&NoteInstance) -> String>,
