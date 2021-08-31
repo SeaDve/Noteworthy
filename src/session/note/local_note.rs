@@ -64,19 +64,15 @@ mod imp {
     }
 
     impl NoteImpl for LocalNote {
-        fn replace_title(&self, obj: &Self::Type, title: &str) {
-            let path = obj.path();
-        }
+        fn replace_title(&self, obj: &Self::ParentType, title: &str) {}
 
-        fn retrieve_title(&self, obj: &Self::Type) -> String {
+        fn retrieve_title(&self, obj: &Self::ParentType) -> String {
             "This is the title".to_string()
         }
 
-        fn replace_content(&self, obj: &Self::Type, content: &str) {
-            let path = obj.path();
-        }
+        fn replace_content(&self, obj: &Self::ParentType, content: &str) {}
 
-        fn retrieve_content(&self, obj: &Self::Type) -> String {
+        fn retrieve_content(&self, obj: &Self::ParentType) -> String {
             "This is the content".to_string()
         }
     }
@@ -84,7 +80,7 @@ mod imp {
 
 glib::wrapper! {
     pub struct LocalNote(ObjectSubclass<imp::LocalNote>)
-        @implements Note;
+        @extends Note;
 }
 
 impl LocalNote {

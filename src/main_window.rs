@@ -76,7 +76,7 @@ mod imp {
                         .downcast()
                         .unwrap();
 
-                    dbg!(selected_note.title());
+                    dbg!(selected_note.retrieve_title());
 
                     let imp = obj.private();
                     imp.note_view.set_note(Some(&selected_note));
