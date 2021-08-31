@@ -47,7 +47,7 @@ mod imp {
             let key_events = gtk::EventControllerKey::new();
             key_events
                 .connect_key_pressed(clone!(@weak obj => @default-return Inhibit(false), move |_, key, _, modifier| {
-                    if modifier.contains(gdk::ModifierType::CONTROL_MASK) && key == gdk::keys::constants::S {
+                    if modifier.contains(gdk::ModifierType::CONTROL_MASK) && key == gdk::keys::constants::s {
                         obj.save_active_note().unwrap();
                         log::info!("File saved");
                         Inhibit(true)
