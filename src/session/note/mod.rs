@@ -85,6 +85,20 @@ mod imp {
             }
         }
     }
+
+    impl NoteImpl for Note {
+        fn replace_title(&self, obj: &Self::Type, title: &str) {}
+
+        fn retrieve_title(&self, obj: &Self::Type) -> String {
+            "hi".to_string()
+        }
+
+        fn replace_content(&self, obj: &Self::Type, content: &str) {}
+
+        fn retrieve_content(&self, obj: &Self::Type) -> String {
+            "hi".to_string()
+        }
+    }
 }
 
 glib::wrapper! {
