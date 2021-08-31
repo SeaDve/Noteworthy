@@ -2,8 +2,9 @@ mod note_row;
 
 use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
-use std::cell::Cell;
+use std::cell::{Cell, RefCell};
 
+use super::Note;
 use note_row::NoteRow;
 
 mod imp {
@@ -16,6 +17,7 @@ mod imp {
         pub listview: TemplateChild<gtk::ListView>,
 
         pub compact: Cell<bool>,
+        pub selected_note: RefCell<Option<Note>>,
     }
 
     #[glib::object_subclass]
@@ -43,13 +45,22 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_boolean(
-                    "compact",
-                    "Compact",
-                    "Whether it is compact view mode",
-                    false,
-                    glib::ParamFlags::READWRITE,
-                )]
+                vec![
+                    glib::ParamSpec::new_boolean(
+                        "compact",
+                        "Compact",
+                        "Whether it is compact view mode",
+                        false,
+                        glib::ParamFlags::READWRITE,
+                    ),
+                    glib::ParamSpec::new_object(
+                        "selected-note",
+                        "Selected Note",
+                        "The selected note in this sidebar",
+                        Note::static_type(),
+                        glib::ParamFlags::READWRITE,
+                    ),
+                ]
             });
 
             PROPERTIES.as_ref()
@@ -67,6 +78,10 @@ mod imp {
                     let compact = value.get().unwrap();
                     self.compact.set(compact);
                 }
+                "selected-note" => {
+                    let selected_note = value.get().unwrap();
+                    self.selected_note.replace(selected_note);
+                }
                 _ => unimplemented!(),
             }
         }
@@ -74,6 +89,7 @@ mod imp {
         fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
                 "compact" => self.compact.get().to_value(),
+                "selected_note" => self.selected_note.borrow().to_value(),
                 _ => unimplemented!(),
             }
         }

@@ -10,7 +10,7 @@ use gtk::{
     subclass::prelude::*,
 };
 
-use std::path::Path;
+use std::{cell::RefCell, path::Path};
 
 use self::{
     content_view::ContentView,
@@ -31,6 +31,8 @@ mod imp {
         pub sidebar: TemplateChild<Sidebar>,
         #[template_child]
         pub content_view: TemplateChild<ContentView>,
+
+        pub selected_note: RefCell<Option<Note>>,
     }
 
     #[glib::object_subclass]
@@ -73,9 +75,46 @@ mod imp {
 
                     dbg!(selected_note.title());
 
-                    let imp = obj.private();
-                    imp.content_view.set_note(Some(&selected_note));
+                    obj.set_selected_note(Some(selected_note));
                 }));
+        }
+
+        fn properties() -> &'static [glib::ParamSpec] {
+            use once_cell::sync::Lazy;
+            static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
+                vec![glib::ParamSpec::new_object(
+                    "selected-note",
+                    "Selected Note",
+                    "The selected note in this sidebar",
+                    Note::static_type(),
+                    glib::ParamFlags::READWRITE,
+                )]
+            });
+
+            PROPERTIES.as_ref()
+        }
+
+        fn set_property(
+            &self,
+            _obj: &Self::Type,
+            _id: usize,
+            value: &glib::Value,
+            pspec: &glib::ParamSpec,
+        ) {
+            match pspec.name() {
+                "selected-note" => {
+                    let selected_note = value.get().unwrap();
+                    self.selected_note.replace(selected_note);
+                }
+                _ => unimplemented!(),
+            }
+        }
+
+        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+            match pspec.name() {
+                "selected-note" => self.selected_note.borrow().to_value(),
+                _ => unimplemented!(),
+            }
         }
     }
 
@@ -93,7 +132,7 @@ impl Session {
         glib::Object::new(&[]).expect("Failed to create Session.")
     }
 
-    fn private(&self) -> &imp::Session {
-        imp::Session::from_instance(self)
+    pub fn set_selected_note(&self, selected_note: Option<Note>) {
+        self.set_property("selected-note", selected_note).unwrap();
     }
 }

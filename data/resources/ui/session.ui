@@ -6,6 +6,7 @@
         <child>
           <object class="NwtySidebar" id="sidebar">
             <property name="compact" bind-source="leaflet" bind-property="folded" bind-flags="sync-create"/>
+            <property name="selected-note" bind-source="NwtySession" bind-property="selected-note" bind-flags="sync-create"/>
           </object>
         </child>
         <child>
@@ -15,6 +16,7 @@
           <object class="NwtyContentView" id="content_view">
             <property name="hexpand">True</property>
             <property name="compact" bind-source="leaflet" bind-property="folded" bind-flags="sync-create"/>
+            <property name="note" bind-source="NwtySession" bind-property="selected-note" bind-flags="sync-create"/>
           </object>
         </child>
       </object>
