@@ -6,28 +6,28 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use super::Provider;
+use super::Manager;
 use crate::{
     error::Error,
-    session::note::{LocalNote, NotesList},
+    session::note::{LocalNote, Note, NotesList},
 };
 
 mod imp {
     use super::*;
 
     #[derive(Debug, Default)]
-    pub struct LocalProvider {
+    pub struct LocalManager {
         directory: RefCell<Option<String>>,
     }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for LocalProvider {
-        const NAME: &'static str = "NwtyLocalProvider";
-        type Type = super::LocalProvider;
+    impl ObjectSubclass for LocalManager {
+        const NAME: &'static str = "NwtyLocalManager";
+        type Type = super::LocalManager;
         type ParentType = glib::Object;
     }
 
-    impl ObjectImpl for LocalProvider {
+    impl ObjectImpl for LocalManager {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
         }
@@ -73,13 +73,13 @@ mod imp {
 }
 
 glib::wrapper! {
-    pub struct LocalProvider(ObjectSubclass<imp::LocalProvider>);
+    pub struct LocalManager(ObjectSubclass<imp::LocalManager>);
 }
 
-impl LocalProvider {
+impl LocalManager {
     pub fn new(directory: &Path) -> Self {
         glib::Object::new::<Self>(&[("directory", &directory.display().to_string())])
-            .expect("Failed to create LocalProvider.")
+            .expect("Failed to create LocalManager.")
     }
 
     pub fn directory(&self) -> PathBuf {
@@ -88,7 +88,7 @@ impl LocalProvider {
     }
 }
 
-impl Provider for LocalProvider {
+impl Manager for LocalManager {
     fn retrive_notes(&self) -> Result<NotesList, Error> {
         let directory = self.directory();
         let paths = fs::read_dir(directory)?;
@@ -102,5 +102,9 @@ impl Provider for LocalProvider {
         }
 
         Ok(notes_list)
+    }
+
+    fn create_note(&self, note: Note) {
+        unimplemented!()
     }
 }

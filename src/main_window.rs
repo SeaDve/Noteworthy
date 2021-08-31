@@ -12,8 +12,8 @@ use crate::{
     application::Application,
     config::PROFILE,
     session::{
+        manager::{LocalManager, Manager},
         note::{Note, NoteExt},
-        provider::{LocalProvider, Provider},
         ContentView, Sidebar,
     },
 };
@@ -60,7 +60,7 @@ mod imp {
 
             obj.load_window_size();
 
-            let note_provider = LocalProvider::new(Path::new("/home/dave/Notes"));
+            let note_provider = LocalManager::new(Path::new("/home/dave/Notes"));
             let notes_list = note_provider.retrive_notes().unwrap();
 
             self.notes_sidebar
