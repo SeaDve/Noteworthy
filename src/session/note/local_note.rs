@@ -64,16 +64,34 @@ mod imp {
     }
 
     impl NoteImpl for LocalNote {
-        fn replace_title(&self, obj: &Self::ParentType, title: &str) {}
-
-        fn retrieve_title(&self, obj: &Self::ParentType) -> String {
-            "This is the title".to_string()
+        fn replace_title(&self, parent: &Self::ParentType, title: &str) {
+            let obj: Self::Type = parent.clone().downcast().unwrap();
         }
 
-        fn replace_content(&self, obj: &Self::ParentType, content: &str) {}
+        fn retrieve_title(&self, parent: &Self::ParentType) -> String {
+            let obj: Self::Type = parent.clone().downcast().unwrap();
+            let path = obj.path();
 
-        fn retrieve_content(&self, obj: &Self::ParentType) -> String {
-            "This is the content".to_string()
+            let path = Path::new(&path);
+            path.file_name().unwrap().to_string_lossy().to_string()
+        }
+
+        fn replace_content(&self, parent: &Self::ParentType, content: &str) {
+            let obj: Self::Type = parent.clone().downcast().unwrap();
+        }
+
+        fn retrieve_content(&self, parent: &Self::ParentType) -> String {
+            let obj: Self::Type = parent.clone().downcast().unwrap();
+            let path = obj.path();
+
+            use std::io::Read;
+            let mut f = std::fs::File::open(path).expect("file not found");
+
+            let mut contents = String::new();
+            f.read_to_string(&mut contents)
+                .expect("something went wrong reading the file");
+
+            contents
         }
     }
 }
