@@ -3,7 +3,7 @@ use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::RefCell;
 
-use super::Note;
+use super::note::{Note, NoteExt};
 
 mod imp {
     use super::*;

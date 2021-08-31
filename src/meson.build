@@ -20,11 +20,13 @@ run_command(
 
 rust_sources = files(
   'session/content_view/mod.rs',
-  'session/sidebar/mod.rs',
+  'session/note/local_note.rs',
+  'session/note/mod.rs',
+  'session/note/notes_list.rs',
+  'session/provider/local_provider.rs',
+  'session/provider/mod.rs',
   'session/sidebar/note_row.rs',
   'session/mod.rs',
-  'session/note.rs',
-  'session/notes_list.rs',
   'application.rs',
   'config.rs',
   'main.rs',

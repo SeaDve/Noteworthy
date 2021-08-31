@@ -13,6 +13,7 @@
 
 mod application;
 mod config;
+mod error;
 mod main_window;
 mod session;
 

@@ -6,10 +6,16 @@ use gtk::{
     subclass::prelude::*,
 };
 
+use std::path::Path;
+
 use crate::{
     application::Application,
     config::PROFILE,
-    session::{ContentView, Note, NotesList, Sidebar},
+    session::{
+        note::{Note, NoteExt},
+        provider::{LocalProvider, Provider},
+        ContentView, Sidebar,
+    },
 };
 
 mod imp {
@@ -54,13 +60,9 @@ mod imp {
 
             obj.load_window_size();
 
-            let notes_list = NotesList::new();
-            for i in 0..100 {
-                let note = Note::new();
-                note.set_title(&format!("Note {}", i));
-                note.set_content(&format!("Content of note {}", i));
-                notes_list.append(note);
-            }
+            let note_provider = LocalProvider::new(Path::new("/home/dave/Notes"));
+            let notes_list = note_provider.retrive_notes().unwrap();
+
             self.notes_sidebar
                 .set_model(Some(&gtk::SingleSelection::new(Some(&notes_list))));
 
