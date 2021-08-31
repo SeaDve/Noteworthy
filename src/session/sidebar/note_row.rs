@@ -71,7 +71,8 @@ mod imp {
                 }
                 "subtitle" => {
                     let subtitle: &str = value.get().unwrap();
-                    self.subtitle.set_label(subtitle.lines().next().unwrap());
+                    self.subtitle
+                        .set_label(subtitle.lines().next().unwrap_or_default());
                 }
                 _ => unimplemented!(),
             }

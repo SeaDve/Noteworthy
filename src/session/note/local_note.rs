@@ -78,6 +78,19 @@ mod imp {
 
         fn replace_content(&self, parent: &Self::ParentType, content: &str) {
             let obj: Self::Type = parent.clone().downcast().unwrap();
+            let path = obj.path();
+
+            use std::io::Write;
+
+            let mut f = std::fs::OpenOptions::new()
+                .write(true)
+                .create(true)
+                .truncate(true)
+                .open(path)
+                .expect("File not found");
+
+            f.write_all(content.as_bytes())
+                .expect("Failed to write to file");
         }
 
         fn retrieve_content(&self, parent: &Self::ParentType) -> String {

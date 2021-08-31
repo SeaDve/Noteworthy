@@ -1,5 +1,11 @@
 use adw::subclass::prelude::*;
-use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
+use gtk::{
+    gdk,
+    glib::{self, clone, signal::Inhibit},
+    prelude::*,
+    subclass::prelude::*,
+    CompositeTemplate,
+};
 use sourceview::prelude::*;
 
 use std::cell::RefCell;
@@ -36,6 +42,26 @@ mod imp {
     impl ObjectImpl for ContentView {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
+
+            let key_events = gtk::EventControllerKey::new();
+            key_events
+                .connect_key_pressed(clone!(@weak obj => @default-return Inhibit(false), move |_, key, _, modifier| {
+                    if modifier.contains(gdk::ModifierType::CONTROL_MASK) && key == gdk::keys::constants::S {
+                        let imp = imp::ContentView::from_instance(&obj);
+
+                        if let Some(note) = obj.note() {
+                            let buffer: sourceview::Buffer = imp.view.buffer().downcast().unwrap();
+                            let (start_iter, end_iter) = buffer.bounds();
+                            note.set_content(&buffer.text(&start_iter, &end_iter, true));
+                        }
+                        log::info!("File saved");
+
+                        Inhibit(true)
+                    } else {
+                        Inhibit(false)
+                    }
+                }));
+            self.view.add_controller(&key_events);
         }
 
         fn properties() -> &'static [glib::ParamSpec] {
@@ -72,6 +98,8 @@ mod imp {
                         buffer.set_language(md_lang.as_ref());
 
                         buffer.set_text(&note.content());
+
+                        self.view.grab_focus();
                     }
 
                     self.note.replace(note);
@@ -100,6 +128,10 @@ glib::wrapper! {
 impl ContentView {
     pub fn new() -> Self {
         glib::Object::new(&[]).expect("Failed to create ContentView.")
+    }
+
+    pub fn note(&self) -> Option<Note> {
+        self.property("note").unwrap().get().unwrap()
     }
 
     pub fn set_note(&self, note: Option<&Note>) {
