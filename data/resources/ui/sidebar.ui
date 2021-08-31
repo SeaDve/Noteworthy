@@ -11,7 +11,7 @@
         <attribute name="action">win.show-help-overlay</attribute>
       </item>
       <item>
-        <attribute name="label" translatable="yes">_About GTK Rust Template</attribute>
+        <attribute name="label" translatable="yes">_About Noteworthy</attribute>
         <attribute name="action">app.about</attribute>
       </item>
     </section>
@@ -21,6 +21,12 @@
     <child>
       <object class="AdwHeaderBar">
         <property name="show-end-title-buttons" bind-source="NwtySidebar" bind-property="compact" bind-flags="sync-create"/>
+        <child>
+          <object class="GtkButton">
+            <property name="icon-name">list-add-symbolic</property>
+            <property name="action-name">notes-manager.create-note</property>
+          </object>
+        </child>
         <child type="end">
           <object class="GtkMenuButton">
             <property name="icon-name">open-menu-symbolic</property>
