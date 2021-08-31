@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <template class="NwtyContentView" parent="AdwBin">
-    <property name="child">
+  <template class="NwtyContentView" parent="GtkBox">
+    <property name="orientation">vertical</property>
+    <child>
+      <object class="AdwHeaderBar">
+        <property name="show-start-title-buttons" bind-source="NwtyContentView" bind-property="compact" bind-flags="sync-create"/>
+      </object>
+    </child>
+    <child>
       <object class="GtkScrolledWindow">
         <property name="vexpand">True</property>
         <property name="child">
@@ -9,6 +15,6 @@
           </object>
         </property>
       </object>
-    </property>
+    </child>
   </template>
 </interface>

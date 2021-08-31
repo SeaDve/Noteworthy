@@ -14,8 +14,8 @@
 mod application;
 mod config;
 mod error;
-mod main_window;
 mod session;
+mod window;
 
 use application::Application;
 use config::{GETTEXT_PACKAGE, LOCALEDIR, RESOURCES_FILE};

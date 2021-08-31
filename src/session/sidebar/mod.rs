@@ -1,7 +1,8 @@
 mod note_row;
 
-use adw::subclass::prelude::*;
 use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
+
+use std::cell::Cell;
 
 use note_row::NoteRow;
 
@@ -13,13 +14,15 @@ mod imp {
     pub struct Sidebar {
         #[template_child]
         pub listview: TemplateChild<gtk::ListView>,
+
+        pub compact: Cell<bool>,
     }
 
     #[glib::object_subclass]
     impl ObjectSubclass for Sidebar {
         const NAME: &'static str = "NwtySidebar";
         type Type = super::Sidebar;
-        type ParentType = adw::Bin;
+        type ParentType = gtk::Box;
 
         fn class_init(klass: &mut Self::Class) {
             Self::bind_template(klass);
@@ -36,15 +39,53 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
         }
+
+        fn properties() -> &'static [glib::ParamSpec] {
+            use once_cell::sync::Lazy;
+            static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
+                vec![glib::ParamSpec::new_boolean(
+                    "compact",
+                    "Compact",
+                    "Whether it is compact view mode",
+                    false,
+                    glib::ParamFlags::READWRITE,
+                )]
+            });
+
+            PROPERTIES.as_ref()
+        }
+
+        fn set_property(
+            &self,
+            _obj: &Self::Type,
+            _id: usize,
+            value: &glib::Value,
+            pspec: &glib::ParamSpec,
+        ) {
+            match pspec.name() {
+                "compact" => {
+                    let compact = value.get().unwrap();
+                    self.compact.set(compact);
+                }
+                _ => unimplemented!(),
+            }
+        }
+
+        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+            match pspec.name() {
+                "compact" => self.compact.get().to_value(),
+                _ => unimplemented!(),
+            }
+        }
     }
 
     impl WidgetImpl for Sidebar {}
-    impl BinImpl for Sidebar {}
+    impl BoxImpl for Sidebar {}
 }
 
 glib::wrapper! {
     pub struct Sidebar(ObjectSubclass<imp::Sidebar>)
-        @extends gtk::Widget, adw::Bin;
+        @extends gtk::Widget, gtk::Box;
 }
 
 impl Sidebar {

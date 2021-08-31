@@ -1,4 +1,3 @@
-use adw::subclass::prelude::*;
 use gtk::{
     gdk,
     glib::{self, clone, signal::Inhibit},
@@ -8,7 +7,7 @@ use gtk::{
 };
 use sourceview::prelude::*;
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 
 use super::note::{Note, NoteExt};
 use crate::{error::Error, Result};
@@ -22,6 +21,7 @@ mod imp {
         #[template_child]
         pub view: TemplateChild<sourceview::View>,
 
+        pub compact: Cell<bool>,
         pub note: RefCell<Option<Note>>,
     }
 
@@ -29,7 +29,7 @@ mod imp {
     impl ObjectSubclass for ContentView {
         const NAME: &'static str = "NwtyContentView";
         type Type = super::ContentView;
-        type ParentType = adw::Bin;
+        type ParentType = gtk::Box;
 
         fn class_init(klass: &mut Self::Class) {
             Self::bind_template(klass);
@@ -61,13 +61,22 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_object(
-                    "note",
-                    "Note",
-                    "Current note in the view",
-                    Note::static_type(),
-                    glib::ParamFlags::READWRITE,
-                )]
+                vec![
+                    glib::ParamSpec::new_object(
+                        "note",
+                        "Note",
+                        "Current note in the view",
+                        Note::static_type(),
+                        glib::ParamFlags::READWRITE,
+                    ),
+                    glib::ParamSpec::new_boolean(
+                        "compact",
+                        "Compact",
+                        "Whether it is compact view mode",
+                        false,
+                        glib::ParamFlags::READWRITE,
+                    ),
+                ]
             });
 
             PROPERTIES.as_ref()
@@ -98,6 +107,10 @@ mod imp {
 
                     self.note.replace(note);
                 }
+                "compact" => {
+                    let compact = value.get().unwrap();
+                    self.compact.set(compact);
+                }
                 _ => unimplemented!(),
             }
         }
@@ -105,18 +118,19 @@ mod imp {
         fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
                 "note" => self.note.borrow().to_value(),
+                "compact" => self.compact.get().to_value(),
                 _ => unimplemented!(),
             }
         }
     }
 
     impl WidgetImpl for ContentView {}
-    impl BinImpl for ContentView {}
+    impl BoxImpl for ContentView {}
 }
 
 glib::wrapper! {
     pub struct ContentView(ObjectSubclass<imp::ContentView>)
-        @extends gtk::Widget, adw::Bin;
+        @extends gtk::Widget, gtk::Box;
 }
 
 impl ContentView {

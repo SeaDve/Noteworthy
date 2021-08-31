@@ -9,7 +9,7 @@ mod imp {
     use gtk::CompositeTemplate;
 
     #[derive(Debug, Default, CompositeTemplate)]
-    #[template(resource = "/io/github/seadve/Noteworthy/ui/main_window.ui")]
+    #[template(resource = "/io/github/seadve/Noteworthy/ui/window.ui")]
     pub struct Window {
         #[template_child]
         pub session: TemplateChild<Session>,

@@ -32,7 +32,7 @@ rust_sources = files(
   'config.rs',
   'error.rs',
   'main.rs',
-  'main_window.rs',
+  'window.rs',
 )
 
 sources = [rust_sources, cargo_sources]
