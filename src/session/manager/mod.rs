@@ -8,4 +8,5 @@ use crate::error::Error;
 pub trait NotesManagerExt {
     fn retrive_notes(&self) -> Result<NotesList, Error>;
     fn create_note(&self, note: Note);
+    fn delete_note(&self, note: Note);
 }

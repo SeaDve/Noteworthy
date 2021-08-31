@@ -107,4 +107,8 @@ impl NotesManagerExt for LocalNotesManager {
     fn create_note(&self, note: Note) {
         unimplemented!()
     }
+
+    fn delete_note(&self, note: Note) {
+        unimplemented!()
+    }
 }
