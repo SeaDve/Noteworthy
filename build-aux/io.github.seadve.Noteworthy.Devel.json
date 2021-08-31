@@ -46,6 +46,19 @@
             ]
         },
         {
+            "name" : "gtksourceview",
+            "buildsystem" : "meson",
+            "config-opts": [
+                "-Dvapi=false"
+            ],
+            "sources" : [
+                {
+                    "type" : "git",
+                    "url" : "https://gitlab.gnome.org/GNOME/gtksourceview.git"
+                }
+            ]
+        },
+        {
             "name": "noteworthy",
             "buildsystem": "meson",
             "run-tests": true,

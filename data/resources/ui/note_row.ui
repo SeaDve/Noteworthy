@@ -10,22 +10,17 @@
         <property name="spacing">6</property>
         <property name="orientation">vertical</property>
         <child>
-          <object class="GtkLabel" id="title_label">
+          <object class="GtkLabel" id="title">
             <property name="halign">start</property>
-            <binding name="label">
-              <lookup name="title">NwtyNoteRow</lookup>
-            </binding>
             <style>
               <class name="heading"/>
             </style>
           </object>
         </child>
         <child>
-          <object class="GtkLabel" id="subtitle_label">
+          <object class="GtkLabel" id="subtitle">
+            <property name="ellipsize">end</property>
             <property name="halign">start</property>
-            <binding name="label">
-              <lookup name="subtitle">NwtyNoteRow</lookup>
-            </binding>
           </object>
         </child>
       </object>

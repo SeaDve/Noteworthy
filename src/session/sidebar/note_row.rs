@@ -1,8 +1,6 @@
 use adw::subclass::prelude::*;
 use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
-use std::cell::RefCell;
-
 mod imp {
     use super::*;
 
@@ -10,12 +8,9 @@ mod imp {
     #[template(resource = "/io/github/seadve/Noteworthy/ui/note_row.ui")]
     pub struct NoteRow {
         #[template_child]
-        pub title_label: TemplateChild<gtk::Label>,
+        pub title: TemplateChild<gtk::Label>,
         #[template_child]
-        pub subtitle_label: TemplateChild<gtk::Label>,
-
-        pub title: RefCell<String>,
-        pub subtitle: RefCell<String>,
+        pub subtitle: TemplateChild<gtk::Label>,
     }
 
     #[glib::object_subclass]
@@ -72,11 +67,11 @@ mod imp {
             match pspec.name() {
                 "title" => {
                     let title = value.get().unwrap();
-                    self.title.replace(title);
+                    self.title.set_label(title);
                 }
                 "subtitle" => {
-                    let subtitle = value.get().unwrap();
-                    self.subtitle.replace(subtitle);
+                    let subtitle: &str = value.get().unwrap();
+                    self.subtitle.set_label(subtitle.lines().next().unwrap());
                 }
                 _ => unimplemented!(),
             }
@@ -84,8 +79,8 @@ mod imp {
 
         fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "title" => self.title.borrow().to_value(),
-                "subtitle" => self.subtitle.borrow().to_value(),
+                "title" => self.title.label().to_value(),
+                "subtitle" => self.subtitle.label().to_value(),
                 _ => unimplemented!(),
             }
         }

@@ -585,6 +585,7 @@ dependencies = [
  "log",
  "once_cell",
  "pretty_env_logger",
+ "sourceview5",
 ]
 
 [[package]]
@@ -803,6 +804,40 @@ name = "smallvec"
 version = "1.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fe0f37c9e8f3c5a4a66ad655a93c74daac4ad00c441533bf5c6e7990bb42604e"
+
+[[package]]
+name = "sourceview5"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "25fa90a479c8f67ebddf3d4f6f96262e7da09312435887b4847aeb0576318954"
+dependencies = [
+ "bitflags",
+ "gdk-pixbuf",
+ "gdk4",
+ "gio",
+ "glib",
+ "gtk4",
+ "libc",
+ "pango",
+ "sourceview5-sys",
+]
+
+[[package]]
+name = "sourceview5-sys"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dda4b277030fb28e862f65ea4c74f6bdeab4d1ecbb9b94b128b0b475c12f4161"
+dependencies = [
+ "gdk-pixbuf-sys",
+ "gdk4-sys",
+ "gio-sys",
+ "glib-sys",
+ "gobject-sys",
+ "gtk4-sys",
+ "libc",
+ "pango-sys",
+ "system-deps",
+]
 
 [[package]]
 name = "strum"

@@ -2,7 +2,12 @@
 <interface>
   <template class="NwtyContentView" parent="AdwBin">
     <property name="child">
-      <object class="GtkLabel" id="label">
+      <object class="GtkScrolledWindow">
+        <property name="vexpand">True</property>
+        <property name="child">
+          <object class="GtkSourceView" id="view">
+          </object>
+        </property>
       </object>
     </property>
   </template>

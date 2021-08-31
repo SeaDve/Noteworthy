@@ -1,5 +1,6 @@
 use adw::subclass::prelude::*;
 use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
+use sourceview::prelude::*;
 
 use std::cell::RefCell;
 
@@ -12,7 +13,7 @@ mod imp {
     #[template(resource = "/io/github/seadve/Noteworthy/ui/content_view.ui")]
     pub struct ContentView {
         #[template_child]
-        pub label: TemplateChild<gtk::Label>,
+        pub view: TemplateChild<sourceview::View>,
 
         pub note: RefCell<Option<Note>>,
     }
@@ -64,7 +65,13 @@ mod imp {
                     let note: Option<Note> = value.get().unwrap();
 
                     if let Some(ref note) = note {
-                        self.label.set_label(&note.content());
+                        let buffer: sourceview::Buffer = self.view.buffer().downcast().unwrap();
+
+                        let md_lang = sourceview::LanguageManager::default()
+                            .and_then(|lm| lm.language("markdown"));
+                        buffer.set_language(md_lang.as_ref());
+
+                        buffer.set_text(&note.content());
                     }
 
                     self.note.replace(note);
