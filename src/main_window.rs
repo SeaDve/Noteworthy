@@ -6,17 +6,7 @@ use gtk::{
     subclass::prelude::*,
 };
 
-use std::path::Path;
-
-use crate::{
-    application::Application,
-    config::PROFILE,
-    session::{
-        manager::{LocalManager, Manager},
-        note::{Note, NoteExt},
-        ContentView, Sidebar,
-    },
-};
+use crate::{application::Application, config::PROFILE, session::Session};
 
 mod imp {
     use super::*;
@@ -27,9 +17,7 @@ mod imp {
     #[template(resource = "/io/github/seadve/Noteworthy/ui/main_window.ui")]
     pub struct MainWindow {
         #[template_child]
-        pub notes_sidebar: TemplateChild<Sidebar>,
-        #[template_child]
-        pub note_view: TemplateChild<ContentView>,
+        pub session: TemplateChild<Session>,
     }
 
     #[glib::object_subclass]
@@ -45,8 +33,7 @@ mod imp {
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
             obj.init_template();
 
-            Sidebar::static_type();
-            ContentView::static_type();
+            Session::static_type();
         }
     }
 
@@ -59,28 +46,6 @@ mod imp {
             }
 
             obj.load_window_size();
-
-            let note_provider = LocalManager::new(Path::new("/home/dave/Notes"));
-            let notes_list = note_provider.retrive_notes().unwrap();
-
-            self.notes_sidebar
-                .set_model(Some(&gtk::SingleSelection::new(Some(&notes_list))));
-
-            self.notes_sidebar
-                .connect_activate(clone!(@weak obj => move |notes_sidebar, pos| {
-                    let selected_note: Note = notes_sidebar
-                        .model()
-                        .unwrap()
-                        .item(pos)
-                        .unwrap()
-                        .downcast()
-                        .unwrap();
-
-                    dbg!(selected_note.title());
-
-                    let imp = obj.private();
-                    imp.note_view.set_note(Some(&selected_note));
-                }));
         }
     }
 
@@ -108,10 +73,6 @@ glib::wrapper! {
 impl MainWindow {
     pub fn new(app: &Application) -> Self {
         glib::Object::new(&[("application", app)]).expect("Failed to create MainWindow.")
-    }
-
-    fn private(&self) -> &imp::MainWindow {
-        imp::MainWindow::from_instance(self)
     }
 
     fn save_window_size(&self) -> Result<(), glib::BoolError> {

@@ -6,6 +6,7 @@
     <file compressed="true" preprocess="xml-stripblanks">ui/note_row.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/sidebar.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/content_view.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">ui/session.ui</file>
     <file compressed="true">style.css</file>
   </gresource>
 </gresources>

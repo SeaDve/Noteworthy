@@ -6,7 +6,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use super::Manager;
+use super::ManagerExt;
 use crate::{
     error::Error,
     session::note::{LocalNote, Note, NotesList},
@@ -88,7 +88,7 @@ impl LocalManager {
     }
 }
 
-impl Manager for LocalManager {
+impl ManagerExt for LocalManager {
     fn retrive_notes(&self) -> Result<NotesList, Error> {
         let directory = self.directory();
         let paths = fs::read_dir(directory)?;
