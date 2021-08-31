@@ -22,6 +22,8 @@ use config::{GETTEXT_PACKAGE, LOCALEDIR, RESOURCES_FILE};
 use gettextrs::{gettext, LocaleCategory};
 use gtk::{gio, glib};
 
+pub type Result<T> = std::result::Result<T, error::Error>;
+
 fn main() {
     pretty_env_logger::init();
 

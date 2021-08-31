@@ -11,6 +11,7 @@ use sourceview::prelude::*;
 use std::cell::RefCell;
 
 use super::note::{Note, NoteExt};
+use crate::{error::Error, Result};
 
 mod imp {
     use super::*;
@@ -47,15 +48,8 @@ mod imp {
             key_events
                 .connect_key_pressed(clone!(@weak obj => @default-return Inhibit(false), move |_, key, _, modifier| {
                     if modifier.contains(gdk::ModifierType::CONTROL_MASK) && key == gdk::keys::constants::S {
-                        let imp = imp::ContentView::from_instance(&obj);
-
-                        if let Some(note) = obj.note() {
-                            let buffer: sourceview::Buffer = imp.view.buffer().downcast().unwrap();
-                            let (start_iter, end_iter) = buffer.bounds();
-                            note.set_content(&buffer.text(&start_iter, &end_iter, true));
-                        }
+                        obj.save_active_note().unwrap();
                         log::info!("File saved");
-
                         Inhibit(true)
                     } else {
                         Inhibit(false)
@@ -136,5 +130,20 @@ impl ContentView {
 
     pub fn set_note(&self, note: Option<&Note>) {
         self.set_property("note", note).unwrap();
+    }
+
+    pub fn save_active_note(&self) -> Result<()> {
+        let imp = imp::ContentView::from_instance(self);
+
+        let note = self.note().ok_or_else(|| {
+            Error::Note("Cannot save active note, the view doesn't containt a note".to_string())
+        })?;
+
+        let buffer: sourceview::Buffer = imp.view.buffer().downcast().unwrap();
+        let (start_iter, end_iter) = buffer.bounds();
+
+        note.set_content(&buffer.text(&start_iter, &end_iter, true))?;
+
+        Ok(())
     }
 }

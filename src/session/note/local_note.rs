@@ -1,8 +1,9 @@
 use gtk::{glib, prelude::*, subclass::prelude::*};
 
-use super::{Note, NoteImpl};
-
 use std::{cell::RefCell, path::Path};
+
+use super::{Note, NoteImpl};
+use crate::Result;
 
 mod imp {
     use super::*;
@@ -64,19 +65,23 @@ mod imp {
     }
 
     impl NoteImpl for LocalNote {
-        fn replace_title(&self, parent: &Self::ParentType, title: &str) {
+        fn replace_title(&self, parent: &Self::ParentType, title: &str) -> Result<()> {
             let obj: Self::Type = parent.clone().downcast().unwrap();
+
+            Ok(())
         }
 
-        fn retrieve_title(&self, parent: &Self::ParentType) -> String {
+        fn retrieve_title(&self, parent: &Self::ParentType) -> Result<String> {
             let obj: Self::Type = parent.clone().downcast().unwrap();
             let path = obj.path();
 
             let path = Path::new(&path);
-            path.file_name().unwrap().to_string_lossy().to_string()
+            let note_file_name = path.file_name().unwrap().to_string_lossy().to_string();
+
+            Ok(note_file_name)
         }
 
-        fn replace_content(&self, parent: &Self::ParentType, content: &str) {
+        fn replace_content(&self, parent: &Self::ParentType, content: &str) -> Result<()> {
             let obj: Self::Type = parent.clone().downcast().unwrap();
             let path = obj.path();
 
@@ -86,25 +91,24 @@ mod imp {
                 .write(true)
                 .create(true)
                 .truncate(true)
-                .open(path)
-                .expect("File not found");
+                .open(path)?;
 
-            f.write_all(content.as_bytes())
-                .expect("Failed to write to file");
+            f.write_all(content.as_bytes())?;
+
+            Ok(())
         }
 
-        fn retrieve_content(&self, parent: &Self::ParentType) -> String {
+        fn retrieve_content(&self, parent: &Self::ParentType) -> Result<String> {
             let obj: Self::Type = parent.clone().downcast().unwrap();
             let path = obj.path();
 
             use std::io::Read;
-            let mut f = std::fs::File::open(path).expect("file not found");
+            let mut f = std::fs::File::open(path)?;
 
             let mut contents = String::new();
-            f.read_to_string(&mut contents)
-                .expect("something went wrong reading the file");
+            f.read_to_string(&mut contents)?;
 
-            contents
+            Ok(contents)
         }
     }
 }

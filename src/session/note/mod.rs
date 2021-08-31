@@ -11,6 +11,8 @@ use gtk::{
 
 use std::cell::RefCell;
 
+use crate::Result;
+
 mod imp {
     use super::*;
 
@@ -20,33 +22,33 @@ mod imp {
     pub struct NoteClass {
         pub parent_class: glib::gobject_ffi::GObjectClass,
 
-        pub replace_title: Option<unsafe fn(&NoteInstance, title: &str)>,
-        pub retrieve_title: Option<unsafe fn(&NoteInstance) -> String>,
+        pub replace_title: Option<unsafe fn(&NoteInstance, title: &str) -> Result<()>>,
+        pub retrieve_title: Option<unsafe fn(&NoteInstance) -> Result<String>>,
 
-        pub replace_content: Option<unsafe fn(&NoteInstance, content: &str)>,
-        pub retrieve_content: Option<unsafe fn(&NoteInstance) -> String>,
+        pub replace_content: Option<unsafe fn(&NoteInstance, content: &str) -> Result<()>>,
+        pub retrieve_content: Option<unsafe fn(&NoteInstance) -> Result<String>>,
     }
 
     unsafe impl ClassStruct for NoteClass {
         type Type = Note;
     }
 
-    pub(super) unsafe fn note_replace_title(this: &NoteInstance, title: &str) {
+    pub(super) unsafe fn note_replace_title(this: &NoteInstance, title: &str) -> Result<()> {
         let klass = &*(this.class() as *const _ as *const NoteClass);
-        (klass.replace_title.unwrap())(this, title);
+        (klass.replace_title.unwrap())(this, title)
     }
 
-    pub(super) unsafe fn note_retrieve_title(this: &NoteInstance) -> String {
+    pub(super) unsafe fn note_retrieve_title(this: &NoteInstance) -> Result<String> {
         let klass = &*(this.class() as *const _ as *const NoteClass);
         (klass.retrieve_title.unwrap())(this)
     }
 
-    pub(super) unsafe fn note_replace_content(this: &NoteInstance, content: &str) {
+    pub(super) unsafe fn note_replace_content(this: &NoteInstance, content: &str) -> Result<()> {
         let klass = &*(this.class() as *const _ as *const NoteClass);
-        (klass.replace_content.unwrap())(this, content);
+        (klass.replace_content.unwrap())(this, content)
     }
 
-    pub(super) unsafe fn note_retrieve_content(this: &NoteInstance) -> String {
+    pub(super) unsafe fn note_retrieve_content(this: &NoteInstance) -> Result<String> {
         let klass = &*(this.class() as *const _ as *const NoteClass);
         (klass.retrieve_content.unwrap())(this)
     }
@@ -104,11 +106,12 @@ mod imp {
             match pspec.name() {
                 "title" => {
                     let title = value.get().unwrap();
-                    obj.set_title(title);
+                    obj.set_title(title).expect("Failed to set note title");
                 }
                 "content" => {
                     let content = value.get().unwrap();
-                    obj.set_content(content);
+                    obj.set_content(content)
+                        .expect("Failed to set note content");
                 }
                 _ => unimplemented!(),
             }
@@ -135,74 +138,70 @@ impl Note {
 }
 
 pub trait NoteExt {
-    fn set_title(&self, title: &str);
+    fn set_title(&self, title: &str) -> Result<()>;
     fn title(&self) -> String;
 
-    fn set_content(&self, content: &str);
+    fn set_content(&self, content: &str) -> Result<()>;
     fn content(&self) -> String;
 }
 
 impl<O: IsA<Note>> NoteExt for O {
-    fn set_title(&self, title: &str) {
-        unsafe {
-            imp::note_replace_title(self.upcast_ref::<Note>(), title);
-        }
+    fn set_title(&self, title: &str) -> Result<()> {
+        unsafe { imp::note_replace_title(self.upcast_ref::<Note>(), title) }
     }
 
     fn title(&self) -> String {
-        unsafe { imp::note_retrieve_title(self.upcast_ref::<Note>()) }
+        unsafe { imp::note_retrieve_title(self.upcast_ref::<Note>()) }.unwrap_or_default()
     }
 
-    fn set_content(&self, content: &str) {
-        unsafe {
-            imp::note_replace_content(self.upcast_ref::<Note>(), content);
-        }
+    fn set_content(&self, content: &str) -> Result<()> {
+        unsafe { imp::note_replace_content(self.upcast_ref::<Note>(), content) }
     }
 
     fn content(&self) -> String {
-        unsafe { imp::note_retrieve_content(self.upcast_ref::<Note>()) }
+        unsafe { imp::note_retrieve_content(self.upcast_ref::<Note>()) }.unwrap_or_default()
     }
 }
 
 pub trait NoteImpl: ObjectImpl + 'static {
-    fn replace_title(&self, obj: &Note, title: &str) {
-        self.parent_replace_title(obj, title);
+    fn replace_title(&self, obj: &Note, title: &str) -> Result<()> {
+        self.parent_replace_title(obj, title)
     }
 
-    fn retrieve_title(&self, obj: &Note) -> String {
+    fn retrieve_title(&self, obj: &Note) -> Result<String> {
         self.parent_retrieve_title(obj)
     }
 
-    fn replace_content(&self, obj: &Note, content: &str) {
-        self.parent_replace_content(obj, content);
+    fn replace_content(&self, obj: &Note, content: &str) -> Result<()> {
+        self.parent_replace_content(obj, content)
     }
 
-    fn retrieve_content(&self, obj: &Note) -> String {
+    fn retrieve_content(&self, obj: &Note) -> Result<String> {
         self.parent_retrieve_content(obj)
     }
 }
 
 pub trait NoteImplExt: ObjectSubclass {
-    fn parent_replace_title(&self, obj: &Note, title: &str);
-    fn parent_retrieve_title(&self, obj: &Note) -> String;
-    fn parent_replace_content(&self, obj: &Note, content: &str);
-    fn parent_retrieve_content(&self, obj: &Note) -> String;
+    fn parent_replace_title(&self, obj: &Note, title: &str) -> Result<()>;
+    fn parent_retrieve_title(&self, obj: &Note) -> Result<String>;
+    fn parent_replace_content(&self, obj: &Note, content: &str) -> Result<()>;
+    fn parent_retrieve_content(&self, obj: &Note) -> Result<String>;
 }
 
 impl<T: NoteImpl> NoteImplExt for T {
-    fn parent_replace_title(&self, obj: &Note, title: &str) {
+    fn parent_replace_title(&self, obj: &Note, title: &str) -> Result<()> {
         unsafe {
             let data = Self::type_data();
             let parent_class = data.as_ref().parent_class() as *mut imp::NoteClass;
             if let Some(ref f) = (*parent_class).replace_title {
-                f(obj, title);
+                f(obj, title)
             } else {
                 unimplemented!()
             }
         }
     }
 
-    fn parent_retrieve_title(&self, obj: &Note) -> String {
+    fn parent_retrieve_title(&self, obj: &Note) -> Result<String> {
         unsafe {
             let data = Self::type_data();
             let parent_class = data.as_ref().parent_class() as *mut imp::NoteClass;
@@ -214,19 +213,19 @@ impl<T: NoteImpl> NoteImplExt for T {
         }
     }
 
-    fn parent_replace_content(&self, obj: &Note, content: &str) {
+    fn parent_replace_content(&self, obj: &Note, content: &str) -> Result<()> {
         unsafe {
             let data = Self::type_data();
             let parent_class = data.as_ref().parent_class() as *mut imp::NoteClass;
             if let Some(ref f) = (*parent_class).replace_content {
-                f(obj, content);
+                f(obj, content)
             } else {
                 unimplemented!()
             }
         }
     }
 
-    fn parent_retrieve_content(&self, obj: &Note) -> String {
+    fn parent_retrieve_content(&self, obj: &Note) -> Result<String> {
         unsafe {
             let data = Self::type_data();
             let parent_class = data.as_ref().parent_class() as *mut imp::NoteClass;
@@ -255,16 +254,16 @@ unsafe impl<T: NoteImpl> IsSubclassable<T> for Note {
     }
 }
 
-unsafe fn replace_title_trampoline<T>(this: &Note, title: &str)
+unsafe fn replace_title_trampoline<T>(this: &Note, title: &str) -> Result<()>
 where
     T: ObjectSubclass + NoteImpl,
 {
     let instance = &*(this as *const _ as *const T::Instance);
     let imp = instance.impl_();
-    imp.replace_title(this, title);
+    imp.replace_title(this, title)
 }
 
-unsafe fn retrieve_title_trampoline<T>(this: &Note) -> String
+unsafe fn retrieve_title_trampoline<T>(this: &Note) -> Result<String>
 where
     T: ObjectSubclass + NoteImpl,
 {
@@ -273,16 +272,16 @@ where
     imp.retrieve_title(this)
 }
 
-unsafe fn replace_content_trampoline<T>(this: &Note, content: &str)
+unsafe fn replace_content_trampoline<T>(this: &Note, content: &str) -> Result<()>
 where
     T: ObjectSubclass + NoteImpl,
 {
     let instance = &*(this as *const _ as *const T::Instance);
     let imp = instance.impl_();
-    imp.replace_content(this, content);
+    imp.replace_content(this, content)
 }
 
-unsafe fn retrieve_content_trampoline<T>(this: &Note) -> String
+unsafe fn retrieve_content_trampoline<T>(this: &Note) -> Result<String>
 where
     T: ObjectSubclass + NoteImpl,
 {
