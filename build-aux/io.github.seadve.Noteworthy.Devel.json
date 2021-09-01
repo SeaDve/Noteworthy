@@ -9,6 +9,7 @@
         "--socket=fallback-x11",
         "--socket=wayland",
         "--device=dri",
+        "--filesystem=home",
         "--talk-name=org.a11y.Bus",
         "--env=RUST_LOG=noteworthy=debug",
         "--env=RUST_BACKTRACE=1",

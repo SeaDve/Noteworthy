@@ -5,11 +5,15 @@ use gtk::{
     subclass::prelude::*,
     CompositeTemplate,
 };
+use once_cell::sync::OnceCell;
 use sourceview::prelude::*;
 
 use std::cell::{Cell, RefCell};
 
-use super::note::{Note, NoteExt};
+use super::{
+    note::{Note, NoteExt},
+    Session,
+};
 use crate::{error::Error, Result};
 
 mod imp {
@@ -23,6 +27,7 @@ mod imp {
 
         pub compact: Cell<bool>,
         pub note: RefCell<Option<Note>>,
+        pub session: OnceCell<Session>,
     }
 
     #[glib::object_subclass]
@@ -48,7 +53,7 @@ mod imp {
             key_events
                 .connect_key_pressed(clone!(@weak obj => @default-return Inhibit(false), move |_, key, _, modifier| {
                     if modifier.contains(gdk::ModifierType::CONTROL_MASK) && key == gdk::keys::constants::s {
-                        obj.save_active_note().unwrap();
+                        obj.session().save();
                         log::info!("File saved");
                         Inhibit(true)
                     } else {
@@ -76,6 +81,13 @@ mod imp {
                         false,
                         glib::ParamFlags::READWRITE,
                     ),
+                    glib::ParamSpec::new_object(
+                        "session",
+                        "Session",
+                        "Current session",
+                        Note::static_type(),
+                        glib::ParamFlags::READWRITE,
+                    ),
                 ]
             });
 
@@ -84,7 +96,7 @@ mod imp {
 
         fn set_property(
             &self,
-            _obj: &Self::Type,
+            obj: &Self::Type,
             _id: usize,
             value: &glib::Value,
             pspec: &glib::ParamSpec,
@@ -111,14 +123,19 @@ mod imp {
                     let compact = value.get().unwrap();
                     self.compact.set(compact);
                 }
+                "session" => {
+                    let session = value.get().unwrap();
+                    obj.set_session(session);
+                }
                 _ => unimplemented!(),
             }
         }
 
-        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+        fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
                 "note" => self.note.borrow().to_value(),
                 "compact" => self.compact.get().to_value(),
+                "session" => obj.session().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -136,6 +153,16 @@ glib::wrapper! {
 impl ContentView {
     pub fn new() -> Self {
         glib::Object::new(&[]).expect("Failed to create ContentView.")
+    }
+
+    pub fn session(&self) -> Session {
+        let imp = imp::ContentView::from_instance(self);
+        imp.session.get().unwrap().clone()
+    }
+
+    pub fn set_session(&self, session: Session) {
+        let imp = imp::ContentView::from_instance(self);
+        imp.session.set(session).unwrap();
     }
 
     pub fn note(&self) -> Option<Note> {

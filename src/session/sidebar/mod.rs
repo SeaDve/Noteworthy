@@ -1,10 +1,11 @@
 mod note_row;
 
 use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
+use once_cell::sync::OnceCell;
 
 use std::cell::{Cell, RefCell};
 
-use super::Note;
+use super::{Note, NoteExt, Session};
 use note_row::NoteRow;
 
 mod imp {
@@ -16,6 +17,7 @@ mod imp {
         #[template_child]
         pub listview: TemplateChild<gtk::ListView>,
 
+        pub session: OnceCell<Session>,
         pub compact: Cell<bool>,
         pub selected_note: RefCell<Option<Note>>,
     }
@@ -28,6 +30,12 @@ mod imp {
 
         fn class_init(klass: &mut Self::Class) {
             Self::bind_template(klass);
+
+            klass.install_action("sidebar.create-note", None, move |obj, _, _| {
+                let imp = obj.private();
+
+                let new_note = imp.session.get().unwrap().create_note("THis is the title");
+            });
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
@@ -60,6 +68,13 @@ mod imp {
                         Note::static_type(),
                         glib::ParamFlags::READWRITE,
                     ),
+                    glib::ParamSpec::new_object(
+                        "session",
+                        "Session",
+                        "Current session",
+                        Note::static_type(),
+                        glib::ParamFlags::READWRITE,
+                    ),
                 ]
             });
 
@@ -68,7 +83,7 @@ mod imp {
 
         fn set_property(
             &self,
-            _obj: &Self::Type,
+            obj: &Self::Type,
             _id: usize,
             value: &glib::Value,
             pspec: &glib::ParamSpec,
@@ -82,14 +97,19 @@ mod imp {
                     let selected_note = value.get().unwrap();
                     self.selected_note.replace(selected_note);
                 }
+                "session" => {
+                    let session = value.get().unwrap();
+                    obj.set_session(session);
+                }
                 _ => unimplemented!(),
             }
         }
 
-        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+        fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
                 "compact" => self.compact.get().to_value(),
-                "selected_note" => self.selected_note.borrow().to_value(),
+                "selected-note" => obj.selected_note().to_value(),
+                "session" => self.session.get().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -117,6 +137,16 @@ impl Sidebar {
     pub fn model(&self) -> Option<impl IsA<gtk::SelectionModel>> {
         let imp = self.private();
         imp.listview.model()
+    }
+
+    pub fn set_session(&self, session: Session) {
+        let imp = self.private();
+        imp.session.set(session).unwrap();
+    }
+
+    pub fn selected_note(&self) -> Note {
+        let imp = self.private();
+        imp.selected_note.borrow().clone().unwrap()
     }
 
     pub fn connect_activate(

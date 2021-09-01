@@ -9,12 +9,13 @@ use gtk::{
     prelude::*,
     subclass::prelude::*,
 };
+use once_cell::sync::OnceCell;
 
-use std::{cell::RefCell, path::Path};
+use std::cell::RefCell;
 
 use self::{
     content_view::ContentView,
-    manager::{LocalNotesManager, NotesManagerExt},
+    manager::LocalNotesManager,
     note::{Note, NoteExt},
     sidebar::Sidebar,
 };
@@ -33,6 +34,7 @@ mod imp {
         #[template_child]
         pub content_view: TemplateChild<ContentView>,
 
+        pub notes_manager: OnceCell<LocalNotesManager>,
         pub selected_note: RefCell<Option<Note>>,
     }
 
@@ -58,11 +60,13 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
-            let notes_manager = LocalNotesManager::new(Path::new("/home/dave/Notes"));
-            let notes_list = notes_manager.retrive_notes().unwrap();
+            self.sidebar.set_session(obj.clone());
+            self.content_view.set_session(obj.clone());
+
+            let note_list = obj.notes_manager().note_list();
 
             self.sidebar
-                .set_model(Some(&gtk::SingleSelection::new(Some(&notes_list))));
+                .set_model(Some(&gtk::SingleSelection::new(Some(note_list))));
 
             self.sidebar
                 .connect_activate(clone!(@weak obj => move |sidebar, pos| {
@@ -83,13 +87,22 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_object(
-                    "selected-note",
-                    "Selected Note",
-                    "The selected note in this sidebar",
-                    Note::static_type(),
-                    glib::ParamFlags::READWRITE,
-                )]
+                vec![
+                    glib::ParamSpec::new_object(
+                        "selected-note",
+                        "Selected Note",
+                        "The selected note",
+                        Note::static_type(),
+                        glib::ParamFlags::READWRITE,
+                    ),
+                    glib::ParamSpec::new_object(
+                        "notes-manager",
+                        "Notes Manager",
+                        "The active notes manager",
+                        LocalNotesManager::static_type(),
+                        glib::ParamFlags::READWRITE,
+                    ),
+                ]
             });
 
             PROPERTIES.as_ref()
@@ -107,13 +120,18 @@ mod imp {
                     let selected_note = value.get().unwrap();
                     self.selected_note.replace(selected_note);
                 }
+                "notes-manager" => {
+                    let notes_manager = value.get().unwrap();
+                    self.notes_manager.set(notes_manager).unwrap();
+                }
                 _ => unimplemented!(),
             }
         }
 
-        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+        fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
                 "selected-note" => self.selected_note.borrow().to_value(),
+                "notes-manager" => obj.notes_manager().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -141,9 +159,24 @@ impl Session {
         self.set_property("selected-note", selected_note).unwrap();
     }
 
-    pub fn save_session(&self) -> Result<()> {
+    pub fn notes_manager(&self) -> &LocalNotesManager {
+        let imp = imp::Session::from_instance(self);
+        imp.notes_manager
+            .get_or_init(|| LocalNotesManager::new("/home/dave/Notes"))
+    }
+
+    pub fn save(&self) -> Result<()> {
         let imp = imp::Session::from_instance(self);
         imp.content_view.save_active_note()?;
+
+        imp.sidebar.set_model(Some(&gtk::SingleSelection::new(Some(
+            self.notes_manager().note_list(),
+        ))));
+
         Ok(())
+    }
+
+    pub fn create_note(&self, title: &str) -> Result<Note> {
+        self.notes_manager().create_note(title)
     }
 }

@@ -1,8 +1,8 @@
 mod local_note;
-mod notes_list;
+mod note_list;
 
 pub use local_note::LocalNote;
-pub use notes_list::NotesList;
+pub use note_list::NoteList;
 
 use gtk::{
     glib::{self, prelude::*},

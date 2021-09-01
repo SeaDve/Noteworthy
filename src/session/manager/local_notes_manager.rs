@@ -1,15 +1,12 @@
 use gtk::{glib, prelude::*, subclass::prelude::*};
+use once_cell::sync::OnceCell;
 
-use std::{
-    cell::RefCell,
-    fs,
-    path::{Path, PathBuf},
-};
+use std::{fs, path::PathBuf};
 
-use super::NotesManagerExt;
 use crate::{
     error::Error,
-    session::note::{LocalNote, Note, NotesList},
+    session::note::{LocalNote, Note, NoteList},
+    Result,
 };
 
 mod imp {
@@ -17,7 +14,8 @@ mod imp {
 
     #[derive(Debug, Default)]
     pub struct LocalNotesManager {
-        directory: RefCell<Option<String>>,
+        pub directory: OnceCell<String>,
+        pub note_list: OnceCell<NoteList>,
     }
 
     #[glib::object_subclass]
@@ -35,13 +33,22 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_string(
-                    "directory",
-                    "Directory",
-                    "Where the notes are stored",
-                    None,
-                    glib::ParamFlags::READWRITE,
-                )]
+                vec![
+                    glib::ParamSpec::new_string(
+                        "directory",
+                        "Directory",
+                        "Where the notes are stored",
+                        None,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
+                    ),
+                    glib::ParamSpec::new_object(
+                        "note-list",
+                        "Note List",
+                        "List of notes",
+                        NoteList::static_type(),
+                        glib::ParamFlags::READABLE,
+                    ),
+                ]
             });
 
             PROPERTIES.as_ref()
@@ -49,7 +56,7 @@ mod imp {
 
         fn set_property(
             &self,
-            _obj: &Self::Type,
+            obj: &Self::Type,
             _id: usize,
             value: &glib::Value,
             pspec: &glib::ParamSpec,
@@ -57,15 +64,16 @@ mod imp {
             match pspec.name() {
                 "directory" => {
                     let directory = value.get().unwrap();
-                    self.directory.replace(Some(directory));
+                    obj.set_directory(directory);
                 }
                 _ => unimplemented!(),
             }
         }
 
-        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+        fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "directory" => self.directory.borrow().to_value(),
+                "directory" => obj.directory().to_value(),
+                "note-list" => obj.note_list().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -77,38 +85,79 @@ glib::wrapper! {
 }
 
 impl LocalNotesManager {
-    pub fn new(directory: &Path) -> Self {
-        glib::Object::new::<Self>(&[("directory", &directory.display().to_string())])
+    pub fn new(directory: &str) -> Self {
+        glib::Object::new::<Self>(&[("directory", &directory.to_string())])
             .expect("Failed to create LocalNotesManager.")
     }
 
-    pub fn directory(&self) -> PathBuf {
-        let directory: String = self.property("directory").unwrap().get().unwrap();
-        PathBuf::from(directory)
+    fn set_directory(&self, directory: &str) {
+        let imp = imp::LocalNotesManager::from_instance(self);
+        imp.directory.set(directory.to_string()).unwrap();
     }
-}
 
-impl NotesManagerExt for LocalNotesManager {
-    fn retrive_notes(&self) -> Result<NotesList, Error> {
+    pub fn directory(&self) -> String {
+        let imp = imp::LocalNotesManager::from_instance(self);
+        imp.directory.get().unwrap().clone()
+    }
+
+    pub fn note_list(&self) -> &NoteList {
+        let imp = imp::LocalNotesManager::from_instance(self);
+        imp.note_list.get_or_init(|| self.retrive_notes().unwrap())
+    }
+
+    fn retrive_notes(&self) -> Result<NoteList> {
         let directory = self.directory();
         let paths = fs::read_dir(directory)?;
 
-        let notes_list = NotesList::new();
+        let note_list = NoteList::new();
 
         for path in paths.flatten() {
             let path = path.path();
             let note = LocalNote::new(path.as_path());
-            notes_list.append(note.upcast());
+            note_list.append(note.upcast());
         }
 
-        Ok(notes_list)
+        Ok(note_list)
     }
 
-    fn create_note(&self, note: Note) {
-        unimplemented!()
+    pub fn create_note(&self, title: &str) -> Result<Note> {
+        let mut file_path = PathBuf::from(self.directory());
+        file_path.push(title);
+        file_path.set_extension("md");
+
+        let mut count = 1;
+        let new_note = loop {
+            if !file_path.exists() {
+                break LocalNote::new(&file_path);
+            }
+
+            file_path.set_file_name(format!("{} ({})", title, count));
+            log::info!("File exists");
+            count += 1;
+        };
+
+        let new_note_upcast: Note = new_note.upcast();
+        self.note_list().append(new_note_upcast.clone());
+
+        Ok(new_note_upcast)
     }
 
-    fn delete_note(&self, note: Note) {
-        unimplemented!()
+    pub fn delete_note(&self, this_note: Note) -> Result<()> {
+        let note_list = self.note_list();
+
+        let this_note_index = note_list
+            .find_with_equal_func(this_note.clone(), |other_note| {
+                let this_note = this_note.clone().downcast::<LocalNote>().unwrap();
+                let other_note = other_note.clone().downcast::<LocalNote>().unwrap();
+
+                this_note.path() == other_note.path()
+            })
+            .ok_or_else(|| Error::Note("Cant delete a note that doesn't exist".to_string()))?;
+
+        note_list.remove(this_note_index);
+
+        fs::remove_file(this_note.downcast::<LocalNote>().unwrap().path())?;
+
+        Ok(())
     }
 }
