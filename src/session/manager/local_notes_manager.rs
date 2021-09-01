@@ -4,7 +4,6 @@ use once_cell::sync::OnceCell;
 use std::{fs, path::PathBuf};
 
 use crate::{
-    error::Error,
     session::note::{LocalNote, Note, NoteList},
     Result,
 };
@@ -142,21 +141,18 @@ impl LocalNotesManager {
         Ok(new_note_upcast)
     }
 
-    pub fn delete_note(&self, this_note: Note) -> Result<()> {
+    pub fn delete_note(&self, index: usize) -> Result<()> {
         let note_list = self.note_list();
+        note_list.remove(index);
 
-        let this_note_index = note_list
-            .find_with_equal_func(this_note.clone(), |other_note| {
-                let this_note = this_note.clone().downcast::<LocalNote>().unwrap();
-                let other_note = other_note.clone().downcast::<LocalNote>().unwrap();
+        let note = note_list
+            .item(index as u32)
+            .unwrap()
+            .downcast::<LocalNote>()
+            .unwrap();
+        fs::remove_file(note.path())?;
 
-                this_note.path() == other_note.path()
-            })
-            .ok_or_else(|| Error::Note("Cant delete a note that doesn't exist".to_string()))?;
-
-        note_list.remove(this_note_index);
-
-        fs::remove_file(this_note.downcast::<LocalNote>().unwrap().path())?;
+        log::info!("Deleted note {}", note.path());
 
         Ok(())
     }

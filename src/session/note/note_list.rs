@@ -69,10 +69,13 @@ impl NoteList {
 
     pub fn remove(&self, index: usize) {
         let imp = &imp::NoteList::from_instance(self);
-        let mut list = imp.list.borrow_mut();
-        list.remove(index);
 
-        self.items_changed(index as u32, 1, 0);
+        {
+            let mut list = imp.list.borrow_mut();
+            list.remove(index);
+        }
+
+        self.items_changed(self.n_items(), 1, 0);
     }
 
     pub fn find_with_equal_func(

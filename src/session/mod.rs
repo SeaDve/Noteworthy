@@ -169,6 +169,7 @@ impl Session {
         let imp = imp::Session::from_instance(self);
         imp.content_view.save_active_note()?;
 
+        // FIXME shouldnt set the model everytime something changes. A change on the note should automatically reflect
         imp.sidebar.set_model(Some(&gtk::SingleSelection::new(Some(
             self.notes_manager().note_list(),
         ))));
