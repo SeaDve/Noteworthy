@@ -18,6 +18,7 @@ use self::{
     note::{Note, NoteExt},
     sidebar::Sidebar,
 };
+use crate::Result;
 
 mod imp {
     use super::*;
@@ -132,7 +133,17 @@ impl Session {
         glib::Object::new(&[]).expect("Failed to create Session.")
     }
 
+    pub fn selected_note(&self) -> Option<Note> {
+        self.property("selected-note").unwrap().get().unwrap()
+    }
+
     pub fn set_selected_note(&self, selected_note: Option<Note>) {
         self.set_property("selected-note", selected_note).unwrap();
+    }
+
+    pub fn save_session(&self) -> Result<()> {
+        let imp = imp::Session::from_instance(self);
+        imp.content_view.save_active_note()?;
+        Ok(())
     }
 }
