@@ -123,20 +123,12 @@ impl LocalNotesManager {
 
     pub fn create_note(&self, title: &str) -> Result<Note> {
         let mut file_path = PathBuf::from(self.directory());
-        file_path.push(title);
+
+        let file_name = format!("{} {}", title, chrono::Local::now().format("%H:%M:%S"));
+        file_path.push(file_name);
         file_path.set_extension("md");
 
-        let mut count = 1;
-        let new_note = loop {
-            if !file_path.exists() {
-                break LocalNote::new(&file_path);
-            }
-
-            file_path.set_file_name(format!("{} ({})", title, count));
-            log::info!("File exists");
-            count += 1;
-        };
-
+        let new_note = LocalNote::new(&file_path);
         let new_note_upcast: Note = new_note.upcast();
         self.note_list().append(new_note_upcast.clone());
 
