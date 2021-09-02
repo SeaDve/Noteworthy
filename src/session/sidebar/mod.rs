@@ -134,7 +134,7 @@ impl Sidebar {
         imp.listview.set_model(model);
     }
 
-    pub fn model(&self) -> Option<impl IsA<gtk::SelectionModel>> {
+    pub fn model(&self) -> Option<gtk::SelectionModel> {
         let imp = self.private();
         imp.listview.model()
     }
