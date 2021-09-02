@@ -54,7 +54,7 @@ mod imp {
                 .connect_key_pressed(clone!(@weak obj => @default-return Inhibit(false), move |_, key, _, modifier| {
                     if modifier.contains(gdk::ModifierType::CONTROL_MASK) && key == gdk::keys::constants::s {
                         // FIXME Shouldn't call this from here
-                        obj.session().save();
+                        obj.session().save().unwrap();
                         log::info!("File saved");
                         Inhibit(true)
                     } else {

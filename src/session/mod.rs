@@ -87,22 +87,13 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![
-                    glib::ParamSpec::new_object(
-                        "selected-note",
-                        "Selected Note",
-                        "The selected note",
-                        Note::static_type(),
-                        glib::ParamFlags::READWRITE,
-                    ),
-                    glib::ParamSpec::new_object(
-                        "notes-manager",
-                        "Notes Manager",
-                        "The active notes manager",
-                        LocalNotesManager::static_type(),
-                        glib::ParamFlags::READWRITE,
-                    ),
-                ]
+                vec![glib::ParamSpec::new_object(
+                    "selected-note",
+                    "Selected Note",
+                    "The selected note",
+                    Note::static_type(),
+                    glib::ParamFlags::READWRITE,
+                )]
             });
 
             PROPERTIES.as_ref()
@@ -120,18 +111,13 @@ mod imp {
                     let selected_note = value.get().unwrap();
                     self.selected_note.replace(selected_note);
                 }
-                "notes-manager" => {
-                    let notes_manager = value.get().unwrap();
-                    self.notes_manager.set(notes_manager).unwrap();
-                }
                 _ => unimplemented!(),
             }
         }
 
-        fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
                 "selected-note" => self.selected_note.borrow().to_value(),
-                "notes-manager" => obj.notes_manager().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -168,12 +154,6 @@ impl Session {
     pub fn save(&self) -> Result<()> {
         let imp = imp::Session::from_instance(self);
         imp.content_view.save_active_note()?;
-
-        // FIXME shouldnt set the model everytime something changes. A change on the note should automatically reflect
-        imp.sidebar.set_model(Some(&gtk::SingleSelection::new(Some(
-            self.notes_manager().note_list(),
-        ))));
-
         Ok(())
     }
 

@@ -5,7 +5,7 @@ use once_cell::sync::OnceCell;
 
 use std::cell::{Cell, RefCell};
 
-use super::{Note, NoteExt, Session};
+use super::{Note, Session};
 use note_row::NoteRow;
 
 mod imp {

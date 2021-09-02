@@ -3,7 +3,7 @@ use gtk::{gio, glib, prelude::*};
 
 use std::cell::RefCell;
 
-use super::{Note, NoteExt};
+use super::Note;
 
 mod imp {
     use super::*;
@@ -78,13 +78,21 @@ impl NoteList {
         self.items_changed(self.n_items(), 1, 0);
     }
 
-    pub fn find_with_equal_func(
-        &self,
-        note: Note,
-        equal_func: impl FnMut(&Note) -> bool,
-    ) -> Option<usize> {
-        let imp = &imp::NoteList::from_instance(self);
-        let list = imp.list.borrow();
-        list.iter().position(equal_func)
-    }
+    // pub fn find(&self, note: Note) -> Option<usize> {
+    //     let imp = imp::NoteList::from_instance(self);
+    //     let list = imp.list.borrow();
+    //     list.iter().position(|other_note| {
+    //         note == other_note
+    //     })
+    // }
+
+    // pub fn find_with_equal_func(
+    //     &self,
+    //     note: Note,
+    //     equal_func: impl FnMut(&Note) -> bool,
+    // ) -> Option<usize> {
+    //     let imp = &imp::NoteList::from_instance(self);
+    //     let list = imp.list.borrow();
+    //     list.iter().position(equal_func)
+    // }
 }
