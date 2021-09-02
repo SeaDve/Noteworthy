@@ -64,6 +64,7 @@ mod imp {
         }
     }
 
+    // FIXME Bad hack, make note as an interface instead
     impl NoteImpl for LocalNote {
         fn replace_title(&self, parent: &Self::ParentType, title: &str) -> Result<()> {
             let obj: Self::Type = parent.clone().downcast().unwrap();

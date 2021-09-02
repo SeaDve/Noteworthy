@@ -121,6 +121,7 @@ impl LocalNotesManager {
         Ok(note_list)
     }
 
+    // FIXME move some creation and deletion to the individual noes class
     pub fn create_note(&self, title: &str) -> Result<Note> {
         let mut file_path = PathBuf::from(self.directory());
 

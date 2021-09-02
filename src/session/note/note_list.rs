@@ -75,7 +75,7 @@ impl NoteList {
             list.remove(index);
         }
 
-        self.items_changed(self.n_items(), 1, 0);
+        self.items_changed(index as u32, 1, 0);
     }
 
     // pub fn find(&self, note: Note) -> Option<usize> {

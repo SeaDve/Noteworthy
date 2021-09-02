@@ -126,6 +126,7 @@ mod imp {
                 }
                 "session" => {
                     let session = value.get().unwrap();
+                    // FIXME this doesnt notify, check other too
                     obj.set_session(session);
                 }
                 _ => unimplemented!(),
