@@ -123,14 +123,14 @@ mod imp {
                         "Title",
                         "Title of the notes",
                         None,
-                        glib::ParamFlags::READWRITE,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
                     glib::ParamSpec::new_string(
                         "content",
                         "Content",
                         "Content of the note",
                         None,
-                        glib::ParamFlags::READWRITE,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
                 ]
             });

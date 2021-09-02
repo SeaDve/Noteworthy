@@ -185,6 +185,8 @@ impl ContentView {
         let (start_iter, end_iter) = buffer.bounds();
 
         note.set_content(&buffer.text(&start_iter, &end_iter, true))?;
+        // FIXME handle this on note class
+        note.notify("content");
 
         Ok(())
     }
