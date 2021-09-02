@@ -99,9 +99,11 @@ impl LocalNotesManager {
         imp.directory.get().unwrap().clone()
     }
 
-    pub fn note_list(&self) -> &NoteList {
+    pub fn note_list(&self) -> NoteList {
         let imp = imp::LocalNotesManager::from_instance(self);
-        imp.note_list.get_or_init(|| self.retrive_notes().unwrap())
+        imp.note_list
+            .get_or_init(|| self.retrive_notes().unwrap())
+            .clone()
     }
 
     fn retrive_notes(&self) -> Result<NoteList> {

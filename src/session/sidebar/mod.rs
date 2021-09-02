@@ -1,11 +1,14 @@
 mod note_row;
 
-use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
+use gtk::{gio, glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 use once_cell::sync::OnceCell;
 
 use std::cell::{Cell, RefCell};
 
-use super::{Note, Session};
+use super::{
+    note::{Note, NoteExt, NoteList},
+    Session,
+};
 use note_row::NoteRow;
 
 mod imp {
@@ -129,14 +132,31 @@ impl Sidebar {
         glib::Object::new(&[]).expect("Failed to create Sidebar.")
     }
 
-    pub fn set_model(&self, model: Option<&impl IsA<gtk::SelectionModel>>) {
+    pub fn set_note_list(&self, note_list: Option<NoteList>) {
         let imp = self.private();
-        imp.listview.set_model(model);
-    }
 
-    pub fn model(&self) -> Option<gtk::SelectionModel> {
-        let imp = self.private();
-        imp.listview.model()
+        let note_expression = gtk::ClosureExpression::new(
+            |value| {
+                value[0]
+                    .get::<gtk::TreeListRow>()
+                    .unwrap()
+                    .item()
+                    .and_then(|o| o.downcast::<Note>().ok())
+                    .map_or(String::new(), |o| o.title())
+            },
+            &[],
+        );
+
+        let filter = gtk::StringFilterBuilder::new()
+            .match_mode(gtk::StringFilterMatchMode::Substring)
+            .expression(&note_expression)
+            .ignore_case(true)
+            .build();
+
+        let filter_model = gtk::FilterListModel::new(Some(&note_list.unwrap()), Some(&filter));
+
+        imp.listview
+            .set_model(Some(&gtk::SingleSelection::new(Some(&filter_model))));
     }
 
     pub fn set_session(&self, session: Session) {

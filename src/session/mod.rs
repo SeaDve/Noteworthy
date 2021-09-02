@@ -65,8 +65,7 @@ mod imp {
 
             let note_list = obj.notes_manager().note_list();
 
-            self.sidebar
-                .set_model(Some(&gtk::SingleSelection::new(Some(note_list))));
+            self.sidebar.set_note_list(Some(note_list));
 
             self.sidebar
                 .connect_activate(clone!(@weak obj => move |sidebar, pos| {
