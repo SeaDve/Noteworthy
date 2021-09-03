@@ -11,7 +11,7 @@ use gtk::{
 };
 use once_cell::sync::OnceCell;
 
-use std::cell::RefCell;
+use std::{cell::RefCell, path::Path};
 
 use self::{
     content_view::ContentView,
@@ -147,7 +147,7 @@ impl Session {
     pub fn notes_manager(&self) -> &LocalNotesManager {
         let imp = imp::Session::from_instance(self);
         imp.notes_manager
-            .get_or_init(|| LocalNotesManager::new("/home/dave/Notes"))
+            .get_or_init(|| LocalNotesManager::new(Path::new("/home/dave/Notes")))
     }
 
     pub fn save(&self) -> Result<()> {

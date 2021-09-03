@@ -1,7 +1,11 @@
 use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::sync::OnceCell;
 
-use std::{fs, path::PathBuf};
+use std::{
+    cell::RefCell,
+    fs,
+    path::{Path, PathBuf},
+};
 
 use crate::{
     session::note::{LocalNote, Note, NoteList},
@@ -13,7 +17,7 @@ mod imp {
 
     #[derive(Debug, Default)]
     pub struct LocalNotesManager {
-        pub directory: OnceCell<String>,
+        pub path: RefCell<Option<gio::File>>,
         pub note_list: OnceCell<NoteList>,
     }
 
@@ -33,13 +37,12 @@ mod imp {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
-                    // FIXME replace with gio file
-                    glib::ParamSpec::new_string(
-                        "directory",
-                        "Directory",
-                        "Where the notes are stored",
-                        None,
-                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
+                    glib::ParamSpec::new_object(
+                        "path",
+                        "Path",
+                        "Path where the notes are stored",
+                        gio::File::static_type(),
+                        glib::ParamFlags::READWRITE,
                     ),
                     glib::ParamSpec::new_object(
                         "note-list",
@@ -62,9 +65,9 @@ mod imp {
             pspec: &glib::ParamSpec,
         ) {
             match pspec.name() {
-                "directory" => {
-                    let directory = value.get().unwrap();
-                    obj.set_directory(directory);
+                "path" => {
+                    let path = value.get().unwrap();
+                    self.path.replace(path);
                 }
                 _ => unimplemented!(),
             }
@@ -72,7 +75,7 @@ mod imp {
 
         fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "directory" => obj.directory().to_value(),
+                "path" => self.path.borrow().to_value(),
                 "note-list" => obj.note_list().to_value(),
                 _ => unimplemented!(),
             }
@@ -85,19 +88,25 @@ glib::wrapper! {
 }
 
 impl LocalNotesManager {
-    pub fn new(directory: &str) -> Self {
-        glib::Object::new::<Self>(&[("directory", &directory.to_string())])
-            .expect("Failed to create LocalNotesManager.")
+    pub fn new(path: &Path) -> Self {
+        let file = gio::File::for_path(path);
+
+        glib::Object::new::<Self>(&[("path", &file)]).expect("Failed to create LocalNotesManager.")
     }
 
-    fn set_directory(&self, directory: &str) {
-        let imp = imp::LocalNotesManager::from_instance(self);
-        imp.directory.set(directory.to_string()).unwrap();
+    pub fn set_path(&self, path: &Path) {
+        let file = gio::File::for_path(path);
+        self.set_property("path", Some(file)).unwrap();
     }
 
-    pub fn directory(&self) -> String {
-        let imp = imp::LocalNotesManager::from_instance(self);
-        imp.directory.get().unwrap().clone()
+    pub fn path(&self) -> PathBuf {
+        self.property("path")
+            .unwrap()
+            .get::<Option<gio::File>>()
+            .unwrap()
+            .unwrap()
+            .path()
+            .unwrap()
     }
 
     pub fn note_list(&self) -> NoteList {
@@ -108,9 +117,7 @@ impl LocalNotesManager {
     }
 
     fn retrive_notes(&self) -> Result<NoteList> {
-        let directory = self.directory();
-        let paths = fs::read_dir(directory)?;
-
+        let paths = fs::read_dir(self.path())?;
         let note_list = NoteList::new();
 
         for path in paths.flatten() {
@@ -124,7 +131,7 @@ impl LocalNotesManager {
     }
 
     pub fn create_note(&self, title: &str) -> Result<Note> {
-        let mut file_path = PathBuf::from(self.directory());
+        let mut file_path = self.path();
         let file_name = format!("{} {}", title, chrono::Local::now().format("%H:%M:%S"));
         file_path.push(file_name);
         file_path.set_extension("md");
