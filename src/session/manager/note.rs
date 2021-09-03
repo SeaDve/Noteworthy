@@ -80,6 +80,15 @@ mod imp {
                     self.file.set(file).unwrap();
                 }
                 "title" => {
+                    let title = value.get().unwrap();
+
+                    let mut metadata = self.metadata.take().unwrap();
+                    metadata.title = title;
+
+                    self.metadata.replace(Some(metadata));
+
+                    // serde_yaml::to_vec(&metadata);
+
                     // let title = value.get().unwrap();
 
                     // let file = obj.file();
@@ -87,7 +96,8 @@ mod imp {
                     // self.title.replace(title);
                 }
                 "content" => {
-                    // let content: String = value.get().unwrap();
+                    let content = value.get().unwrap();
+                    self.content.replace(content);
 
                     // let file = obj.file();
 
@@ -101,7 +111,6 @@ mod imp {
                     // )
                     // .expect("Failed to load contents from file");
 
-                    // self.content.replace(content);
                     // log::info!("Replaced contents");
                 }
                 _ => unimplemented!(),
