@@ -6,7 +6,7 @@ use once_cell::sync::OnceCell;
 use std::cell::{Cell, RefCell};
 
 use super::{
-    note::{Note, NoteExt, NoteList},
+    manager::{Note, NoteList},
     Session,
 };
 use note_row::NoteRow;

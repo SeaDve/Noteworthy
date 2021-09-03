@@ -10,10 +10,7 @@ use sourceview::prelude::*;
 
 use std::cell::{Cell, RefCell};
 
-use super::{
-    note::{Note, NoteExt},
-    Session,
-};
+use super::{manager::Note, Session};
 use crate::{error::Error, Result};
 
 mod imp {
@@ -185,7 +182,7 @@ impl ContentView {
         let buffer: sourceview::Buffer = imp.view.buffer().downcast().unwrap();
         let (start_iter, end_iter) = buffer.bounds();
 
-        note.set_content(&buffer.text(&start_iter, &end_iter, true))?;
+        note.set_content(&buffer.text(&start_iter, &end_iter, true));
         // FIXME handle this on note class
         note.notify("content");
 

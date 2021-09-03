@@ -1,6 +1,5 @@
 mod content_view;
 mod manager;
-mod note;
 mod sidebar;
 
 use adw::subclass::prelude::*;
@@ -15,8 +14,7 @@ use std::{cell::RefCell, path::Path};
 
 use self::{
     content_view::ContentView,
-    manager::LocalNotesManager,
-    note::{Note, NoteExt},
+    manager::{Note, NoteManager},
     sidebar::Sidebar,
 };
 use crate::Result;
@@ -34,7 +32,7 @@ mod imp {
         #[template_child]
         pub content_view: TemplateChild<ContentView>,
 
-        pub notes_manager: OnceCell<LocalNotesManager>,
+        pub notes_manager: OnceCell<NoteManager>,
         pub selected_note: RefCell<Option<Note>>,
     }
 
@@ -144,10 +142,10 @@ impl Session {
         self.set_property("selected-note", selected_note).unwrap();
     }
 
-    pub fn notes_manager(&self) -> &LocalNotesManager {
+    pub fn notes_manager(&self) -> &NoteManager {
         let imp = imp::Session::from_instance(self);
         imp.notes_manager
-            .get_or_init(|| LocalNotesManager::new(Path::new("/home/dave/Notes")))
+            .get_or_init(|| NoteManager::new(Path::new("/home/dave/Notes")))
     }
 
     pub fn save(&self) -> Result<()> {
