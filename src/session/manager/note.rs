@@ -10,6 +10,7 @@ use crate::Result;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Metadata {
     pub title: String,
+    pub tags: Vec<String>,
 }
 
 mod imp {
@@ -68,13 +69,12 @@ mod imp {
 
         fn set_property(
             &self,
-            _obj: &Self::Type,
+            obj: &Self::Type,
             _id: usize,
             value: &glib::Value,
             pspec: &glib::ParamSpec,
         ) {
             match pspec.name() {
-                // FIXME implement editing the yaml file here
                 "file" => {
                     let file = value.get().unwrap();
                     self.file.set(file).unwrap();
@@ -85,33 +85,42 @@ mod imp {
                     let mut metadata = self.metadata.take().unwrap();
                     metadata.title = title;
 
+                    // FIXME Replace this with not a hacky way
+                    let mut metadata_bytes = serde_yaml::to_vec(&metadata).unwrap();
+                    metadata_bytes.append(&mut "---\n".as_bytes().to_vec());
+                    metadata_bytes.append(&mut obj.content().as_bytes().to_vec());
+
+                    let file = obj.file();
+                    file.replace_contents(
+                        &metadata_bytes,
+                        None,
+                        false,
+                        gio::FileCreateFlags::NONE,
+                        None::<&gio::Cancellable>,
+                    )
+                    .expect("Failed to create output stream from file");
+
                     self.metadata.replace(Some(metadata));
-
-                    // serde_yaml::to_vec(&metadata);
-
-                    // let title = value.get().unwrap();
-
-                    // let file = obj.file();
-
-                    // self.title.replace(title);
                 }
                 "content" => {
-                    let content = value.get().unwrap();
+                    let content: Option<String> = value.get().unwrap();
+
+                    // FIXME replace with not hacky implementation
+                    let mut metadata_bytes = serde_yaml::to_vec(&self.metadata).unwrap();
+                    metadata_bytes.append(&mut "---\n".as_bytes().to_vec());
+                    metadata_bytes.append(&mut content.as_ref().unwrap().as_bytes().to_vec());
+
+                    let file = obj.file();
+                    file.replace_contents(
+                        content.as_ref().unwrap().as_bytes(),
+                        None,
+                        false,
+                        gio::FileCreateFlags::NONE,
+                        None::<&gio::Cancellable>,
+                    )
+                    .expect("Failed to load contents from file");
+
                     self.content.replace(content);
-
-                    // let file = obj.file();
-
-                    // let file = obj.file();
-                    // file.replace_contents(
-                    //     content.as_bytes(),
-                    //     None,
-                    //     false,
-                    //     gio::FileCreateFlags::NONE,
-                    //     None::<&gio::Cancellable>,
-                    // )
-                    // .expect("Failed to load contents from file");
-
-                    // log::info!("Replaced contents");
                 }
                 _ => unimplemented!(),
             }
