@@ -176,7 +176,9 @@ impl ContentView {
         let imp = imp::ContentView::from_instance(self);
 
         let note = self.note().ok_or_else(|| {
-            Error::Note("Cannot save active note, the view doesn't containt a note".to_string())
+            Error::ContentView(
+                "Cannot save active note, the view doesn't containt a note".to_string(),
+            )
         })?;
 
         let buffer: sourceview::Buffer = imp.view.buffer().downcast().unwrap();
