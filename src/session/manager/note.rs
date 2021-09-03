@@ -95,6 +95,7 @@ mod imp {
 
         fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
+                // FIXME use get_or_init here
                 "file" => self.file.borrow().to_value(),
                 "title" => {
                     let file = obj.file();
