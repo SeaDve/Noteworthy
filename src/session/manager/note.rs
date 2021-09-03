@@ -1,17 +1,25 @@
+use gray_matter::{engine::YAML, Matter};
 use gtk::{gio, glib, prelude::*, subclass::prelude::*};
+use serde::Deserialize;
 
 use std::cell::RefCell;
 
 use crate::Result;
+
+#[derive(Debug, Deserialize, Clone)]
+struct Metadata {
+    title: String,
+}
 
 mod imp {
     use super::*;
 
     #[derive(Debug, Default)]
     pub struct Note {
-        file: RefCell<Option<gio::File>>,
-        title: RefCell<String>,
-        content: RefCell<String>,
+        pub file: RefCell<Option<gio::File>>,
+
+        pub title: RefCell<Option<String>>,
+        pub content: RefCell<Option<String>>,
     }
 
     #[glib::object_subclass]
@@ -24,6 +32,8 @@ mod imp {
     impl ObjectImpl for Note {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
+
+            obj.load_properties_from_file();
         }
 
         fn properties() -> &'static [glib::ParamSpec] {
@@ -65,16 +75,22 @@ mod imp {
             pspec: &glib::ParamSpec,
         ) {
             match pspec.name() {
+                // FIXME implement editing the yaml file here
                 "file" => {
                     let file = value.get().unwrap();
                     self.file.replace(file);
                 }
                 "title" => {
                     let title = value.get().unwrap();
-                    self.title.replace(title);
+
+                    let file = obj.file();
+
+                    // self.title.replace(title);
                 }
                 "content" => {
                     let content: String = value.get().unwrap();
+
+                    let file = obj.file();
 
                     let file = obj.file();
                     file.replace_contents(
@@ -95,25 +111,9 @@ mod imp {
 
         fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                // FIXME use get_or_init here
                 "file" => self.file.borrow().to_value(),
-                "title" => {
-                    let file = obj.file();
-                    let title = file.basename().unwrap().display().to_string();
-                    title.to_value()
-
-                    // self.title.borrow().to_value()
-                }
-                "content" => {
-                    let file = obj.file();
-                    let (content, _) = file
-                        .load_contents(None::<&gio::Cancellable>)
-                        .expect("Failed to load contents from file");
-                    let content = String::from_utf8(content).expect("Failed to load from bytes");
-                    content.to_value()
-
-                    // self.content.borrow().to_value()
-                }
+                "title" => self.title.borrow().to_value(),
+                "content" => self.content.borrow().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -166,5 +166,19 @@ impl Note {
     pub fn delete(&self) -> Result<()> {
         self.file().delete(None::<&gio::Cancellable>)?;
         Ok(())
+    }
+
+    fn load_properties_from_file(&self) {
+        let file = self.file();
+        let (file_content, _) = file
+            .load_contents(None::<&gio::Cancellable>)
+            .expect("Failed to load contents from file");
+        let file_content = String::from_utf8(file_content).expect("Failed to load from bytes");
+        let parsed_entity = Matter::<YAML>::new().parse(&file_content);
+        let metadata: Metadata = parsed_entity.data.unwrap().deserialize().unwrap();
+
+        let imp = imp::Note::from_instance(self);
+        imp.title.replace(Some(metadata.title));
+        imp.content.replace(Some(parsed_entity.content));
     }
 }
