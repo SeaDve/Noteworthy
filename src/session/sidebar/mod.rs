@@ -1,6 +1,6 @@
 mod note_row;
 
-use gtk::{gio, glib, prelude::*, subclass::prelude::*, CompositeTemplate};
+use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 use once_cell::sync::OnceCell;
 
 use std::cell::{Cell, RefCell};

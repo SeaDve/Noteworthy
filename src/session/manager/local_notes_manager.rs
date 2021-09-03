@@ -1,4 +1,4 @@
-use gtk::{glib, prelude::*, subclass::prelude::*};
+use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::sync::OnceCell;
 
 use std::{fs, path::PathBuf};
@@ -33,6 +33,7 @@ mod imp {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
+                    // FIXME replace with gio file
                     glib::ParamSpec::new_string(
                         "directory",
                         "Directory",
@@ -114,22 +115,25 @@ impl LocalNotesManager {
 
         for path in paths.flatten() {
             let path = path.path();
-            let note = LocalNote::new(path.as_path());
+            let file = gio::File::for_path(path);
+            let note = LocalNote::load_from_file(&file)?;
             note_list.append(note.upcast());
         }
 
         Ok(note_list)
     }
 
-    // FIXME move some creation and deletion to the individual noes class
     pub fn create_note(&self, title: &str) -> Result<Note> {
         let mut file_path = PathBuf::from(self.directory());
-
         let file_name = format!("{} {}", title, chrono::Local::now().format("%H:%M:%S"));
         file_path.push(file_name);
         file_path.set_extension("md");
 
-        let new_note = LocalNote::new(&file_path);
+        let file = gio::File::for_path(file_path.display().to_string());
+        let new_note = LocalNote::from_file(&file)?;
+
+        log::info!("Created note {}", new_note.file().path().unwrap().display());
+
         let new_note_upcast: Note = new_note.upcast();
         self.note_list().append(new_note_upcast.clone());
 
@@ -145,9 +149,10 @@ impl LocalNotesManager {
             .unwrap()
             .downcast::<LocalNote>()
             .unwrap();
-        fs::remove_file(note.path())?;
 
-        log::info!("Deleted note {}", note.path());
+        note.delete().unwrap();
+
+        log::info!("Deleted note {}", note.file().path().unwrap().display());
 
         Ok(())
     }
