@@ -155,8 +155,4 @@ impl Session {
         imp.content_view.save_active_note()?;
         Ok(())
     }
-
-    pub fn create_note(&self, title: &str) -> Result<Note> {
-        self.notes_manager().create_note(title)
-    }
 }

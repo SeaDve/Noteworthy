@@ -37,7 +37,12 @@ mod imp {
             klass.install_action("sidebar.create-note", None, move |obj, _, _| {
                 let imp = obj.private();
 
-                let new_note = imp.session.get().unwrap().create_note("THis is the title");
+                let new_note = imp
+                    .session
+                    .get()
+                    .unwrap()
+                    .notes_manager()
+                    .create_note("THis is the title");
             });
         }
 
