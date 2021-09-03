@@ -67,13 +67,13 @@ mod imp {
     // FIXME Bad hack, make note as an interface instead
     impl NoteImpl for LocalNote {
         fn replace_title(&self, parent: &Self::ParentType, title: &str) -> Result<()> {
-            let obj: Self::Type = parent.clone().downcast().unwrap();
+            let obj: &Self::Type = parent.downcast_ref().unwrap();
 
             Ok(())
         }
 
         fn retrieve_title(&self, parent: &Self::ParentType) -> Result<String> {
-            let obj: Self::Type = parent.clone().downcast().unwrap();
+            let obj: &Self::Type = parent.downcast_ref().unwrap();
             let path = obj.path();
 
             let path = Path::new(&path);
@@ -83,7 +83,7 @@ mod imp {
         }
 
         fn replace_content(&self, parent: &Self::ParentType, content: &str) -> Result<()> {
-            let obj: Self::Type = parent.clone().downcast().unwrap();
+            let obj: &Self::Type = parent.downcast_ref().unwrap();
             let path = obj.path();
 
             use std::io::Write;
@@ -100,7 +100,7 @@ mod imp {
         }
 
         fn retrieve_content(&self, parent: &Self::ParentType) -> Result<String> {
-            let obj: Self::Type = parent.clone().downcast().unwrap();
+            let obj: &Self::Type = parent.downcast_ref().unwrap();
             let path = obj.path();
 
             use std::io::Read;
