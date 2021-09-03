@@ -5,7 +5,8 @@ pub enum Error {
     Provider(String),
     Note(String),
     Glib(glib::Error),
-    String(std::string::FromUtf8Error),
+    Str(std::string::FromUtf8Error),
+    Yaml(String),
 }
 
 impl std::error::Error for Error {}
@@ -16,7 +17,8 @@ impl std::fmt::Display for Error {
             Self::Provider(e) => f.write_str(&format!("NoteProviderError: {}", e)),
             Self::Note(e) => f.write_str(&format!("NoteError: {}", e)),
             Self::Glib(e) => f.write_str(&format!("GlibError: {}", e)),
-            Self::String(e) => f.write_str(&format!("FromUtf8Error: {}", e)),
+            Self::Str(e) => f.write_str(&format!("FromUtf8Error: {}", e)),
+            Self::Yaml(e) => f.write_str(&format!("YamlError: {}", e)),
         }
     }
 }
@@ -35,6 +37,18 @@ impl From<glib::Error> for Error {
 
 impl From<std::string::FromUtf8Error> for Error {
     fn from(error: std::string::FromUtf8Error) -> Self {
-        Error::String(error)
+        Error::Str(error)
+    }
+}
+
+impl From<serde_yaml::Error> for Error {
+    fn from(error: serde_yaml::Error) -> Self {
+        Error::Yaml(error.to_string())
+    }
+}
+
+impl From<yaml_rust::ScanError> for Error {
+    fn from(error: yaml_rust::ScanError) -> Self {
+        Error::Yaml(error.to_string())
     }
 }

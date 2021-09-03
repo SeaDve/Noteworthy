@@ -15,5 +15,8 @@ gtk = { package = "gtk4", version = "0.2" }
 adw = { package = "libadwaita", version = "0.1.0-alpha-3" }
 
 chrono = "0.4"
-gray_matter = "0.2.0"
-serde = "1.0.130"
+serde = { version = "1.0.130", features = ["derive"] }
+gray_matter = "0.2"
+
+yaml-rust = "0.4.5"
+serde_yaml = "0.8"

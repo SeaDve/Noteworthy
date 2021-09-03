@@ -1,15 +1,15 @@
 use gray_matter::{engine::YAML, Matter};
 use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::sync::OnceCell;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use std::cell::RefCell;
 
 use crate::Result;
 
-#[derive(Debug, Deserialize, Clone)]
-struct Metadata {
-    title: String,
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Metadata {
+    pub title: String,
 }
 
 mod imp {
@@ -19,7 +19,7 @@ mod imp {
     pub struct Note {
         pub file: OnceCell<gio::File>,
 
-        pub title: RefCell<Option<String>>,
+        pub metadata: RefCell<Option<Metadata>>,
         pub content: RefCell<Option<String>>,
     }
 
@@ -111,7 +111,7 @@ mod imp {
         fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
                 "file" => self.file.get().to_value(),
-                "title" => self.title.borrow().to_value(),
+                "title" => self.metadata.borrow().as_ref().unwrap().title.to_value(),
                 "content" => self.content.borrow().to_value(),
                 _ => unimplemented!(),
             }
@@ -174,7 +174,7 @@ impl Note {
         let metadata: Metadata = parsed_entity.data.unwrap().deserialize().unwrap();
 
         let imp = imp::Note::from_instance(self);
-        imp.title.replace(Some(metadata.title));
+        imp.metadata.replace(Some(metadata));
         imp.content.replace(Some(parsed_entity.content));
         Ok(())
     }
