@@ -7,7 +7,7 @@ use std::cell::RefCell;
 
 use crate::Result;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Metadata {
     pub title: String,
     pub tags: Vec<String>,
@@ -112,7 +112,7 @@ mod imp {
 
                     let file = obj.file();
                     file.replace_contents(
-                        content.as_ref().unwrap().as_bytes(),
+                        &metadata_bytes,
                         None,
                         false,
                         gio::FileCreateFlags::NONE,
@@ -189,7 +189,10 @@ impl Note {
         let (file_content, _) = file.load_contents(None::<&gio::Cancellable>)?;
         let file_content = String::from_utf8(file_content)?;
         let parsed_entity = Matter::<YAML>::new().parse(&file_content);
-        let metadata: Metadata = parsed_entity.data.unwrap().deserialize().unwrap();
+        let metadata: Metadata = match parsed_entity.data {
+            Some(pod) => pod.deserialize().unwrap(),
+            None => Metadata::default(),
+        };
 
         let imp = imp::Note::from_instance(self);
         imp.metadata.replace(Some(metadata));
