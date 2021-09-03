@@ -78,8 +78,6 @@ mod imp {
                 "file" => {
                     let file = value.get().unwrap();
                     self.file.set(file).unwrap();
-
-                    log::error!("yes");
                 }
                 "title" => {
                     // let title = value.get().unwrap();
