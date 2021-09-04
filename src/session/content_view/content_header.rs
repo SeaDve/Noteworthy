@@ -53,7 +53,7 @@ mod imp {
                 },
                 &[modified_expr],
             );
-            modified_str_expr.bind(&*self.modified_label, "label", None);
+            modified_str_expr.bind(&self.modified_label.get(), "label", None);
         }
 
         fn properties() -> &'static [glib::ParamSpec] {

@@ -131,7 +131,7 @@ mod imp {
 
                         // FIXME make this not hacky
                         let title_binding = note
-                            .bind_property("title", &*self.content_header, "title")
+                            .bind_property("title", &self.content_header.get(), "title")
                             .flags(
                                 glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL,
                             )
