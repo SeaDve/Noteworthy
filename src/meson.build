@@ -29,6 +29,7 @@ rust_sources = files(
   'session/mod.rs',
   'application.rs',
   'config.rs',
+  'date.rs',
   'error.rs',
   'main.rs',
   'window.rs',
