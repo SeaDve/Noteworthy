@@ -4,9 +4,10 @@
     <property name="orientation">vertical</property>
     <property name="spacing">6</property>
     <child>
-      <object class="GtkLabel" id="title">
-        <property name="label">hi</property>
-        <property name="halign">start</property>
+      <object class="GtkEditableLabel" id="title">
+        <property name="text" bind-source="NwtyContentHeader" bind-property="title" bind-flags="sync-create | bidirectional"/>
+        <property name="hexpand">True</property>
+        <property name="editable">True</property>
         <style>
           <class name="title-1"/>
         </style>

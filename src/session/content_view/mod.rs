@@ -27,6 +27,8 @@ mod imp {
         #[template_child]
         pub content_header: TemplateChild<ContentHeader>,
 
+        pub title_binding: RefCell<Option<glib::Binding>>,
+
         pub compact: Cell<bool>,
         pub note: RefCell<Option<Note>>,
         pub session: OnceCell<Session>,
@@ -110,6 +112,12 @@ mod imp {
                 "note" => {
                     let note: Option<Note> = value.get().unwrap();
 
+                    // FIXME make this less hacky
+                    // this unbinds before binding it later
+                    if let Some(title_binding) = self.title_binding.take() {
+                        title_binding.unbind();
+                    }
+
                     if let Some(ref note) = note {
                         let buffer: sourceview::Buffer =
                             self.source_view.buffer().downcast().unwrap();
@@ -122,8 +130,15 @@ mod imp {
 
                         self.source_view.grab_focus();
 
-                        // FIXME do bindings here and make it editable
-                        self.content_header.set_title(&note.title());
+                        // FIXME make this not hacky
+                        let title_binding = note
+                            .bind_property("title", &*self.content_header, "title")
+                            .flags(
+                                glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL,
+                            )
+                            .build();
+
+                        self.title_binding.replace(title_binding);
                     }
 
                     self.note.replace(note);

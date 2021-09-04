@@ -1,5 +1,7 @@
 use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
+use std::cell::RefCell;
+
 mod imp {
     use super::*;
 
@@ -7,9 +9,9 @@ mod imp {
     #[template(resource = "/io/github/seadve/Noteworthy/ui/content_header.ui")]
     pub struct ContentHeader {
         #[template_child]
-        pub title: TemplateChild<gtk::Label>,
-        #[template_child]
-        pub subtitle: TemplateChild<gtk::Label>,
+        pub title_label: TemplateChild<gtk::EditableLabel>,
+
+        pub title: RefCell<String>,
     }
 
     #[glib::object_subclass]
@@ -35,22 +37,13 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![
-                    glib::ParamSpec::new_string(
-                        "title",
-                        "Title",
-                        "Title of this row",
-                        None,
-                        glib::ParamFlags::READWRITE,
-                    ),
-                    glib::ParamSpec::new_string(
-                        "subtitle",
-                        "Subitle",
-                        "Subtitle of this row",
-                        None,
-                        glib::ParamFlags::READWRITE,
-                    ),
-                ]
+                vec![glib::ParamSpec::new_string(
+                    "title",
+                    "Title",
+                    "Title of this row",
+                    None,
+                    glib::ParamFlags::READWRITE,
+                )]
             });
 
             PROPERTIES.as_ref()
@@ -66,11 +59,7 @@ mod imp {
             match pspec.name() {
                 "title" => {
                     let title = value.get().unwrap();
-                    self.title.set_label(title);
-                }
-                "subtitle" => {
-                    let subtitle = value.get().unwrap();
-                    self.subtitle.set_label(subtitle);
+                    self.title.replace(title);
                 }
                 _ => unimplemented!(),
             }
@@ -78,8 +67,7 @@ mod imp {
 
         fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "title" => self.title.label().to_value(),
-                "subtitle" => self.subtitle.label().to_value(),
+                "title" => self.title.borrow().to_value(),
                 _ => unimplemented!(),
             }
         }
