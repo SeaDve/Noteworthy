@@ -152,6 +152,9 @@ impl Session {
         let imp = imp::Session::from_instance(self);
         imp.content_view.save_active_note()?;
         self.notes_manager().save_notes_to_file()?;
+
+        log::info!("Session saved");
+
         Ok(())
     }
 }

@@ -61,7 +61,6 @@ mod imp {
                     if modifier.contains(gdk::ModifierType::CONTROL_MASK) && key == gdk::keys::constants::s {
                         // FIXME Shouldn't call this from here
                         obj.session().save().unwrap();
-                        log::info!("File saved");
                         Inhibit(true)
                     } else {
                         Inhibit(false)
