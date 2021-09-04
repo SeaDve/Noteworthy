@@ -38,6 +38,7 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
+            // Expression that converts the selected note date to readable date
             let this_expr = gtk::ConstantExpression::new(obj).upcast();
             let modified_expr = gtk::PropertyExpression::new(
                 Self::Type::static_type(),
@@ -52,7 +53,6 @@ mod imp {
                 },
                 &[modified_expr],
             );
-
             modified_str_expr.bind(&*self.modified_label, "label", None);
         }
 

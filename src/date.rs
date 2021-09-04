@@ -20,7 +20,7 @@ impl Serialize for Date {
 
 impl std::fmt::Display for Date {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.0.format("%B %d %Y %H:%M").to_string())
+        f.write_str(&self.0.format("%B %d %Y %H:%M:%S").to_string())
     }
 }
 
