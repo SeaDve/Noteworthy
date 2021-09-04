@@ -21,8 +21,8 @@ mod imp {
     pub struct Note {
         pub file: OnceCell<gio::File>,
 
-        pub metadata: RefCell<Option<Metadata>>,
-        pub content: RefCell<Option<String>>,
+        pub metadata: RefCell<Metadata>,
+        pub content: RefCell<String>,
     }
 
     #[glib::object_subclass]
@@ -46,7 +46,7 @@ mod imp {
                         "File",
                         "File representing where the note is stored",
                         gio::File::static_type(),
-                        glib::ParamFlags::READWRITE,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
                     glib::ParamSpec::new_string(
                         "title",
@@ -89,33 +89,32 @@ mod imp {
                 }
                 "title" => {
                     let title = value.get().unwrap();
-                    let mut metadata = self.metadata.take().unwrap();
+                    let mut metadata = self.metadata.borrow_mut();
                     metadata.title = title;
-                    self.metadata.replace(Some(metadata));
-
-                    obj.update_modified();
                 }
                 "modified" => {
                     let modified = value.get().unwrap();
-                    let mut metadata = self.metadata.take().unwrap();
+                    let mut metadata = self.metadata.borrow_mut();
                     metadata.modified = modified;
-                    self.metadata.replace(Some(metadata));
                 }
                 "content" => {
                     let content = value.get().unwrap();
                     self.content.replace(content);
-
-                    obj.update_modified();
                 }
                 _ => unimplemented!(),
+            }
+
+            match pspec.name() {
+                "title" | "content" => obj.update_modified(),
+                _ => (),
             }
         }
 
         fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
                 "file" => self.file.get().to_value(),
-                "title" => self.metadata.borrow().as_ref().unwrap().title.to_value(),
-                "modified" => self.metadata.borrow().as_ref().unwrap().modified.to_value(),
+                "title" => self.metadata.borrow().title.to_value(),
+                "modified" => self.metadata.borrow().modified.to_value(),
                 "content" => self.content.borrow().to_value(),
                 _ => unimplemented!(),
             }
@@ -191,8 +190,8 @@ impl Note {
         };
 
         let imp = imp::Note::from_instance(self);
-        imp.metadata.replace(Some(metadata));
-        imp.content.replace(Some(parsed_entity.content));
+        imp.metadata.replace(metadata);
+        imp.content.replace(parsed_entity.content);
         Ok(())
     }
 
@@ -202,15 +201,7 @@ impl Note {
         // FIXME replace with not hacky implementation
         let mut bytes = serde_yaml::to_vec(&imp.metadata).unwrap();
         bytes.append(&mut "---\n".as_bytes().to_vec());
-        bytes.append(
-            &mut imp
-                .content
-                .borrow_mut()
-                .as_ref()
-                .unwrap()
-                .as_bytes()
-                .to_vec(),
-        );
+        bytes.append(&mut imp.content.borrow_mut().as_bytes().to_vec());
 
         Ok(bytes)
     }
