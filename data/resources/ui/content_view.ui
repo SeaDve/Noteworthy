@@ -9,9 +9,22 @@
     </child>
     <child>
       <object class="GtkScrolledWindow">
-        <property name="vexpand">True</property>
         <property name="child">
-          <object class="GtkSourceView" id="view">
+          <object class="GtkBox">
+            <property name="orientation">vertical</property>
+            <child>
+              <object class="NwtyContentHeader" id="content_header">
+              </object>
+            </child>
+            <child>
+              <object class="GtkSourceView" id="source_view">
+                <property name="vexpand">True</property>
+                <property name="left-margin">48</property>
+                <property name="right-margin">48</property>
+                <property name="top-margin">24</property>
+                <property name="bottom-margin">24</property>
+              </object>
+            </child>
           </object>
         </property>
       </object>

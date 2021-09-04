@@ -1,3 +1,5 @@
+mod content_header;
+
 use gtk::{
     gdk,
     glib::{self, clone, signal::Inhibit},
@@ -10,6 +12,7 @@ use sourceview::prelude::*;
 
 use std::cell::{Cell, RefCell};
 
+use self::content_header::ContentHeader;
 use super::{manager::Note, Session};
 use crate::{error::Error, Result};
 
@@ -20,7 +23,9 @@ mod imp {
     #[template(resource = "/io/github/seadve/Noteworthy/ui/content_view.ui")]
     pub struct ContentView {
         #[template_child]
-        pub view: TemplateChild<sourceview::View>,
+        pub source_view: TemplateChild<sourceview::View>,
+        #[template_child]
+        pub content_header: TemplateChild<ContentHeader>,
 
         pub compact: Cell<bool>,
         pub note: RefCell<Option<Note>>,
@@ -35,6 +40,8 @@ mod imp {
 
         fn class_init(klass: &mut Self::Class) {
             Self::bind_template(klass);
+
+            ContentHeader::static_type();
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
@@ -58,7 +65,7 @@ mod imp {
                         Inhibit(false)
                     }
                 }));
-            self.view.add_controller(&key_events);
+            self.source_view.add_controller(&key_events);
         }
 
         fn properties() -> &'static [glib::ParamSpec] {
@@ -104,7 +111,8 @@ mod imp {
                     let note: Option<Note> = value.get().unwrap();
 
                     if let Some(ref note) = note {
-                        let buffer: sourceview::Buffer = self.view.buffer().downcast().unwrap();
+                        let buffer: sourceview::Buffer =
+                            self.source_view.buffer().downcast().unwrap();
 
                         let md_lang = sourceview::LanguageManager::default()
                             .and_then(|lm| lm.language("markdown"));
@@ -112,7 +120,10 @@ mod imp {
 
                         buffer.set_text(&note.content());
 
-                        self.view.grab_focus();
+                        self.source_view.grab_focus();
+
+                        // FIXME do bindings here and make it editable
+                        self.content_header.set_title(&note.title());
                     }
 
                     self.note.replace(note);
@@ -181,7 +192,7 @@ impl ContentView {
             )
         })?;
 
-        let buffer: sourceview::Buffer = imp.view.buffer().downcast().unwrap();
+        let buffer: sourceview::Buffer = imp.source_view.buffer().downcast().unwrap();
         let (start_iter, end_iter) = buffer.bounds();
 
         note.set_content(&buffer.text(&start_iter, &end_iter, true));

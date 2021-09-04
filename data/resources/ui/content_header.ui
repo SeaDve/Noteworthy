@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="NwtyContentHeader" parent="GtkBox">
+    <property name="orientation">vertical</property>
+    <child>
+      <object class="GtkLabel" id="title">
+        <property name="label">hi</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkLabel" id="subtitle">
+        <property name="label">hi</property>
+      </object>
+    </child>
+  </template>
+</interface>
