@@ -9,9 +9,9 @@ use crate::{date::Date, Result};
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Metadata {
-    pub title: Option<String>,
-    pub modified: Option<Date>,
-    pub tags: Option<Vec<String>>,
+    pub title: String,
+    pub modified: Date,
+    pub tags: Vec<String>,
 }
 
 mod imp {
@@ -77,7 +77,7 @@ mod imp {
 
         fn set_property(
             &self,
-            _obj: &Self::Type,
+            obj: &Self::Type,
             _id: usize,
             value: &glib::Value,
             pspec: &glib::ParamSpec,
@@ -90,18 +90,22 @@ mod imp {
                 "title" => {
                     let title = value.get().unwrap();
                     let mut metadata = self.metadata.take().unwrap();
-                    metadata.title = Some(title);
+                    metadata.title = title;
                     self.metadata.replace(Some(metadata));
+
+                    obj.update_modified();
                 }
                 "modified" => {
                     let modified = value.get().unwrap();
                     let mut metadata = self.metadata.take().unwrap();
-                    metadata.modified = Some(modified);
+                    metadata.modified = modified;
                     self.metadata.replace(Some(metadata));
                 }
                 "content" => {
                     let content = value.get().unwrap();
                     self.content.replace(content);
+
+                    obj.update_modified();
                 }
                 _ => unimplemented!(),
             }
@@ -110,24 +114,8 @@ mod imp {
         fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
                 "file" => self.file.get().to_value(),
-                "title" => self
-                    .metadata
-                    .borrow()
-                    .as_ref()
-                    .unwrap()
-                    .title
-                    .as_deref()
-                    .unwrap_or_default()
-                    .to_value(),
-                "modified" => self
-                    .metadata
-                    .borrow()
-                    .as_ref()
-                    .unwrap()
-                    .modified
-                    .clone() // TODO idk if clone is safe to call here
-                    .unwrap_or_default()
-                    .to_value(),
+                "title" => self.metadata.borrow().as_ref().unwrap().title.to_value(),
+                "modified" => self.metadata.borrow().as_ref().unwrap().modified.to_value(),
                 "content" => self.content.borrow().to_value(),
                 _ => unimplemented!(),
             }
@@ -170,6 +158,14 @@ impl Note {
         self.property("title").unwrap().get().unwrap()
     }
 
+    pub fn update_modified(&self) {
+        self.set_property("modified", Date::default()).unwrap();
+    }
+
+    pub fn modified(&self) -> Date {
+        self.property("modified").unwrap().get().unwrap()
+    }
+
     pub fn set_content(&self, content: &str) {
         self.set_property("content", content).unwrap();
     }
@@ -189,7 +185,8 @@ impl Note {
         let file_content = String::from_utf8(file_content)?;
         let parsed_entity = Matter::<YAML>::new().parse(&file_content);
         let metadata: Metadata = match parsed_entity.data {
-            Some(pod) => pod.deserialize().unwrap(),
+            Some(pod) => pod.deserialize().unwrap_or_default(), // FIXME this will cause data losses when one field is missing
+            // Fix this by creating a struct from what is available and fill in the defaults
             None => Metadata::default(),
         };
 
