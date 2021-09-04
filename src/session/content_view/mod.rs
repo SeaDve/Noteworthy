@@ -14,7 +14,7 @@ use std::cell::{Cell, RefCell};
 
 use self::content_header::ContentHeader;
 use super::{manager::Note, Session};
-use crate::{error::Error, Result};
+use crate::{date::Date, error::Error, Result};
 
 mod imp {
     use super::*;

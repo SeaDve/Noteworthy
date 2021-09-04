@@ -14,6 +14,11 @@
             <property name="orientation">vertical</property>
             <child>
               <object class="NwtyContentHeader" id="content_header">
+                <binding name="modified">
+                  <lookup type="NwtyNote" name="modified">
+                    <lookup name="note">NwtyContentView</lookup>
+                  </lookup>
+                </binding>
               </object>
             </child>
             <child>

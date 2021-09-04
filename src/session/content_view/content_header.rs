@@ -2,6 +2,8 @@ use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::RefCell;
 
+use crate::date::Date;
+
 mod imp {
     use super::*;
 
@@ -10,8 +12,11 @@ mod imp {
     pub struct ContentHeader {
         #[template_child]
         pub title_label: TemplateChild<gtk::EditableLabel>,
+        #[template_child]
+        pub modified_label: TemplateChild<gtk::Label>,
 
         pub title: RefCell<String>,
+        pub modified: RefCell<Date>,
     }
 
     #[glib::object_subclass]
@@ -32,18 +37,44 @@ mod imp {
     impl ObjectImpl for ContentHeader {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
+
+            let this_expr = gtk::ConstantExpression::new(obj).upcast();
+            let modified_expr = gtk::PropertyExpression::new(
+                Self::Type::static_type(),
+                Some(&this_expr),
+                "modified",
+            )
+            .upcast();
+            let modified_str_expr = gtk::ClosureExpression::new(
+                |args| {
+                    let date: Date = args[1].get().unwrap();
+                    format!("Last edited {:?}", date)
+                },
+                &[modified_expr],
+            );
+
+            modified_str_expr.bind(&*self.modified_label, "label", None);
         }
 
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_string(
-                    "title",
-                    "Title",
-                    "Title of this row",
-                    None,
-                    glib::ParamFlags::READWRITE,
-                )]
+                vec![
+                    glib::ParamSpec::new_string(
+                        "title",
+                        "Title",
+                        "Title of the selected note",
+                        None,
+                        glib::ParamFlags::READWRITE,
+                    ),
+                    glib::ParamSpec::new_boxed(
+                        "modified",
+                        "Modified",
+                        "Last modified date of selected note",
+                        Date::static_type(),
+                        glib::ParamFlags::READWRITE,
+                    ),
+                ]
             });
 
             PROPERTIES.as_ref()
@@ -61,6 +92,10 @@ mod imp {
                     let title = value.get().unwrap();
                     self.title.replace(title);
                 }
+                "modified" => {
+                    let modified = value.get().unwrap();
+                    self.modified.replace(modified);
+                }
                 _ => unimplemented!(),
             }
         }
@@ -68,6 +103,7 @@ mod imp {
         fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
                 "title" => self.title.borrow().to_value(),
+                "modified" => self.modified.borrow().to_value(),
                 _ => unimplemented!(),
             }
         }

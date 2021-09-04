@@ -51,14 +51,14 @@ mod imp {
                     glib::ParamSpec::new_string(
                         "title",
                         "Title",
-                        "Title of the notes",
+                        "Title of the note",
                         None,
                         glib::ParamFlags::READWRITE,
                     ),
                     glib::ParamSpec::new_boxed(
                         "modified",
                         "Modified",
-                        "Date when the note was last modified",
+                        "Last modified date of the note",
                         Date::static_type(),
                         glib::ParamFlags::READWRITE,
                     ),
@@ -125,9 +125,9 @@ mod imp {
                     .as_ref()
                     .unwrap()
                     .modified
-                    .clone()
+                    .clone() // TODO idk if clone is safe to call here
                     .unwrap_or_default()
-                    .to_value(), // TODO idk if clone is safe to call here
+                    .to_value(),
                 "content" => self.content.borrow().to_value(),
                 _ => unimplemented!(),
             }

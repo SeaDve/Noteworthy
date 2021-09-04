@@ -20,8 +20,7 @@
       <object class="GtkBox">
         <property name="spacing">6</property>
         <child>
-          <object class="GtkLabel">
-            <property name="label">Last edited yesterday</property>
+          <object class="GtkLabel" id="modified_label">
             <style>
               <class name="caption"/>
             </style>
