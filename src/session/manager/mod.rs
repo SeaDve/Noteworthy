@@ -135,8 +135,7 @@ impl NoteManager {
         let note_list = self.note_list();
 
         // FIXME use iterator here
-        let last_index = note_list.n_items() - 1;
-        for i in 0..last_index {
+        for i in 0..note_list.n_items() {
             let note = note_list.item(i).unwrap().downcast::<Note>().unwrap();
             let note_bytes = note.serialize()?;
 

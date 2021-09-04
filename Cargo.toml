@@ -14,7 +14,7 @@ sourceview = { package = "sourceview5", version = "0.2.0" }
 gtk = { package = "gtk4", version = "0.2" }
 adw = { package = "libadwaita", version = "0.1.0-alpha-3" }
 
-chrono = "0.4"
+chrono = { version = "0.4", features = ["serde"] }
 serde = { version = "1.0.130", features = ["derive"] }
 serde_yaml = "0.8"
 gray_matter = "0.2"

@@ -13,6 +13,7 @@
 
 mod application;
 mod config;
+mod date;
 mod error;
 mod session;
 mod window;

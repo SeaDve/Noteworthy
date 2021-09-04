@@ -5,12 +5,13 @@ use serde::{Deserialize, Serialize};
 
 use std::cell::RefCell;
 
-use crate::Result;
+use crate::{date::Date, Result};
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Metadata {
-    pub title: String,
-    pub tags: Vec<String>,
+    pub title: Option<String>,
+    pub modified: Option<Date>,
+    pub tags: Option<Vec<String>>,
 }
 
 mod imp {
@@ -54,6 +55,13 @@ mod imp {
                         None,
                         glib::ParamFlags::READWRITE,
                     ),
+                    glib::ParamSpec::new_boxed(
+                        "modified",
+                        "Modified",
+                        "Date when the note was last modified",
+                        Date::static_type(),
+                        glib::ParamFlags::READWRITE,
+                    ),
                     glib::ParamSpec::new_string(
                         "content",
                         "Content",
@@ -82,7 +90,13 @@ mod imp {
                 "title" => {
                     let title = value.get().unwrap();
                     let mut metadata = self.metadata.take().unwrap();
-                    metadata.title = title;
+                    metadata.title = Some(title);
+                    self.metadata.replace(Some(metadata));
+                }
+                "modified" => {
+                    let modified = value.get().unwrap();
+                    let mut metadata = self.metadata.take().unwrap();
+                    metadata.modified = Some(modified);
                     self.metadata.replace(Some(metadata));
                 }
                 "content" => {
@@ -96,7 +110,24 @@ mod imp {
         fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
                 "file" => self.file.get().to_value(),
-                "title" => self.metadata.borrow().as_ref().unwrap().title.to_value(),
+                "title" => self
+                    .metadata
+                    .borrow()
+                    .as_ref()
+                    .unwrap()
+                    .title
+                    .as_deref()
+                    .unwrap_or_default()
+                    .to_value(),
+                "modified" => self
+                    .metadata
+                    .borrow()
+                    .as_ref()
+                    .unwrap()
+                    .modified
+                    .clone()
+                    .unwrap_or_default()
+                    .to_value(), // TODO idk if clone is safe to call here
                 "content" => self.content.borrow().to_value(),
                 _ => unimplemented!(),
             }
