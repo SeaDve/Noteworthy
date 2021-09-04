@@ -35,6 +35,8 @@ mod imp {
     impl ObjectImpl for Note {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
+            obj.deserialize_from_file()
+                .expect("Failed to deserialize note from file");
         }
 
         fn properties() -> &'static [glib::ParamSpec] {
@@ -127,10 +129,8 @@ glib::wrapper! {
 }
 
 impl Note {
-    pub fn from_file(file: &gio::File) -> Result<Self> {
-        let obj = glib::Object::new::<Self>(&[("file", file)]).expect("Failed to create Note.");
-        obj.deserialize_from_file()?;
-        Ok(obj)
+    pub fn from_file(file: &gio::File) -> Self {
+        glib::Object::new::<Self>(&[("file", file)]).expect("Failed to create Note.")
     }
 
     pub fn set_file(&self, file: &gio::File) {
