@@ -69,7 +69,7 @@ mod imp {
 
         fn set_property(
             &self,
-            obj: &Self::Type,
+            _obj: &Self::Type,
             _id: usize,
             value: &glib::Value,
             pspec: &glib::ParamSpec,
@@ -81,45 +81,12 @@ mod imp {
                 }
                 "title" => {
                     let title = value.get().unwrap();
-
                     let mut metadata = self.metadata.take().unwrap();
                     metadata.title = title;
-
-                    // FIXME Replace this with not a hacky way
-                    let mut metadata_bytes = serde_yaml::to_vec(&metadata).unwrap();
-                    metadata_bytes.append(&mut "---\n".as_bytes().to_vec());
-                    metadata_bytes.append(&mut obj.content().as_bytes().to_vec());
-
-                    let file = obj.file();
-                    file.replace_contents(
-                        &metadata_bytes,
-                        None,
-                        false,
-                        gio::FileCreateFlags::NONE,
-                        None::<&gio::Cancellable>,
-                    )
-                    .expect("Failed to create output stream from file");
-
                     self.metadata.replace(Some(metadata));
                 }
                 "content" => {
-                    let content: Option<String> = value.get().unwrap();
-
-                    // FIXME replace with not hacky implementation
-                    let mut metadata_bytes = serde_yaml::to_vec(&self.metadata).unwrap();
-                    metadata_bytes.append(&mut "---\n".as_bytes().to_vec());
-                    metadata_bytes.append(&mut content.as_ref().unwrap().as_bytes().to_vec());
-
-                    let file = obj.file();
-                    file.replace_contents(
-                        &metadata_bytes,
-                        None,
-                        false,
-                        gio::FileCreateFlags::NONE,
-                        None::<&gio::Cancellable>,
-                    )
-                    .expect("Failed to load contents from file");
-
+                    let content = value.get().unwrap();
                     self.content.replace(content);
                 }
                 _ => unimplemented!(),
@@ -144,14 +111,14 @@ glib::wrapper! {
 impl Note {
     pub fn load_from_file(file: &gio::File) -> Result<Self> {
         let obj = glib::Object::new::<Self>(&[("file", file)]).expect("Failed to create Note.");
-        obj.load_properties_from_file()?;
+        obj.deserialize_from_file()?;
         Ok(obj)
     }
 
     pub fn from_file(file: &gio::File) -> Result<Self> {
         file.create(gio::FileCreateFlags::NONE, None::<&gio::Cancellable>)?;
         let obj = glib::Object::new::<Self>(&[("file", file)]).expect("Failed to create Note.");
-        obj.load_properties_from_file()?;
+        obj.deserialize_from_file()?;
         Ok(obj)
     }
 
@@ -184,7 +151,7 @@ impl Note {
         Ok(())
     }
 
-    fn load_properties_from_file(&self) -> Result<()> {
+    fn deserialize_from_file(&self) -> Result<()> {
         let file = self.file();
         let (file_content, _) = file.load_contents(None::<&gio::Cancellable>)?;
         let file_content = String::from_utf8(file_content)?;
@@ -198,5 +165,24 @@ impl Note {
         imp.metadata.replace(Some(metadata));
         imp.content.replace(Some(parsed_entity.content));
         Ok(())
+    }
+
+    pub fn serialize(&self) -> Result<Vec<u8>> {
+        let imp = imp::Note::from_instance(self);
+
+        // FIXME replace with not hacky implementation
+        let mut bytes = serde_yaml::to_vec(&imp.metadata).unwrap();
+        bytes.append(&mut "---\n".as_bytes().to_vec());
+        bytes.append(
+            &mut imp
+                .content
+                .borrow_mut()
+                .as_ref()
+                .unwrap()
+                .as_bytes()
+                .to_vec(),
+        );
+
+        Ok(bytes)
     }
 }

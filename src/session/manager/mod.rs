@@ -131,6 +131,27 @@ impl NoteManager {
         Ok(note_list)
     }
 
+    pub fn save_notes_to_file(&self) -> Result<()> {
+        let note_list = self.note_list();
+
+        // FIXME use iterator here
+        let last_index = note_list.n_items() - 1;
+        for i in 0..last_index {
+            let note = note_list.item(i).unwrap().downcast::<Note>().unwrap();
+            let note_bytes = note.serialize()?;
+
+            note.file().replace_contents(
+                &note_bytes,
+                None,
+                false,
+                gio::FileCreateFlags::NONE,
+                None::<&gio::Cancellable>,
+            )?;
+        }
+
+        Ok(())
+    }
+
     pub fn create_note(&self, title: &str) -> Result<Note> {
         let mut file_path = self.path();
         let file_name = format!("{} {}", title, chrono::Local::now().format("%H:%M:%S"));
