@@ -159,7 +159,7 @@ impl Note {
     }
 
     pub fn update_modified(&self) {
-        self.set_property("modified", Date::default()).unwrap();
+        self.set_property("modified", Date::now()).unwrap();
     }
 
     pub fn modified(&self) -> Date {
