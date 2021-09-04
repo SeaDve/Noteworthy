@@ -109,6 +109,7 @@ glib::wrapper! {
 }
 
 impl Note {
+    // FIXME Add better constructor methods
     pub fn load_from_file(file: &gio::File) -> Result<Self> {
         let obj = glib::Object::new::<Self>(&[("file", file)]).expect("Failed to create Note.");
         obj.deserialize_from_file()?;

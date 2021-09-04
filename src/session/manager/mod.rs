@@ -140,6 +140,8 @@ impl NoteManager {
             let note = note_list.item(i).unwrap().downcast::<Note>().unwrap();
             let note_bytes = note.serialize()?;
 
+            // FIXME Update only unsaved notes so add a property for unsaved there and update it everytime a property changes
+
             note.file().replace_contents(
                 &note_bytes,
                 None,
