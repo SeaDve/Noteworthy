@@ -2,15 +2,26 @@
 <interface>
   <template class="NwtyContentHeader" parent="GtkBox">
     <property name="orientation">vertical</property>
+    <property name="spacing">6</property>
     <child>
       <object class="GtkLabel" id="title">
         <property name="label">hi</property>
+        <property name="halign">start</property>
+        <style>
+          <class name="title-1"/>
+        </style>
       </object>
+    </child>
+    <child>
+      <object class="GtkSeparator"/>
     </child>
     <child>
       <object class="GtkLabel" id="subtitle">
         <property name="label">hi</property>
       </object>
     </child>
+    <style>
+      <class name="content-header"/>
+    </style>
   </template>
 </interface>

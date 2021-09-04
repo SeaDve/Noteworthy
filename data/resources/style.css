@@ -1,4 +1,4 @@
-.title-header{
-  font-size: 36px;
-  font-weight: bold;
+.content-header {
+  padding: 24px 48px 12px 48px;
+  background-color: @theme_base_color;
 }
