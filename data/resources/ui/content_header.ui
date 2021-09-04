@@ -17,8 +17,24 @@
       <object class="GtkSeparator"/>
     </child>
     <child>
-      <object class="GtkLabel" id="subtitle">
-        <property name="label">hi</property>
+      <object class="GtkBox">
+        <property name="spacing">6</property>
+        <child>
+          <object class="GtkLabel">
+            <property name="label">Last edited yesterday</property>
+            <style>
+              <class name="caption"/>
+            </style>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel">
+            <property name="label"></property>
+            <style>
+              <class name="caption"/>
+            </style>
+          </object>
+        </child>
       </object>
     </child>
     <style>
