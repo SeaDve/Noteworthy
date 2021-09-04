@@ -75,7 +75,7 @@ mod imp {
                         .downcast()
                         .unwrap();
 
-                    dbg!(selected_note.title());
+                    log::info!("Selected note: {}", selected_note.title());
 
                     obj.set_selected_note(Some(selected_note));
                 }));
