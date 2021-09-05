@@ -6,7 +6,7 @@
         <child>
           <object class="NwtySidebar" id="sidebar">
             <property name="compact" bind-source="leaflet" bind-property="folded" bind-flags="sync-create"/>
-            <property name="selected-note" bind-source="NwtySession" bind-property="selected-note" bind-flags="sync-create"/>
+            <property name="selected-note" bind-source="NwtySession" bind-property="selected-note" bind-flags="sync-create | bidirectional"/>
           </object>
         </child>
         <child>

@@ -27,6 +27,7 @@ mod imp {
 
         pub compact: Cell<bool>,
         pub selected_note: RefCell<Option<Note>>,
+        pub selection: RefCell<Option<gtk::SingleSelection>>,
 
         pub session: OnceCell<Session>,
     }
@@ -165,26 +166,36 @@ impl Sidebar {
 
         let filter_model = gtk::FilterListModel::new(Some(&note_list), Some(&filter));
         let sort_model = gtk::SortListModel::new(Some(&filter_model), Some(&sorter));
+        let selection = gtk::SingleSelection::new(Some(&sort_model));
+        selection.set_autoselect(false);
+        selection
+            .bind_property("selected-item", self, "selected-note")
+            .flags(glib::BindingFlags::SYNC_CREATE)
+            .build();
+        imp.selection.replace(Some(selection));
 
         imp.listview
-            .set_model(Some(&gtk::SingleSelection::new(Some(&sort_model))));
+            .set_model(Some(imp.selection.borrow().as_ref().unwrap()));
+
+        self.set_selected_note(None);
     }
 
-    pub fn set_selected_note(&self, note: Option<Note>) {
-        if self.selected_note() == note {
+    pub fn set_selected_note(&self, selected_note: Option<Note>) {
+        if self.selected_note() == selected_note {
             return;
         }
 
         let imp = imp::Sidebar::from_instance(self);
-        imp.selected_note.replace(note);
+        if selected_note.is_none() {
+            imp.selection
+                .borrow()
+                .as_ref()
+                .unwrap()
+                .set_selected(gtk::INVALID_LIST_POSITION);
+        }
 
+        imp.selected_note.replace(selected_note);
         self.notify("selected-note");
-    }
-
-    // TODO remove this in the future
-    pub fn set_session(&self, session: Session) {
-        let imp = imp::Sidebar::from_instance(self);
-        imp.session.set(session).unwrap();
     }
 
     pub fn selected_note(&self) -> Option<Note> {
@@ -192,11 +203,9 @@ impl Sidebar {
         imp.selected_note.borrow().clone()
     }
 
-    pub fn connect_activate(
-        &self,
-        f: impl Fn(&gtk::ListView, u32) + 'static,
-    ) -> glib::SignalHandlerId {
+    // TODO remove this in the future
+    pub fn set_session(&self, session: Session) {
         let imp = imp::Sidebar::from_instance(self);
-        imp.listview.connect_activate(f)
+        imp.session.set(session).unwrap();
     }
 }

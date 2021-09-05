@@ -3,11 +3,7 @@ mod manager;
 mod sidebar;
 
 use adw::subclass::prelude::*;
-use gtk::{
-    glib::{self, clone},
-    prelude::*,
-    subclass::prelude::*,
-};
+use gtk::{glib, prelude::*, subclass::prelude::*};
 use once_cell::sync::OnceCell;
 
 use std::{cell::RefCell, path::Path};
@@ -62,21 +58,6 @@ mod imp {
 
             self.sidebar.set_note_list(note_list);
             self.sidebar.set_session(obj.clone());
-
-            self.sidebar
-                .connect_activate(clone!(@weak obj => move |sidebar, pos| {
-                    let selected_note: Note = sidebar
-                        .model()
-                        .unwrap()
-                        .item(pos)
-                        .unwrap()
-                        .downcast()
-                        .unwrap();
-
-                    log::info!("Selected note: {}", selected_note.title());
-
-                    obj.set_selected_note(Some(selected_note));
-                }));
         }
 
         fn properties() -> &'static [glib::ParamSpec] {
