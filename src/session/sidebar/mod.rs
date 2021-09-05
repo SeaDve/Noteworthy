@@ -146,7 +146,7 @@ impl Sidebar {
     pub fn set_note_list(&self, note_list: NoteList) {
         let imp = imp::Sidebar::from_instance(self);
 
-        // FIXME update when new note is edited
+        // FIXME broken here see commit a6c627dad8fa370b39f77c9f84f0a9df2c3add79
         let filter = gtk::CustomFilter::new(|item| {
             let modified = item.downcast_ref::<Note>().unwrap().modified();
             true
