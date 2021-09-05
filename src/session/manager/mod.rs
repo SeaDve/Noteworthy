@@ -153,7 +153,7 @@ impl NoteManager {
         Ok(())
     }
 
-    pub fn create_note(&self) -> Result<Note> {
+    pub fn create_note(&self) -> Result<()> {
         let mut file_path = self.path();
         file_path.push(self.generate_unique_file_name());
         file_path.set_extension("md");
@@ -162,12 +162,11 @@ impl NoteManager {
         file.create(gio::FileCreateFlags::NONE, None::<&gio::Cancellable>)?;
         let new_note = Note::from_file(&file);
 
-        self.note_list().append(new_note.clone());
+        self.note_list().append(new_note);
 
         log::info!("Created note {}", file_path.display());
 
-        // TODO Consider if we really need to pass this out
-        Ok(new_note)
+        Ok(())
     }
 
     pub fn delete_note(&self, index: usize) -> Result<()> {
