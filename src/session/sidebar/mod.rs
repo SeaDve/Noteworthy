@@ -1,11 +1,15 @@
 mod note_row;
 
 use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
+use once_cell::sync::OnceCell;
 
 use std::cell::{Cell, RefCell};
 
-use super::manager::{Note, NoteList};
-use note_row::NoteRow;
+use self::note_row::NoteRow;
+use super::{
+    manager::{Note, NoteList},
+    Session,
+};
 
 mod imp {
     use super::*;
@@ -18,6 +22,8 @@ mod imp {
 
         pub compact: Cell<bool>,
         pub selected_note: RefCell<Option<Note>>,
+
+        pub session: OnceCell<Session>,
     }
 
     #[glib::object_subclass]
@@ -30,14 +36,14 @@ mod imp {
             Self::bind_template(klass);
 
             klass.install_action("sidebar.create-note", None, move |obj, _, _| {
-                // FIXME unbreak this
-                // let imp = obj.private();
-                // imp.session
-                //     .get()
-                //     .unwrap()
-                //     .notes_manager()
-                //     .create_note()
-                //     .expect("Failed to create note");
+                // FIXME more proper way to create note
+                let imp = imp::Sidebar::from_instance(obj);
+                imp.session
+                    .get()
+                    .unwrap()
+                    .notes_manager()
+                    .create_note()
+                    .expect("Failed to create note");
             });
         }
 
@@ -174,6 +180,12 @@ impl Sidebar {
         imp.selected_note.replace(note);
 
         self.notify("selected-note");
+    }
+
+    // TODO remove this in the future
+    pub fn set_session(&self, session: Session) {
+        let imp = imp::Sidebar::from_instance(self);
+        imp.session.set(session).unwrap();
     }
 
     pub fn selected_note(&self) -> Option<Note> {
