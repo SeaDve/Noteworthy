@@ -52,8 +52,8 @@
               <object class="GtkSourceView" id="source_view">
                 <property name="vexpand">True</property>
                 <property name="wrap-mode">word</property>
-                <property name="left-margin">48</property>
-                <property name="right-margin">48</property>
+                <property name="left-margin">24</property>
+                <property name="right-margin">24</property>
                 <property name="top-margin">6</property>
                 <property name="bottom-margin">6</property>
               </object>
