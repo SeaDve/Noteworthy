@@ -158,7 +158,7 @@ impl Sidebar {
             order2.cmp(&order1).into()
         });
 
-        note_list.connect_items_changed(clone!(@strong filter, @strong sorter => move |_,_,_,_| {
+        note_list.connect_position_changed(clone!(@strong filter, @strong sorter => move |_| {
             filter.changed(gtk::FilterChange::Different);
             sorter.changed(gtk::SorterChange::Different);
         }));

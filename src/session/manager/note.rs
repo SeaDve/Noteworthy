@@ -165,6 +165,14 @@ impl Note {
         self.property("content").unwrap().get().unwrap()
     }
 
+    pub fn connect_modified_notify<F: Fn(&Self, &glib::ParamSpec) + 'static>(
+        &self,
+        f: F,
+    ) -> glib::SignalHandlerId {
+        // TODO make this also handle other properties to enabled sorting for title etc.
+        self.connect_notify_local(Some("modified"), f)
+    }
+
     pub fn delete(&self) -> Result<()> {
         self.file().delete(None::<&gio::Cancellable>)?;
         Ok(())
