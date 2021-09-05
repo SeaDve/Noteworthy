@@ -58,9 +58,6 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
-            self.sidebar.set_session(obj.clone());
-            self.content_view.set_session(obj.clone());
-
             let note_list = obj.notes_manager().note_list();
 
             self.sidebar.set_note_list(Some(note_list));

@@ -1,14 +1,10 @@
 mod note_row;
 
 use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
-use once_cell::sync::OnceCell;
 
 use std::cell::{Cell, RefCell};
 
-use super::{
-    manager::{Note, NoteList},
-    Session,
-};
+use super::manager::{Note, NoteList};
 use note_row::NoteRow;
 
 mod imp {
@@ -20,7 +16,6 @@ mod imp {
         #[template_child]
         pub listview: TemplateChild<gtk::ListView>,
 
-        pub session: OnceCell<Session>,
         pub compact: Cell<bool>,
         pub selected_note: RefCell<Option<Note>>,
     }
@@ -35,13 +30,14 @@ mod imp {
             Self::bind_template(klass);
 
             klass.install_action("sidebar.create-note", None, move |obj, _, _| {
-                let imp = obj.private();
-                imp.session
-                    .get()
-                    .unwrap()
-                    .notes_manager()
-                    .create_note()
-                    .expect("Failed to create note");
+                // FIXME unbreak this
+                // let imp = obj.private();
+                // imp.session
+                //     .get()
+                //     .unwrap()
+                //     .notes_manager()
+                //     .create_note()
+                //     .expect("Failed to create note");
             });
         }
 
@@ -69,18 +65,18 @@ mod imp {
                         glib::ParamFlags::READWRITE,
                     ),
                     glib::ParamSpec::new_object(
+                        "note-list",
+                        "Note List",
+                        "Note list represented by self",
+                        Note::static_type(),
+                        glib::ParamFlags::WRITABLE,
+                    ),
+                    glib::ParamSpec::new_object(
                         "selected-note",
                         "Selected Note",
                         "The selected note in this sidebar",
                         Note::static_type(),
-                        glib::ParamFlags::READWRITE,
-                    ),
-                    glib::ParamSpec::new_object(
-                        "session",
-                        "Session",
-                        "Current session",
-                        Note::static_type(),
-                        glib::ParamFlags::READWRITE,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
                 ]
             });
@@ -100,14 +96,13 @@ mod imp {
                     let compact = value.get().unwrap();
                     self.compact.set(compact);
                 }
+                "note-list" => {
+                    let note_list = value.get().unwrap();
+                    obj.set_note_list(note_list);
+                }
                 "selected-note" => {
                     let selected_note = value.get().unwrap();
-                    self.selected_note.replace(selected_note);
-                }
-                "session" => {
-                    let session = value.get().unwrap();
-                    // FIXME this doesnt notify this property check others too
-                    obj.set_session(session);
+                    obj.set_selected_note(selected_note);
                 }
                 _ => unimplemented!(),
             }
@@ -117,7 +112,6 @@ mod imp {
             match pspec.name() {
                 "compact" => self.compact.get().to_value(),
                 "selected-note" => obj.selected_note().to_value(),
-                "session" => self.session.get().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -138,7 +132,14 @@ impl Sidebar {
     }
 
     pub fn set_note_list(&self, note_list: Option<NoteList>) {
-        let imp = self.private();
+        let imp = imp::Sidebar::from_instance(self);
+
+        let sorter = gtk::CustomSorter::new(move |obj1, obj2| {
+            let order1 = obj1.downcast_ref::<Note>().unwrap().modified();
+            let order2 = obj2.downcast_ref::<Note>().unwrap().modified();
+
+            order2.cmp(&order1).into()
+        });
 
         let note_expression = gtk::ClosureExpression::new(
             |value| {
@@ -164,25 +165,27 @@ impl Sidebar {
             .set_model(Some(&gtk::SingleSelection::new(Some(&filter_model))));
     }
 
-    pub fn set_session(&self, session: Session) {
-        let imp = self.private();
-        imp.session.set(session).unwrap();
+    pub fn set_selected_note(&self, note: Option<Note>) {
+        if self.selected_note() == note {
+            return;
+        }
+
+        let imp = imp::Sidebar::from_instance(self);
+        imp.selected_note.replace(note);
+
+        self.notify("selected-note");
     }
 
-    pub fn selected_note(&self) -> Note {
-        let imp = self.private();
-        imp.selected_note.borrow().clone().unwrap()
+    pub fn selected_note(&self) -> Option<Note> {
+        let imp = imp::Sidebar::from_instance(self);
+        imp.selected_note.borrow().clone()
     }
 
     pub fn connect_activate(
         &self,
         f: impl Fn(&gtk::ListView, u32) + 'static,
     ) -> glib::SignalHandlerId {
-        let imp = self.private();
+        let imp = imp::Sidebar::from_instance(self);
         imp.listview.connect_activate(f)
-    }
-
-    fn private(&self) -> &imp::Sidebar {
-        imp::Sidebar::from_instance(self)
     }
 }
