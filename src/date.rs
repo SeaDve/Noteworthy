@@ -2,7 +2,7 @@ use chrono::{DateTime, Local};
 use gtk::glib::{self, GBoxed};
 use serde::{Deserialize, Serialize, Serializer};
 
-#[derive(Debug, Clone, GBoxed, Deserialize)]
+#[derive(Debug, Clone, GBoxed, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[gboxed(type_name = "NwtyDate")]
 pub struct Date(DateTime<Local>);
 

@@ -50,15 +50,8 @@
   <template class="GtkListItem">
     <property name="child">
       <object class="NwtyNoteRow">
-        <binding name="title">
-          <lookup type="NwtyNote" name="title">
-            <lookup name="item">GtkListItem</lookup>
-          </lookup>
-        </binding>
-        <binding name="subtitle">
-          <lookup type="NwtyNote" name="content">
-            <lookup name="item">GtkListItem</lookup>
-          </lookup>
+        <binding name="note">
+          <lookup name="item">GtkListItem</lookup>
         </binding>
       </object>
     </property>

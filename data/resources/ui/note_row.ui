@@ -13,6 +13,11 @@
           <object class="GtkLabel" id="title">
             <property name="ellipsize">end</property>
             <property name="halign">start</property>
+            <binding name="label">
+              <lookup name="title">
+                <lookup name="note">NwtyNoteRow</lookup>
+              </lookup>
+            </binding>
             <style>
               <class name="heading"/>
             </style>

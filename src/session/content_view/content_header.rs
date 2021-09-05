@@ -39,10 +39,10 @@ mod imp {
             self.parent_constructed(obj);
 
             // Expression that converts the selected note date to readable date
-            let this_expr = gtk::ConstantExpression::new(obj).upcast();
+            let self_expr = gtk::ConstantExpression::new(obj).upcast();
             let modified_expr = gtk::PropertyExpression::new(
                 Self::Type::static_type(),
-                Some(&this_expr),
+                Some(&self_expr),
                 "modified",
             )
             .upcast();
