@@ -138,9 +138,4 @@ impl Content {
         imp.note.replace(note);
         self.notify("note");
     }
-
-    pub fn save_active_note(&self) {
-        let imp = imp::Content::from_instance(self);
-        imp.content_view.save_active_note();
-    }
 }

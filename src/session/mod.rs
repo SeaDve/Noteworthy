@@ -144,8 +144,8 @@ impl Session {
     }
 
     pub fn save(&self) -> Result<()> {
-        let imp = imp::Session::from_instance(self);
-        imp.content.save_active_note();
+        // let imp = imp::Session::from_instance(self);
+        // imp.content.save_active_note();
         self.notes_manager().save_notes_to_file()?;
 
         log::info!("Session saved");

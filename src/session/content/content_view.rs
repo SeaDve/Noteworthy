@@ -19,7 +19,7 @@ mod imp {
         #[template_child]
         pub source_view: TemplateChild<sourceview::View>,
 
-        pub title_binding: RefCell<Option<glib::Binding>>,
+        pub bindings: RefCell<Vec<glib::Binding>>,
 
         pub note: RefCell<Option<Note>>,
     }
@@ -125,9 +125,9 @@ impl ContentView {
 
     pub fn set_note(&self, note: Option<Note>) {
         let imp = imp::ContentView::from_instance(self);
-        // this unbinds before binding it later
-        if let Some(title_binding) = imp.title_binding.take() {
-            title_binding.unbind();
+
+        for binding in imp.bindings.borrow_mut().drain(..) {
+            binding.unbind();
         }
 
         if let Some(ref note) = note {
@@ -139,32 +139,23 @@ impl ContentView {
             buffer.set_language(md_lang.as_ref());
             buffer.set_text(&note.content());
 
-            // FIXME make this not hacky
+            let mut bindings = imp.bindings.borrow_mut();
             let title_binding = note
                 .bind_property("title", &imp.title_label.get(), "text")
                 .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
-                .build();
+                .build()
+                .unwrap();
+            bindings.push(title_binding);
 
-            imp.title_binding.replace(title_binding);
+            let content_binding = note
+                .bind_property("content", &imp.source_view.buffer(), "text")
+                .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
+                .build()
+                .unwrap();
+            bindings.push(content_binding);
         }
 
         imp.note.replace(note);
         self.notify("note");
-    }
-
-    pub fn save_active_note(&self) {
-        // TODO maybe there is better place to put this functionality
-
-        match self.note() {
-            Some(note) => {
-                let imp = imp::ContentView::from_instance(self);
-                let buffer: sourceview::Buffer = imp.source_view.buffer().downcast().unwrap();
-                let (start_iter, end_iter) = buffer.bounds();
-                let buffer_text = buffer.text(&start_iter, &end_iter, true);
-
-                note.set_content(&buffer_text);
-            }
-            None => log::warn!("No note found on the view, not saving the content"),
-        };
     }
 }
