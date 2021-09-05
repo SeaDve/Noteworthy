@@ -18,7 +18,7 @@ mod imp {
         #[template_child]
         pub content_view: TemplateChild<ContentView>,
         #[template_child]
-        pub no_selected_view: TemplateChild<gtk::Box>,
+        pub no_selected_view: TemplateChild<adw::StatusPage>,
 
         pub compact: Cell<bool>,
         pub note: RefCell<Option<Note>>,
@@ -33,11 +33,15 @@ mod imp {
         fn class_init(klass: &mut Self::Class) {
             Self::bind_template(klass);
 
-            ContentView::static_type();
+            klass.install_action("content.go-back", None, move |obj, _, _| {
+                obj.set_note(None);
+            });
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
             obj.init_template();
+
+            ContentView::static_type();
         }
     }
 

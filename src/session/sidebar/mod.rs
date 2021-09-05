@@ -153,10 +153,10 @@ impl Sidebar {
         });
 
         let sorter = gtk::CustomSorter::new(move |obj1, obj2| {
-            let order1 = obj1.downcast_ref::<Note>().unwrap().modified();
-            let order2 = obj2.downcast_ref::<Note>().unwrap().modified();
+            let modified1 = obj1.downcast_ref::<Note>().unwrap().modified();
+            let modified2 = obj2.downcast_ref::<Note>().unwrap().modified();
 
-            order2.cmp(&order1).into()
+            modified2.cmp(&modified1).into()
         });
 
         note_list.connect_position_changed(clone!(@strong filter, @strong sorter => move |_| {

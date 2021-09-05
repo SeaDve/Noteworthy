@@ -10,13 +10,23 @@
           </object>
         </child>
         <child>
-          <object class="GtkSeparator"/>
+          <object class="AdwLeafletPage">
+            <property name="navigatable">False</property>
+            <property name="child">
+              <object class="GtkSeparator">
+                <property name="orientation">vertical</property>
+                <style>
+                  <class name="sidebar"/>
+                </style>
+              </object>
+            </property>
+          </object>
         </child>
         <child>
           <object class="NwtyContent" id="content">
             <property name="hexpand">True</property>
             <property name="compact" bind-source="leaflet" bind-property="folded" bind-flags="sync-create"/>
-            <property name="note" bind-source="NwtySession" bind-property="selected-note" bind-flags="sync-create"/>
+            <property name="note" bind-source="NwtySession" bind-property="selected-note" bind-flags="sync-create | bidirectional"/>
           </object>
         </child>
       </object>

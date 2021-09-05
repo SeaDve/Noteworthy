@@ -24,6 +24,8 @@ mod imp {
     #[template(resource = "/io/github/seadve/Noteworthy/ui/session.ui")]
     pub struct Session {
         #[template_child]
+        pub leaflet: TemplateChild<adw::Leaflet>,
+        #[template_child]
         pub sidebar: TemplateChild<Sidebar>,
         #[template_child]
         pub content: TemplateChild<Content>,
@@ -68,7 +70,7 @@ mod imp {
                     "Selected Note",
                     "The selected note",
                     Note::static_type(),
-                    glib::ParamFlags::READWRITE,
+                    glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                 )]
             });
 
@@ -77,7 +79,7 @@ mod imp {
 
         fn set_property(
             &self,
-            _obj: &Self::Type,
+            obj: &Self::Type,
             _id: usize,
             value: &glib::Value,
             pspec: &glib::ParamSpec,
@@ -85,15 +87,15 @@ mod imp {
             match pspec.name() {
                 "selected-note" => {
                     let selected_note = value.get().unwrap();
-                    self.selected_note.replace(selected_note);
+                    obj.set_selected_note(selected_note);
                 }
                 _ => unimplemented!(),
             }
         }
 
-        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+        fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "selected-note" => self.selected_note.borrow().to_value(),
+                "selected-note" => obj.selected_note().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -114,11 +116,25 @@ impl Session {
     }
 
     pub fn selected_note(&self) -> Option<Note> {
-        self.property("selected-note").unwrap().get().unwrap()
+        let imp = imp::Session::from_instance(self);
+        imp.selected_note.borrow().clone()
     }
 
     pub fn set_selected_note(&self, selected_note: Option<Note>) {
-        self.set_property("selected-note", selected_note).unwrap();
+        if self.selected_note() == selected_note {
+            return;
+        }
+
+        let imp = imp::Session::from_instance(self);
+
+        if selected_note.is_some() {
+            imp.leaflet.navigate(adw::NavigationDirection::Forward);
+        } else {
+            imp.leaflet.navigate(adw::NavigationDirection::Back);
+        }
+
+        imp.selected_note.replace(selected_note);
+        self.notify("selected-note");
     }
 
     pub fn notes_manager(&self) -> &NoteManager {
