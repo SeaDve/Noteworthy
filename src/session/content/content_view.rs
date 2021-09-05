@@ -58,7 +58,6 @@ mod imp {
             let modified_str_expr = gtk::ClosureExpression::new(
                 |args| {
                     let date: Date = args[1].get().unwrap();
-                    dbg!(&date);
                     format!("Last edited {}", date)
                 },
                 &[modified_expression],

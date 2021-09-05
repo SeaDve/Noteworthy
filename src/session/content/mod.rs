@@ -14,7 +14,11 @@ mod imp {
     #[template(resource = "/io/github/seadve/Noteworthy/ui/content.ui")]
     pub struct Content {
         #[template_child]
+        pub stack: TemplateChild<gtk::Stack>,
+        #[template_child]
         pub content_view: TemplateChild<ContentView>,
+        #[template_child]
+        pub no_selected_view: TemplateChild<gtk::Box>,
 
         pub compact: Cell<bool>,
         pub note: RefCell<Option<Note>>,
@@ -115,7 +119,18 @@ impl Content {
     }
 
     pub fn set_note(&self, note: Option<Note>) {
+        if self.note() == note {
+            return;
+        }
+
         let imp = imp::Content::from_instance(self);
+
+        if note.is_some() {
+            imp.stack.set_visible_child(&imp.content_view.get());
+        } else {
+            imp.stack.set_visible_child(&imp.no_selected_view.get());
+        }
+
         imp.note.replace(note);
         self.notify("note");
     }

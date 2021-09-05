@@ -8,8 +8,19 @@
       </object>
     </child>
     <child>
-      <object class="NwtyContentView" id="content_view">
-        <property name="note" bind-source="NwtyContent" bind-property="note" bind-flags="sync-create"/>
+      <object class="GtkStack" id="stack">
+        <child>
+          <object class="AdwStatusPage" id="no_selected_view">
+            <property name="icon-name">editor-symbolic</property>
+            <property name="title" translatable="yes">No Note Selected</property>
+            <property name="description" translatable="yes">Select a note to start writing.</property>
+          </object>
+        </child>
+        <child>
+          <object class="NwtyContentView" id="content_view">
+            <property name="note" bind-source="NwtyContent" bind-property="note" bind-flags="sync-create"/>
+          </object>
+        </child>
       </object>
     </child>
   </template>
