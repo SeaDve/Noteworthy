@@ -54,19 +54,6 @@ mod imp {
     impl ObjectImpl for ContentView {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
-
-            let key_events = gtk::EventControllerKey::new();
-            key_events
-                .connect_key_pressed(clone!(@weak obj => @default-return Inhibit(false), move |_, key, _, modifier| {
-                    if modifier.contains(gdk::ModifierType::CONTROL_MASK) && key == gdk::keys::constants::s {
-                        // FIXME Shouldn't call this from here
-                        obj.session().save().unwrap();
-                        Inhibit(true)
-                    } else {
-                        Inhibit(false)
-                    }
-                }));
-            self.source_view.add_controller(&key_events);
         }
 
         fn properties() -> &'static [glib::ParamSpec] {

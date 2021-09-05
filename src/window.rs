@@ -51,6 +51,8 @@ mod imp {
                 log::warn!("Failed to save window state, {}", &err);
             }
 
+            self.session.save().unwrap();
+
             self.parent_close_request(window)
         }
     }

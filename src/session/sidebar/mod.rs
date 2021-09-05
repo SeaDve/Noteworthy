@@ -102,6 +102,7 @@ mod imp {
                 }
                 "session" => {
                     let session = value.get().unwrap();
+                    // FIXME this doesnt notify this property check others too
                     obj.set_session(session);
                 }
                 _ => unimplemented!(),
