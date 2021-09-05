@@ -3,6 +3,7 @@
   <template class="NwtyContentView" parent="GtkBox">
     <child>
       <object class="GtkScrolledWindow">
+        <property name="hscrollbar-policy">never</property>
         <property name="child">
           <object class="GtkBox">
             <property name="orientation">vertical</property>
