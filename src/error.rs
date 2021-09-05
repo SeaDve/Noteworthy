@@ -2,7 +2,7 @@ use gtk::glib;
 
 #[derive(Debug)]
 pub enum Error {
-    ContentView(String),
+    Content(String),
     Str(std::string::FromUtf8Error),
     Io(std::io::Error),
     Glib(glib::Error),
@@ -14,7 +14,7 @@ impl std::error::Error for Error {}
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::ContentView(e) => f.write_str(&format!("NoteError: {}", e)),
+            Self::Content(e) => f.write_str(&format!("NoteError: {}", e)),
             Self::Str(e) => f.write_str(&format!("FromUtf8Error: {}", e)),
             Self::Io(e) => f.write_str(&format!("IoError: {}", e)),
             Self::Glib(e) => f.write_str(&format!("GlibError: {}", e)),

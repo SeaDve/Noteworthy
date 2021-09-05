@@ -12,8 +12,8 @@ mod imp {
     use super::*;
 
     #[derive(Debug, Default, CompositeTemplate)]
-    #[template(resource = "/io/github/seadve/Noteworthy/ui/content_view.ui")]
-    pub struct ContentView {
+    #[template(resource = "/io/github/seadve/Noteworthy/ui/content.ui")]
+    pub struct Content {
         #[template_child]
         pub source_view: TemplateChild<sourceview::View>,
         #[template_child]
@@ -26,9 +26,9 @@ mod imp {
     }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for ContentView {
-        const NAME: &'static str = "NwtyContentView";
-        type Type = super::ContentView;
+    impl ObjectSubclass for Content {
+        const NAME: &'static str = "NwtyContent";
+        type Type = super::Content;
         type ParentType = gtk::Box;
 
         fn class_init(klass: &mut Self::Class) {
@@ -42,7 +42,7 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for ContentView {
+    impl ObjectImpl for Content {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
         }
@@ -100,27 +100,27 @@ mod imp {
         }
     }
 
-    impl WidgetImpl for ContentView {}
-    impl BoxImpl for ContentView {}
+    impl WidgetImpl for Content {}
+    impl BoxImpl for Content {}
 }
 
 glib::wrapper! {
-    pub struct ContentView(ObjectSubclass<imp::ContentView>)
+    pub struct Content(ObjectSubclass<imp::Content>)
         @extends gtk::Widget, gtk::Box;
 }
 
-impl ContentView {
+impl Content {
     pub fn new() -> Self {
-        glib::Object::new(&[]).expect("Failed to create ContentView.")
+        glib::Object::new(&[]).expect("Failed to create Content.")
     }
 
     pub fn note(&self) -> Option<Note> {
-        let imp = imp::ContentView::from_instance(self);
+        let imp = imp::Content::from_instance(self);
         imp.note.borrow().clone()
     }
 
     pub fn set_note(&self, note: Option<Note>) {
-        let imp = imp::ContentView::from_instance(self);
+        let imp = imp::Content::from_instance(self);
         // this unbinds before binding it later
         if let Some(title_binding) = imp.title_binding.take() {
             title_binding.unbind();
@@ -153,7 +153,7 @@ impl ContentView {
 
         match self.note() {
             Some(note) => {
-                let imp = imp::ContentView::from_instance(self);
+                let imp = imp::Content::from_instance(self);
                 let buffer: sourceview::Buffer = imp.source_view.buffer().downcast().unwrap();
                 let (start_iter, end_iter) = buffer.bounds();
                 let buffer_text = buffer.text(&start_iter, &end_iter, true);

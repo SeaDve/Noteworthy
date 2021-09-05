@@ -13,7 +13,7 @@
           <object class="GtkSeparator"/>
         </child>
         <child>
-          <object class="NwtyContentView" id="content_view">
+          <object class="NwtyContent" id="content">
             <property name="hexpand">True</property>
             <property name="compact" bind-source="leaflet" bind-property="folded" bind-flags="sync-create"/>
             <property name="note" bind-source="NwtySession" bind-property="selected-note" bind-flags="sync-create"/>

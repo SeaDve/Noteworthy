@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <template class="NwtyContentView" parent="GtkBox">
+  <template class="NwtyContent" parent="GtkBox">
     <property name="orientation">vertical</property>
     <child>
       <object class="AdwHeaderBar">
-        <property name="show-start-title-buttons" bind-source="NwtyContentView" bind-property="compact" bind-flags="sync-create"/>
+        <property name="show-start-title-buttons" bind-source="NwtyContent" bind-property="compact" bind-flags="sync-create"/>
       </object>
     </child>
     <child>
@@ -16,7 +16,7 @@
               <object class="NwtyContentHeader" id="content_header">
                 <binding name="modified">
                   <lookup type="NwtyNote" name="modified">
-                    <lookup name="note">NwtyContentView</lookup>
+                    <lookup name="note">NwtyContent</lookup>
                   </lookup>
                 </binding>
               </object>

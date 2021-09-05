@@ -1,4 +1,4 @@
-mod content_view;
+mod content;
 mod manager;
 mod sidebar;
 
@@ -13,7 +13,7 @@ use once_cell::sync::OnceCell;
 use std::{cell::RefCell, path::Path};
 
 use self::{
-    content_view::ContentView,
+    content::Content,
     manager::{Note, NoteManager},
     sidebar::Sidebar,
 };
@@ -30,7 +30,7 @@ mod imp {
         #[template_child]
         pub sidebar: TemplateChild<Sidebar>,
         #[template_child]
-        pub content_view: TemplateChild<ContentView>,
+        pub content: TemplateChild<Content>,
 
         pub notes_manager: OnceCell<NoteManager>,
         pub selected_note: RefCell<Option<Note>>,
@@ -50,7 +50,7 @@ mod imp {
             obj.init_template();
 
             Sidebar::static_type();
-            ContentView::static_type();
+            Content::static_type();
         }
     }
 
@@ -148,7 +148,7 @@ impl Session {
 
     pub fn save(&self) -> Result<()> {
         let imp = imp::Session::from_instance(self);
-        imp.content_view.save_active_note();
+        imp.content.save_active_note();
         self.notes_manager().save_notes_to_file()?;
 
         log::info!("Session saved");
