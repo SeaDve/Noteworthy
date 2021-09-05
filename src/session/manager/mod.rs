@@ -153,22 +153,21 @@ impl NoteManager {
         Ok(())
     }
 
-    pub fn create_note(&self, title: &str) -> Result<Note> {
+    pub fn create_note(&self) -> Result<Note> {
         let mut file_path = self.path();
-        let file_name = format!("{} {}", title, chrono::Local::now().format("%H:%M:%S"));
-        file_path.push(file_name);
+        file_path.push(self.generate_unique_file_name());
         file_path.set_extension("md");
 
         let file = gio::File::for_path(file_path.display().to_string());
         file.create(gio::FileCreateFlags::NONE, None::<&gio::Cancellable>)?;
         let new_note = Note::from_file(&file);
 
-        log::info!("Created note {}", new_note.file().path().unwrap().display());
+        self.note_list().append(new_note.clone());
 
-        let new_note_upcast: Note = new_note.upcast();
-        self.note_list().append(new_note_upcast.clone());
+        log::info!("Created note {}", file_path.display());
 
-        Ok(new_note_upcast)
+        // TODO Consider if we really need to pass this out
+        Ok(new_note)
     }
 
     pub fn delete_note(&self, index: usize) -> Result<()> {
@@ -186,5 +185,11 @@ impl NoteManager {
         log::info!("Deleted note {}", note.file().path().unwrap().display());
 
         Ok(())
+    }
+
+    fn generate_unique_file_name(&self) -> String {
+        chrono::Local::now()
+            .format("Noteworthy %f %Y%m%dT%H%M%S")
+            .to_string()
     }
 }
