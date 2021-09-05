@@ -5,7 +5,6 @@ use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::sync::OnceCell;
 
 use std::{
-    cell::RefCell,
     fs,
     path::{Path, PathBuf},
 };
@@ -18,7 +17,7 @@ mod imp {
 
     #[derive(Debug, Default)]
     pub struct NoteManager {
-        pub path: RefCell<Option<gio::File>>,
+        pub path: OnceCell<gio::File>,
         pub note_list: OnceCell<NoteList>,
     }
 
@@ -68,7 +67,7 @@ mod imp {
             match pspec.name() {
                 "path" => {
                     let path = value.get().unwrap();
-                    self.path.replace(path);
+                    self.path.set(path).unwrap();
                 }
                 _ => unimplemented!(),
             }
@@ -76,7 +75,7 @@ mod imp {
 
         fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "path" => self.path.borrow().to_value(),
+                "path" => self.path.get().to_value(),
                 "note-list" => obj.note_list().to_value(),
                 _ => unimplemented!(),
             }
@@ -95,16 +94,10 @@ impl NoteManager {
         glib::Object::new::<Self>(&[("path", &file)]).expect("Failed to create NoteManager.")
     }
 
-    pub fn set_path(&self, path: &Path) {
-        let file = gio::File::for_path(path);
-        self.set_property("path", Some(file)).unwrap();
-    }
-
     pub fn path(&self) -> PathBuf {
         self.property("path")
             .unwrap()
-            .get::<Option<gio::File>>()
-            .unwrap()
+            .get::<gio::File>()
             .unwrap()
             .path()
             .unwrap()
