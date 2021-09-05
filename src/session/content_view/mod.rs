@@ -1,12 +1,6 @@
 mod content_header;
 
-use gtk::{
-    gdk,
-    glib::{self, clone, signal::Inhibit},
-    prelude::*,
-    subclass::prelude::*,
-    CompositeTemplate,
-};
+use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 use once_cell::sync::OnceCell;
 use sourceview::prelude::*;
 
@@ -14,7 +8,6 @@ use std::cell::{Cell, RefCell};
 
 use self::content_header::ContentHeader;
 use super::{manager::Note, Session};
-use crate::{error::Error, Result};
 
 mod imp {
     use super::*;
@@ -184,20 +177,17 @@ impl ContentView {
         self.set_property("note", note).unwrap();
     }
 
-    pub fn save_active_note(&self) -> Result<()> {
-        let imp = imp::ContentView::from_instance(self);
+    pub fn save_active_note(&self) {
+        match self.note() {
+            Some(note) => {
+                let imp = imp::ContentView::from_instance(self);
+                let buffer: sourceview::Buffer = imp.source_view.buffer().downcast().unwrap();
+                let (start_iter, end_iter) = buffer.bounds();
+                let buffer_text = buffer.text(&start_iter, &end_iter, true);
 
-        let note = self.note().ok_or_else(|| {
-            Error::ContentView(
-                "Cannot save active note, the view doesn't containt a note".to_string(),
-            )
-        })?;
-
-        let buffer: sourceview::Buffer = imp.source_view.buffer().downcast().unwrap();
-        let (start_iter, end_iter) = buffer.bounds();
-
-        note.set_content(&buffer.text(&start_iter, &end_iter, true));
-
-        Ok(())
+                note.set_content(&buffer_text);
+            }
+            None => log::warn!("No note found on the view, not saving the content"),
+        };
     }
 }
