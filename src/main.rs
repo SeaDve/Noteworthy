@@ -2,7 +2,6 @@
 #![warn(clippy::semicolon_if_nothing_returned)]
 #![warn(clippy::match_wildcard_for_single_variants)]
 #![warn(clippy::inefficient_to_string)]
-#![warn(clippy::needless_pass_by_value)]
 #![warn(clippy::await_holding_refcell_ref)]
 #![warn(clippy::map_unwrap_or)]
 #![warn(clippy::implicit_clone)]

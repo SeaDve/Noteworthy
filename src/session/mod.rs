@@ -60,7 +60,7 @@ mod imp {
 
             let note_list = obj.notes_manager().note_list();
 
-            self.sidebar.set_note_list(Some(note_list));
+            self.sidebar.set_note_list(note_list);
             self.sidebar.set_session(obj.clone());
 
             self.sidebar

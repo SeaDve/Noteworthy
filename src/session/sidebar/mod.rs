@@ -137,7 +137,7 @@ impl Sidebar {
         glib::Object::new(&[]).expect("Failed to create Sidebar.")
     }
 
-    pub fn set_note_list(&self, note_list: Option<NoteList>) {
+    pub fn set_note_list(&self, note_list: NoteList) {
         let imp = imp::Sidebar::from_instance(self);
 
         let sorter = gtk::CustomSorter::new(move |obj1, obj2| {
@@ -165,7 +165,7 @@ impl Sidebar {
             .ignore_case(true)
             .build();
 
-        let filter_model = gtk::FilterListModel::new(Some(&note_list.unwrap()), Some(&filter));
+        let filter_model = gtk::FilterListModel::new(Some(&note_list), Some(&filter));
 
         imp.listview
             .set_model(Some(&gtk::SingleSelection::new(Some(&filter_model))));
