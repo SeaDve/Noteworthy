@@ -1,6 +1,11 @@
 mod note_row;
 
-use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
+use gtk::{
+    glib::{self, clone},
+    prelude::*,
+    subclass::prelude::*,
+    CompositeTemplate,
+};
 use once_cell::sync::OnceCell;
 
 use std::cell::{Cell, RefCell};
@@ -140,6 +145,12 @@ impl Sidebar {
     pub fn set_note_list(&self, note_list: NoteList) {
         let imp = imp::Sidebar::from_instance(self);
 
+        // FIXME update when new note is edited
+        let filter = gtk::CustomFilter::new(|item| {
+            let modified = item.downcast_ref::<Note>().unwrap().modified();
+            true
+        });
+
         let sorter = gtk::CustomSorter::new(move |obj1, obj2| {
             let order1 = obj1.downcast_ref::<Note>().unwrap().modified();
             let order2 = obj2.downcast_ref::<Note>().unwrap().modified();
@@ -147,28 +158,16 @@ impl Sidebar {
             order2.cmp(&order1).into()
         });
 
-        let note_expression = gtk::ClosureExpression::new(
-            |value| {
-                value[0]
-                    .get::<gtk::TreeListRow>()
-                    .unwrap()
-                    .item()
-                    .and_then(|o| o.downcast::<Note>().ok())
-                    .map_or(String::new(), |o| o.title())
-            },
-            &[],
-        );
-
-        let filter = gtk::StringFilterBuilder::new()
-            .match_mode(gtk::StringFilterMatchMode::Substring)
-            .expression(&note_expression)
-            .ignore_case(true)
-            .build();
+        note_list.connect_items_changed(clone!(@strong filter, @strong sorter => move |_,_,_,_| {
+            filter.changed(gtk::FilterChange::Different);
+            sorter.changed(gtk::SorterChange::Different);
+        }));
 
         let filter_model = gtk::FilterListModel::new(Some(&note_list), Some(&filter));
+        let sort_model = gtk::SortListModel::new(Some(&filter_model), Some(&sorter));
 
         imp.listview
-            .set_model(Some(&gtk::SingleSelection::new(Some(&filter_model))));
+            .set_model(Some(&gtk::SingleSelection::new(Some(&sort_model))));
     }
 
     pub fn set_selected_note(&self, note: Option<Note>) {
