@@ -8,31 +8,8 @@
       </object>
     </child>
     <child>
-      <object class="GtkScrolledWindow">
-        <property name="child">
-          <object class="GtkBox">
-            <property name="orientation">vertical</property>
-            <child>
-              <object class="NwtyContentHeader" id="content_header">
-                <binding name="modified">
-                  <lookup type="NwtyNote" name="modified">
-                    <lookup name="note">NwtyContent</lookup>
-                  </lookup>
-                </binding>
-              </object>
-            </child>
-            <child>
-              <object class="GtkSourceView" id="source_view">
-                <property name="vexpand">True</property>
-                <property name="wrap-mode">word</property>
-                <property name="left-margin">48</property>
-                <property name="right-margin">48</property>
-                <property name="top-margin">6</property>
-                <property name="bottom-margin">6</property>
-              </object>
-            </child>
-          </object>
-        </property>
+      <object class="NwtyContentView" id="content_view">
+        <property name="note" bind-source="NwtyContent" bind-property="note" bind-flags="sync-create"/>
       </object>
     </child>
   </template>

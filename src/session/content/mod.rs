@@ -1,11 +1,10 @@
-mod content_header;
+mod content_view;
 
 use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
-use sourceview::prelude::*;
 
 use std::cell::{Cell, RefCell};
 
-use self::content_header::ContentHeader;
+use self::content_view::ContentView;
 use super::manager::Note;
 
 mod imp {
@@ -15,11 +14,7 @@ mod imp {
     #[template(resource = "/io/github/seadve/Noteworthy/ui/content.ui")]
     pub struct Content {
         #[template_child]
-        pub source_view: TemplateChild<sourceview::View>,
-        #[template_child]
-        pub content_header: TemplateChild<ContentHeader>,
-
-        pub title_binding: RefCell<Option<glib::Binding>>,
+        pub content_view: TemplateChild<ContentView>,
 
         pub compact: Cell<bool>,
         pub note: RefCell<Option<Note>>,
@@ -34,7 +29,7 @@ mod imp {
         fn class_init(klass: &mut Self::Class) {
             Self::bind_template(klass);
 
-            ContentHeader::static_type();
+            ContentView::static_type();
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
@@ -121,46 +116,12 @@ impl Content {
 
     pub fn set_note(&self, note: Option<Note>) {
         let imp = imp::Content::from_instance(self);
-        // this unbinds before binding it later
-        if let Some(title_binding) = imp.title_binding.take() {
-            title_binding.unbind();
-        }
-
-        if let Some(ref note) = note {
-            imp.source_view.grab_focus();
-            let buffer: sourceview::Buffer = imp.source_view.buffer().downcast().unwrap();
-
-            let md_lang =
-                sourceview::LanguageManager::default().and_then(|lm| lm.language("markdown"));
-            buffer.set_language(md_lang.as_ref());
-            buffer.set_text(&note.content());
-
-            // FIXME make this not hacky
-            let title_binding = note
-                .bind_property("title", &imp.content_header.get(), "title")
-                .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
-                .build();
-
-            imp.title_binding.replace(title_binding);
-        }
-
         imp.note.replace(note);
         self.notify("note");
     }
 
     pub fn save_active_note(&self) {
-        // TODO maybe there is better place to put this functionality
-
-        match self.note() {
-            Some(note) => {
-                let imp = imp::Content::from_instance(self);
-                let buffer: sourceview::Buffer = imp.source_view.buffer().downcast().unwrap();
-                let (start_iter, end_iter) = buffer.bounds();
-                let buffer_text = buffer.text(&start_iter, &end_iter, true);
-
-                note.set_content(&buffer_text);
-            }
-            None => log::warn!("No note found on the view, not saving the content"),
-        };
+        let imp = imp::Content::from_instance(self);
+        imp.content_view.save_active_note();
     }
 }
