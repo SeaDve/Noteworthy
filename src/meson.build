@@ -19,14 +19,14 @@ run_command(
 )
 
 rust_sources = files(
-  'session/content/view.rs',
   'session/content/mod.rs',
-  'session/manager/mod.rs',
-  'session/manager/note.rs',
-  'session/manager/note_list.rs',
+  'session/content/view.rs',
+  'session/note/mod.rs',
   'session/sidebar/mod.rs',
   'session/sidebar/note_row.rs',
   'session/mod.rs',
+  'session/note_list.rs',
+  'session/note_manager.rs',
   'application.rs',
   'config.rs',
   'date.rs',

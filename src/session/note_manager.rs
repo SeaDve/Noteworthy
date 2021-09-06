@@ -1,6 +1,3 @@
-mod note;
-mod note_list;
-
 use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::sync::OnceCell;
 
@@ -9,7 +6,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub use self::{note::Note, note_list::NoteList};
+use super::{Note, NoteList};
 use crate::Result;
 
 mod imp {

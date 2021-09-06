@@ -5,7 +5,7 @@ use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 use std::cell::{Cell, RefCell};
 
 use self::view::View;
-use super::manager::Note;
+use super::Note;
 
 mod imp {
     use super::*;

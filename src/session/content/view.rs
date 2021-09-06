@@ -3,7 +3,7 @@ use sourceview::prelude::*;
 
 use std::cell::RefCell;
 
-use super::super::manager::Note;
+use super::Note;
 use crate::date::Date;
 
 mod imp {

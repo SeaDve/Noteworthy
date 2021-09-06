@@ -11,10 +11,7 @@ use once_cell::sync::OnceCell;
 use std::cell::{Cell, RefCell};
 
 use self::note_row::NoteRow;
-use super::{
-    manager::{Note, NoteList},
-    Session,
-};
+use super::{Note, NoteList, Session};
 
 mod imp {
     use super::*;
@@ -47,7 +44,7 @@ mod imp {
                 imp.session
                     .get()
                     .unwrap()
-                    .notes_manager()
+                    .note_manager()
                     .create_note()
                     .expect("Failed to create note");
             });

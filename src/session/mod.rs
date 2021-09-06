@@ -1,5 +1,7 @@
 mod content;
-mod manager;
+mod note;
+mod note_list;
+mod note_manager;
 mod sidebar;
 
 use adw::subclass::prelude::*;
@@ -9,9 +11,7 @@ use once_cell::sync::OnceCell;
 use std::{cell::RefCell, path::Path};
 
 use self::{
-    content::Content,
-    manager::{Note, NoteManager},
-    sidebar::Sidebar,
+    content::Content, note::Note, note_list::NoteList, note_manager::NoteManager, sidebar::Sidebar,
 };
 use crate::Result;
 
@@ -30,7 +30,7 @@ mod imp {
         #[template_child]
         pub content: TemplateChild<Content>,
 
-        pub notes_manager: OnceCell<NoteManager>,
+        pub note_manager: OnceCell<NoteManager>,
         pub selected_note: RefCell<Option<Note>>,
     }
 
@@ -56,7 +56,7 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
-            let note_list = obj.notes_manager().note_list();
+            let note_list = obj.note_manager().note_list();
 
             self.sidebar.set_note_list(note_list);
             self.sidebar.set_session(obj.clone());
@@ -137,16 +137,16 @@ impl Session {
         self.notify("selected-note");
     }
 
-    pub fn notes_manager(&self) -> &NoteManager {
+    pub fn note_manager(&self) -> &NoteManager {
         let imp = imp::Session::from_instance(self);
-        imp.notes_manager
+        imp.note_manager
             .get_or_init(|| NoteManager::new(Path::new("/home/dave/Notes")))
     }
 
     pub fn save(&self) -> Result<()> {
         // let imp = imp::Session::from_instance(self);
         // imp.content.save_active_note();
-        self.notes_manager().save_notes_to_file()?;
+        self.note_manager().save_notes_to_file()?;
 
         log::info!("Session saved");
 
