@@ -10,7 +10,7 @@ mod imp {
     use super::*;
 
     #[derive(Debug, Default, CompositeTemplate)]
-    #[template(resource = "/io/github/seadve/Noteworthy/ui/note_row.ui")]
+    #[template(resource = "/io/github/seadve/Noteworthy/ui/sidebar_note_row.ui")]
     pub struct NoteRow {
         #[template_child]
         pub title_label: TemplateChild<gtk::Label>,
@@ -24,7 +24,7 @@ mod imp {
 
     #[glib::object_subclass]
     impl ObjectSubclass for NoteRow {
-        const NAME: &'static str = "NwtyNoteRow";
+        const NAME: &'static str = "NwtySidebarNoteRow";
         type Type = super::NoteRow;
         type ParentType = adw::Bin;
 

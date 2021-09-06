@@ -1,10 +1,10 @@
-mod content_view;
+mod view;
 
 use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::{Cell, RefCell};
 
-use self::content_view::ContentView;
+use self::view::View;
 use super::manager::Note;
 
 mod imp {
@@ -16,7 +16,7 @@ mod imp {
         #[template_child]
         pub stack: TemplateChild<gtk::Stack>,
         #[template_child]
-        pub content_view: TemplateChild<ContentView>,
+        pub view: TemplateChild<View>,
         #[template_child]
         pub no_selected_view: TemplateChild<adw::StatusPage>,
 
@@ -41,7 +41,7 @@ mod imp {
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
             obj.init_template();
 
-            ContentView::static_type();
+            View::static_type();
         }
     }
 
@@ -130,7 +130,7 @@ impl Content {
         let imp = imp::Content::from_instance(self);
 
         if note.is_some() {
-            imp.stack.set_visible_child(&imp.content_view.get());
+            imp.stack.set_visible_child(&imp.view.get());
         } else {
             imp.stack.set_visible_child(&imp.no_selected_view.get());
         }

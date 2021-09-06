@@ -11,7 +11,7 @@ mod imp {
 
     #[derive(Debug, Default, CompositeTemplate)]
     #[template(resource = "/io/github/seadve/Noteworthy/ui/content_view.ui")]
-    pub struct ContentView {
+    pub struct View {
         #[template_child]
         pub title_label: TemplateChild<gtk::TextView>,
         #[template_child]
@@ -25,9 +25,9 @@ mod imp {
     }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for ContentView {
+    impl ObjectSubclass for View {
         const NAME: &'static str = "NwtyContentView";
-        type Type = super::ContentView;
+        type Type = super::View;
         type ParentType = gtk::Box;
 
         fn class_init(klass: &mut Self::Class) {
@@ -39,7 +39,7 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for ContentView {
+    impl ObjectImpl for View {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
@@ -104,27 +104,27 @@ mod imp {
         }
     }
 
-    impl WidgetImpl for ContentView {}
-    impl BoxImpl for ContentView {}
+    impl WidgetImpl for View {}
+    impl BoxImpl for View {}
 }
 
 glib::wrapper! {
-    pub struct ContentView(ObjectSubclass<imp::ContentView>)
+    pub struct View(ObjectSubclass<imp::View>)
         @extends gtk::Widget, gtk::Box;
 }
 
-impl ContentView {
+impl View {
     pub fn new() -> Self {
-        glib::Object::new(&[]).expect("Failed to create ContentView.")
+        glib::Object::new(&[]).expect("Failed to create View.")
     }
 
     pub fn note(&self) -> Option<Note> {
-        let imp = imp::ContentView::from_instance(self);
+        let imp = imp::View::from_instance(self);
         imp.note.borrow().clone()
     }
 
     pub fn set_note(&self, note: Option<Note>) {
-        let imp = imp::ContentView::from_instance(self);
+        let imp = imp::View::from_instance(self);
 
         for binding in imp.bindings.borrow_mut().drain(..) {
             binding.unbind();

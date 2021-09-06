@@ -48,7 +48,7 @@
 <interface>
   <template class="GtkListItem">
     <property name="child">
-      <object class="NwtyNoteRow">
+      <object class="NwtySidebarNoteRow">
         <binding name="note">
           <lookup name="item">GtkListItem</lookup>
         </binding>

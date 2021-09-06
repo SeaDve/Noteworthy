@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <template class="NwtyNoteRow" parent="AdwBin">
+  <template class="NwtySidebarNoteRow" parent="AdwBin">
     <property name="child">
       <object class="GtkBox">
         <property name="margin-top">6</property>
@@ -17,7 +17,7 @@
                 <property name="halign">start</property>
                 <binding name="label">
                   <lookup name="title">
-                    <lookup name="note">NwtyNoteRow</lookup>
+                    <lookup name="note">NwtySidebarNoteRow</lookup>
                   </lookup>
                 </binding>
                 <style>

@@ -24,7 +24,7 @@
           </object>
         </child>
         <child>
-          <object class="NwtyContentView" id="content_view">
+          <object class="NwtyContentView" id="view">
             <property name="note" bind-source="NwtyContent" bind-property="note" bind-flags="sync-create"/>
           </object>
         </child>
