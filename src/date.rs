@@ -24,6 +24,12 @@ impl std::fmt::Display for Date {
     }
 }
 
+impl From<String> for Date {
+    fn from(string: String) -> Self {
+        Date(DateTime::parse_from_rfc3339(&string).unwrap().into())
+    }
+}
+
 impl Date {
     pub fn now() -> Self {
         Self(Local::now())

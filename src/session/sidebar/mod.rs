@@ -145,13 +145,13 @@ impl Sidebar {
 
         // FIXME broken here see commit a6c627dad8fa370b39f77c9f84f0a9df2c3add79
         let filter = gtk::CustomFilter::new(|item| {
-            let modified = item.downcast_ref::<Note>().unwrap().modified();
+            let modified = item.downcast_ref::<Note>().unwrap().metadata().modified();
             true
         });
 
         let sorter = gtk::CustomSorter::new(move |obj1, obj2| {
-            let modified1 = obj1.downcast_ref::<Note>().unwrap().modified();
-            let modified2 = obj2.downcast_ref::<Note>().unwrap().modified();
+            let modified1 = obj1.downcast_ref::<Note>().unwrap().metadata().modified();
+            let modified2 = obj2.downcast_ref::<Note>().unwrap().metadata().modified();
 
             modified2.cmp(&modified1).into()
         });

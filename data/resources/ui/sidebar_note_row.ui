@@ -17,7 +17,9 @@
                 <property name="halign">start</property>
                 <binding name="label">
                   <lookup name="title">
-                    <lookup name="note">NwtySidebarNoteRow</lookup>
+                    <lookup name="metadata">
+                      <lookup name="note">NwtySidebarNoteRow</lookup>
+                    </lookup>
                   </lookup>
                 </binding>
                 <style>

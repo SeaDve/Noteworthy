@@ -3,6 +3,7 @@ use sourceview::prelude::*;
 
 use std::cell::RefCell;
 
+use super::super::note::Metadata;
 use super::Note;
 use crate::date::Date;
 
@@ -49,9 +50,14 @@ mod imp {
                 Some(&self_expression),
                 "note",
             );
-            let modified_expression = gtk::PropertyExpression::new(
+            let metadata_expression = gtk::PropertyExpression::new(
                 Note::static_type(),
                 Some(&note_expression),
+                "metadata",
+            );
+            let modified_expression = gtk::PropertyExpression::new(
+                Metadata::static_type(),
+                Some(&metadata_expression),
                 "modified",
             )
             .upcast();
@@ -141,6 +147,7 @@ impl View {
 
             let mut bindings = imp.bindings.borrow_mut();
             let title_binding = note
+                .metadata()
                 .bind_property("title", &imp.title_label.get().buffer(), "text")
                 .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
                 .build()

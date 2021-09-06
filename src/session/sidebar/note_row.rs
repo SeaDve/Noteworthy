@@ -3,6 +3,7 @@ use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::RefCell;
 
+use super::super::note::Metadata;
 use super::Note;
 use crate::date::Date;
 
@@ -128,9 +129,15 @@ impl NoteRow {
 
             // Expression describing how to get time label of self from date of note
             let note_expression = gtk::ConstantExpression::new(&note).upcast();
-            let modified_expression = gtk::PropertyExpression::new(
+            let metadata_expression = gtk::PropertyExpression::new(
                 Note::static_type(),
                 Some(&note_expression),
+                "metadata",
+            )
+            .upcast();
+            let modified_expression = gtk::PropertyExpression::new(
+                Metadata::static_type(),
+                Some(&metadata_expression),
                 "modified",
             )
             .upcast();

@@ -1,18 +1,13 @@
-use gray_matter::{engine::YAML, Matter};
+mod metadata;
+
+use gray_matter::{engine::YAML, value::pod::Pod, Matter};
 use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::sync::OnceCell;
-use serde::{Deserialize, Serialize};
 
-use std::cell::RefCell;
+use std::{cell::RefCell, collections::HashMap};
 
-use crate::{date::Date, Result};
-
-#[derive(Debug, Serialize, Deserialize, Default)]
-pub struct Metadata {
-    pub title: String,
-    pub modified: Date,
-    pub tags: Vec<String>,
-}
+pub use self::metadata::Metadata;
+use crate::Result;
 
 mod imp {
     use super::*;
@@ -50,18 +45,11 @@ mod imp {
                         gio::File::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
-                    glib::ParamSpec::new_string(
-                        "title",
-                        "Title",
-                        "Title of the note",
-                        None,
-                        glib::ParamFlags::READWRITE,
-                    ),
-                    glib::ParamSpec::new_boxed(
-                        "modified",
-                        "Modified",
-                        "Last modified date of the note",
-                        Date::static_type(),
+                    glib::ParamSpec::new_object(
+                        "metadata",
+                        "Metadata",
+                        "Metadata containing info of note",
+                        Metadata::static_type(),
                         glib::ParamFlags::READWRITE,
                     ),
                     glib::ParamSpec::new_string(
@@ -89,34 +77,24 @@ mod imp {
                     let file = value.get().unwrap();
                     self.file.set(file).unwrap();
                 }
-                "title" => {
-                    let title = value.get().unwrap();
-                    let mut metadata = self.metadata.borrow_mut();
-                    metadata.title = title;
-                }
-                "modified" => {
-                    let modified = value.get().unwrap();
-                    let mut metadata = self.metadata.borrow_mut();
-                    metadata.modified = modified;
+                "metadata" => {
+                    let metadata = value.get().unwrap();
+                    self.metadata.replace(metadata);
                 }
                 "content" => {
                     let content = value.get().unwrap();
                     self.content.replace(content);
+
+                    obj.metadata().update_modified();
                 }
                 _ => unimplemented!(),
-            }
-
-            match pspec.name() {
-                "title" | "content" => obj.update_modified(),
-                _ => (),
             }
         }
 
         fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
                 "file" => self.file.get().to_value(),
-                "title" => self.metadata.borrow().title.to_value(),
-                "modified" => self.metadata.borrow().modified.to_value(),
+                "metadata" => self.metadata.borrow().to_value(),
                 "content" => self.content.borrow().to_value(),
                 _ => unimplemented!(),
             }
@@ -133,28 +111,12 @@ impl Note {
         glib::Object::new::<Self>(&[("file", file)]).expect("Failed to create Note.")
     }
 
-    pub fn set_file(&self, file: &gio::File) {
-        self.set_property("file", Some(file)).unwrap();
-    }
-
     pub fn file(&self) -> gio::File {
         self.property("file").unwrap().get::<gio::File>().unwrap()
     }
 
-    pub fn set_title(&self, title: &str) {
-        self.set_property("title", title).unwrap();
-    }
-
-    pub fn title(&self) -> String {
-        self.property("title").unwrap().get().unwrap()
-    }
-
-    pub fn update_modified(&self) {
-        self.set_property("modified", Date::now()).unwrap();
-    }
-
-    pub fn modified(&self) -> Date {
-        self.property("modified").unwrap().get().unwrap()
+    pub fn metadata(&self) -> Metadata {
+        self.property("metadata").unwrap().get().unwrap()
     }
 
     pub fn set_content(&self, content: &str) {
@@ -163,14 +125,6 @@ impl Note {
 
     pub fn content(&self) -> String {
         self.property("content").unwrap().get().unwrap()
-    }
-
-    pub fn connect_modified_notify<F: Fn(&Self, &glib::ParamSpec) + 'static>(
-        &self,
-        f: F,
-    ) -> glib::SignalHandlerId {
-        // TODO make this also handle other properties to enabled sorting for title etc.
-        self.connect_notify_local(Some("modified"), f)
     }
 
     pub fn delete(&self) -> Result<()> {
@@ -183,11 +137,23 @@ impl Note {
         let (file_content, _) = file.load_contents(None::<&gio::Cancellable>)?;
         let file_content = String::from_utf8(file_content)?;
         let parsed_entity = Matter::<YAML>::new().parse(&file_content);
-        let metadata: Metadata = match parsed_entity.data {
-            Some(pod) => pod.deserialize().unwrap_or_default(), // FIXME this will cause data losses when one field is missing
-            // Fix this by creating a struct from what is available and fill in the defaults
-            None => Metadata::default(),
-        };
+
+        let metadata = parsed_entity
+            .data
+            .map(|p| {
+                let parsed_entity_data: HashMap<String, Pod> = p.into();
+                Metadata::new(
+                    parsed_entity_data
+                        .get("title")
+                        .map(|t| t.as_string().unwrap())
+                        .unwrap_or_default(),
+                    parsed_entity_data
+                        .get("modified")
+                        .map(|t| t.as_string().unwrap().into())
+                        .unwrap_or_default(),
+                )
+            })
+            .unwrap_or_default();
 
         let imp = imp::Note::from_instance(self);
         imp.metadata.replace(metadata);

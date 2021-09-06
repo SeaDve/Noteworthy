@@ -21,6 +21,7 @@ run_command(
 rust_sources = files(
   'session/content/mod.rs',
   'session/content/view.rs',
+  'session/note/metadata.rs',
   'session/note/mod.rs',
   'session/sidebar/mod.rs',
   'session/sidebar/note_row.rs',
