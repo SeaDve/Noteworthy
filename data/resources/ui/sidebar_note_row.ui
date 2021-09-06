@@ -3,8 +3,6 @@
   <template class="NwtySidebarNoteRow" parent="AdwBin">
     <property name="child">
       <object class="GtkBox">
-        <property name="margin-top">6</property>
-        <property name="margin-bottom">6</property>
         <property name="spacing">6</property>
         <property name="orientation">vertical</property>
         <child>

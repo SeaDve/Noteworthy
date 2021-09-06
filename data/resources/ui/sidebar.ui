@@ -18,6 +18,9 @@
   </menu>
   <template class="NwtySidebar" parent="GtkBox">
     <property name="orientation">vertical</property>
+    <style>
+      <class name="sidebar"/>
+    </style>
     <child>
       <object class="AdwHeaderBar">
         <property name="show-end-title-buttons" bind-source="NwtySidebar" bind-property="compact" bind-flags="sync-create"/>

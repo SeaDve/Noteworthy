@@ -1,4 +1,14 @@
-.content-header {
-  padding: 18px 24px 6px 24px;
+.sidebar row {
+  padding-left: 6px;
+  padding-right: 6px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.content-view {
   background-color: @theme_base_color;
+  padding-left: 24px;
+  padding-right: 24px;
+  padding-top: 18px;
+  padding-bottom: 18px;
 }

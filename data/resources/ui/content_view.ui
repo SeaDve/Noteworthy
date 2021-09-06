@@ -7,6 +7,10 @@
         <property name="child">
           <object class="GtkBox">
             <property name="orientation">vertical</property>
+            <property name="spacing">12</property>
+            <style>
+              <class name="content-view"/>
+            </style>
             <child>
               <object class="GtkBox">
                 <property name="orientation">vertical</property>
@@ -43,19 +47,12 @@
                     </child>
                   </object>
                 </child>
-                <style>
-                  <class name="content-header"/>
-                </style>
               </object>
             </child>
             <child>
               <object class="GtkSourceView" id="source_view">
                 <property name="vexpand">True</property>
                 <property name="wrap-mode">word</property>
-                <property name="left-margin">24</property>
-                <property name="right-margin">24</property>
-                <property name="top-margin">6</property>
-                <property name="bottom-margin">6</property>
               </object>
             </child>
           </object>
