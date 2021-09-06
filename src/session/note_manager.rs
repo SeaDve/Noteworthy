@@ -39,7 +39,7 @@ mod imp {
                         "Path",
                         "Path where the notes are stored",
                         gio::File::static_type(),
-                        glib::ParamFlags::READWRITE,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
                     glib::ParamSpec::new_object(
                         "note-list",
