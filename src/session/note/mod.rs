@@ -9,7 +9,7 @@ use gtk::{
 };
 use once_cell::sync::OnceCell;
 
-use std::{cell::RefCell, collections::HashMap};
+use std::collections::HashMap;
 
 pub use self::metadata::Metadata;
 use crate::Result;
@@ -21,7 +21,7 @@ mod imp {
     pub struct Note {
         pub file: OnceCell<gio::File>,
         pub metadata: OnceCell<Metadata>,
-        pub content: RefCell<Option<sourceview::Buffer>>,
+        pub content: OnceCell<sourceview::Buffer>,
     }
 
     #[glib::object_subclass]
@@ -66,7 +66,7 @@ mod imp {
                         "Content",
                         "Content of the note",
                         sourceview::Buffer::static_type(),
-                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
                 ]
             });
@@ -92,7 +92,7 @@ mod imp {
                 }
                 "content" => {
                     let content = value.get().unwrap();
-                    self.content.replace(Some(content));
+                    self.content.set(content).unwrap();
                 }
                 _ => unimplemented!(),
             }
@@ -137,7 +137,7 @@ impl Note {
 
     pub fn content(&self) -> sourceview::Buffer {
         let imp = imp::Note::from_instance(self);
-        imp.content.borrow().as_ref().unwrap().clone()
+        imp.content.get().unwrap().clone()
     }
 
     pub fn delete(&self) -> Result<()> {

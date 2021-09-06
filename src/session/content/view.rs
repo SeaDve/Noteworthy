@@ -152,7 +152,7 @@ impl View {
 
             let content_binding = note
                 .bind_property("content", &imp.source_view.get(), "buffer")
-                .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
+                .flags(glib::BindingFlags::SYNC_CREATE)
                 .build()
                 .unwrap();
             bindings.push(content_binding);
