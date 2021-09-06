@@ -4,6 +4,7 @@ use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 use std::cell::RefCell;
 
 use super::Note;
+use crate::date::Date;
 
 mod imp {
     use super::*;
@@ -12,9 +13,11 @@ mod imp {
     #[template(resource = "/io/github/seadve/Noteworthy/ui/note_row.ui")]
     pub struct NoteRow {
         #[template_child]
-        pub title: TemplateChild<gtk::Label>,
+        pub title_label: TemplateChild<gtk::Label>,
         #[template_child]
-        pub subtitle: TemplateChild<gtk::Label>,
+        pub subtitle_label: TemplateChild<gtk::Label>,
+        #[template_child]
+        pub time_label: TemplateChild<gtk::Label>,
 
         pub note: RefCell<Option<Note>>,
     }
@@ -105,7 +108,7 @@ impl NoteRow {
         let imp = imp::NoteRow::from_instance(self);
 
         if let Some(ref note) = note {
-            // Expression describing how to get subtitle of self content of note
+            // Expression describing how to get subtitle label of self from content of note
             let note_expression = gtk::ConstantExpression::new(&note).upcast();
             let content_expression = gtk::PropertyExpression::new(
                 Note::static_type(),
@@ -121,7 +124,25 @@ impl NoteRow {
                 &[content_expression],
             )
             .upcast();
-            subtitle_expression.bind(&imp.subtitle.get(), "label", None);
+            subtitle_expression.bind(&imp.subtitle_label.get(), "label", None);
+
+            // Expression describing how to get time label of self from date of note
+            let note_expression = gtk::ConstantExpression::new(&note).upcast();
+            let modified_expression = gtk::PropertyExpression::new(
+                Note::static_type(),
+                Some(&note_expression),
+                "modified",
+            )
+            .upcast();
+            let time_expression = gtk::ClosureExpression::new(
+                |args| {
+                    let modified: Date = args[1].get().unwrap();
+                    modified.fuzzy_display()
+                },
+                &[modified_expression],
+            )
+            .upcast();
+            time_expression.bind(&imp.time_label.get(), "label", None);
         }
 
         imp.note.replace(note);

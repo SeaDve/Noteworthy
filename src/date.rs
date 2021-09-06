@@ -26,6 +26,26 @@ impl std::fmt::Display for Date {
 
 impl Date {
     pub fn now() -> Self {
-        Self(chrono::offset::Local::now())
+        Self(Local::now())
+    }
+
+    pub fn fuzzy_display(&self) -> String {
+        let now = Local::now();
+        let is_today = now.date() == self.0.date();
+
+        let duration = self.0.signed_duration_since(now);
+        let hours_difference = duration.num_hours();
+        let week_difference = duration.num_weeks();
+
+        if is_today {
+            self.0.format("%I∶%M") // 08:10
+        } else if hours_difference <= 36 {
+            self.0.format("yesterday")
+        } else if week_difference <= 52 {
+            self.0.format("%b %m") // Sep 03
+        } else {
+            self.0.format("%b %m %Y") // Sep 03 1920
+        }
+        .to_string()
     }
 }
