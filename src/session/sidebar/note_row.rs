@@ -117,12 +117,18 @@ impl NoteRow {
                 "content",
             )
             .upcast();
+            let text_expression = gtk::PropertyExpression::new(
+                sourceview::Buffer::static_type(),
+                Some(&content_expression),
+                "text",
+            )
+            .upcast();
             let subtitle_expression = gtk::ClosureExpression::new(
                 |args| {
-                    let content: String = args[1].get().unwrap();
-                    content.lines().next().unwrap_or_default().to_string()
+                    let text: String = args[1].get().unwrap();
+                    text.lines().next().unwrap_or_default().to_string()
                 },
-                &[content_expression],
+                &[text_expression],
             )
             .upcast();
             subtitle_expression.bind(&imp.subtitle_label.get(), "label", None);

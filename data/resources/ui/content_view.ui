@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <template class="NwtyContentView" parent="GtkBox">
+  <template class="NwtyContentView" parent="AdwBin">
     <child>
       <object class="GtkScrolledWindow">
         <property name="hscrollbar-policy">never</property>
@@ -12,7 +12,7 @@
                 <property name="orientation">vertical</property>
                 <property name="spacing">6</property>
                 <child>
-                  <object class="GtkTextView" id="title_label">
+                  <object class="GtkSourceView" id="title_label">
                     <property name="hexpand">True</property>
                     <property name="wrap-mode">word-char</property>
                     <style>

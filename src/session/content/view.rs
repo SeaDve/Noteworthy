@@ -1,5 +1,5 @@
+use adw::subclass::prelude::*;
 use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
-use sourceview::prelude::*;
 
 use std::cell::RefCell;
 
@@ -14,7 +14,7 @@ mod imp {
     #[template(resource = "/io/github/seadve/Noteworthy/ui/content_view.ui")]
     pub struct View {
         #[template_child]
-        pub title_label: TemplateChild<gtk::TextView>,
+        pub title_label: TemplateChild<sourceview::View>,
         #[template_child]
         pub modified_label: TemplateChild<gtk::Label>,
         #[template_child]
@@ -29,7 +29,7 @@ mod imp {
     impl ObjectSubclass for View {
         const NAME: &'static str = "NwtyContentView";
         type Type = super::View;
-        type ParentType = gtk::Box;
+        type ParentType = adw::Bin;
 
         fn class_init(klass: &mut Self::Class) {
             Self::bind_template(klass);
@@ -111,12 +111,12 @@ mod imp {
     }
 
     impl WidgetImpl for View {}
-    impl BoxImpl for View {}
+    impl BinImpl for View {}
 }
 
 glib::wrapper! {
     pub struct View(ObjectSubclass<imp::View>)
-        @extends gtk::Widget, gtk::Box;
+        @extends gtk::Widget, adw::Bin;
 }
 
 impl View {
@@ -138,11 +138,6 @@ impl View {
 
         if let Some(ref note) = note {
             imp.source_view.grab_focus();
-            let buffer: sourceview::Buffer = imp.source_view.buffer().downcast().unwrap();
-
-            let md_lang =
-                sourceview::LanguageManager::default().and_then(|lm| lm.language("markdown"));
-            buffer.set_language(md_lang.as_ref());
 
             let mut bindings = imp.bindings.borrow_mut();
 
@@ -155,7 +150,7 @@ impl View {
             bindings.push(title_binding);
 
             let content_binding = note
-                .bind_property("content", &imp.source_view.buffer(), "text")
+                .bind_property("content", &imp.source_view.get(), "buffer")
                 .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
                 .build()
                 .unwrap();

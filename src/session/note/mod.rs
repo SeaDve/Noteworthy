@@ -1,7 +1,12 @@
 mod metadata;
 
 use gray_matter::{engine::YAML, value::pod::Pod, Matter};
-use gtk::{gio, glib, prelude::*, subclass::prelude::*};
+use gtk::{
+    gio,
+    glib::{self, clone},
+    prelude::*,
+    subclass::prelude::*,
+};
 use once_cell::sync::OnceCell;
 
 use std::{cell::RefCell, collections::HashMap};
@@ -15,9 +20,8 @@ mod imp {
     #[derive(Debug, Default)]
     pub struct Note {
         pub file: OnceCell<gio::File>,
-
-        pub metadata: RefCell<Metadata>,
-        pub content: RefCell<String>,
+        pub metadata: OnceCell<Metadata>,
+        pub content: RefCell<Option<sourceview::Buffer>>,
     }
 
     #[glib::object_subclass]
@@ -30,8 +34,13 @@ mod imp {
     impl ObjectImpl for Note {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
-            obj.deserialize_from_file()
-                .expect("Failed to deserialize note from file");
+
+            obj.content().connect_notify_local(
+                Some("text"),
+                clone!(@weak obj => move |_, _| {
+                    obj.metadata().update_modified();
+                }),
+            );
         }
 
         fn properties() -> &'static [glib::ParamSpec] {
@@ -50,14 +59,14 @@ mod imp {
                         "Metadata",
                         "Metadata containing info of note",
                         Metadata::static_type(),
-                        glib::ParamFlags::READWRITE,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
-                    glib::ParamSpec::new_string(
+                    glib::ParamSpec::new_object(
                         "content",
                         "Content",
                         "Content of the note",
-                        None,
-                        glib::ParamFlags::READWRITE,
+                        sourceview::Buffer::static_type(),
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT,
                     ),
                 ]
             });
@@ -67,7 +76,7 @@ mod imp {
 
         fn set_property(
             &self,
-            obj: &Self::Type,
+            _obj: &Self::Type,
             _id: usize,
             value: &glib::Value,
             pspec: &glib::ParamSpec,
@@ -79,23 +88,21 @@ mod imp {
                 }
                 "metadata" => {
                     let metadata = value.get().unwrap();
-                    self.metadata.replace(metadata);
+                    self.metadata.set(metadata).unwrap();
                 }
                 "content" => {
                     let content = value.get().unwrap();
-                    self.content.replace(content);
-
-                    obj.metadata().update_modified();
+                    self.content.replace(Some(content));
                 }
                 _ => unimplemented!(),
             }
         }
 
-        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+        fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "file" => self.file.get().to_value(),
-                "metadata" => self.metadata.borrow().to_value(),
-                "content" => self.content.borrow().to_value(),
+                "file" => obj.file().to_value(),
+                "metadata" => obj.metadata().to_value(),
+                "content" => obj.content().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -108,23 +115,29 @@ glib::wrapper! {
 
 impl Note {
     pub fn from_file(file: &gio::File) -> Self {
-        glib::Object::new::<Self>(&[("file", file)]).expect("Failed to create Note.")
+        let (metadata, content) =
+            Self::deserialize_from_file(file).expect("Failed to deserialize from file");
+        glib::Object::new::<Self>(&[
+            ("file", file),
+            ("metadata", &metadata),
+            ("content", &content),
+        ])
+        .expect("Failed to create Note.")
     }
 
     pub fn file(&self) -> gio::File {
-        self.property("file").unwrap().get::<gio::File>().unwrap()
+        let imp = imp::Note::from_instance(self);
+        imp.file.get().unwrap().clone()
     }
 
     pub fn metadata(&self) -> Metadata {
-        self.property("metadata").unwrap().get().unwrap()
+        let imp = imp::Note::from_instance(self);
+        imp.metadata.get().unwrap().clone()
     }
 
-    pub fn set_content(&self, content: &str) {
-        self.set_property("content", content).unwrap();
-    }
-
-    pub fn content(&self) -> String {
-        self.property("content").unwrap().get().unwrap()
+    pub fn content(&self) -> sourceview::Buffer {
+        let imp = imp::Note::from_instance(self);
+        imp.content.borrow().as_ref().unwrap().clone()
     }
 
     pub fn delete(&self) -> Result<()> {
@@ -132,11 +145,19 @@ impl Note {
         Ok(())
     }
 
-    fn deserialize_from_file(&self) -> Result<()> {
-        let file = self.file();
+    fn deserialize_from_file(file: &gio::File) -> Result<(Metadata, sourceview::Buffer)> {
         let (file_content, _) = file.load_contents(None::<&gio::Cancellable>)?;
         let file_content = std::str::from_utf8(&file_content)?;
         let parsed_entity = Matter::<YAML>::new().parse(file_content);
+
+        let content = sourceview::BufferBuilder::new()
+            .text(&parsed_entity.content)
+            .language(
+                &sourceview::LanguageManager::default()
+                    .and_then(|lm| lm.language("markdown"))
+                    .unwrap(),
+            )
+            .build();
 
         let metadata = parsed_entity
             .data
@@ -155,19 +176,19 @@ impl Note {
             })
             .unwrap_or_default();
 
-        let imp = imp::Note::from_instance(self);
-        imp.metadata.replace(metadata);
-        imp.content.replace(parsed_entity.content);
-        Ok(())
+        Ok((metadata, content))
     }
 
     pub fn serialize(&self) -> Result<Vec<u8>> {
-        let imp = imp::Note::from_instance(self);
-
         // FIXME replace with not hacky implementation
-        let mut bytes = serde_yaml::to_vec(&imp.metadata).unwrap();
+        let mut bytes = serde_yaml::to_vec(&self.metadata()).unwrap();
         bytes.append(&mut "---\n".as_bytes().to_vec());
-        bytes.append(&mut imp.content.borrow_mut().as_bytes().to_vec());
+
+        let buffer = self.content();
+        let (start_iter, end_iter) = buffer.bounds();
+        let buffer_text = buffer.text(&start_iter, &end_iter, true);
+
+        bytes.append(&mut buffer_text.as_bytes().to_vec());
 
         Ok(bytes)
     }
