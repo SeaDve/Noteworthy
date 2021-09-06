@@ -143,9 +143,9 @@ impl View {
             let md_lang =
                 sourceview::LanguageManager::default().and_then(|lm| lm.language("markdown"));
             buffer.set_language(md_lang.as_ref());
-            buffer.set_text(&note.content());
 
             let mut bindings = imp.bindings.borrow_mut();
+
             let title_binding = note
                 .metadata()
                 .bind_property("title", &imp.title_label.get().buffer(), "text")
