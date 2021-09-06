@@ -3,7 +3,7 @@ use gtk::glib;
 #[derive(Debug)]
 pub enum Error {
     Content(String),
-    Str(std::string::FromUtf8Error),
+    Str(std::str::Utf8Error),
     Io(std::io::Error),
     Glib(glib::Error),
     Yaml(serde_yaml::Error),
@@ -15,7 +15,7 @@ impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Content(e) => f.write_str(&format!("NoteError: {}", e)),
-            Self::Str(e) => f.write_str(&format!("FromUtf8Error: {}", e)),
+            Self::Str(e) => f.write_str(&format!("Utf8Error: {}", e)),
             Self::Io(e) => f.write_str(&format!("IoError: {}", e)),
             Self::Glib(e) => f.write_str(&format!("GlibError: {}", e)),
             Self::Yaml(e) => f.write_str(&format!("YamlError: {}", e)),
@@ -29,8 +29,8 @@ impl From<glib::Error> for Error {
     }
 }
 
-impl From<std::string::FromUtf8Error> for Error {
-    fn from(error: std::string::FromUtf8Error) -> Self {
+impl From<std::str::Utf8Error> for Error {
+    fn from(error: std::str::Utf8Error) -> Self {
         Error::Str(error)
     }
 }

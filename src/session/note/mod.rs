@@ -135,8 +135,8 @@ impl Note {
     fn deserialize_from_file(&self) -> Result<()> {
         let file = self.file();
         let (file_content, _) = file.load_contents(None::<&gio::Cancellable>)?;
-        let file_content = String::from_utf8(file_content)?;
-        let parsed_entity = Matter::<YAML>::new().parse(&file_content);
+        let file_content = std::str::from_utf8(&file_content)?;
+        let parsed_entity = Matter::<YAML>::new().parse(file_content);
 
         let metadata = parsed_entity
             .data
