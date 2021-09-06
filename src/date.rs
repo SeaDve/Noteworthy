@@ -48,9 +48,9 @@ impl Date {
         } else if hours_difference <= 36 {
             self.0.format("yesterday")
         } else if week_difference <= 52 {
-            self.0.format("%b %m") // Sep 03
+            self.0.format("%b %d") // Sep 03
         } else {
-            self.0.format("%b %m %Y") // Sep 03 1920
+            self.0.format("%b %d %Y") // Sep 03 1920
         }
         .to_string()
     }
