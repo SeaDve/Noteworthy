@@ -44,7 +44,7 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
-            let self_expression = gtk::ConstantExpression::new(&obj).upcast();
+            let self_expression = gtk::ConstantExpression::new(&obj);
             let note_expression = gtk::PropertyExpression::new(
                 Self::Type::static_type(),
                 Some(&self_expression),
@@ -59,15 +59,14 @@ mod imp {
                 Metadata::static_type(),
                 Some(&metadata_expression),
                 "modified",
-            )
-            .upcast();
+            );
             let modified_str_expr = gtk::ClosureExpression::new(
                 |args| {
                     let date: Date = args[1].get().unwrap();
                     // TODO use fuzzy here
                     format!("Last edited {}", date)
                 },
-                &[modified_expression],
+                &[modified_expression.upcast()],
             );
             modified_str_expr.bind(&self.modified_label.get(), "label", None);
         }
