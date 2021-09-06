@@ -13,7 +13,7 @@ mod imp {
     #[template(resource = "/io/github/seadve/Noteworthy/ui/content_view.ui")]
     pub struct ContentView {
         #[template_child]
-        pub title_label: TemplateChild<gtk::EditableLabel>,
+        pub title_label: TemplateChild<gtk::TextView>,
         #[template_child]
         pub modified_label: TemplateChild<gtk::Label>,
         #[template_child]
@@ -141,7 +141,7 @@ impl ContentView {
 
             let mut bindings = imp.bindings.borrow_mut();
             let title_binding = note
-                .bind_property("title", &imp.title_label.get(), "text")
+                .bind_property("title", &imp.title_label.get().buffer(), "text")
                 .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
                 .build()
                 .unwrap();

@@ -12,9 +12,9 @@
                 <property name="orientation">vertical</property>
                 <property name="spacing">6</property>
                 <child>
-                  <object class="GtkEditableLabel" id="title_label">
+                  <object class="GtkTextView" id="title_label">
                     <property name="hexpand">True</property>
-                    <property name="editable">True</property>
+                    <property name="wrap-mode">word-char</property>
                     <style>
                       <class name="title-1"/>
                     </style>
