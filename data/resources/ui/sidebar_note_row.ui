@@ -14,7 +14,7 @@
               <object class="GtkLabel" id="title_label">
                 <property name="hexpand">True</property>
                 <property name="ellipsize">end</property>
-                <property name="halign">start</property>
+                <property name="xalign">0</property>
                 <binding name="label">
                   <lookup name="title">
                     <lookup name="metadata">
@@ -44,7 +44,7 @@
             <property name="wrap">True</property>
             <property name="lines">2</property>
             <property name="ellipsize">end</property>
-            <property name="halign">start</property>
+            <property name="xalign">0</property>
             <style>
               <class name="caption"/>
             </style>
