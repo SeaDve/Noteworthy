@@ -24,9 +24,11 @@ impl std::fmt::Display for Date {
     }
 }
 
-impl From<String> for Date {
-    fn from(string: String) -> Self {
-        Date(DateTime::parse_from_rfc3339(&string).unwrap().into())
+impl std::str::FromStr for Date {
+    type Err = serde_yaml::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        serde_yaml::from_str(s)
     }
 }
 

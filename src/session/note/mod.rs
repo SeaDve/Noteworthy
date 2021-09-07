@@ -169,8 +169,8 @@ impl Note {
                         .unwrap_or_default(),
                     parsed_entity_data
                         .get("modified")
-                        .map(|t| t.as_string().unwrap().into())
-                        .unwrap_or_default(),
+                        .map(|t| t.as_string().unwrap().parse().unwrap_or_default())
+                        .unwrap_or_default(), // TODO if this failed to unwrap consider just showing empty date
                 )
             })
             .unwrap_or_default();
