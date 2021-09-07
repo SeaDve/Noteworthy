@@ -144,7 +144,7 @@ impl Sidebar {
 
         let filter = gtk::CustomFilter::new(|item| {
             let is_pinned = item.downcast_ref::<Note>().unwrap().metadata().is_pinned();
-            !is_pinned
+            true
         });
         let filter_model = gtk::FilterListModel::new(Some(&note_list), Some(&filter));
 
