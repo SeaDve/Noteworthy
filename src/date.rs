@@ -1,20 +1,14 @@
-use chrono::{DateTime, Local};
+use chrono::{DateTime, Local, ParseError, ParseResult};
 use gtk::glib::{self, GBoxed};
-use serde::{Deserialize, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, GBoxed, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, GBoxed, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[gboxed(type_name = "NwtyDate")]
 pub struct Date(DateTime<Local>);
 
 impl Default for Date {
     fn default() -> Self {
         Self::now()
-    }
-}
-
-impl Serialize for Date {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        self.0.serialize(serializer)
     }
 }
 
@@ -25,10 +19,10 @@ impl std::fmt::Display for Date {
 }
 
 impl std::str::FromStr for Date {
-    type Err = serde_yaml::Error;
+    type Err = ParseError;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        serde_yaml::from_str(s)
+    fn from_str(s: &str) -> ParseResult<Self> {
+        DateTime::parse_from_rfc3339(s).map(|dt| Date(dt.into()))
     }
 }
 
