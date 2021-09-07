@@ -41,6 +41,58 @@ mod imp {
     impl ObjectImpl for NoteRow {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
+
+            // Expression describing how to get subtitle label of self from content of note
+            let self_expression = gtk::ConstantExpression::new(&obj);
+            let note_expression = gtk::PropertyExpression::new(
+                Self::Type::static_type(),
+                Some(&self_expression),
+                "note",
+            );
+            let content_expression = gtk::PropertyExpression::new(
+                Note::static_type(),
+                Some(&note_expression),
+                "content",
+            );
+            let text_expression = gtk::PropertyExpression::new(
+                sourceview::Buffer::static_type(),
+                Some(&content_expression),
+                "text",
+            );
+            let subtitle_expression = gtk::ClosureExpression::new(
+                |args| {
+                    let text: String = args[1].get().unwrap();
+                    text.lines().next().unwrap_or_default().to_string()
+                },
+                &[text_expression.upcast()],
+            );
+            subtitle_expression.bind(&self.subtitle_label.get(), "label", None);
+
+            // Expression describing how to get time label of self from date of note
+            let self_expression = gtk::ConstantExpression::new(&obj);
+            let note_expression = gtk::PropertyExpression::new(
+                Self::Type::static_type(),
+                Some(&self_expression),
+                "note",
+            );
+            let metadata_expression = gtk::PropertyExpression::new(
+                Note::static_type(),
+                Some(&note_expression),
+                "metadata",
+            );
+            let modified_expression = gtk::PropertyExpression::new(
+                Metadata::static_type(),
+                Some(&metadata_expression),
+                "modified",
+            );
+            let time_expression = gtk::ClosureExpression::new(
+                |args| {
+                    let modified: Date = args[1].get().unwrap();
+                    modified.fuzzy_display()
+                },
+                &[modified_expression.upcast()],
+            );
+            time_expression.bind(&self.time_label.get(), "label", None);
         }
 
         fn properties() -> &'static [glib::ParamSpec] {
@@ -102,56 +154,7 @@ impl NoteRow {
     }
 
     pub fn set_note(&self, note: Option<Note>) {
-        if self.note() == note {
-            return;
-        }
-
         let imp = imp::NoteRow::from_instance(self);
-
-        if let Some(ref note) = note {
-            // Expression describing how to get subtitle label of self from content of note
-            let note_expression = gtk::ConstantExpression::new(&note);
-            let content_expression = gtk::PropertyExpression::new(
-                Note::static_type(),
-                Some(&note_expression),
-                "content",
-            );
-            let text_expression = gtk::PropertyExpression::new(
-                sourceview::Buffer::static_type(),
-                Some(&content_expression),
-                "text",
-            );
-            let subtitle_expression = gtk::ClosureExpression::new(
-                |args| {
-                    let text: String = args[1].get().unwrap();
-                    text.lines().next().unwrap_or_default().to_string()
-                },
-                &[text_expression.upcast()],
-            );
-            subtitle_expression.bind(&imp.subtitle_label.get(), "label", None);
-
-            // Expression describing how to get time label of self from date of note
-            let note_expression = gtk::ConstantExpression::new(&note).upcast();
-            let metadata_expression = gtk::PropertyExpression::new(
-                Note::static_type(),
-                Some(&note_expression),
-                "metadata",
-            );
-            let modified_expression = gtk::PropertyExpression::new(
-                Metadata::static_type(),
-                Some(&metadata_expression),
-                "modified",
-            );
-            let time_expression = gtk::ClosureExpression::new(
-                |args| {
-                    let modified: Date = args[1].get().unwrap();
-                    modified.fuzzy_display()
-                },
-                &[modified_expression.upcast()],
-            );
-            time_expression.bind(&imp.time_label.get(), "label", None);
-        }
-
         imp.note.replace(note);
         self.notify("note");
     }
