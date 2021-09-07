@@ -19,6 +19,10 @@ mod imp {
         pub view: TemplateChild<View>,
         #[template_child]
         pub no_selected_view: TemplateChild<adw::StatusPage>,
+        #[template_child]
+        pub is_pinned_button: TemplateChild<gtk::ToggleButton>,
+
+        pub bindings: RefCell<Vec<glib::Binding>>,
 
         pub compact: Cell<bool>,
         pub note: RefCell<Option<Note>>,
@@ -47,6 +51,21 @@ mod imp {
     impl ObjectImpl for Content {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
+
+            let self_expression = gtk::ConstantExpression::new(&obj);
+            let note_expression = gtk::PropertyExpression::new(
+                Self::Type::static_type(),
+                Some(&self_expression),
+                "note",
+            );
+            let is_some_note_expression = gtk::ClosureExpression::new(
+                |args| {
+                    let note: Option<Note> = args[1].get().unwrap();
+                    note.is_some()
+                },
+                &[note_expression.upcast()],
+            );
+            is_some_note_expression.bind(&self.is_pinned_button.get(), "visible", None);
         }
 
         fn properties() -> &'static [glib::ParamSpec] {
@@ -128,7 +147,23 @@ impl Content {
 
         let imp = imp::Content::from_instance(self);
 
+        for binding in imp.bindings.borrow_mut().drain(..) {
+            binding.unbind();
+        }
+
         if note.is_some() {
+            let mut bindings = imp.bindings.borrow_mut();
+
+            let is_pinned = note
+                .as_ref()
+                .unwrap()
+                .metadata()
+                .bind_property("is-pinned", &imp.is_pinned_button.get(), "active")
+                .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
+                .build()
+                .unwrap();
+            bindings.push(is_pinned);
+
             imp.stack.set_visible_child(&imp.view.get());
         } else {
             imp.stack.set_visible_child(&imp.no_selected_view.get());

@@ -12,6 +12,11 @@
             <property name="action-name">content.go-back</property>
           </object>
         </child>
+        <child type="end">
+          <object class="GtkToggleButton" id="is_pinned_button">
+            <property name="icon-name">view-pin-symbolic</property>
+          </object>
+        </child>
       </object>
     </child>
     <child>
