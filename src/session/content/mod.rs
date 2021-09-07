@@ -31,6 +31,7 @@ mod imp {
         type ParentType = gtk::Box;
 
         fn class_init(klass: &mut Self::Class) {
+            View::static_type();
             Self::bind_template(klass);
 
             klass.install_action("content.go-back", None, move |obj, _, _| {
@@ -40,8 +41,6 @@ mod imp {
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
             obj.init_template();
-
-            View::static_type();
         }
     }
 

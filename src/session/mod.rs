@@ -41,14 +41,13 @@ mod imp {
         type ParentType = adw::Bin;
 
         fn class_init(klass: &mut Self::Class) {
+            Sidebar::static_type();
+            Content::static_type();
             Self::bind_template(klass);
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
             obj.init_template();
-
-            Sidebar::static_type();
-            Content::static_type();
         }
     }
 

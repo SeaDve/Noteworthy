@@ -36,6 +36,7 @@ mod imp {
         type ParentType = gtk::Box;
 
         fn class_init(klass: &mut Self::Class) {
+            NoteRow::static_type();
             Self::bind_template(klass);
 
             klass.install_action("sidebar.create-note", None, move |obj, _, _| {
@@ -52,8 +53,6 @@ mod imp {
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
             obj.init_template();
-
-            NoteRow::static_type();
         }
     }
 
