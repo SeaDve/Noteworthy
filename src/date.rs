@@ -37,9 +37,10 @@ impl Date {
 
     pub fn fuzzy_display(&self) -> String {
         let now = Local::now();
-        let is_today = now.date() == self.0.date();
 
+        let is_today = now.date() == self.0.date();
         let duration = now.signed_duration_since(self.0);
+
         let hours_difference = duration.num_hours();
         let week_difference = duration.num_weeks();
 
