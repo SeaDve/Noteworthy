@@ -181,7 +181,7 @@ impl Note {
 
     pub fn serialize(&self) -> Result<Vec<u8>> {
         // FIXME replace with not hacky implementation
-        let mut bytes = serde_yaml::to_vec(&self.metadata()).unwrap();
+        let mut bytes = serde_yaml::to_vec(&self.metadata())?;
         bytes.append(&mut "---\n".as_bytes().to_vec());
 
         let buffer = self.content();
