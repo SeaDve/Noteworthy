@@ -152,6 +152,7 @@ impl Note {
 
         let content = sourceview::BufferBuilder::new()
             .text(&parsed_entity.content)
+            .highlight_matching_brackets(false)
             .language(
                 &sourceview::LanguageManager::default()
                     .and_then(|lm| lm.language("markdown"))
