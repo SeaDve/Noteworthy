@@ -76,7 +76,7 @@ mod imp {
                         "note-list",
                         "Note List",
                         "Note list represented by self",
-                        Note::static_type(),
+                        NoteList::static_type(),
                         glib::ParamFlags::WRITABLE,
                     ),
                     glib::ParamSpec::new_object(
@@ -162,7 +162,6 @@ impl Sidebar {
         let filter_model = gtk::FilterListModel::new(Some(&note_list), Some(&filter));
         let sort_model = gtk::SortListModel::new(Some(&filter_model), Some(&sorter));
         let selection = gtk::SingleSelection::new(Some(&sort_model));
-        selection.set_autoselect(false);
         selection
             .bind_property("selected-item", self, "selected-note")
             .flags(glib::BindingFlags::SYNC_CREATE)
