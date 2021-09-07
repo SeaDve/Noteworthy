@@ -19,7 +19,8 @@ run_command(
 )
 
 rust_sources = files(
-  'session/content/mod.rs',
+  'components/context_menu_bin.rs',
+  'components/mod.rs',
   'session/content/view.rs',
   'session/note/metadata.rs',
   'session/note/mod.rs',

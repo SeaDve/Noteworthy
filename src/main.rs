@@ -11,6 +11,7 @@
 #![warn(clippy::option_if_let_else)]
 
 mod application;
+mod components;
 mod config;
 mod date;
 mod error;
