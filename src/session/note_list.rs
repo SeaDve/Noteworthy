@@ -81,7 +81,7 @@ impl NoteList {
             list.push(note);
         }
 
-        self.items_changed(self.n_items() + 1, 0, 1);
+        self.items_changed(self.n_items() - 1, 0, 1);
     }
 
     pub fn remove(&self, index: usize) {
