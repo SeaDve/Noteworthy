@@ -33,7 +33,10 @@ mod imp {
 
         fn signals() -> &'static [Signal] {
             static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
-                vec![Signal::builder("position-changed", &[], <()>::static_type().into()).build()]
+                vec![
+                    Signal::builder("note-metadata-changed", &[], <()>::static_type().into())
+                        .build(),
+                ]
             });
             SIGNALS.as_ref()
         }
@@ -71,10 +74,12 @@ impl NoteList {
     pub fn append(&self, note: Note) {
         let imp = &imp::NoteList::from_instance(self);
 
-        note.metadata()
-            .connect_last_modified_notify(clone!(@weak self as obj => move |_,_| {
-                obj.emit_by_name("position-changed", &[]).unwrap();
-            }));
+        note.metadata().connect_notify_local(
+            None,
+            clone!(@weak self as obj => move |_,_| {
+                obj.emit_by_name("note-metadata-changed", &[]).unwrap();
+            }),
+        );
 
         {
             let mut list = imp.list.borrow_mut();
@@ -95,8 +100,11 @@ impl NoteList {
         self.items_changed(index as u32, 1, 0);
     }
 
-    pub fn connect_position_changed<F: Fn(&Self) + 'static>(&self, f: F) -> glib::SignalHandlerId {
-        self.connect_local("position-changed", true, move |values| {
+    pub fn connect_note_metadata_changed<F: Fn(&Self) + 'static>(
+        &self,
+        f: F,
+    ) -> glib::SignalHandlerId {
+        self.connect_local("note-metadata-changed", true, move |values| {
             let obj = values[0].get::<Self>().unwrap();
             f(&obj);
             None

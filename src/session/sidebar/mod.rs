@@ -152,17 +152,19 @@ impl Sidebar {
             let note1_metadata = obj1.downcast_ref::<Note>().unwrap().metadata();
             let note2_metadata = obj2.downcast_ref::<Note>().unwrap().metadata();
 
-            note1_metadata
+            note2_metadata
                 .last_modified()
-                .cmp(&note2_metadata.last_modified())
+                .cmp(&note1_metadata.last_modified())
                 .into()
         });
         let sort_model = gtk::SortListModel::new(Some(&filter_model), Some(&sorter));
 
-        note_list.connect_position_changed(clone!(@strong filter, @strong sorter => move |_| {
-            filter.changed(gtk::FilterChange::Different);
-            sorter.changed(gtk::SorterChange::Different);
-        }));
+        note_list.connect_note_metadata_changed(
+            clone!(@strong filter, @strong sorter => move |_| {
+                filter.changed(gtk::FilterChange::Different);
+                sorter.changed(gtk::SorterChange::Different);
+            }),
+        );
 
         let selection = gtk::SingleSelection::new(Some(&sort_model));
         selection

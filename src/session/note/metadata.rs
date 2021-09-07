@@ -132,14 +132,6 @@ impl Metadata {
     pub fn is_pinned(&self) -> bool {
         self.property("is-pinned").unwrap().get().unwrap()
     }
-
-    pub fn connect_last_modified_notify<F: Fn(&Self, &glib::ParamSpec) + 'static>(
-        &self,
-        f: F,
-    ) -> glib::SignalHandlerId {
-        // TODO make this also handle other properties to enabled sorting for title etc.
-        self.connect_notify_local(Some("last-modified"), f)
-    }
 }
 
 impl Serialize for Metadata {
