@@ -2,13 +2,16 @@
 // See https://gitlab.gnome.org/GNOME/fractal/-/blob/fractal-next/src/components/context_menu_bin.rs
 
 use adw::subclass::prelude::*;
-use gtk::prelude::*;
-use gtk::subclass::prelude::*;
-use gtk::{gdk, gio, glib, glib::clone, CompositeTemplate};
+use gtk::{
+    gdk, gio,
+    glib::{self, clone},
+    prelude::*,
+    subclass::prelude::*,
+    CompositeTemplate,
+};
 
 mod imp {
     use super::*;
-    use glib::subclass::InitializingObject;
 
     #[derive(Debug, CompositeTemplate)]
     #[template(resource = "/io/github/seadve/Noteworthy/ui/context_menu_bin.ui")]
@@ -63,7 +66,7 @@ mod imp {
             );
         }
 
-        fn instance_init(obj: &InitializingObject<Self>) {
+        fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
             obj.init_template();
         }
     }
