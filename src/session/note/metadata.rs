@@ -11,7 +11,7 @@ mod imp {
     #[derive(Debug, Default, Serialize)]
     pub struct Metadata {
         pub title: RefCell<String>,
-        pub modified: RefCell<Date>,
+        pub last_modified: RefCell<Date>,
     }
 
     #[glib::object_subclass]
@@ -38,8 +38,8 @@ mod imp {
                         glib::ParamFlags::READWRITE,
                     ),
                     glib::ParamSpec::new_boxed(
-                        "modified",
-                        "Modified",
+                        "last-modified",
+                        "Last Modified",
                         "Last modified date of the Metadata",
                         Date::static_type(),
                         glib::ParamFlags::READWRITE,
@@ -62,11 +62,11 @@ mod imp {
                     let title = value.get().unwrap();
                     self.title.replace(title);
 
-                    obj.update_modified();
+                    obj.update_last_modified();
                 }
-                "modified" => {
-                    let modified = value.get().unwrap();
-                    self.modified.replace(modified);
+                "last-modified" => {
+                    let last_modified = value.get().unwrap();
+                    self.last_modified.replace(last_modified);
                 }
                 _ => unimplemented!(),
             }
@@ -75,7 +75,7 @@ mod imp {
         fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
                 "title" => self.title.borrow().to_value(),
-                "modified" => self.modified.borrow().to_value(),
+                "last-modified" => self.last_modified.borrow().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -87,8 +87,8 @@ glib::wrapper! {
 }
 
 impl Metadata {
-    pub fn new(title: String, modified: Date) -> Self {
-        glib::Object::new::<Self>(&[("title", &title), ("modified", &modified)])
+    pub fn new(title: String, last_modified: Date) -> Self {
+        glib::Object::new::<Self>(&[("title", &title), ("last-modified", &last_modified)])
             .expect("Failed to create Metadata.")
     }
 
@@ -100,20 +100,20 @@ impl Metadata {
         self.property("title").unwrap().get().unwrap()
     }
 
-    pub fn update_modified(&self) {
-        self.set_property("modified", Date::now()).unwrap();
+    pub fn update_last_modified(&self) {
+        self.set_property("last-modified", Date::now()).unwrap();
     }
 
-    pub fn modified(&self) -> Date {
-        self.property("modified").unwrap().get().unwrap()
+    pub fn last_modified(&self) -> Date {
+        self.property("last-modified").unwrap().get().unwrap()
     }
 
-    pub fn connect_modified_notify<F: Fn(&Self, &glib::ParamSpec) + 'static>(
+    pub fn connect_last_modified_notify<F: Fn(&Self, &glib::ParamSpec) + 'static>(
         &self,
         f: F,
     ) -> glib::SignalHandlerId {
         // TODO make this also handle other properties to enabled sorting for title etc.
-        self.connect_notify_local(Some("modified"), f)
+        self.connect_notify_local(Some("last-modified"), f)
     }
 }
 

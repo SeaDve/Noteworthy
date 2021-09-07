@@ -16,7 +16,7 @@ mod imp {
         #[template_child]
         pub title_label: TemplateChild<sourceview::View>,
         #[template_child]
-        pub modified_label: TemplateChild<gtk::Label>,
+        pub last_modified_label: TemplateChild<gtk::Label>,
         #[template_child]
         pub source_view: TemplateChild<sourceview::View>,
 
@@ -55,20 +55,20 @@ mod imp {
                 Some(&note_expression),
                 "metadata",
             );
-            let modified_expression = gtk::PropertyExpression::new(
+            let last_modified_expression = gtk::PropertyExpression::new(
                 Metadata::static_type(),
                 Some(&metadata_expression),
-                "modified",
+                "last-modified",
             );
-            let modified_str_expr = gtk::ClosureExpression::new(
+            let last_modified_str_expr = gtk::ClosureExpression::new(
                 |args| {
                     let date: Date = args[1].get().unwrap();
                     // TODO use fuzzy here
                     format!("Last edited {}", date)
                 },
-                &[modified_expression.upcast()],
+                &[last_modified_expression.upcast()],
             );
-            modified_str_expr.bind(&self.modified_label.get(), "label", None);
+            last_modified_str_expr.bind(&self.last_modified_label.get(), "label", None);
         }
 
         fn properties() -> &'static [glib::ParamSpec] {

@@ -83,17 +83,17 @@ mod imp {
                 Some(&note_expression),
                 "metadata",
             );
-            let modified_expression = gtk::PropertyExpression::new(
+            let last_modified_expression = gtk::PropertyExpression::new(
                 Metadata::static_type(),
                 Some(&metadata_expression),
-                "modified",
+                "last-modified",
             );
             let time_expression = gtk::ClosureExpression::new(
                 |args| {
-                    let modified: Date = args[1].get().unwrap();
-                    modified.fuzzy_display()
+                    let last_modified: Date = args[1].get().unwrap();
+                    last_modified.fuzzy_display()
                 },
-                &[modified_expression.upcast()],
+                &[last_modified_expression.upcast()],
             );
             time_expression.bind(&self.time_label.get(), "label", None);
         }

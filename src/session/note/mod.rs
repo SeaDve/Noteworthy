@@ -37,7 +37,7 @@ mod imp {
 
             obj.content()
                 .connect_text_notify(clone!(@weak obj => move |_| {
-                    obj.metadata().update_modified();
+                    obj.metadata().update_last_modified();
                 }));
         }
 
@@ -161,6 +161,7 @@ impl Note {
         let metadata = parsed_entity
             .data
             .map(|p| {
+                // NOTE: Use snake case here or decide in the future which case to use
                 let parsed_entity_data: HashMap<String, Pod> = p.into();
                 Metadata::new(
                     parsed_entity_data
@@ -168,7 +169,7 @@ impl Note {
                         .and_then(|t| t.as_string().ok())
                         .unwrap_or_default(),
                     parsed_entity_data
-                        .get("modified")
+                        .get("last_modified")
                         .and_then(|t| t.as_string().ok())
                         .and_then(|t| t.parse().ok())
                         .unwrap_or_default(), // TODO if this failed to unwrap consider just showing empty date

@@ -72,7 +72,7 @@ impl NoteList {
         let imp = &imp::NoteList::from_instance(self);
 
         note.metadata()
-            .connect_modified_notify(clone!(@weak self as obj => move |_,_| {
+            .connect_last_modified_notify(clone!(@weak self as obj => move |_,_| {
                 obj.emit_by_name("position-changed", &[]).unwrap();
             }));
 

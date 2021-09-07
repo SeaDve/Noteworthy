@@ -31,7 +31,7 @@
                   <object class="GtkBox">
                     <property name="spacing">6</property>
                     <child>
-                      <object class="GtkLabel" id="modified_label">
+                      <object class="GtkLabel" id="last_modified_label">
                         <style>
                           <class name="caption"/>
                         </style>

@@ -143,15 +143,27 @@ impl Sidebar {
         let imp = imp::Sidebar::from_instance(self);
 
         let filter = gtk::CustomFilter::new(|item| {
-            let modified = item.downcast_ref::<Note>().unwrap().metadata().modified();
+            let last_modified = item
+                .downcast_ref::<Note>()
+                .unwrap()
+                .metadata()
+                .last_modified();
             true
         });
 
         let sorter = gtk::CustomSorter::new(move |obj1, obj2| {
-            let modified1 = obj1.downcast_ref::<Note>().unwrap().metadata().modified();
-            let modified2 = obj2.downcast_ref::<Note>().unwrap().metadata().modified();
+            let last_modified1 = obj1
+                .downcast_ref::<Note>()
+                .unwrap()
+                .metadata()
+                .last_modified();
+            let last_modified2 = obj2
+                .downcast_ref::<Note>()
+                .unwrap()
+                .metadata()
+                .last_modified();
 
-            modified2.cmp(&modified1).into()
+            last_modified2.cmp(&last_modified1).into()
         });
 
         note_list.connect_position_changed(clone!(@strong filter, @strong sorter => move |_| {
