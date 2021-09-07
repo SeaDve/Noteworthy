@@ -8,7 +8,10 @@ use gtk::{
 };
 use once_cell::sync::OnceCell;
 
-use std::cell::{Cell, RefCell};
+use std::{
+    cell::{Cell, RefCell},
+    cmp,
+};
 
 use self::note_row::NoteRow;
 use super::{Note, NoteList, Session};
@@ -149,13 +152,17 @@ impl Sidebar {
         let filter_model = gtk::FilterListModel::new(Some(&note_list), Some(&filter));
 
         let sorter = gtk::CustomSorter::new(move |obj1, obj2| {
-            let note1_metadata = obj1.downcast_ref::<Note>().unwrap().metadata();
-            let note2_metadata = obj2.downcast_ref::<Note>().unwrap().metadata();
+            let note1 = obj1.downcast_ref::<Note>().unwrap().metadata();
+            let note2 = obj2.downcast_ref::<Note>().unwrap().metadata();
 
-            note2_metadata
-                .last_modified()
-                .cmp(&note1_metadata.last_modified())
-                .into()
+            // Sort is pinned first before classifying by last modified
+            if note1.is_pinned() == note2.is_pinned() {
+                note2.last_modified().cmp(&note1.last_modified()).into()
+            } else if note1.is_pinned() && !note2.is_pinned() {
+                gtk::Ordering::Smaller
+            } else {
+                gtk::Ordering::Larger
+            }
         });
         let sort_model = gtk::SortListModel::new(Some(&filter_model), Some(&sorter));
 
