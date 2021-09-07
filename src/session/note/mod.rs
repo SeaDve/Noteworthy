@@ -173,6 +173,10 @@ impl Note {
                         .and_then(|t| t.as_string().ok())
                         .and_then(|t| t.parse().ok())
                         .unwrap_or_default(), // TODO if this failed to unwrap consider just showing empty date
+                    parsed_entity_data
+                        .get("is_pinned")
+                        .and_then(|t| t.as_bool().ok())
+                        .unwrap_or_default(),
                 )
             })
             .unwrap_or_default();

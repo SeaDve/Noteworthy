@@ -1,7 +1,7 @@
 use gtk::{glib, prelude::*, subclass::prelude::*};
 use serde::{Serialize, Serializer};
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 
 use crate::date::Date;
 
@@ -12,6 +12,7 @@ mod imp {
     pub struct Metadata {
         pub title: RefCell<String>,
         pub last_modified: RefCell<Date>,
+        pub is_pinned: Cell<bool>,
     }
 
     #[glib::object_subclass]
@@ -44,6 +45,13 @@ mod imp {
                         Date::static_type(),
                         glib::ParamFlags::READWRITE,
                     ),
+                    glib::ParamSpec::new_boolean(
+                        "is-pinned",
+                        "Is Pinned",
+                        "Whether the note associated with self is pinned",
+                        false,
+                        glib::ParamFlags::READWRITE,
+                    ),
                 ]
             });
 
@@ -68,6 +76,10 @@ mod imp {
                     let last_modified = value.get().unwrap();
                     self.last_modified.replace(last_modified);
                 }
+                "is-pinned" => {
+                    let is_pinned = value.get().unwrap();
+                    self.is_pinned.set(is_pinned);
+                }
                 _ => unimplemented!(),
             }
         }
@@ -76,6 +88,7 @@ mod imp {
             match pspec.name() {
                 "title" => self.title.borrow().to_value(),
                 "last-modified" => self.last_modified.borrow().to_value(),
+                "is-pinned" => self.is_pinned.get().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -87,9 +100,13 @@ glib::wrapper! {
 }
 
 impl Metadata {
-    pub fn new(title: String, last_modified: Date) -> Self {
-        glib::Object::new::<Self>(&[("title", &title), ("last-modified", &last_modified)])
-            .expect("Failed to create Metadata.")
+    pub fn new(title: String, last_modified: Date, is_pinned: bool) -> Self {
+        glib::Object::new::<Self>(&[
+            ("title", &title),
+            ("last-modified", &last_modified),
+            ("is-pinned", &is_pinned),
+        ])
+        .expect("Failed to create Metadata.")
     }
 
     pub fn set_title(&self, title: String) {
@@ -106,6 +123,14 @@ impl Metadata {
 
     pub fn last_modified(&self) -> Date {
         self.property("last-modified").unwrap().get().unwrap()
+    }
+
+    pub fn set_is_pinned(&self, is_pinned: bool) {
+        self.set_property("is-pinned", is_pinned).unwrap();
+    }
+
+    pub fn is_pinned(&self) -> bool {
+        self.property("is-pinned").unwrap().get().unwrap()
     }
 
     pub fn connect_last_modified_notify<F: Fn(&Self, &glib::ParamSpec) + 'static>(
@@ -126,6 +151,6 @@ impl Serialize for Metadata {
 
 impl Default for Metadata {
     fn default() -> Self {
-        Self::new(Default::default(), Default::default())
+        Self::new(Default::default(), Default::default(), Default::default())
     }
 }

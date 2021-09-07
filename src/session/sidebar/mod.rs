@@ -143,12 +143,8 @@ impl Sidebar {
         let imp = imp::Sidebar::from_instance(self);
 
         let filter = gtk::CustomFilter::new(|item| {
-            let last_modified = item
-                .downcast_ref::<Note>()
-                .unwrap()
-                .metadata()
-                .last_modified();
-            true
+            let is_pinned = item.downcast_ref::<Note>().unwrap().metadata().is_pinned();
+            !is_pinned
         });
 
         let sorter = gtk::CustomSorter::new(move |obj1, obj2| {
