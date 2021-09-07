@@ -146,29 +146,24 @@ impl Sidebar {
             let is_pinned = item.downcast_ref::<Note>().unwrap().metadata().is_pinned();
             !is_pinned
         });
+        let filter_model = gtk::FilterListModel::new(Some(&note_list), Some(&filter));
 
         let sorter = gtk::CustomSorter::new(move |obj1, obj2| {
-            let last_modified1 = obj1
-                .downcast_ref::<Note>()
-                .unwrap()
-                .metadata()
-                .last_modified();
-            let last_modified2 = obj2
-                .downcast_ref::<Note>()
-                .unwrap()
-                .metadata()
-                .last_modified();
+            let note1_metadata = obj1.downcast_ref::<Note>().unwrap().metadata();
+            let note2_metadata = obj2.downcast_ref::<Note>().unwrap().metadata();
 
-            last_modified2.cmp(&last_modified1).into()
+            note1_metadata
+                .last_modified()
+                .cmp(&note2_metadata.last_modified())
+                .into()
         });
+        let sort_model = gtk::SortListModel::new(Some(&filter_model), Some(&sorter));
 
         note_list.connect_position_changed(clone!(@strong filter, @strong sorter => move |_| {
             filter.changed(gtk::FilterChange::Different);
             sorter.changed(gtk::SorterChange::Different);
         }));
 
-        let filter_model = gtk::FilterListModel::new(Some(&note_list), Some(&filter));
-        let sort_model = gtk::SortListModel::new(Some(&filter_model), Some(&sorter));
         let selection = gtk::SingleSelection::new(Some(&sort_model));
         selection
             .bind_property("selected-item", self, "selected-note")
