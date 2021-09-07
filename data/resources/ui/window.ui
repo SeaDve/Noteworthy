@@ -3,7 +3,7 @@
   <template class="NwtyWindow" parent="AdwApplicationWindow">
     <property name="default-width">600</property>
     <property name="default-height">400</property>
-    <property name="child">
+    <property name="content">
       <object class="NwtySession" id="session"/>
     </property>
   </template>
