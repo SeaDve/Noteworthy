@@ -165,11 +165,12 @@ impl Note {
                 Metadata::new(
                     parsed_entity_data
                         .get("title")
-                        .map(|t| t.as_string().unwrap())
+                        .and_then(|t| t.as_string().ok())
                         .unwrap_or_default(),
                     parsed_entity_data
                         .get("modified")
-                        .map(|t| t.as_string().unwrap().parse().unwrap_or_default())
+                        .and_then(|t| t.as_string().ok())
+                        .and_then(|t| t.parse().ok())
                         .unwrap_or_default(), // TODO if this failed to unwrap consider just showing empty date
                 )
             })
