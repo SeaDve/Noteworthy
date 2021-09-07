@@ -35,12 +35,10 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
-            obj.content().connect_notify_local(
-                Some("text"),
-                clone!(@weak obj => move |_, _| {
+            obj.content()
+                .connect_text_notify(clone!(@weak obj => move |_| {
                     obj.metadata().update_modified();
-                }),
-            );
+                }));
         }
 
         fn properties() -> &'static [glib::ParamSpec] {
