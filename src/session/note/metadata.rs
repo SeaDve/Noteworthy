@@ -1,5 +1,5 @@
 use gtk::{glib, prelude::*, subclass::prelude::*};
-use serde::{Deserialize, Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use std::cell::{Cell, RefCell};
 
@@ -142,12 +142,9 @@ impl Serialize for Metadata {
     }
 }
 
-// FIXME there mus be a better way to do this without boilerplates
 impl<'de> Deserialize<'de> for Metadata {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        // FIXME there must be a better way to do this without having to specify each fields
         let imp = imp::Metadata::deserialize(deserializer)?;
         let metadata = Metadata::new(
             imp.title.take(),
