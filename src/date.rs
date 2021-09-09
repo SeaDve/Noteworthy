@@ -42,7 +42,7 @@ impl Date {
 
         if is_today {
             self.0.format("%I∶%M") // 08:10
-        } else if hours_difference <= 36 {
+        } else if hours_difference <= 30 {
             self.0.format("yesterday")
         } else if week_difference <= 52 {
             self.0.format("%b %d") // Sep 03
