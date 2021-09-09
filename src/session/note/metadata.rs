@@ -1,5 +1,5 @@
 use gtk::{glib, prelude::*, subclass::prelude::*};
-use serde::{Serialize, Serializer};
+use serde::{Deserialize, Serialize, Serializer};
 
 use std::cell::{Cell, RefCell};
 
@@ -8,7 +8,8 @@ use crate::date::Date;
 mod imp {
     use super::*;
 
-    #[derive(Debug, Default, Serialize)]
+    #[derive(Debug, Default, Serialize, Deserialize)]
+    #[serde(default)]
     pub struct Metadata {
         pub title: RefCell<String>,
         pub last_modified: RefCell<Date>,
@@ -138,6 +139,22 @@ impl Serialize for Metadata {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let imp = imp::Metadata::from_instance(self);
         imp.serialize(serializer)
+    }
+}
+
+// FIXME there mus be a better way to do this without boilerplates
+impl<'de> Deserialize<'de> for Metadata {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let imp = imp::Metadata::deserialize(deserializer)?;
+        let metadata = Metadata::new(
+            imp.title.take(),
+            imp.last_modified.take(),
+            imp.is_pinned.get(),
+        );
+        Ok(metadata)
     }
 }
 

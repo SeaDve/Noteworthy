@@ -1,6 +1,6 @@
 mod metadata;
 
-use gray_matter::{engine::YAML, value::pod::Pod, Matter};
+use gray_matter::{engine::YAML, Matter};
 use gtk::{
     gio,
     glib::{self, clone},
@@ -8,8 +8,6 @@ use gtk::{
     subclass::prelude::*,
 };
 use once_cell::sync::OnceCell;
-
-use std::collections::HashMap;
 
 pub use self::metadata::Metadata;
 use crate::Result;
@@ -160,25 +158,7 @@ impl Note {
 
         let metadata = parsed_entity
             .data
-            .map(|p| {
-                // NOTE: Use snake case here or decide in the future which case to use
-                let parsed_entity_data: HashMap<String, Pod> = p.into();
-                Metadata::new(
-                    parsed_entity_data
-                        .get("title")
-                        .and_then(|t| t.as_string().ok())
-                        .unwrap_or_default(),
-                    parsed_entity_data
-                        .get("last_modified")
-                        .and_then(|t| t.as_string().ok())
-                        .and_then(|t| t.parse().ok())
-                        .unwrap_or_default(), // TODO if this failed to unwrap consider just showing empty date
-                    parsed_entity_data
-                        .get("is_pinned")
-                        .and_then(|t| t.as_bool().ok())
-                        .unwrap_or_default(),
-                )
-            })
+            .and_then(|p| p.deserialize().ok())
             .unwrap_or_default();
 
         Ok((metadata, content))
