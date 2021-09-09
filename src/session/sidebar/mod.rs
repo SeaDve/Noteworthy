@@ -8,10 +8,7 @@ use gtk::{
 };
 use once_cell::sync::OnceCell;
 
-use std::{
-    cell::{Cell, RefCell},
-    cmp,
-};
+use std::cell::{Cell, RefCell};
 
 use self::note_row::NoteRow;
 use super::{Note, NoteList, Session};
