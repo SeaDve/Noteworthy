@@ -198,6 +198,7 @@ impl Note {
 
         self.set_property("metadata", metadata).unwrap();
         self.set_property("content", content).unwrap();
+        self.emit_by_name("metadata-changed", &[]).unwrap();
 
         Ok(())
     }
