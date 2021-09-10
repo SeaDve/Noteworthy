@@ -113,6 +113,9 @@ impl NoteManager {
 
         for path in paths.flatten() {
             let path = path.path();
+
+            log::info!("Loading file: {}", path.display());
+
             // TODO consider using sourcefile here
             let file = gio::File::for_path(path);
             let note = Note::from_file(&file);
