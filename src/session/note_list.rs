@@ -74,12 +74,9 @@ impl NoteList {
     pub fn append(&self, note: Note) {
         let imp = &imp::NoteList::from_instance(self);
 
-        note.metadata().connect_notify_local(
-            None,
-            clone!(@weak self as obj => move |_,_| {
-                obj.emit_by_name("note-metadata-changed", &[]).unwrap();
-            }),
-        );
+        note.connect_metadata_changed(clone!(@weak self as obj => move |_| {
+            obj.emit_by_name("note-metadata-changed", &[]).unwrap();
+        }));
 
         {
             let mut list = imp.list.borrow_mut();

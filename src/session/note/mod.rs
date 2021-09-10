@@ -3,7 +3,7 @@ mod metadata;
 use gray_matter::{engine::YAML, Matter};
 use gtk::{
     gio,
-    glib::{self, clone},
+    glib::{self, clone, subclass::Signal},
     prelude::*,
     subclass::prelude::*,
 };
@@ -33,9 +33,26 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
-            obj.content().connect_changed(clone!(@weak obj => move |_| {
-                obj.metadata().update_last_modified();
+            let ctx = glib::MainContext::default();
+            ctx.spawn_local(clone!(@weak obj => async move {
+                obj.load_contents().await.expect("Failed to load note contents");
+
+                obj.content().connect_changed(clone!(@weak obj => move |_| {
+                    obj.metadata().update_last_modified();
+                }));
+
+                obj.metadata().connect_notify_local(None, clone!(@weak obj => move |_, _| {
+                    obj.emit_by_name("metadata-changed", &[]).unwrap();
+                }));
             }));
+        }
+
+        fn signals() -> &'static [Signal] {
+            use once_cell::sync::Lazy;
+            static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
+                vec![Signal::builder("metadata-changed", &[], <()>::static_type().into()).build()]
+            });
+            SIGNALS.as_ref()
         }
 
         fn properties() -> &'static [glib::ParamSpec] {
@@ -54,14 +71,14 @@ mod imp {
                         "Metadata",
                         "Metadata containing info of note",
                         Metadata::static_type(),
-                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
+                        glib::ParamFlags::READWRITE,
                     ),
                     glib::ParamSpec::new_object(
                         "content",
                         "Content",
                         "Content of the note",
                         sourceview::Buffer::static_type(),
-                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
+                        glib::ParamFlags::READWRITE,
                     ),
                 ]
             });
@@ -120,12 +137,15 @@ impl Note {
 
     pub fn metadata(&self) -> Metadata {
         let imp = imp::Note::from_instance(self);
-        imp.metadata.get().unwrap().clone()
+        imp.metadata.get().cloned().unwrap_or_default()
     }
 
     pub fn content(&self) -> sourceview::Buffer {
         let imp = imp::Note::from_instance(self);
-        imp.content.get().unwrap().clone()
+        imp.content
+            .get()
+            .cloned()
+            .unwrap_or_else(|| sourceview::Buffer::builder().build())
     }
 
     pub fn delete(&self) -> Result<()> {
@@ -133,8 +153,31 @@ impl Note {
         Ok(())
     }
 
-    pub fn deserialize_from_file(file: &gio::File) -> Result<Self> {
-        let (file_content, _) = file.load_contents(None::<&gio::Cancellable>)?;
+    pub fn connect_metadata_changed<F: Fn(&Self) + 'static>(&self, f: F) -> glib::SignalHandlerId {
+        self.connect_local("metadata-changed", true, move |values| {
+            let obj = values[0].get::<Self>().unwrap();
+            f(&obj);
+            None
+        })
+        .unwrap()
+    }
+
+    pub fn serialize(&self) -> Result<Vec<u8>> {
+        // FIXME replace with not hacky implementation
+        let mut bytes = serde_yaml::to_vec(&self.metadata())?;
+        bytes.append(&mut "---\n".as_bytes().to_vec());
+
+        let buffer = self.content();
+        let (start_iter, end_iter) = buffer.bounds();
+        let buffer_text = buffer.text(&start_iter, &end_iter, true);
+
+        bytes.append(&mut buffer_text.as_bytes().to_vec());
+
+        Ok(bytes)
+    }
+
+    async fn load_contents(&self) -> Result<()> {
+        let (file_content, _) = self.file().load_contents_async_future().await?;
         let file_content = std::str::from_utf8(&file_content)?;
         let parsed_entity = Matter::<YAML>::new().parse(file_content);
 
@@ -153,27 +196,9 @@ impl Note {
             .and_then(|p| p.deserialize().ok())
             .unwrap_or_default();
 
-        let note = glib::Object::new::<Self>(&[
-            ("file", file),
-            ("metadata", &metadata),
-            ("content", &content),
-        ])
-        .expect("Failed to create Note.");
+        self.set_property("metadata", metadata).unwrap();
+        self.set_property("content", content).unwrap();
 
-        Ok(note)
-    }
-
-    pub fn serialize(&self) -> Result<Vec<u8>> {
-        // FIXME replace with not hacky implementation
-        let mut bytes = serde_yaml::to_vec(&self.metadata())?;
-        bytes.append(&mut "---\n".as_bytes().to_vec());
-
-        let buffer = self.content();
-        let (start_iter, end_iter) = buffer.bounds();
-        let buffer_text = buffer.text(&start_iter, &end_iter, true);
-
-        bytes.append(&mut buffer_text.as_bytes().to_vec());
-
-        Ok(bytes)
+        Ok(())
     }
 }

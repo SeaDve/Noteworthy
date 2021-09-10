@@ -114,7 +114,7 @@ impl NoteManager {
         for path in paths.flatten() {
             let path = path.path();
             let file = gio::File::for_path(path);
-            let note = Note::deserialize_from_file(&file)?;
+            let note = Note::from_file(&file);
             note_list.append(note);
         }
 
