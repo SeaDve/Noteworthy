@@ -110,14 +110,7 @@ glib::wrapper! {
 
 impl Note {
     pub fn from_file(file: &gio::File) -> Self {
-        let (metadata, content) =
-            Self::deserialize_from_file(file).expect("Failed to deserialize from file");
-        glib::Object::new::<Self>(&[
-            ("file", file),
-            ("metadata", &metadata),
-            ("content", &content),
-        ])
-        .expect("Failed to create Note.")
+        glib::Object::new::<Self>(&[("file", file)]).expect("Failed to create Note.")
     }
 
     pub fn file(&self) -> gio::File {
@@ -140,7 +133,7 @@ impl Note {
         Ok(())
     }
 
-    fn deserialize_from_file(file: &gio::File) -> Result<(Metadata, sourceview::Buffer)> {
+    pub fn deserialize_from_file(file: &gio::File) -> Result<Self> {
         let (file_content, _) = file.load_contents(None::<&gio::Cancellable>)?;
         let file_content = std::str::from_utf8(&file_content)?;
         let parsed_entity = Matter::<YAML>::new().parse(file_content);
@@ -155,12 +148,19 @@ impl Note {
             )
             .build();
 
-        let metadata = parsed_entity
+        let metadata: Metadata = parsed_entity
             .data
             .and_then(|p| p.deserialize().ok())
             .unwrap_or_default();
 
-        Ok((metadata, content))
+        let note = glib::Object::new::<Self>(&[
+            ("file", file),
+            ("metadata", &metadata),
+            ("content", &content),
+        ])
+        .expect("Failed to create Note.");
+
+        Ok(note)
     }
 
     pub fn serialize(&self) -> Result<Vec<u8>> {

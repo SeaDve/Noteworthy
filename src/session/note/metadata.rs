@@ -101,13 +101,8 @@ glib::wrapper! {
 }
 
 impl Metadata {
-    pub fn new(title: String, last_modified: Date, is_pinned: bool) -> Self {
-        glib::Object::new::<Self>(&[
-            ("title", &title),
-            ("last-modified", &last_modified),
-            ("is-pinned", &is_pinned),
-        ])
-        .expect("Failed to create Metadata.")
+    pub fn new() -> Self {
+        glib::Object::new::<Self>(&[]).expect("Failed to create Metadata.")
     }
 
     pub fn set_title(&self, title: String) {
@@ -144,19 +139,21 @@ impl Serialize for Metadata {
 
 impl<'de> Deserialize<'de> for Metadata {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        // FIXME there must be a better way to do this without having to specify each fields
         let imp = imp::Metadata::deserialize(deserializer)?;
-        let metadata = Metadata::new(
-            imp.title.take(),
-            imp.last_modified.take(),
-            imp.is_pinned.get(),
-        );
+
+        let metadata = glib::Object::new::<Self>(&[
+            ("title", &*imp.title.borrow()),
+            ("last-modified", &*imp.last_modified.borrow()),
+            ("is-pinned", &imp.is_pinned.get()),
+        ])
+        .expect("Failed to create Metadata.");
+
         Ok(metadata)
     }
 }
 
 impl Default for Metadata {
     fn default() -> Self {
-        Self::new(Default::default(), Default::default(), Default::default())
+        Self::new()
     }
 }
