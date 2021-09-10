@@ -171,6 +171,8 @@ impl Sidebar {
         );
 
         let selection = gtk::SingleSelection::new(Some(&sort_model));
+        selection.set_autoselect(false);
+        selection.set_selected(gtk::INVALID_LIST_POSITION);
         selection
             .bind_property("selected-item", self, "selected-note")
             .flags(glib::BindingFlags::SYNC_CREATE)
@@ -179,8 +181,6 @@ impl Sidebar {
 
         imp.listview
             .set_model(Some(imp.selection.borrow().as_ref().unwrap()));
-
-        self.set_selected_note(None);
     }
 
     pub fn set_selected_note(&self, selected_note: Option<Note>) {

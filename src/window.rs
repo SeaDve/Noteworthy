@@ -50,8 +50,7 @@ mod imp {
                 log::warn!("Failed to save window state, {}", &err);
             }
 
-            // FIXME what if the app crashed?
-            self.session.save().unwrap();
+            self.session.save_active_note_sync();
 
             self.parent_close_request(window)
         }

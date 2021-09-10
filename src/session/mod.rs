@@ -5,7 +5,11 @@ mod note_manager;
 mod sidebar;
 
 use adw::subclass::prelude::*;
-use gtk::{glib, prelude::*, subclass::prelude::*};
+use gtk::{
+    glib::{self, clone},
+    prelude::*,
+    subclass::prelude::*,
+};
 use once_cell::sync::OnceCell;
 
 use std::{cell::RefCell, path::Path};
@@ -13,7 +17,6 @@ use std::{cell::RefCell, path::Path};
 use self::{
     content::Content, note::Note, note_list::NoteList, note_manager::NoteManager, sidebar::Sidebar,
 };
-use crate::Result;
 
 mod imp {
     use super::*;
@@ -124,6 +127,9 @@ impl Session {
             return;
         }
 
+        // Save previous note before switching to other notes
+        self.save_active_note();
+
         let imp = imp::Session::from_instance(self);
 
         if selected_note.is_some() {
@@ -142,13 +148,19 @@ impl Session {
             .get_or_init(|| NoteManager::new(Path::new("/home/dave/Notes")))
     }
 
-    pub fn save(&self) -> Result<()> {
-        // let imp = imp::Session::from_instance(self);
-        // imp.content.save_active_note();
-        self.note_manager().save_notes_to_file()?;
+    // TODO Add autosave
+    pub fn save_active_note(&self) {
+        if let Some(note) = self.selected_note() {
+            let ctx = glib::MainContext::default();
+            ctx.spawn_local(clone!(@weak self as obj => async move {
+                obj.note_manager().save_note(note).await.unwrap();
+            }));
+        }
+    }
 
-        log::info!("Session saved");
-
-        Ok(())
+    pub fn save_active_note_sync(&self) {
+        if let Some(note) = self.selected_note() {
+            self.note_manager().save_note_sync(note).unwrap();
+        }
     }
 }

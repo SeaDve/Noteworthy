@@ -113,6 +113,7 @@ impl NoteManager {
 
         for path in paths.flatten() {
             let path = path.path();
+            // TODO consider using sourcefile here
             let file = gio::File::for_path(path);
             let note = Note::from_file(&file);
             note_list.append(note);
@@ -121,24 +122,44 @@ impl NoteManager {
         Ok(note_list)
     }
 
-    pub fn save_notes_to_file(&self) -> Result<()> {
-        let note_list = self.note_list();
+    pub async fn save_note(&self, note: Note) -> Result<()> {
+        let note_bytes = note.serialize()?;
+        let note_file = note.file();
 
-        // FIXME use iterator here
-        for i in 0..note_list.n_items() {
-            let note = note_list.item(i).unwrap().downcast::<Note>().unwrap();
-            let note_bytes = note.serialize()?;
+        note_file
+            .replace_contents_async_future(note_bytes, None, false, gio::FileCreateFlags::NONE)
+            .await
+            .unwrap();
 
-            // FIXME Update only unsaved notes so add a property for unsaved there and update it everytime a property changes
+        log::info!(
+            "Saved note with title of {} and path of {:?}",
+            note.metadata().title(),
+            note.file().path().unwrap().display()
+        );
 
-            note.file().replace_contents(
+        Ok(())
+    }
+
+    // FIXME use only one save_note func
+    pub fn save_note_sync(&self, note: Note) -> Result<()> {
+        let note_bytes = note.serialize()?;
+        let note_file = note.file();
+
+        note_file
+            .replace_contents(
                 &note_bytes,
                 None,
                 false,
                 gio::FileCreateFlags::NONE,
                 None::<&gio::Cancellable>,
-            )?;
-        }
+            )
+            .unwrap();
+
+        log::info!(
+            "Saved note synchronously with title of {} and path of {:?}",
+            note.metadata().title(),
+            note.file().path().unwrap().display()
+        );
 
         Ok(())
     }
