@@ -42,6 +42,8 @@ mod imp {
             ctx.spawn_local(clone!(@weak obj => async move {
                 obj.load_contents().await.expect("Failed to load note contents");
 
+                log::info!("File {} is loaded", obj.file().path().unwrap().display());
+
                 obj.content().connect_changed(clone!(@weak obj => move |_| {
                     obj.metadata().update_last_modified();
                     obj.set_is_saved(false);
