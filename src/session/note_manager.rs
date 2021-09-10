@@ -123,6 +123,11 @@ impl NoteManager {
     }
 
     pub async fn save_note(&self, note: Note) -> Result<()> {
+        if note.is_saved() {
+            log::info!("Note is already saved returning");
+            return Ok(());
+        }
+
         let note_bytes = note.serialize()?;
         let note_file = note.file();
 
@@ -130,6 +135,8 @@ impl NoteManager {
             .replace_contents_async_future(note_bytes, None, false, gio::FileCreateFlags::NONE)
             .await
             .unwrap();
+
+        note.set_is_saved(true);
 
         log::info!(
             "Saved note with title of {} and path of {:?}",
@@ -140,26 +147,36 @@ impl NoteManager {
         Ok(())
     }
 
-    // FIXME use only one save_note func
-    pub fn save_note_sync(&self, note: Note) -> Result<()> {
-        let note_bytes = note.serialize()?;
-        let note_file = note.file();
+    pub fn save_all_notes(&self) -> Result<()> {
+        let note_list = self.note_list();
 
-        note_file
-            .replace_contents(
+        // FIXME use iterator here
+        for i in 0..note_list.n_items() {
+            let note = note_list.item(i).unwrap().downcast::<Note>().unwrap();
+
+            if note.is_saved() {
+                log::info!("Note already saved, skipping...");
+                continue;
+            }
+
+            let note_bytes = note.serialize()?;
+
+            note.file().replace_contents(
                 &note_bytes,
                 None,
                 false,
                 gio::FileCreateFlags::NONE,
                 None::<&gio::Cancellable>,
-            )
-            .unwrap();
+            )?;
 
-        log::info!(
-            "Saved note synchronously with title of {} and path of {:?}",
-            note.metadata().title(),
-            note.file().path().unwrap().display()
-        );
+            note.set_is_saved(true);
+
+            log::info!(
+                "Saved note synchronously with title of {} and path of {:?}",
+                note.metadata().title(),
+                note.file().path().unwrap().display()
+            );
+        }
 
         Ok(())
     }

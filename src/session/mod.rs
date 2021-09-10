@@ -158,9 +158,11 @@ impl Session {
         }
     }
 
-    pub fn save_active_note_sync(&self) {
-        if let Some(note) = self.selected_note() {
-            self.note_manager().save_note_sync(note).unwrap();
-        }
+    pub fn save(&self) {
+        self.note_manager()
+            .save_all_notes()
+            .expect("Failed to save notes to file");
+
+        log::info!("Session saved");
     }
 }

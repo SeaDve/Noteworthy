@@ -9,6 +9,8 @@ use gtk::{
 };
 use once_cell::sync::OnceCell;
 
+use std::cell::Cell;
+
 pub use self::metadata::Metadata;
 use crate::Result;
 
@@ -18,6 +20,7 @@ mod imp {
     #[derive(Debug, Default)]
     pub struct Note {
         pub file: OnceCell<gio::File>,
+        pub is_saved: Cell<bool>,
         pub metadata: OnceCell<Metadata>,
         pub content: OnceCell<sourceview::Buffer>,
     }
@@ -33,16 +36,24 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
+            obj.set_is_saved(true);
+
             let ctx = glib::MainContext::default();
             ctx.spawn_local(clone!(@weak obj => async move {
                 obj.load_contents().await.expect("Failed to load note contents");
 
                 obj.content().connect_changed(clone!(@weak obj => move |_| {
                     obj.metadata().update_last_modified();
+                    obj.set_is_saved(false);
                 }));
 
-                obj.metadata().connect_notify_local(None, clone!(@weak obj => move |_, _| {
+                obj.metadata().connect_notify_local(None, clone!(@weak obj => move |_, pspec| {
                     obj.emit_by_name("metadata-changed", &[]).unwrap();
+
+                    if pspec.name() != "last-modified" {
+                        // This is to avoid an endless loop
+                        obj.set_is_saved(false);
+                    }
                 }));
             }));
         }
@@ -65,6 +76,13 @@ mod imp {
                         "File representing where the note is stored",
                         gio::File::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
+                    ),
+                    glib::ParamSpec::new_boolean(
+                        "is-saved",
+                        "Is Saved",
+                        "Whether the note is already saved to file",
+                        false,
+                        glib::ParamFlags::READWRITE,
                     ),
                     glib::ParamSpec::new_object(
                         "metadata",
@@ -98,6 +116,10 @@ mod imp {
                     let file = value.get().unwrap();
                     self.file.set(file).unwrap();
                 }
+                "is-saved" => {
+                    let is_saved = value.get().unwrap();
+                    self.is_saved.set(is_saved);
+                }
                 "metadata" => {
                     let metadata = value.get().unwrap();
                     self.metadata.set(metadata).unwrap();
@@ -113,6 +135,7 @@ mod imp {
         fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
                 "file" => obj.file().to_value(),
+                "is-saved" => obj.is_saved().to_value(),
                 "metadata" => obj.metadata().to_value(),
                 "content" => obj.content().to_value(),
                 _ => unimplemented!(),
@@ -133,6 +156,15 @@ impl Note {
     pub fn file(&self) -> gio::File {
         let imp = imp::Note::from_instance(self);
         imp.file.get().unwrap().clone()
+    }
+
+    pub fn set_is_saved(&self, is_saved: bool) {
+        self.set_property("is-saved", is_saved).unwrap();
+    }
+
+    pub fn is_saved(&self) -> bool {
+        let imp = imp::Note::from_instance(self);
+        imp.is_saved.get()
     }
 
     pub fn metadata(&self) -> Metadata {
