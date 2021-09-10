@@ -232,6 +232,8 @@ impl Note {
 
         self.set_property("metadata", metadata).unwrap();
         self.set_property("content", content).unwrap();
+
+        // FIXME this is very very slow
         self.emit_by_name("metadata-changed", &[]).unwrap();
 
         Ok(())
