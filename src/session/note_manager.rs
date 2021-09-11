@@ -108,12 +108,8 @@ impl NoteManager {
         let imp = imp::NoteManager::from_instance(self);
         imp.note_list
             .get()
-            .expect("Please call load notes first")
+            .expect("Please call `load notes` first")
             .clone()
-    }
-
-    fn set_note_list(&self, note_list: NoteList) {
-        self.set_property("note-list", note_list).unwrap();
     }
 
     pub async fn load_notes(&self) -> Result<()> {
@@ -131,7 +127,7 @@ impl NoteManager {
             note_list.append(note);
         }
 
-        self.set_note_list(note_list);
+        self.set_property("note-list", note_list).unwrap();
 
         Ok(())
     }
