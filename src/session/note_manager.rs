@@ -158,12 +158,7 @@ impl NoteManager {
     }
 
     pub fn save_all_notes(&self) -> Result<()> {
-        let note_list = self.note_list();
-
-        // FIXME use iterator here
-        for i in 0..note_list.n_items() {
-            let note = note_list.item(i).unwrap().downcast::<Note>().unwrap();
-
+        for note in self.note_list().iter() {
             if note.is_saved() {
                 log::info!("Note already saved, skipping...");
                 continue;

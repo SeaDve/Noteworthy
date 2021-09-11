@@ -109,21 +109,35 @@ impl NoteList {
         .unwrap()
     }
 
-    // pub fn find(&self, note: Note) -> Option<usize> {
-    //     let imp = imp::NoteList::from_instance(self);
-    //     let list = imp.list.borrow();
-    //     list.iter().position(|other_note| {
-    //         note == other_note
-    //     })
-    // }
+    pub fn iter(&self) -> NoteListIter {
+        NoteListIter::new(self.clone())
+    }
+}
 
-    // pub fn find_with_equal_func(
-    //     &self,
-    //     note: Note,
-    //     equal_func: impl FnMut(&Note) -> bool,
-    // ) -> Option<usize> {
-    //     let imp = &imp::NoteList::from_instance(self);
-    //     let list = imp.list.borrow();
-    //     list.iter().position(equal_func)
-    // }
+use std::cell::Cell;
+
+pub struct NoteListIter {
+    model: NoteList,
+    i: Cell<u32>,
+}
+
+impl NoteListIter {
+    fn new(model: NoteList) -> Self {
+        Self {
+            model,
+            i: Cell::new(0),
+        }
+    }
+}
+
+impl Iterator for NoteListIter {
+    type Item = Note;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let index = self.i.get();
+
+        let item = self.model.item(index);
+        self.i.set(index + 1);
+        item.map(|x| x.downcast::<Note>().unwrap())
+    }
 }
