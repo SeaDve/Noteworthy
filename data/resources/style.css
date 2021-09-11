@@ -5,6 +5,11 @@
   padding-bottom: 6px;
 }
 
+.sidebar-spinner {
+  min-width: 32px;
+  min-height: 32px;
+}
+
 .content-view {
   background-color: @theme_base_color;
   padding-left: 24px;

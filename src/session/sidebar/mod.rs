@@ -21,6 +21,8 @@ mod imp {
     pub struct Sidebar {
         #[template_child]
         pub listview: TemplateChild<gtk::ListView>,
+        #[template_child]
+        pub stack: TemplateChild<gtk::Stack>,
 
         pub compact: Cell<bool>,
         pub selected_note: RefCell<Option<Note>>,
@@ -59,6 +61,26 @@ mod imp {
     impl ObjectImpl for Sidebar {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
+
+            let listview_expression = gtk::ConstantExpression::new(&self.listview.get());
+            let model_expression = gtk::PropertyExpression::new(
+                gtk::ListView::static_type(),
+                Some(&listview_expression),
+                "model",
+            );
+            let model_is_some_expression = gtk::ClosureExpression::new(
+                |args| {
+                    let model: Option<gtk::SelectionModel> = args[1].get().unwrap();
+
+                    if model.is_some() {
+                        "filled-view"
+                    } else {
+                        "empty-view"
+                    }
+                },
+                &[model_expression.upcast()],
+            );
+            model_is_some_expression.bind(&self.stack.get(), "visible-child-name", None);
         }
 
         fn properties() -> &'static [glib::ParamSpec] {
