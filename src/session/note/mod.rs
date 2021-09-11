@@ -38,26 +38,18 @@ mod imp {
 
             obj.set_is_saved(true);
 
-            let ctx = glib::MainContext::default();
-            ctx.spawn_local(clone!(@weak obj => async move {
-                obj.load_contents().await.expect("Failed to load note contents");
-
-                log::info!("File {} is loaded", obj.file().path().unwrap().display());
-
-                obj.buffer().connect_changed(clone!(@weak obj => move |_| {
-                    obj.metadata().update_last_modified();
-                    obj.set_is_saved(false);
-                }));
-
-                obj.metadata().connect_notify_local(None, clone!(@weak obj => move |_, pspec| {
-                    obj.emit_by_name("metadata-changed", &[]).unwrap();
-
-                    if pspec.name() != "last-modified" {
-                        // This is to avoid an endless loop
-                        obj.set_is_saved(false);
-                    }
-                }));
+            obj.buffer().connect_changed(clone!(@weak obj => move |_| {
+                obj.metadata().update_last_modified();
+                obj.set_is_saved(false);
             }));
+
+            obj.metadata().connect_notify_local(
+                None,
+                clone!(@weak obj => move |_, _| {
+                    obj.emit_by_name("metadata-changed", &[]).unwrap();
+                    obj.set_is_saved(false);
+                }),
+            );
         }
 
         fn signals() -> &'static [Signal] {
@@ -79,25 +71,25 @@ mod imp {
                         gio::File::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
-                    glib::ParamSpec::new_boolean(
-                        "is-saved",
-                        "Is Saved",
-                        "Whether the note is already saved to file",
-                        false,
-                        glib::ParamFlags::READWRITE,
-                    ),
                     glib::ParamSpec::new_object(
                         "metadata",
                         "Metadata",
                         "Metadata containing info of note",
                         Metadata::static_type(),
-                        glib::ParamFlags::READWRITE,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
                     glib::ParamSpec::new_object(
                         "buffer",
                         "Buffer",
                         "The buffer containing note text content",
                         sourceview::Buffer::static_type(),
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
+                    ),
+                    glib::ParamSpec::new_boolean(
+                        "is-saved",
+                        "Is Saved",
+                        "Whether the note is already saved to file",
+                        false,
                         glib::ParamFlags::READWRITE,
                     ),
                 ]
@@ -118,10 +110,6 @@ mod imp {
                     let file = value.get().unwrap();
                     self.file.set(file).unwrap();
                 }
-                "is-saved" => {
-                    let is_saved = value.get().unwrap();
-                    self.is_saved.set(is_saved);
-                }
                 "metadata" => {
                     let metadata = value.get().unwrap();
                     self.metadata.set(metadata).unwrap();
@@ -130,6 +118,10 @@ mod imp {
                     let buffer = value.get().unwrap();
                     self.buffer.set(buffer).unwrap();
                 }
+                "is-saved" => {
+                    let is_saved = value.get().unwrap();
+                    self.is_saved.set(is_saved);
+                }
                 _ => unimplemented!(),
             }
         }
@@ -137,9 +129,9 @@ mod imp {
         fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
                 "file" => obj.file().to_value(),
-                "is-saved" => obj.is_saved().to_value(),
                 "metadata" => obj.metadata().to_value(),
                 "buffer" => obj.buffer().to_value(),
+                "is-saved" => obj.is_saved().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -151,8 +143,17 @@ glib::wrapper! {
 }
 
 impl Note {
-    pub fn from_file(file: &gio::File) -> Self {
-        glib::Object::new::<Self>(&[("file", file)]).expect("Failed to create Note.")
+    pub fn new(file: &gio::File, metadata: &Metadata, buffer: &sourceview::Buffer) -> Self {
+        glib::Object::new::<Self>(&[("file", file), ("metadata", metadata), ("buffer", buffer)])
+            .expect("Failed to create Note.")
+    }
+
+    pub fn create_default(file: &gio::File) -> Self {
+        Self::new(
+            file,
+            &Metadata::default(),
+            &sourceview::Buffer::builder().build(),
+        )
     }
 
     pub fn file(&self) -> gio::File {
@@ -160,8 +161,14 @@ impl Note {
         imp.file.get().unwrap().clone()
     }
 
-    pub fn set_is_saved(&self, is_saved: bool) {
-        self.set_property("is-saved", is_saved).unwrap();
+    pub fn metadata(&self) -> Metadata {
+        let imp = imp::Note::from_instance(self);
+        imp.metadata.get().unwrap().clone()
+    }
+
+    pub fn buffer(&self) -> sourceview::Buffer {
+        let imp = imp::Note::from_instance(self);
+        imp.buffer.get().unwrap().clone()
     }
 
     pub fn is_saved(&self) -> bool {
@@ -169,19 +176,8 @@ impl Note {
         imp.is_saved.get()
     }
 
-    pub fn metadata(&self) -> Metadata {
-        let imp = imp::Note::from_instance(self);
-        // FIXME find cleaner way to load everything before connecting things
-        // so no need to unwrap_or_else
-        imp.metadata.get().cloned().unwrap_or_default()
-    }
-
-    pub fn buffer(&self) -> sourceview::Buffer {
-        let imp = imp::Note::from_instance(self);
-        imp.buffer
-            .get()
-            .cloned()
-            .unwrap_or_else(|| sourceview::Buffer::builder().build())
+    pub fn set_is_saved(&self, is_saved: bool) {
+        self.set_property("is-saved", is_saved).unwrap();
     }
 
     pub fn delete(&self) -> Result<()> {
@@ -198,6 +194,31 @@ impl Note {
         .unwrap()
     }
 
+    pub fn deserialize(file: &gio::File) -> Result<Self> {
+        let (file_content, _) = file.load_contents(None::<&gio::Cancellable>)?;
+        let file_content = std::str::from_utf8(&file_content)?;
+        let parsed_entity = Matter::<YAML>::new().parse(file_content);
+
+        let metadata: Metadata = parsed_entity
+            .data
+            .and_then(|p| p.deserialize().ok())
+            .unwrap_or_default();
+
+        let buffer = sourceview::BufferBuilder::new()
+            .text(&parsed_entity.content)
+            .highlight_matching_brackets(false)
+            .language(
+                &sourceview::LanguageManager::default()
+                    .and_then(|lm| lm.language("markdown"))
+                    .unwrap(),
+            )
+            .build();
+
+        log::info!("File {} is loaded", file.path().unwrap().display());
+
+        Ok(Self::new(file, &metadata, &buffer))
+    }
+
     pub fn serialize(&self) -> Result<Vec<u8>> {
         // FIXME replace with not hacky implementation
         let mut bytes = serde_yaml::to_vec(&self.metadata())?;
@@ -210,34 +231,5 @@ impl Note {
         bytes.append(&mut buffer_text.as_bytes().to_vec());
 
         Ok(bytes)
-    }
-
-    async fn load_contents(&self) -> Result<()> {
-        let (file_content, _) = self.file().load_contents_async_future().await?;
-        let file_content = std::str::from_utf8(&file_content)?;
-        let parsed_entity = Matter::<YAML>::new().parse(file_content);
-
-        let buffer = sourceview::BufferBuilder::new()
-            .text(&parsed_entity.content)
-            .highlight_matching_brackets(false)
-            .language(
-                &sourceview::LanguageManager::default()
-                    .and_then(|lm| lm.language("markdown"))
-                    .unwrap(),
-            )
-            .build();
-
-        let metadata: Metadata = parsed_entity
-            .data
-            .and_then(|p| p.deserialize().ok())
-            .unwrap_or_default();
-
-        self.set_property("metadata", metadata).unwrap();
-        self.set_property("buffer", buffer).unwrap();
-
-        // FIXME this is very very slow
-        self.emit_by_name("metadata-changed", &[]).unwrap();
-
-        Ok(())
     }
 }

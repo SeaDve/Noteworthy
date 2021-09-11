@@ -118,7 +118,7 @@ impl NoteManager {
 
             // TODO consider using sourcefile here
             let file = gio::File::for_path(path);
-            let note = Note::from_file(&file);
+            let note = Note::deserialize(&file)?;
             note_list.append(note);
         }
 
@@ -191,7 +191,7 @@ impl NoteManager {
 
         let file = gio::File::for_path(file_path.display().to_string());
         file.create(gio::FileCreateFlags::NONE, None::<&gio::Cancellable>)?;
-        let new_note = Note::from_file(&file);
+        let new_note = Note::create_default(&file);
 
         self.note_list().append(new_note);
 
