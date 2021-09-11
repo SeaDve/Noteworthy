@@ -194,8 +194,8 @@ impl Note {
         .unwrap()
     }
 
-    pub fn deserialize(file: &gio::File) -> Result<Self> {
-        let (file_content, _) = file.load_contents(None::<&gio::Cancellable>)?;
+    pub async fn deserialize(file: &gio::File) -> Result<Self> {
+        let (file_content, _) = file.load_contents_async_future().await?;
         let file_content = std::str::from_utf8(&file_content)?;
         let parsed_entity = Matter::<YAML>::new().parse(file_content);
 

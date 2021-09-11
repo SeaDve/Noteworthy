@@ -46,7 +46,7 @@ mod imp {
                         "Note List",
                         "List of notes",
                         NoteList::static_type(),
-                        glib::ParamFlags::READABLE,
+                        glib::ParamFlags::READWRITE,
                     ),
                 ]
             });
@@ -65,6 +65,10 @@ mod imp {
                 "path" => {
                     let path = value.get().unwrap();
                     self.path.set(path).unwrap();
+                }
+                "note-list" => {
+                    let note_list = value.get().unwrap();
+                    self.note_list.set(note_list).unwrap();
                 }
                 _ => unimplemented!(),
             }
@@ -103,11 +107,16 @@ impl NoteManager {
     pub fn note_list(&self) -> NoteList {
         let imp = imp::NoteManager::from_instance(self);
         imp.note_list
-            .get_or_init(|| self.retrive_notes().unwrap())
+            .get()
+            .expect("Please call load notes first")
             .clone()
     }
 
-    fn retrive_notes(&self) -> Result<NoteList> {
+    fn set_note_list(&self, note_list: NoteList) {
+        self.set_property("note-list", note_list).unwrap();
+    }
+
+    pub async fn load_notes(&self) -> Result<()> {
         let paths = fs::read_dir(self.path())?;
         let note_list = NoteList::new();
 
@@ -118,11 +127,13 @@ impl NoteManager {
 
             // TODO consider using sourcefile here
             let file = gio::File::for_path(path);
-            let note = Note::deserialize(&file)?;
+            let note = Note::deserialize(&file).await?;
             note_list.append(note);
         }
 
-        Ok(note_list)
+        self.set_note_list(note_list);
+
+        Ok(())
     }
 
     pub async fn save_note(&self, note: Note) -> Result<()> {

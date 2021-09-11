@@ -58,9 +58,16 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
-            let note_list = obj.note_manager().note_list();
+            let ctx = glib::MainContext::default();
+            ctx.spawn_local(clone!(@weak obj => async move {
+                let note_manager = obj.note_manager();
+                note_manager.load_notes().await.expect("Failed to load notes");
+                let note_list = note_manager.note_list();
 
-            self.sidebar.set_note_list(note_list);
+                let imp = imp::Session::from_instance(&obj);
+                imp.sidebar.set_note_list(note_list);
+            }));
+
             self.sidebar.set_session(obj.clone());
         }
 
