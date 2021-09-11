@@ -197,7 +197,7 @@ impl NoteManager {
 
     pub fn create_note(&self) -> Result<()> {
         let mut file_path = self.path();
-        file_path.push(self.generate_unique_file_name());
+        file_path.push(Self::generate_unique_file_name());
         file_path.set_extension("md");
 
         let file = gio::File::for_path(file_path.display().to_string());
@@ -227,7 +227,7 @@ impl NoteManager {
         Ok(())
     }
 
-    fn generate_unique_file_name(&self) -> String {
+    fn generate_unique_file_name() -> String {
         chrono::Local::now()
             .format("Noteworthy %f %Y%m%dT%H%M%S")
             .to_string()
