@@ -6,7 +6,7 @@ use gtk::{
 };
 use once_cell::sync::Lazy;
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 
 use super::Note;
 
@@ -113,8 +113,6 @@ impl NoteList {
         NoteListIter::new(self.clone())
     }
 }
-
-use std::cell::Cell;
 
 pub struct NoteListIter {
     model: NoteList,
