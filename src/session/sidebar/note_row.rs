@@ -45,21 +45,18 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
-            // Expression describing how to get subtitle label of self from content of note
+            // Expression describing how to get subtitle label of self from buffer of note
             let self_expression = gtk::ConstantExpression::new(&obj);
             let note_expression = gtk::PropertyExpression::new(
                 Self::Type::static_type(),
                 Some(&self_expression),
                 "note",
             );
-            let content_expression = gtk::PropertyExpression::new(
-                Note::static_type(),
-                Some(&note_expression),
-                "content",
-            );
+            let buffer_expression =
+                gtk::PropertyExpression::new(Note::static_type(), Some(&note_expression), "buffer");
             let text_expression = gtk::PropertyExpression::new(
                 sourceview::Buffer::static_type(),
-                Some(&content_expression),
+                Some(&buffer_expression),
                 "text",
             );
             let subtitle_expression = gtk::ClosureExpression::new(

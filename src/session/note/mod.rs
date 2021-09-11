@@ -22,7 +22,7 @@ mod imp {
         pub file: OnceCell<gio::File>,
         pub is_saved: Cell<bool>,
         pub metadata: OnceCell<Metadata>,
-        pub content: OnceCell<sourceview::Buffer>,
+        pub buffer: OnceCell<sourceview::Buffer>,
     }
 
     #[glib::object_subclass]
@@ -44,7 +44,7 @@ mod imp {
 
                 log::info!("File {} is loaded", obj.file().path().unwrap().display());
 
-                obj.content().connect_changed(clone!(@weak obj => move |_| {
+                obj.buffer().connect_changed(clone!(@weak obj => move |_| {
                     obj.metadata().update_last_modified();
                     obj.set_is_saved(false);
                 }));
@@ -94,9 +94,9 @@ mod imp {
                         glib::ParamFlags::READWRITE,
                     ),
                     glib::ParamSpec::new_object(
-                        "content",
-                        "Content",
-                        "Content of the note",
+                        "buffer",
+                        "Buffer",
+                        "The buffer containing note text content",
                         sourceview::Buffer::static_type(),
                         glib::ParamFlags::READWRITE,
                     ),
@@ -126,9 +126,9 @@ mod imp {
                     let metadata = value.get().unwrap();
                     self.metadata.set(metadata).unwrap();
                 }
-                "content" => {
-                    let content = value.get().unwrap();
-                    self.content.set(content).unwrap();
+                "buffer" => {
+                    let buffer = value.get().unwrap();
+                    self.buffer.set(buffer).unwrap();
                 }
                 _ => unimplemented!(),
             }
@@ -139,7 +139,7 @@ mod imp {
                 "file" => obj.file().to_value(),
                 "is-saved" => obj.is_saved().to_value(),
                 "metadata" => obj.metadata().to_value(),
-                "content" => obj.content().to_value(),
+                "buffer" => obj.buffer().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -171,12 +171,14 @@ impl Note {
 
     pub fn metadata(&self) -> Metadata {
         let imp = imp::Note::from_instance(self);
+        // FIXME find cleaner way to load everything before connecting things
+        // so no need to unwrap_or_else
         imp.metadata.get().cloned().unwrap_or_default()
     }
 
-    pub fn content(&self) -> sourceview::Buffer {
+    pub fn buffer(&self) -> sourceview::Buffer {
         let imp = imp::Note::from_instance(self);
-        imp.content
+        imp.buffer
             .get()
             .cloned()
             .unwrap_or_else(|| sourceview::Buffer::builder().build())
@@ -201,7 +203,7 @@ impl Note {
         let mut bytes = serde_yaml::to_vec(&self.metadata())?;
         bytes.append(&mut "---\n".as_bytes().to_vec());
 
-        let buffer = self.content();
+        let buffer = self.buffer();
         let (start_iter, end_iter) = buffer.bounds();
         let buffer_text = buffer.text(&start_iter, &end_iter, true);
 
@@ -215,7 +217,7 @@ impl Note {
         let file_content = std::str::from_utf8(&file_content)?;
         let parsed_entity = Matter::<YAML>::new().parse(file_content);
 
-        let content = sourceview::BufferBuilder::new()
+        let buffer = sourceview::BufferBuilder::new()
             .text(&parsed_entity.content)
             .highlight_matching_brackets(false)
             .language(
@@ -231,7 +233,7 @@ impl Note {
             .unwrap_or_default();
 
         self.set_property("metadata", metadata).unwrap();
-        self.set_property("content", content).unwrap();
+        self.set_property("buffer", buffer).unwrap();
 
         // FIXME this is very very slow
         self.emit_by_name("metadata-changed", &[]).unwrap();

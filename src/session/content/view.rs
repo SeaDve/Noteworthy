@@ -149,12 +149,12 @@ impl View {
                 .unwrap();
             bindings.push(title_binding);
 
-            let content_binding = note
-                .bind_property("content", &imp.source_view.get(), "buffer")
+            let buffer_binding = note
+                .bind_property("buffer", &imp.source_view.get(), "buffer")
                 .flags(glib::BindingFlags::SYNC_CREATE)
                 .build()
                 .unwrap();
-            bindings.push(content_binding);
+            bindings.push(buffer_binding);
         }
 
         imp.note.replace(note);
