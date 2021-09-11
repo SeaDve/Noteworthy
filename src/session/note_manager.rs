@@ -190,7 +190,6 @@ impl NoteManager {
         file_path.set_extension("md");
 
         let file = gio::File::for_path(file_path.display().to_string());
-        file.create(gio::FileCreateFlags::NONE, None::<&gio::Cancellable>)?;
         let new_note = Note::create_default(&file);
 
         self.note_list().append(new_note);
