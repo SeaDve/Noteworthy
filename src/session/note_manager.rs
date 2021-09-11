@@ -229,7 +229,7 @@ impl NoteManager {
 
     fn generate_unique_file_name() -> String {
         chrono::Local::now()
-            .format("Noteworthy %f %Y%m%dT%H%M%S")
+            .format("Noteworthy-%Y-%m-%d-%H-%M-%S-%f")
             .to_string()
     }
 }
