@@ -15,7 +15,7 @@ use crate::{
 mod imp {
     use super::*;
     use glib::WeakRef;
-    use once_cell::sync::OnceCell;
+    use once_cell::unsync::OnceCell;
 
     #[derive(Debug)]
     pub struct Application {

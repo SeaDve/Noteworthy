@@ -10,7 +10,7 @@ use gtk::{
     prelude::*,
     subclass::prelude::*,
 };
-use once_cell::sync::OnceCell;
+use once_cell::unsync::OnceCell;
 
 use std::{cell::RefCell, path::Path};
 

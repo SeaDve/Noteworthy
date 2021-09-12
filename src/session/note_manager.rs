@@ -1,5 +1,5 @@
 use gtk::{gio, glib, prelude::*, subclass::prelude::*};
-use once_cell::sync::OnceCell;
+use once_cell::unsync::OnceCell;
 
 use std::{
     fs,

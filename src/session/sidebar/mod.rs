@@ -6,7 +6,7 @@ use gtk::{
     subclass::prelude::*,
     CompositeTemplate,
 };
-use once_cell::sync::OnceCell;
+use once_cell::unsync::OnceCell;
 
 use std::cell::{Cell, RefCell};
 
