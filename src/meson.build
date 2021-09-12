@@ -23,6 +23,7 @@ rust_sources = files(
   'components/mod.rs',
   'session/content/mod.rs',
   'session/content/view.rs',
+  'session/note/id.rs',
   'session/note/metadata.rs',
   'session/note/mod.rs',
   'session/sidebar/category.rs',
