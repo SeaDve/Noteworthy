@@ -1,6 +1,14 @@
 .sidebar row {
+  min-height: 30px;
   padding-left: 6px;
   padding-right: 6px;
+}
+
+.sidebar .category {
+  padding-top: 6px;
+}
+
+.sidebar .note {
   padding-top: 6px;
   padding-bottom: 6px;
 }

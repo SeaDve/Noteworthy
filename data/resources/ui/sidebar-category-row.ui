@@ -3,11 +3,16 @@
   <template class="NwtySidebarCategoryRow" parent="AdwBin">
     <property name="child">
       <object class="GtkLabel" id="label">
+        <property name="xalign">0</property>
         <binding name="label">
           <lookup name="display-name">
             <lookup name="category">NwtySidebarCategoryRow</lookup>
           </lookup>
         </binding>
+        <style>
+          <class name="caption-heading"/>
+          <class name="dim-label"/>
+        </style>
       </object>
     </property>
   </template>

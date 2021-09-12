@@ -1,3 +1,4 @@
+use gettextrs::gettext;
 use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::sync::Lazy;
 use once_cell::unsync::OnceCell;
@@ -84,7 +85,7 @@ impl ItemList {
 
         let list = [
             Category::new(
-                "Pinned",
+                &gettext("Pinned"),
                 &gtk::CustomFilter::new(|item| {
                     let note = item.downcast_ref::<Note>().unwrap().metadata();
                     note.is_pinned()
@@ -94,7 +95,7 @@ impl ItemList {
             )
             .upcast::<glib::Object>(),
             Category::new(
-                "Other",
+                &gettext("Other Notes"),
                 &gtk::CustomFilter::new(|item| {
                     let note = item.downcast_ref::<Note>().unwrap().metadata();
                     !note.is_pinned()

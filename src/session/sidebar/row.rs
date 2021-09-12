@@ -99,11 +99,11 @@ impl Row {
             return;
         }
 
-        if let Some(_) = list_row.clone() {
+        if list_row.is_some() {
             imp.list_row.replace(list_row);
         } else {
             return;
-        };
+        }
 
         if let Some(item) = self.item() {
             if let Some(category) = item.downcast_ref::<Category>() {
@@ -118,9 +118,9 @@ impl Row {
                 };
                 child.set_category(Some(category.clone()));
 
-                // if let Some(list_item) = self.parent() {
-                //     list_item.set_css_classes(&["category"]);
-                // }
+                if let Some(list_item) = self.parent() {
+                    list_item.set_css_classes(&["category"]);
+                }
             } else if let Some(note) = item.downcast_ref::<Note>() {
                 let child =
                     if let Some(Ok(child)) = self.child().map(glib::Cast::downcast::<NoteRow>) {
@@ -133,9 +133,9 @@ impl Row {
 
                 child.set_note(Some(note.clone()));
 
-                // if let Some(list_item) = self.parent() {
-                //     list_item.set_css_classes(&["category"]);
-                // }
+                if let Some(list_item) = self.parent() {
+                    list_item.set_css_classes(&["note"]);
+                }
             } else {
                 panic!("Wrong row item: {:?}", item);
             }
