@@ -14,7 +14,7 @@ mod imp {
     use super::*;
 
     #[derive(Debug, Default, CompositeTemplate)]
-    #[template(resource = "/io/github/seadve/Noteworthy/ui/sidebar_note_row.ui")]
+    #[template(resource = "/io/github/seadve/Noteworthy/ui/sidebar-note-row.ui")]
     pub struct NoteRow {
         #[template_child]
         pub title_label: TemplateChild<gtk::Label>,

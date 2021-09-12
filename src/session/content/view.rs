@@ -11,7 +11,7 @@ mod imp {
     use super::*;
 
     #[derive(Debug, Default, CompositeTemplate)]
-    #[template(resource = "/io/github/seadve/Noteworthy/ui/content_view.ui")]
+    #[template(resource = "/io/github/seadve/Noteworthy/ui/content-view.ui")]
     pub struct View {
         #[template_child]
         pub title_label: TemplateChild<sourceview::View>,

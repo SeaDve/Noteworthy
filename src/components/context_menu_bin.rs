@@ -14,7 +14,7 @@ mod imp {
     use super::*;
 
     #[derive(Debug, CompositeTemplate)]
-    #[template(resource = "/io/github/seadve/Noteworthy/ui/context_menu_bin.ui")]
+    #[template(resource = "/io/github/seadve/Noteworthy/ui/context-menu-bin.ui")]
     pub struct ContextMenuBin {
         #[template_child]
         pub click_gesture: TemplateChild<gtk::GestureClick>,

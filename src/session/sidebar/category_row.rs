@@ -9,7 +9,7 @@ mod imp {
     use super::*;
 
     #[derive(Debug, Default, CompositeTemplate)]
-    #[template(resource = "/io/github/seadve/Noteworthy/ui/sidebar_category_row.ui")]
+    #[template(resource = "/io/github/seadve/Noteworthy/ui/sidebar-category-row.ui")]
     pub struct CategoryRow {
         #[template_child]
         pub label: TemplateChild<gtk::Label>,
