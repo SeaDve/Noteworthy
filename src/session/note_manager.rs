@@ -139,9 +139,8 @@ impl NoteManager {
         }
 
         let note_bytes = note.serialize()?;
-        let note_file = note.file();
 
-        note_file
+        note.file()
             .replace_contents_async_future(note_bytes, None, false, gio::FileCreateFlags::NONE)
             .await
             .unwrap();
