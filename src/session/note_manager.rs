@@ -113,16 +113,16 @@ impl NoteManager {
     }
 
     pub async fn load_notes(&self) -> Result<()> {
-        let paths = fs::read_dir(self.path())?;
+        let files = fs::read_dir(self.path())?;
         let note_list = NoteList::new();
 
-        for path in paths.flatten() {
-            let path = path.path();
+        for file in files.flatten() {
+            let file_path = file.path();
 
-            log::info!("Loading file: {}", path.display());
+            log::info!("Loading file: {}", file_path.display());
 
             // TODO consider using sourcefile here
-            let file = gio::File::for_path(path);
+            let file = gio::File::for_path(file_path);
             let note = Note::deserialize(&file).await?;
             note_list.append(note);
         }
