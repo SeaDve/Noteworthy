@@ -192,13 +192,6 @@ impl Sidebar {
             item.clone().downcast::<gio::ListModel>().ok()
         });
 
-        // note_list.connect_note_metadata_changed(
-        //     clone!(@strong filter, @strong sorter => move |_| {
-        //         filter.changed(gtk::FilterChange::Different);
-        //         sorter.changed(gtk::SorterChange::Different);
-        //     }),
-        // );
-
         let selection = Selection::new(Some(&tree_model));
         self.bind_property("selected-note", &selection, "selected-item")
             .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
