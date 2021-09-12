@@ -1,16 +1,19 @@
+mod category;
+mod category_row;
+mod item_list;
 mod note_row;
+mod row;
+mod selection;
 
-use gtk::{
-    glib::{self, clone},
-    prelude::*,
-    subclass::prelude::*,
-    CompositeTemplate,
-};
+use gtk::{gio, glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 use once_cell::unsync::OnceCell;
 
 use std::cell::{Cell, RefCell};
 
-use self::note_row::NoteRow;
+use self::{
+    category_row::CategoryRow, item_list::ItemList, note_row::NoteRow, row::Row,
+    selection::Selection,
+};
 use super::{Note, NoteList, Session};
 
 mod imp {
@@ -26,7 +29,6 @@ mod imp {
 
         pub compact: Cell<bool>,
         pub selected_note: RefCell<Option<Note>>,
-        pub selection: RefCell<Option<gtk::SingleSelection>>,
 
         pub session: OnceCell<Session>,
     }
@@ -39,6 +41,7 @@ mod imp {
 
         fn class_init(klass: &mut Self::Class) {
             NoteRow::static_type();
+            Row::static_type();
             Self::bind_template(klass);
 
             klass.install_action("sidebar.create-note", None, move |obj, _, _| {
@@ -61,6 +64,25 @@ mod imp {
     impl ObjectImpl for Sidebar {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
+
+            self.listview.get().connect_activate(move |listview, pos| {
+                let model: Option<Selection> = listview.model().and_then(|o| o.downcast().ok());
+                let row: Option<gtk::TreeListRow> = model
+                    .as_ref()
+                    .and_then(|m| m.item(pos))
+                    .and_then(|o| o.downcast().ok());
+
+                let (model, row) = match (model, row) {
+                    (Some(model), Some(row)) => (model, row),
+                    _ => return,
+                };
+
+                match row.item() {
+                    // Some(o) if o.is::<Category>() => row.set_expanded(!row.is_expanded()),
+                    Some(o) if o.is::<Note>() => model.set_selected(pos),
+                    _ => {}
+                }
+            });
 
             let listview_expression = gtk::ConstantExpression::new(&self.listview.get());
             let model_expression = gtk::PropertyExpression::new(
@@ -164,45 +186,25 @@ impl Sidebar {
     pub fn set_note_list(&self, note_list: NoteList) {
         let imp = imp::Sidebar::from_instance(self);
 
-        let filter = gtk::CustomFilter::new(|item| {
-            let is_pinned = item.downcast_ref::<Note>().unwrap().metadata().is_pinned();
-            true
+        // TODO: hide empty categories
+        let item_list = ItemList::new(&note_list);
+        let tree_model = gtk::TreeListModel::new(&item_list, false, true, |item| {
+            item.clone().downcast::<gio::ListModel>().ok()
         });
-        let filter_model = gtk::FilterListModel::new(Some(&note_list), Some(&filter));
 
-        let sorter = gtk::CustomSorter::new(move |obj1, obj2| {
-            let note1 = obj1.downcast_ref::<Note>().unwrap().metadata();
-            let note2 = obj2.downcast_ref::<Note>().unwrap().metadata();
+        // note_list.connect_note_metadata_changed(
+        //     clone!(@strong filter, @strong sorter => move |_| {
+        //         filter.changed(gtk::FilterChange::Different);
+        //         sorter.changed(gtk::SorterChange::Different);
+        //     }),
+        // );
 
-            // Sort is pinned first before classifying by last modified
-            if note1.is_pinned() == note2.is_pinned() {
-                note2.last_modified().cmp(&note1.last_modified()).into()
-            } else if note1.is_pinned() && !note2.is_pinned() {
-                gtk::Ordering::Smaller
-            } else {
-                gtk::Ordering::Larger
-            }
-        });
-        let sort_model = gtk::SortListModel::new(Some(&filter_model), Some(&sorter));
-
-        note_list.connect_note_metadata_changed(
-            clone!(@strong filter, @strong sorter => move |_| {
-                filter.changed(gtk::FilterChange::Different);
-                sorter.changed(gtk::SorterChange::Different);
-            }),
-        );
-
-        let selection = gtk::SingleSelection::new(Some(&sort_model));
-        selection.set_autoselect(false);
-        selection.set_selected(gtk::INVALID_LIST_POSITION);
-        selection
-            .bind_property("selected-item", self, "selected-note")
-            .flags(glib::BindingFlags::SYNC_CREATE)
+        let selection = Selection::new(Some(&tree_model));
+        self.bind_property("selected-note", &selection, "selected-item")
+            .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
             .build();
-        imp.selection.replace(Some(selection));
 
-        imp.listview
-            .set_model(Some(imp.selection.borrow().as_ref().unwrap()));
+        imp.listview.set_model(Some(&selection));
     }
 
     pub fn set_selected_note(&self, selected_note: Option<Note>) {
@@ -211,14 +213,6 @@ impl Sidebar {
         }
 
         let imp = imp::Sidebar::from_instance(self);
-        if selected_note.is_none() {
-            imp.selection
-                .borrow()
-                .as_ref()
-                .unwrap()
-                .set_selected(gtk::INVALID_LIST_POSITION);
-        }
-
         imp.selected_note.replace(selected_note);
         self.notify("selected-note");
     }

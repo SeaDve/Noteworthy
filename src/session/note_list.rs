@@ -1,21 +1,21 @@
 use adw::subclass::prelude::*;
 use gtk::{
     gio,
-    glib::{self, clone, subclass::Signal},
+    glib::{self, clone},
     prelude::*,
 };
-use once_cell::sync::Lazy;
+use indexmap::IndexMap;
 
 use std::cell::{Cell, RefCell};
 
-use super::Note;
+use super::{note::Id, Note};
 
 mod imp {
     use super::*;
 
     #[derive(Debug, Default)]
     pub struct NoteList {
-        pub list: RefCell<Vec<Note>>,
+        pub list: RefCell<IndexMap<Id, Note>>,
     }
 
     #[glib::object_subclass]
@@ -29,16 +29,6 @@ mod imp {
     impl ObjectImpl for NoteList {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
-        }
-
-        fn signals() -> &'static [Signal] {
-            static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
-                vec![
-                    Signal::builder("note-metadata-changed", &[], <()>::static_type().into())
-                        .build(),
-                ]
-            });
-            SIGNALS.as_ref()
         }
     }
 
@@ -54,7 +44,8 @@ mod imp {
         fn item(&self, _list_model: &Self::Type, position: u32) -> Option<glib::Object> {
             self.list
                 .borrow()
-                .get(position as usize)
+                .values()
+                .nth(position as usize)
                 .map(glib::object::Cast::upcast_ref::<glib::Object>)
                 .cloned()
         }
@@ -74,39 +65,44 @@ impl NoteList {
     pub fn append(&self, note: Note) {
         let imp = &imp::NoteList::from_instance(self);
 
-        note.connect_metadata_changed(clone!(@weak self as obj => move |_| {
-            obj.emit_by_name("note-metadata-changed", &[]).unwrap();
+        note.connect_metadata_changed(clone!(@weak self as obj => move |note| {
+            if let Some((position, _, _)) = obj.get_full(&note.id()) {
+                obj.items_changed(position as u32, 1, 1);
+            }
         }));
 
         {
             let mut list = imp.list.borrow_mut();
-            list.push(note);
+            list.insert(note.id(), note);
         }
 
         self.items_changed(self.n_items() - 1, 0, 1);
     }
 
-    pub fn remove(&self, index: usize) {
+    pub fn remove(&self, note_id: &Id) {
         let imp = &imp::NoteList::from_instance(self);
 
-        {
+        let removed = {
             let mut list = imp.list.borrow_mut();
-            list.remove(index);
-        }
+            list.shift_remove_full(note_id)
+        };
 
-        self.items_changed(index as u32, 1, 0);
+        if let Some((position, _, _)) = removed {
+            self.items_changed(position as u32, 1, 0);
+        }
     }
 
-    pub fn connect_note_metadata_changed<F: Fn(&Self) + 'static>(
-        &self,
-        f: F,
-    ) -> glib::SignalHandlerId {
-        self.connect_local("note-metadata-changed", true, move |values| {
-            let obj = values[0].get::<Self>().unwrap();
-            f(&obj);
-            None
-        })
-        .unwrap()
+    pub fn get(&self, note_id: &Id) -> Option<Note> {
+        let imp = &imp::NoteList::from_instance(self);
+        imp.list.borrow().get(note_id).cloned()
+    }
+
+    fn get_full(&self, note_id: &Id) -> Option<(usize, Id, Note)> {
+        let imp = imp::NoteList::from_instance(self);
+        imp.list
+            .borrow()
+            .get_full(note_id)
+            .map(|(pos, note_id, room)| (pos, note_id.clone(), room.clone()))
     }
 
     pub fn iter(&self) -> NoteListIter {

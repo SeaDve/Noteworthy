@@ -8,6 +8,7 @@
     <file compressed="true" preprocess="xml-stripblanks">ui/context_menu_bin.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/session.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/sidebar.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">ui/sidebar_category_row.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/sidebar_note_row.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/window.ui</file>
     <file compressed="true">style.css</file>

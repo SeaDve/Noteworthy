@@ -6,7 +6,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use super::{Note, NoteList};
+use super::{note::Id, Note, NoteList};
 use crate::Result;
 
 mod imp {
@@ -200,16 +200,11 @@ impl NoteManager {
         Ok(())
     }
 
-    pub fn delete_note(&self, index: usize) -> Result<()> {
+    pub fn delete_note(&self, note_id: &Id) -> Result<()> {
         let note_list = self.note_list();
-        note_list.remove(index);
+        note_list.remove(note_id);
 
-        let note = note_list
-            .item(index as u32)
-            .unwrap()
-            .downcast::<Note>()
-            .unwrap();
-
+        let note = note_list.get(note_id).unwrap();
         note.delete().unwrap();
 
         log::info!("Deleted note {}", note.file().path().unwrap().display());
@@ -218,6 +213,7 @@ impl NoteManager {
     }
 
     fn generate_unique_file_name() -> String {
+        // This is also the note's id
         chrono::Local::now()
             .format("Noteworthy-%Y-%m-%d-%H-%M-%S-%f")
             .to_string()

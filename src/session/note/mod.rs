@@ -1,3 +1,4 @@
+mod id;
 mod metadata;
 
 use gray_matter::{engine::YAML, Matter};
@@ -11,7 +12,7 @@ use once_cell::unsync::OnceCell;
 
 use std::cell::Cell;
 
-pub use self::metadata::Metadata;
+pub use self::{id::Id, metadata::Metadata};
 use crate::Result;
 
 mod imp {
@@ -174,6 +175,10 @@ impl Note {
     pub fn is_saved(&self) -> bool {
         let imp = imp::Note::from_instance(self);
         imp.is_saved.get()
+    }
+
+    pub fn id(&self) -> Id {
+        Id::from_path(&self.file().path().unwrap())
     }
 
     pub fn set_is_saved(&self, is_saved: bool) {

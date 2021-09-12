@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="NwtySidebarCategoryRow" parent="AdwBin">
+    <property name="child">
+      <object class="GtkLabel" id="label">
+        <binding name="label">
+          <lookup name="display-name">
+            <lookup name="category">NwtySidebarCategoryRow</lookup>
+          </lookup>
+        </binding>
+      </object>
+    </property>
+  </template>
+</interface>
