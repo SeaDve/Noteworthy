@@ -153,7 +153,14 @@ impl Note {
         Self::new(
             file,
             &Metadata::default(),
-            &sourceview::Buffer::builder().build(),
+            &sourceview::Buffer::builder()
+                .highlight_matching_brackets(false)
+                .language(
+                    &sourceview::LanguageManager::default()
+                        .and_then(|lm| lm.language("markdown"))
+                        .unwrap(),
+                )
+                .build(),
         )
     }
 
