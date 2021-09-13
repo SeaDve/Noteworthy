@@ -152,7 +152,7 @@ impl Session {
     pub fn note_manager(&self) -> &NoteManager {
         let imp = imp::Session::from_instance(self);
         imp.note_manager
-            .get_or_init(|| NoteManager::new(Path::new("/home/dave/Notes")))
+            .get_or_init(|| NoteManager::new(Path::new("/home/dave/NotesDevel")))
     }
 
     // TODO Add autosave
