@@ -3,10 +3,9 @@
   <template class="NwtySidebarViewSwitcher" parent="AdwBin">
     <property name="child">
       <object class="GtkMenuButton" id="menu_button">
-        <property name="label">All Notes</property>
         <property name="has-frame">False</property>
         <property name="popover">
-          <object class="NwtySidebarViewSwitcherPopover"/>
+          <object class="NwtySidebarViewSwitcherPopover" id="popover"/>
         </property>
       </object>
     </property>

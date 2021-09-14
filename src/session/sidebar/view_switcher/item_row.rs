@@ -119,10 +119,10 @@ impl ItemRow {
 
         if let Some(ref item) = item {
             match item.item_type() {
-                ItemType::AllNotes => {
+                ItemType::AllNotes | ItemType::Trash => {
                     let label = gtk::LabelBuilder::new()
                         .halign(gtk::Align::Start)
-                        .label(&gettext("All Notes"))
+                        .label(&item.display_name().unwrap())
                         .build();
 
                     imp.bin.set_child(Some(&label));
@@ -133,14 +133,6 @@ impl ItemRow {
                         .build();
 
                     imp.bin.set_child(Some(&separator));
-                }
-                ItemType::Trash => {
-                    let label = gtk::LabelBuilder::new()
-                        .halign(gtk::Align::Start)
-                        .label(&gettext("Trash"))
-                        .build();
-
-                    imp.bin.set_child(Some(&label));
                 }
             }
         } else {

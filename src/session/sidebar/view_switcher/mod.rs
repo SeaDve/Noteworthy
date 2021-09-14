@@ -3,6 +3,7 @@ mod item_row;
 mod popover;
 
 use adw::subclass::prelude::*;
+use gettextrs::gettext;
 use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
 use self::{
@@ -19,6 +20,8 @@ mod imp {
     pub struct ViewSwitcher {
         #[template_child]
         menu_button: TemplateChild<gtk::MenuButton>,
+        #[template_child]
+        popover: TemplateChild<Popover>,
     }
 
     #[glib::object_subclass]
@@ -41,6 +44,24 @@ mod imp {
     impl ObjectImpl for ViewSwitcher {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
+
+            let popover_expression = gtk::ConstantExpression::new(&self.popover.get());
+            let selected_item_expression = gtk::PropertyExpression::new(
+                Popover::static_type(),
+                Some(&popover_expression),
+                "selected-item",
+            );
+            let label_expression = gtk::ClosureExpression::new(
+                |args| {
+                    let item: Option<Item> = args[1].get().unwrap();
+                    item.unwrap()
+                        .display_name()
+                        .expect("Separator can't have a display name")
+                },
+                &[selected_item_expression.upcast()],
+            );
+
+            label_expression.bind(&self.menu_button.get(), "label", None);
         }
     }
 

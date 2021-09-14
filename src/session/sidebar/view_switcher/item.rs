@@ -4,7 +4,7 @@ use gtk::{
     prelude::*,
 };
 
-use std::cell::Cell;
+use std::cell::{Cell, RefCell};
 
 #[derive(Debug, Clone, Copy, GEnum, PartialEq)]
 #[genum(type_name = "NwtySidebarViewSwitcherItemType")]
@@ -26,6 +26,7 @@ mod imp {
     #[derive(Debug, Default)]
     pub struct Item {
         item_type: Cell<ItemType>,
+        display_name: RefCell<Option<String>>,
     }
 
     #[glib::object_subclass]
@@ -43,14 +44,23 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_enum(
-                    "item-type",
-                    "Item Type",
-                    "Type of this item",
-                    ItemType::static_type(),
-                    ItemType::default() as i32,
-                    glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
-                )]
+                vec![
+                    glib::ParamSpec::new_enum(
+                        "item-type",
+                        "Item Type",
+                        "Type of this item",
+                        ItemType::static_type(),
+                        ItemType::default() as i32,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
+                    ),
+                    glib::ParamSpec::new_string(
+                        "display-name",
+                        "Display Name",
+                        "Display name of this item",
+                        None,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
+                    ),
+                ]
             });
 
             PROPERTIES.as_ref()
@@ -68,6 +78,10 @@ mod imp {
                     let item_type = value.get().unwrap();
                     self.item_type.set(item_type);
                 }
+                "display-name" => {
+                    let display_name = value.get().unwrap();
+                    self.display_name.replace(display_name);
+                }
                 _ => unimplemented!(),
             }
         }
@@ -75,6 +89,7 @@ mod imp {
         fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
                 "item-type" => self.item_type.get().to_value(),
+                "display-name" => self.display_name.borrow().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -86,11 +101,16 @@ glib::wrapper! {
 }
 
 impl Item {
-    pub fn new(item_type: ItemType) -> Self {
-        glib::Object::new(&[("item-type", &item_type)]).expect("Failed to create Item.")
+    pub fn new(item_type: ItemType, display_name: Option<String>) -> Self {
+        glib::Object::new(&[("item-type", &item_type), ("display-name", &display_name)])
+            .expect("Failed to create Item.")
     }
 
     pub fn item_type(&self) -> ItemType {
         self.property("item-type").unwrap().get().unwrap()
+    }
+
+    pub fn display_name(&self) -> Option<String> {
+        self.property("display-name").unwrap().get().unwrap()
     }
 }
