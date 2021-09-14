@@ -21,6 +21,8 @@ mod imp {
         pub no_selected_view: TemplateChild<adw::StatusPage>,
         #[template_child]
         pub is_pinned_button: TemplateChild<gtk::ToggleButton>,
+        #[template_child]
+        pub is_trashed_button: TemplateChild<gtk::ToggleButton>,
 
         pub bindings: RefCell<Vec<glib::Binding>>,
 
@@ -66,6 +68,7 @@ mod imp {
                 &[note_expression.upcast()],
             );
             is_some_note_expression.bind(&self.is_pinned_button.get(), "visible", None);
+            is_some_note_expression.bind(&self.is_trashed_button.get(), "visible", None);
         }
 
         fn properties() -> &'static [glib::ParamSpec] {
@@ -154,15 +157,21 @@ impl Content {
         if note.is_some() {
             let mut bindings = imp.bindings.borrow_mut();
 
-            let is_pinned = note
-                .as_ref()
-                .unwrap()
-                .metadata()
+            let note_metadata = note.as_ref().unwrap().metadata();
+
+            let is_pinned = note_metadata
                 .bind_property("is-pinned", &imp.is_pinned_button.get(), "active")
                 .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
                 .build()
                 .unwrap();
             bindings.push(is_pinned);
+
+            let is_trashed = note_metadata
+                .bind_property("is-trashed", &imp.is_trashed_button.get(), "active")
+                .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
+                .build()
+                .unwrap();
+            bindings.push(is_trashed);
 
             imp.stack.set_visible_child(&imp.view.get());
         } else {
