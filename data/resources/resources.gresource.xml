@@ -2,14 +2,16 @@
 <gresources>
   <gresource prefix="/io/github/seadve/Noteworthy/">
     <file compressed="true" preprocess="xml-stripblanks">icons/scalable/status/editor-symbolic.svg</file>
-    <file compressed="true" preprocess="xml-stripblanks" alias="gtk/help-overlay.ui">ui/shortcuts.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/content.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/content-view.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/context-menu-bin.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/session.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks" alias="gtk/help-overlay.ui">ui/shortcuts.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/sidebar.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/sidebar-category-row.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/sidebar-note-row.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">ui/sidebar-view-switcher.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">ui/sidebar-view-switcher-item-row.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/window.ui</file>
     <file compressed="true">style.css</file>
   </gresource>

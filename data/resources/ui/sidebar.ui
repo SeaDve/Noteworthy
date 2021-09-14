@@ -24,6 +24,15 @@
     <child>
       <object class="AdwHeaderBar">
         <property name="show-end-title-buttons" bind-source="NwtySidebar" bind-property="compact" bind-flags="sync-create"/>
+        <property name="title-widget">
+          <object class="GtkMenuButton">
+            <property name="has-frame">False</property>
+            <property name="label">All Notes</property>
+            <property name="popover">
+              <object class="NwtySidebarViewSwitcher"/>
+            </property>
+          </object>
+        </property>
         <child>
           <object class="GtkButton">
             <property name="icon-name">list-add-symbolic</property>

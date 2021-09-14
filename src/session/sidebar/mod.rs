@@ -4,6 +4,7 @@ mod item_list;
 mod note_row;
 mod row;
 mod selection;
+mod view_switcher;
 
 use gtk::{gio, glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 use once_cell::unsync::OnceCell;
@@ -12,7 +13,7 @@ use std::cell::{Cell, RefCell};
 
 use self::{
     category_row::CategoryRow, item_list::ItemList, note_row::NoteRow, row::Row,
-    selection::Selection,
+    selection::Selection, view_switcher::ViewSwitcher,
 };
 use super::{Note, NoteList, Session};
 
@@ -40,6 +41,7 @@ mod imp {
         type ParentType = gtk::Box;
 
         fn class_init(klass: &mut Self::Class) {
+            ViewSwitcher::static_type();
             NoteRow::static_type();
             Row::static_type();
             Self::bind_template(klass);
