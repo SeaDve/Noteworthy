@@ -127,7 +127,9 @@ impl ItemRow {
                     imp.bin.set_child(Some(&label));
                 }
                 ItemType::Separator => {
-                    let separator = gtk::Separator::new(gtk::Orientation::Horizontal);
+                    let separator = gtk::SeparatorBuilder::new()
+                        .orientation(gtk::Orientation::Horizontal)
+                        .build();
 
                     imp.bin.set_child(Some(&separator));
                 }
