@@ -42,29 +42,32 @@ mod imp {
             let factory = gtk::SignalListItemFactory::new();
             factory.connect_setup(|_, list_item| {
                 let item_row = ItemRow::new();
-                list_item
-                    .bind_property("selected", &item_row, "selected")
-                    .flags(glib::BindingFlags::SYNC_CREATE)
-                    .build();
+
+                let list_item_expression = gtk::ConstantExpression::new(list_item);
+
+                let item_expression = gtk::PropertyExpression::new(
+                    gtk::ListItem::static_type(),
+                    Some(&list_item_expression),
+                    "item",
+                );
+                item_expression.bind(&item_row, "item", None);
+
+                let selected_expression = gtk::PropertyExpression::new(
+                    gtk::ListItem::static_type(),
+                    Some(&list_item_expression),
+                    "selected",
+                );
+                selected_expression.bind(&item_row, "selected", None);
+
                 list_item.set_child(Some(&item_row));
             });
 
             factory.connect_bind(|_, list_item| {
                 let item: Item = list_item.item().unwrap().downcast().unwrap();
 
-                let item_row: ItemRow = list_item.child().unwrap().downcast().unwrap();
-
                 if item.item_type() == ItemType::Separator {
                     list_item.set_selectable(false);
                 }
-
-                item_row.set_item(Some(item));
-            });
-
-            factory.connect_unbind(|_, list_item| {
-                let item_row: ItemRow = list_item.child().unwrap().downcast().unwrap();
-
-                item_row.set_item(None);
             });
 
             self.listview.set_factory(Some(&factory));
