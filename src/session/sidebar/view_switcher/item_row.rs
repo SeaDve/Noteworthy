@@ -100,7 +100,8 @@ mod imp {
 
 glib::wrapper! {
     pub struct ItemRow(ObjectSubclass<imp::ItemRow>)
-        @extends gtk::Widget, adw::Bin, @implements gtk::Accessible;
+        @extends gtk::Widget, adw::Bin,
+        @implements gtk::Accessible;
 }
 
 impl ItemRow {

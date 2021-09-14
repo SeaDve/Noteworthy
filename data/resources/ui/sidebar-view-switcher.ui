@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <template class="NwtySidebarViewSwitcher" parent="GtkPopover">
+  <template class="NwtySidebarViewSwitcher" parent="AdwBin">
     <property name="child">
-      <object class="GtkListView" id="listview"/>
+      <object class="GtkMenuButton" id="menu_button">
+        <property name="label">All Notes</property>
+        <property name="has-frame">False</property>
+        <property name="popover">
+          <object class="NwtySidebarViewSwitcherPopover"/>
+        </property>
+      </object>
     </property>
   </template>
 </interface>
