@@ -14,6 +14,7 @@ mod imp {
         pub title: RefCell<String>,
         pub last_modified: RefCell<Date>,
         pub is_pinned: Cell<bool>,
+        pub is_trashed: Cell<bool>,
     }
 
     #[glib::object_subclass]
@@ -53,6 +54,13 @@ mod imp {
                         false,
                         glib::ParamFlags::READWRITE,
                     ),
+                    glib::ParamSpec::new_boolean(
+                        "is-trashed",
+                        "Is Trashed",
+                        "Whether the note associated with self is in trash",
+                        false,
+                        glib::ParamFlags::READWRITE,
+                    ),
                 ]
             });
 
@@ -81,6 +89,10 @@ mod imp {
                     let is_pinned = value.get().unwrap();
                     self.is_pinned.set(is_pinned);
                 }
+                "is-trashed" => {
+                    let is_trashed = value.get().unwrap();
+                    self.is_trashed.set(is_trashed);
+                }
                 _ => unimplemented!(),
             }
         }
@@ -90,6 +102,7 @@ mod imp {
                 "title" => self.title.borrow().to_value(),
                 "last-modified" => self.last_modified.borrow().to_value(),
                 "is-pinned" => self.is_pinned.get().to_value(),
+                "is-trashed" => self.is_trashed.get().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -128,6 +141,14 @@ impl Metadata {
     pub fn is_pinned(&self) -> bool {
         self.property("is-pinned").unwrap().get().unwrap()
     }
+
+    pub fn set_is_trashed(&self, is_trashed: bool) {
+        self.set_property("is-trashed", is_trashed).unwrap();
+    }
+
+    pub fn is_trashed(&self) -> bool {
+        self.property("is-trashed").unwrap().get().unwrap()
+    }
 }
 
 impl Serialize for Metadata {
@@ -145,6 +166,7 @@ impl<'de> Deserialize<'de> for Metadata {
             ("title", &*imp.title.borrow()),
             ("last-modified", &*imp.last_modified.borrow()),
             ("is-pinned", &imp.is_pinned.get()),
+            ("is-trashed", &imp.is_trashed.get()),
         ])
         .expect("Failed to create Metadata.");
 
