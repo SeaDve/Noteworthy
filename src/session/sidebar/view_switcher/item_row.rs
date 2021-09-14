@@ -1,5 +1,4 @@
 use adw::{prelude::*, subclass::prelude::BinImpl};
-use gettextrs::gettext;
 use gtk::{glib, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::{Cell, RefCell};

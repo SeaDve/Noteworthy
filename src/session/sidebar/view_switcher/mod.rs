@@ -3,7 +3,6 @@ mod item_row;
 mod popover;
 
 use adw::subclass::prelude::*;
-use gettextrs::gettext;
 use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
 use self::{
@@ -51,16 +50,11 @@ mod imp {
                 Some(&popover_expression),
                 "selected-item",
             );
-            let label_expression = gtk::ClosureExpression::new(
-                |args| {
-                    let item: Option<Item> = args[1].get().unwrap();
-                    item.unwrap()
-                        .display_name()
-                        .expect("Separator can't have a display name")
-                },
-                &[selected_item_expression.upcast()],
+            let label_expression = gtk::PropertyExpression::new(
+                Item::static_type(),
+                Some(&selected_item_expression),
+                "display-name",
             );
-
             label_expression.bind(&self.menu_button.get(), "label", None);
         }
     }
