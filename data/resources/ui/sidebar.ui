@@ -23,6 +23,7 @@
     </style>
     <child>
       <object class="AdwHeaderBar">
+        <property name="centering-policy">strict</property>
         <property name="show-end-title-buttons" bind-source="NwtySidebar" bind-property="compact" bind-flags="sync-create"/>
         <property name="title-widget">
           <object class="NwtySidebarViewSwitcher">
