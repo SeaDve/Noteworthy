@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
+  <object class="GtkLabel" id="label_child">
+    <property name="halign">start</property>
+  </object>
+  <object class="GtkSeparator" id="separator_child">
+    <property name="valign">center</property>
+  </object>
   <template class="NwtySidebarViewSwitcherItemRow" parent="AdwBin">
     <property name="child">
-      <object class="GtkBox" id="hbox">
-        <property name="orientation">horizontal</property>
+      <object class="GtkBox">
+        <property name="spacing">6</property>
         <child>
           <object class="AdwBin" id="bin">
             <property name="hexpand">True</property>

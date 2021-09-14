@@ -12,6 +12,10 @@ mod imp {
     #[template(resource = "/io/github/seadve/Noteworthy/ui/sidebar-view-switcher-item-row.ui")]
     pub struct ItemRow {
         #[template_child]
+        pub label_child: TemplateChild<gtk::Label>,
+        #[template_child]
+        pub separator_child: TemplateChild<gtk::Separator>,
+        #[template_child]
         pub bin: TemplateChild<adw::Bin>,
         #[template_child]
         pub select_icon: TemplateChild<gtk::Image>,
@@ -119,19 +123,11 @@ impl ItemRow {
         if let Some(ref item) = item {
             match item.item_type() {
                 ItemType::AllNotes | ItemType::Trash => {
-                    let label = gtk::LabelBuilder::new()
-                        .halign(gtk::Align::Start)
-                        .label(&item.display_name().unwrap())
-                        .build();
-
-                    imp.bin.set_child(Some(&label));
+                    imp.label_child.set_label(&item.display_name().unwrap());
+                    imp.bin.set_child(Some(&imp.label_child.get()));
                 }
                 ItemType::Separator => {
-                    let separator = gtk::SeparatorBuilder::new()
-                        .orientation(gtk::Orientation::Horizontal)
-                        .build();
-
-                    imp.bin.set_child(Some(&separator));
+                    imp.bin.set_child(Some(&imp.separator_child.get()));
                 }
             }
         } else {

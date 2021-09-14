@@ -2,7 +2,11 @@
 <interface>
   <template class="NwtySidebarViewSwitcherPopover" parent="GtkPopover">
     <property name="child">
-      <object class="GtkListView" id="listview"/>
+      <object class="GtkListView" id="listview">
+        <style>
+          <class name="sidebar-view-switcher-popover"/>
+        </style>
+      </object>
     </property>
   </template>
 </interface>

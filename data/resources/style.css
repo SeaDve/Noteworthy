@@ -1,5 +1,6 @@
 .sidebar row {
   min-height: 30px;
+  min-width: 200px;
   padding-left: 6px;
   padding-right: 6px;
 }
@@ -16,6 +17,20 @@
 .sidebar-spinner {
   min-width: 32px;
   min-height: 32px;
+}
+
+.sidebar-view-switcher-popover {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.sidebar-view-switcher-popover row {
+  min-height: 12px;
+  min-width: 120px;
+}
+
+.sidebar-view-switcher-popover row:selected {
+  background: none;
 }
 
 .content-view {
