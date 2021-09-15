@@ -4,6 +4,8 @@
     <file compressed="true" preprocess="xml-stripblanks">icons/scalable/status/editor-symbolic.svg</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/content.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/content-view.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">ui/content-view-tag-list-view.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">ui/content-view-tag-list-view-row.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/context-menu-bin.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/session.ui</file>
     <file compressed="true" preprocess="xml-stripblanks" alias="gtk/help-overlay.ui">ui/shortcuts.ui</file>

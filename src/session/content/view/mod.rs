@@ -1,11 +1,13 @@
+mod tag_list_view;
+
 use adw::subclass::prelude::*;
 use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::RefCell;
 
-use super::super::note::Metadata;
+use self::tag_list_view::TagListView;
 use super::Note;
-use crate::date::Date;
+use crate::{date::Date, session::note::Metadata};
 
 mod imp {
     use super::*;
@@ -17,6 +19,8 @@ mod imp {
         pub title_label: TemplateChild<sourceview::View>,
         #[template_child]
         pub last_modified_label: TemplateChild<gtk::Label>,
+        #[template_child]
+        pub tag_list_view: TemplateChild<TagListView>,
         #[template_child]
         pub source_view: TemplateChild<sourceview::View>,
 
@@ -32,6 +36,7 @@ mod imp {
         type ParentType = adw::Bin;
 
         fn class_init(klass: &mut Self::Class) {
+            TagListView::static_type();
             Self::bind_template(klass);
         }
 

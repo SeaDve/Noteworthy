@@ -38,11 +38,14 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkLabel">
-                        <property name="label"></property>
-                        <style>
-                          <class name="caption"/>
-                        </style>
+                      <object class="NwtyContentViewTagListView" id="tag_list_view">
+                        <binding name="tag-list">
+                          <lookup name="tag-list">
+                            <lookup name="metadata">
+                              <lookup name="note">NwtyContentView</lookup>
+                            </lookup>
+                          </lookup>
+                        </binding>
                       </object>
                     </child>
                   </object>

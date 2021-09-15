@@ -14,7 +14,7 @@ use once_cell::unsync::OnceCell;
 
 use std::cell::Cell;
 
-pub use self::{id::Id, metadata::Metadata};
+pub use self::{id::Id, metadata::Metadata, tag::Tag, tag_list::TagList};
 use crate::Result;
 
 mod imp {
