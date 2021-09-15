@@ -6,14 +6,24 @@ mod row;
 mod selection;
 mod view_switcher;
 
-use gtk::{gio, glib, prelude::*, subclass::prelude::*, CompositeTemplate};
+use gtk::{
+    gio,
+    glib::{self, clone},
+    prelude::*,
+    subclass::prelude::*,
+    CompositeTemplate,
+};
 use once_cell::unsync::OnceCell;
 
 use std::cell::{Cell, RefCell};
 
 use self::{
-    category_row::CategoryRow, item_list::ItemList, note_row::NoteRow, row::Row,
-    selection::Selection, view_switcher::ViewSwitcher,
+    category_row::CategoryRow,
+    item_list::ItemList,
+    note_row::NoteRow,
+    row::Row,
+    selection::Selection,
+    view_switcher::{ItemType, ViewSwitcher},
 };
 use super::{Note, NoteList, Session};
 
@@ -27,6 +37,8 @@ mod imp {
         pub listview: TemplateChild<gtk::ListView>,
         #[template_child]
         pub stack: TemplateChild<gtk::Stack>,
+        #[template_child]
+        pub view_switcher: TemplateChild<ViewSwitcher>,
 
         pub compact: Cell<bool>,
         pub selected_note: RefCell<Option<Note>>,
@@ -194,7 +206,36 @@ impl Sidebar {
             item.clone().downcast::<gio::ListModel>().ok()
         });
 
-        let selection = Selection::new(Some(&tree_model));
+        let filter_expression = gtk::ClosureExpression::new(
+            clone!(@weak self as obj => @default-return true, move |value| {
+                value[0]
+                    .get::<gtk::TreeListRow>()
+                    .unwrap()
+                    .item()
+                    .and_then(|o| o.downcast::<Note>().ok())
+                    .map_or(true, |note| {
+                        let imp = imp::Sidebar::from_instance(&obj);
+                        let note = note.metadata();
+
+                        match imp.view_switcher.selected_type() {
+                            ItemType::AllNotes => !note.is_trashed(),
+                            ItemType::Trash => note.is_trashed(),
+                            ItemType::Separator => unreachable!("Separator cannot be selected"),
+                        }
+                    })
+            }),
+            &[],
+        );
+        let filter = gtk::BoolFilterBuilder::new()
+            .expression(&filter_expression)
+            .build();
+        let filter_model = gtk::FilterListModel::new(Some(&tree_model), Some(&filter));
+
+        imp.view_switcher.connect_selected_type_notify(move |_, _| {
+            filter.changed(gtk::FilterChange::Different);
+        });
+
+        let selection = Selection::new(Some(&filter_model));
         self.bind_property("selected-note", &selection, "selected-item")
             .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
             .build();

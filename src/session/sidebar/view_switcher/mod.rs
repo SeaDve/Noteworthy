@@ -5,11 +5,10 @@ mod popover;
 use adw::subclass::prelude::*;
 use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
-use self::{
-    item::{Item, ItemType},
-    item_row::ItemRow,
-    popover::Popover,
-};
+use std::cell::Cell;
+
+pub use self::item::ItemType;
+use self::{item::Item, item_row::ItemRow, popover::Popover};
 
 mod imp {
     use super::*;
@@ -18,9 +17,11 @@ mod imp {
     #[template(resource = "/io/github/seadve/Noteworthy/ui/sidebar-view-switcher.ui")]
     pub struct ViewSwitcher {
         #[template_child]
-        menu_button: TemplateChild<gtk::MenuButton>,
+        pub menu_button: TemplateChild<gtk::MenuButton>,
         #[template_child]
-        popover: TemplateChild<Popover>,
+        pub popover: TemplateChild<Popover>,
+
+        pub selected_type: Cell<ItemType>,
     }
 
     #[glib::object_subclass]
@@ -41,6 +42,45 @@ mod imp {
     }
 
     impl ObjectImpl for ViewSwitcher {
+        fn properties() -> &'static [glib::ParamSpec] {
+            use once_cell::sync::Lazy;
+            static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
+                vec![glib::ParamSpec::new_enum(
+                    "selected-type",
+                    "Selected-type",
+                    "The selected type in the switcher",
+                    ItemType::static_type(),
+                    ItemType::default() as i32,
+                    glib::ParamFlags::READWRITE,
+                )]
+            });
+
+            PROPERTIES.as_ref()
+        }
+
+        fn set_property(
+            &self,
+            _obj: &Self::Type,
+            _id: usize,
+            value: &glib::Value,
+            pspec: &glib::ParamSpec,
+        ) {
+            match pspec.name() {
+                "selected-type" => {
+                    let selected_type = value.get().unwrap();
+                    self.selected_type.set(selected_type);
+                }
+                _ => unimplemented!(),
+            }
+        }
+
+        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+            match pspec.name() {
+                "selected-type" => self.selected_type.get().to_value(),
+                _ => unimplemented!(),
+            }
+        }
+
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
@@ -56,6 +96,13 @@ mod imp {
                 "display-name",
             );
             label_expression.bind(&self.menu_button.get(), "label", None);
+
+            let selected_type_expression = gtk::PropertyExpression::new(
+                Item::static_type(),
+                Some(&selected_item_expression),
+                "item-type",
+            );
+            selected_type_expression.bind(obj, "selected-type", None);
         }
     }
 
@@ -72,5 +119,16 @@ glib::wrapper! {
 impl ViewSwitcher {
     pub fn new() -> Self {
         glib::Object::new(&[]).expect("Failed to create ViewSwitcher.")
+    }
+
+    pub fn selected_type(&self) -> ItemType {
+        self.property("selected-type").unwrap().get().unwrap()
+    }
+
+    pub fn connect_selected_type_notify<F: Fn(&Self, &glib::ParamSpec) + 'static>(
+        &self,
+        f: F,
+    ) -> glib::SignalHandlerId {
+        self.connect_notify_local(Some("selected-type"), f)
     }
 }
