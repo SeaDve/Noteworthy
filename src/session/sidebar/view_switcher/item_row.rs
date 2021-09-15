@@ -125,9 +125,13 @@ impl ItemRow {
                 ItemType::AllNotes | ItemType::Trash => {
                     imp.label_child.set_label(&item.display_name().unwrap());
                     imp.bin.set_child(Some(&imp.label_child.get()));
+                    self.set_margin_start(6);
+                    self.set_margin_end(6);
                 }
                 ItemType::Separator => {
                     imp.bin.set_child(Some(&imp.separator_child.get()));
+                    self.set_margin_start(0);
+                    self.set_margin_end(0);
                 }
             }
         } else {
