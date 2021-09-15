@@ -1,5 +1,7 @@
 mod id;
 mod metadata;
+mod tag;
+mod tag_list;
 
 use gray_matter::{engine::YAML, Matter};
 use gtk::{

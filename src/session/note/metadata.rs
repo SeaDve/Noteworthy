@@ -3,6 +3,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use std::cell::{Cell, RefCell};
 
+use super::tag_list::TagList;
 use crate::date::Date;
 
 mod imp {
@@ -12,6 +13,7 @@ mod imp {
     #[serde(default)]
     pub struct Metadata {
         pub title: RefCell<String>,
+        pub tag_list: RefCell<TagList>,
         pub last_modified: RefCell<Date>,
         pub is_pinned: Cell<bool>,
         pub is_trashed: Cell<bool>,
@@ -36,14 +38,21 @@ mod imp {
                     glib::ParamSpec::new_string(
                         "title",
                         "Title",
-                        "Title of the Metadata",
+                        "Title of the metadata",
                         None,
+                        glib::ParamFlags::READWRITE,
+                    ),
+                    glib::ParamSpec::new_object(
+                        "tag-list",
+                        "Tag List",
+                        "List containing the tags",
+                        TagList::static_type(),
                         glib::ParamFlags::READWRITE,
                     ),
                     glib::ParamSpec::new_boxed(
                         "last-modified",
                         "Last Modified",
-                        "Last modified date of the Metadata",
+                        "Last modified date of the metadata",
                         Date::static_type(),
                         glib::ParamFlags::READWRITE,
                     ),
@@ -81,6 +90,10 @@ mod imp {
 
                     obj.update_last_modified();
                 }
+                "tag-list" => {
+                    let tag_list = value.get().unwrap();
+                    self.tag_list.replace(tag_list);
+                }
                 "last-modified" => {
                     let last_modified = value.get().unwrap();
                     self.last_modified.replace(last_modified);
@@ -100,6 +113,7 @@ mod imp {
         fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
                 "title" => self.title.borrow().to_value(),
+                "tag-list" => self.tag_list.borrow().to_value(),
                 "last-modified" => self.last_modified.borrow().to_value(),
                 "is-pinned" => self.is_pinned.get().to_value(),
                 "is-trashed" => self.is_trashed.get().to_value(),
@@ -124,6 +138,14 @@ impl Metadata {
 
     pub fn title(&self) -> String {
         self.property("title").unwrap().get().unwrap()
+    }
+
+    pub fn set_tag_list(&self, tag_list: TagList) {
+        self.set_property("tag-list", tag_list).unwrap();
+    }
+
+    pub fn tag_list(&self) -> TagList {
+        self.property("tag-list").unwrap().get().unwrap()
     }
 
     pub fn update_last_modified(&self) {
@@ -164,6 +186,7 @@ impl<'de> Deserialize<'de> for Metadata {
 
         let metadata = glib::Object::new::<Self>(&[
             ("title", &*imp.title.borrow()),
+            ("tag-list", &*imp.tag_list.borrow()),
             ("last-modified", &*imp.last_modified.borrow()),
             ("is-pinned", &imp.is_pinned.get()),
             ("is-trashed", &imp.is_trashed.get()),

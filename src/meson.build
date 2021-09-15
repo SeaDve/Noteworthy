@@ -26,6 +26,8 @@ rust_sources = files(
   'session/note/id.rs',
   'session/note/metadata.rs',
   'session/note/mod.rs',
+  'session/note/tag.rs',
+  'session/note/tag_list.rs',
   'session/sidebar/view_switcher/item.rs',
   'session/sidebar/view_switcher/item_row.rs',
   'session/sidebar/view_switcher/mod.rs',
