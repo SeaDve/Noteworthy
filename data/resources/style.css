@@ -19,13 +19,8 @@
   min-height: 32px;
 }
 
-.sidebar-view-switcher-popover {
-  padding-top: 6px;
-  padding-bottom: 6px;
-}
-
 .sidebar-view-switcher-popover row {
-  min-height: 12px;
+  min-height: 6px;
   min-width: 120px;
 }
 
