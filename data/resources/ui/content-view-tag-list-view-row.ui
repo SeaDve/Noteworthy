@@ -8,6 +8,9 @@
             <lookup name="tag">NwtyContentViewTagListViewRow</lookup>
           </lookup>
         </binding>
+        <style>
+          <class name="caption"/>
+        </style>
       </object>
     </property>
   </template>

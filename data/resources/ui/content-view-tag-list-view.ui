@@ -3,6 +3,7 @@
   <template class="NwtyContentViewTagListView" parent="AdwBin">
     <property name="child">
       <object class="GtkListView" id="list_view">
+        <property name="orientation">horizontal</property>
         <property name="factory">
           <object class="GtkBuilderListItemFactory">
             <property name="bytes"><![CDATA[
@@ -21,6 +22,9 @@
          ]]></property>
           </object>
         </property>
+        <style>
+          <class name="content-view-tag-list-view"/>
+        </style>
       </object>
     </property>
   </template>
