@@ -154,10 +154,9 @@ impl Content {
             binding.unbind();
         }
 
-        if note.is_some() {
+        if let Some(ref note) = note {
             let mut bindings = imp.bindings.borrow_mut();
-
-            let note_metadata = note.as_ref().unwrap().metadata();
+            let note_metadata = note.metadata();
 
             let is_pinned = note_metadata
                 .bind_property("is-pinned", &imp.is_pinned_button.get(), "active")
