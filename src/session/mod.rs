@@ -6,13 +6,14 @@ mod sidebar;
 
 use adw::subclass::prelude::*;
 use gtk::{
+    gio,
     glib::{self, clone},
     prelude::*,
     subclass::prelude::*,
 };
 use once_cell::unsync::OnceCell;
 
-use std::{cell::RefCell, path::Path};
+use std::cell::RefCell;
 
 use self::{
     content::Content, note::Note, note_list::NoteList, note_manager::NoteManager, sidebar::Sidebar,
@@ -151,8 +152,10 @@ impl Session {
 
     pub fn note_manager(&self) -> &NoteManager {
         let imp = imp::Session::from_instance(self);
-        imp.note_manager
-            .get_or_init(|| NoteManager::new(Path::new("/home/dave/NotesDevel")))
+        imp.note_manager.get_or_init(|| {
+            let directory = gio::File::for_path("/home/dave/NotesDevel");
+            NoteManager::for_directory(&directory)
+        })
     }
 
     // TODO Add autosave

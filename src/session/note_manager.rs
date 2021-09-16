@@ -1,10 +1,7 @@
 use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::unsync::OnceCell;
 
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
+use std::fs;
 
 use super::{note::Id, Note, NoteList};
 use crate::Result;
@@ -14,7 +11,7 @@ mod imp {
 
     #[derive(Debug, Default)]
     pub struct NoteManager {
-        pub path: OnceCell<gio::File>,
+        pub directory: OnceCell<gio::File>,
         pub note_list: OnceCell<NoteList>,
     }
 
@@ -35,9 +32,9 @@ mod imp {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
                     glib::ParamSpec::new_object(
-                        "path",
-                        "Path",
-                        "Path where the notes are stored",
+                        "directory",
+                        "Directory",
+                        "Directory where the notes are stored",
                         gio::File::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
@@ -62,9 +59,9 @@ mod imp {
             pspec: &glib::ParamSpec,
         ) {
             match pspec.name() {
-                "path" => {
-                    let path = value.get().unwrap();
-                    self.path.set(path).unwrap();
+                "directory" => {
+                    let directory = value.get().unwrap();
+                    self.directory.set(directory).unwrap();
                 }
                 "note-list" => {
                     let note_list = value.get().unwrap();
@@ -76,7 +73,7 @@ mod imp {
 
         fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "path" => self.path.get().to_value(),
+                "directory" => obj.directory().to_value(),
                 "note-list" => obj.note_list().to_value(),
                 _ => unimplemented!(),
             }
@@ -89,19 +86,14 @@ glib::wrapper! {
 }
 
 impl NoteManager {
-    pub fn new(path: &Path) -> Self {
-        let file = gio::File::for_path(path);
-
-        glib::Object::new::<Self>(&[("path", &file)]).expect("Failed to create NoteManager.")
+    pub fn for_directory(directory: &gio::File) -> Self {
+        glib::Object::new::<Self>(&[("directory", &directory)])
+            .expect("Failed to create NoteManager.")
     }
 
-    pub fn path(&self) -> PathBuf {
-        self.property("path")
-            .unwrap()
-            .get::<gio::File>()
-            .unwrap()
-            .path()
-            .unwrap()
+    pub fn directory(&self) -> gio::File {
+        let imp = imp::NoteManager::from_instance(self);
+        imp.directory.get().unwrap().clone()
     }
 
     pub fn note_list(&self) -> NoteList {
@@ -113,7 +105,8 @@ impl NoteManager {
     }
 
     pub async fn load_notes(&self) -> Result<()> {
-        let files = fs::read_dir(self.path())?;
+        let path = self.directory().path().unwrap();
+        let files = fs::read_dir(path)?;
         let note_list = NoteList::new();
 
         for file in files.flatten() {
@@ -186,11 +179,11 @@ impl NoteManager {
     }
 
     pub fn create_note(&self) -> Result<()> {
-        let mut file_path = self.path();
+        let mut file_path = self.directory().path().unwrap();
         file_path.push(Self::generate_unique_file_name());
         file_path.set_extension("md");
 
-        let file = gio::File::for_path(file_path.display().to_string());
+        let file = gio::File::for_path(&file_path);
         let new_note = Note::create_default(&file);
 
         self.note_list().append(new_note);
