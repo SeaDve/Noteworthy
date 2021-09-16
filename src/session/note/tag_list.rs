@@ -1,10 +1,35 @@
 use adw::subclass::prelude::*;
 use gtk::{gio, glib, prelude::*};
+use indexmap::IndexSet;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use std::cell::RefCell;
 
 use super::tag::Tag;
+
+// This is used for two different tags with the same name to be treated
+// as same object.
+#[derive(Debug, Serialize, Deserialize, Eq)]
+#[serde(transparent)]
+pub struct TagWrapper(Tag);
+
+impl std::hash::Hash for TagWrapper {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.0.name().hash(state);
+    }
+}
+
+impl PartialEq for TagWrapper {
+    fn eq(&self, other: &TagWrapper) -> bool {
+        self.0.name() == other.0.name()
+    }
+}
+
+impl TagWrapper {
+    fn inner_ref(&self) -> &Tag {
+        &self.0
+    }
+}
 
 mod imp {
     use super::*;
@@ -12,7 +37,7 @@ mod imp {
     #[derive(Debug, Default, Serialize, Deserialize)]
     #[serde(transparent)]
     pub struct TagList {
-        pub list: RefCell<Vec<Tag>>,
+        pub list: RefCell<IndexSet<TagWrapper>>,
     }
 
     #[glib::object_subclass]
@@ -41,8 +66,8 @@ mod imp {
         fn item(&self, _list_model: &Self::Type, position: u32) -> Option<glib::Object> {
             self.list
                 .borrow()
-                .get(position as usize)
-                .map(glib::object::Cast::upcast_ref::<glib::Object>)
+                .get_index(position as usize)
+                .map(|o| o.inner_ref().upcast_ref::<glib::Object>())
                 .cloned()
         }
     }
@@ -58,26 +83,34 @@ impl TagList {
         glib::Object::new(&[]).expect("Failed to create TagList.")
     }
 
-    pub fn append(&self, tag: Tag) {
+    pub fn append(&self, tag: Tag) -> bool {
         let imp = &imp::TagList::from_instance(self);
 
-        {
+        let is_appended = {
             let mut list = imp.list.borrow_mut();
-            list.push(tag);
+            list.insert(TagWrapper(tag))
+        };
+
+        if is_appended {
+            self.items_changed(self.n_items() - 1, 0, 1);
         }
 
-        self.items_changed(self.n_items() - 1, 0, 1);
+        is_appended
     }
 
-    pub fn remove(&self, index: u32) {
+    pub fn remove(&self, tag: Tag) -> bool {
         let imp = &imp::TagList::from_instance(self);
 
-        {
+        let removed = {
             let mut list = imp.list.borrow_mut();
-            list.remove(index as usize);
+            list.shift_remove_full(&TagWrapper(tag))
+        };
+
+        if let Some((position, _)) = removed {
+            self.items_changed(position as u32, 1, 0);
         }
 
-        self.items_changed(index, 1, 0);
+        removed.is_some()
     }
 
     // FIXME remove this
@@ -87,7 +120,7 @@ impl TagList {
             .list
             .borrow()
             .iter()
-            .map(|t| t.name())
+            .map(|t| t.inner_ref().name())
             .collect::<Vec<String>>());
     }
 }
