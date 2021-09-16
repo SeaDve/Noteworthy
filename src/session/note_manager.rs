@@ -1,8 +1,6 @@
 use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::unsync::OnceCell;
 
-use std::fs;
-
 use super::{note::Id, Note, NoteList};
 use crate::Result;
 
@@ -105,12 +103,19 @@ impl NoteManager {
     }
 
     pub async fn load_notes(&self) -> Result<()> {
-        let path = self.directory().path().unwrap();
-        let files = fs::read_dir(path)?;
+        let files = self
+            .directory()
+            .enumerate_children_async_future(
+                &gio::FILE_ATTRIBUTE_STANDARD_NAME,
+                gio::FileQueryInfoFlags::NONE,
+                glib::PRIORITY_HIGH_IDLE,
+            )
+            .await?;
         let note_list = NoteList::new();
 
         for file in files.flatten() {
-            let file_path = file.path();
+            let mut file_path = self.directory().path().unwrap();
+            file_path.push(file.name());
 
             log::info!("Loading file: {}", file_path.display());
 
