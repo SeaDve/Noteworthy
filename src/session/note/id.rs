@@ -1,6 +1,6 @@
 use std::path::Path;
 
-// TODO optimize this
+// TODO optimize this (Reduce size of id in generating unique file name in note_manager)
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct Id {
     id: Box<str>,
