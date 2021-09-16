@@ -1,5 +1,6 @@
 use std::path::Path;
 
+// TODO optimize this
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct Id {
     id: Box<str>,
