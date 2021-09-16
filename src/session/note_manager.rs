@@ -103,8 +103,8 @@ impl NoteManager {
     }
 
     pub async fn load_notes(&self) -> Result<()> {
-        let files = self
-            .directory()
+        let directory = self.directory();
+        let files = directory
             .enumerate_children_async_future(
                 &gio::FILE_ATTRIBUTE_STANDARD_NAME,
                 gio::FileQueryInfoFlags::NONE,
@@ -114,7 +114,7 @@ impl NoteManager {
         let note_list = NoteList::new();
 
         for file in files.flatten() {
-            let mut file_path = self.directory().path().unwrap();
+            let mut file_path = directory.path().unwrap();
             file_path.push(file.name());
 
             log::info!("Loading file: {}", file_path.display());
