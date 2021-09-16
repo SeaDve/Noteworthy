@@ -1,15 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <menu id="context_menu">
-    <section>
-      <item>
-        <attribute name="label" translatable="yes">Move to Trash</attribute>
-        <attribute name="action">app.preferences</attribute>
-      </item>
-    </section>
-  </menu>
-  <template class="NwtySidebarNoteRow" parent="NwtyContextMenuBin">
-    <property name="context-menu">context_menu</property>
+  <template class="NwtySidebarNoteRow" parent="AdwBin">
     <property name="child">
       <object class="GtkBox">
         <property name="spacing">6</property>

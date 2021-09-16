@@ -3,12 +3,8 @@ use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::RefCell;
 
-use super::super::note::Metadata;
 use super::Note;
-use crate::{
-    components::{ContextMenuBin, ContextMenuBinExt, ContextMenuBinImpl},
-    date::Date,
-};
+use crate::{date::Date, session::note::Metadata};
 
 mod imp {
     use super::*;
@@ -30,7 +26,7 @@ mod imp {
     impl ObjectSubclass for NoteRow {
         const NAME: &'static str = "NwtySidebarNoteRow";
         type Type = super::NoteRow;
-        type ParentType = ContextMenuBin;
+        type ParentType = adw::Bin;
 
         fn class_init(klass: &mut Self::Class) {
             Self::bind_template(klass);
@@ -136,12 +132,11 @@ mod imp {
 
     impl WidgetImpl for NoteRow {}
     impl BinImpl for NoteRow {}
-    impl ContextMenuBinImpl for NoteRow {}
 }
 
 glib::wrapper! {
     pub struct NoteRow(ObjectSubclass<imp::NoteRow>)
-        @extends gtk::Widget, adw::Bin, ContextMenuBin,
+        @extends gtk::Widget, adw::Bin,
         @implements gtk::Accessible;
 }
 

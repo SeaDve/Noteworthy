@@ -1,6 +1,8 @@
 // Class from Fractal-next
 // See https://gitlab.gnome.org/GNOME/fractal/-/blob/fractal-next/src/components/context_menu_bin.rs
 
+// TODO remove this file, since it is not currently used
+
 use adw::subclass::prelude::*;
 use gtk::{
     gdk, gio,
