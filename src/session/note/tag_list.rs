@@ -8,7 +8,7 @@ use std::cell::RefCell;
 use super::tag::Tag;
 
 // This is used for two different tags with the same name to be treated
-// as same object.
+// as equal and have the same hash
 #[derive(Debug, Serialize, Deserialize, Eq)]
 #[serde(transparent)]
 pub struct TagWrapper(Tag);
