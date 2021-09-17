@@ -3,7 +3,7 @@ mod note;
 mod note_list;
 mod note_manager;
 mod sidebar;
-mod tag_window;
+mod tag_dialog;
 
 use adw::subclass::prelude::*;
 use gtk::{
@@ -18,6 +18,7 @@ use std::cell::RefCell;
 
 use self::{
     content::Content, note::Note, note_list::NoteList, note_manager::NoteManager, sidebar::Sidebar,
+    tag_dialog::TagDialog,
 };
 
 mod imp {

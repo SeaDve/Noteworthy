@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="NwtyTagDialogRow" parent="AdwBin">
+    <property name="child">
+      <object class="GtkBox">
+        <property name="spacing">6</property>
+        <child>
+          <object class="GtkImage">
+            <property name="icon-name">tag-symbolic</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="label">
+            <property name="xalign">0</property>
+            <property name="hexpand">True</property>
+            <binding name="label">
+              <lookup name="name">
+                <lookup name="tag">NwtyTagDialogRow</lookup>
+              </lookup>
+            </binding>
+          </object>
+        </child>
+        <child>
+          <object class="GtkCheckButton" id="check_button">
+          </object>
+        </child>
+      </object>
+    </property>
+  </template>
+</interface>

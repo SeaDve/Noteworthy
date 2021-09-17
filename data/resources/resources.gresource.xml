@@ -2,6 +2,7 @@
 <gresources>
   <gresource prefix="/io/github/seadve/Noteworthy/">
     <file compressed="true" preprocess="xml-stripblanks">icons/scalable/status/editor-symbolic.svg</file>
+    <file compressed="true" preprocess="xml-stripblanks">icons/scalable/status/tag-symbolic.svg</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/content.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/content-view.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/content-view-tag-list-view.ui</file>
@@ -15,6 +16,8 @@
     <file compressed="true" preprocess="xml-stripblanks">ui/sidebar-view-switcher.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/sidebar-view-switcher-item-row.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/sidebar-view-switcher-popover.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">ui/tag-dialog.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">ui/tag-dialog-row.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/window.ui</file>
     <file compressed="true">style.css</file>
   </gresource>
