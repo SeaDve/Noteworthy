@@ -1,10 +1,13 @@
 use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::unsync::OnceCell;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use std::path::PathBuf;
 
-use super::{note::{Id, TagList}, Note, NoteList};
+use super::{
+    note::{Id, TagList},
+    Note, NoteList,
+};
 use crate::Result;
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -166,11 +169,17 @@ impl NoteManager {
 
         let data: Data = match file.load_contents_async_future().await {
             Ok((file_content, _)) => {
-                log::info!("Data file found at {} is loaded successfully", data_file_path.display());
+                log::info!(
+                    "Data file found at {} is loaded successfully",
+                    data_file_path.display()
+                );
                 serde_yaml::from_slice(&file_content)?
             }
             Err(e) => {
-                log::warn!("Falling back to default data, Failed to load data file: {}", e);
+                log::warn!(
+                    "Falling back to default data, Failed to load data file: {}",
+                    e
+                );
                 Data::default()
             }
         };

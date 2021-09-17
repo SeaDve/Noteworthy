@@ -172,8 +172,12 @@ impl Session {
 
     pub fn save(&self) {
         let note_manager = self.note_manager();
-        note_manager.save_all_notes().expect("Failed to save notes to file");
-        note_manager.save_data_file().expect("Failed to save data file");
+        note_manager
+            .save_all_notes()
+            .expect("Failed to save notes to file");
+        note_manager
+            .save_data_file()
+            .expect("Failed to save data file");
 
         log::info!("Session saved");
     }
