@@ -104,17 +104,17 @@ impl NoteList {
             .map(|(pos, note_id, room)| (pos, note_id.clone(), room.clone()))
     }
 
-    pub fn iter(&self) -> NoteListIter {
-        NoteListIter::new(self.clone())
+    pub fn iter(&self) -> Iter {
+        Iter::new(self.clone())
     }
 }
 
-pub struct NoteListIter {
+pub struct Iter {
     model: NoteList,
     i: Cell<u32>,
 }
 
-impl NoteListIter {
+impl Iter {
     fn new(model: NoteList) -> Self {
         Self {
             model,
@@ -123,7 +123,7 @@ impl NoteListIter {
     }
 }
 
-impl Iterator for NoteListIter {
+impl Iterator for Iter {
     type Item = Note;
 
     fn next(&mut self) -> Option<Self::Item> {
