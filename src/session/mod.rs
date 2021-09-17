@@ -3,6 +3,7 @@ mod note;
 mod note_list;
 mod note_manager;
 mod sidebar;
+mod tag_window;
 
 use adw::subclass::prelude::*;
 use gtk::{
@@ -62,7 +63,8 @@ mod imp {
             let ctx = glib::MainContext::default();
             ctx.spawn_local(clone!(@weak obj => async move {
                 let note_manager = obj.note_manager();
-                note_manager.load_notes().await.expect("Failed to load notes");
+                note_manager.load_data_file().await.expect("Failed to load data file");
+                note_manager.load_notes().await.expect("Failed to load files");
                 let note_list = note_manager.note_list();
 
                 let imp = imp::Session::from_instance(&obj);
@@ -169,9 +171,9 @@ impl Session {
     }
 
     pub fn save(&self) {
-        self.note_manager()
-            .save_all_notes()
-            .expect("Failed to save notes to file");
+        let note_manager = self.note_manager();
+        note_manager.save_all_notes().expect("Failed to save notes to file");
+        note_manager.save_data_file().expect("Failed to save data file");
 
         log::info!("Session saved");
     }

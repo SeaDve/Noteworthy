@@ -1,8 +1,17 @@
 use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::unsync::OnceCell;
+use serde::{Serialize, Deserialize};
 
-use super::{note::Id, Note, NoteList};
+use std::path::PathBuf;
+
+use super::{note::{Id, TagList}, Note, NoteList};
 use crate::Result;
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
+struct Data {
+    tag_list: TagList,
+}
 
 mod imp {
     use super::*;
@@ -11,6 +20,7 @@ mod imp {
     pub struct NoteManager {
         pub directory: OnceCell<gio::File>,
         pub note_list: OnceCell<NoteList>,
+        pub tag_list: OnceCell<TagList>,
     }
 
     #[glib::object_subclass]
@@ -43,6 +53,13 @@ mod imp {
                         NoteList::static_type(),
                         glib::ParamFlags::READWRITE,
                     ),
+                    glib::ParamSpec::new_object(
+                        "tag-list",
+                        "Tag List",
+                        "List of tags",
+                        TagList::static_type(),
+                        glib::ParamFlags::READWRITE,
+                    ),
                 ]
             });
 
@@ -65,6 +82,10 @@ mod imp {
                     let note_list = value.get().unwrap();
                     self.note_list.set(note_list).unwrap();
                 }
+                "tag-list" => {
+                    let tag_list = value.get().unwrap();
+                    self.tag_list.set(tag_list).unwrap();
+                }
                 _ => unimplemented!(),
             }
         }
@@ -73,6 +94,7 @@ mod imp {
             match pspec.name() {
                 "directory" => obj.directory().to_value(),
                 "note-list" => obj.note_list().to_value(),
+                "tag-list" => obj.tag_list().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -98,7 +120,15 @@ impl NoteManager {
         let imp = imp::NoteManager::from_instance(self);
         imp.note_list
             .get()
-            .expect("Please call `load notes` first")
+            .expect("Please call `load_notes` first")
+            .clone()
+    }
+
+    pub fn tag_list(&self) -> TagList {
+        let imp = imp::NoteManager::from_instance(self);
+        imp.tag_list
+            .get()
+            .expect("Please call `load_data_file` first")
             .clone()
     }
 
@@ -126,6 +156,26 @@ impl NoteManager {
         }
 
         self.set_property("note-list", note_list).unwrap();
+
+        Ok(())
+    }
+
+    pub async fn load_data_file(&self) -> Result<()> {
+        let data_file_path = self.data_file_path();
+        let file = gio::File::for_path(&data_file_path);
+
+        let data: Data = match file.load_contents_async_future().await {
+            Ok((file_content, _)) => {
+                log::info!("Data file found at {} is loaded successfully", data_file_path.display());
+                serde_yaml::from_slice(&file_content)?
+            }
+            Err(e) => {
+                log::warn!("Falling back to default data, Failed to load data file: {}", e);
+                Data::default()
+            }
+        };
+
+        self.set_property("tag-list", data.tag_list).unwrap();
 
         Ok(())
     }
@@ -183,6 +233,24 @@ impl NoteManager {
         Ok(())
     }
 
+    pub fn save_data_file(&self) -> Result<()> {
+        let data = Data {
+            tag_list: self.tag_list(),
+        };
+        let data_bytes = serde_yaml::to_vec(&data)?;
+
+        let data_file = gio::File::for_path(self.data_file_path());
+        data_file.replace_contents(
+            &data_bytes,
+            None,
+            false,
+            gio::FileCreateFlags::NONE,
+            None::<&gio::Cancellable>,
+        )?;
+
+        Ok(())
+    }
+
     pub fn create_note(&self) -> Result<()> {
         let mut file_path = self.directory().path().unwrap();
         file_path.push(Self::generate_unique_file_name());
@@ -208,6 +276,12 @@ impl NoteManager {
         log::info!("Deleted note {}", note.file().path().unwrap().display());
 
         Ok(())
+    }
+
+    fn data_file_path(&self) -> PathBuf {
+        let mut data_file_path = self.directory().path().unwrap();
+        data_file_path.push("data.nwty");
+        data_file_path
     }
 
     fn generate_unique_file_name() -> String {
