@@ -30,6 +30,7 @@
   background: none;
 }
 
+
 .content-view {
   background-color: @theme_base_color;
   padding-left: 24px;
@@ -51,4 +52,9 @@
   border-radius: 9px;
   background-color: @accent_bg_color;
   color: @accent_fg_color;
+}
+
+
+.tag-dialog-list-view row {
+  padding: 12px;
 }

@@ -1,12 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <template class="NwtyTagDialog" parent="GtkDialog">
+  <template class="NwtyTagDialog" parent="AdwWindow">
+    <property name="default-width">300</property>
+    <property name="default-height">400</property>
     <property name="title" translatable="yes">Tags</property>
-    <property name="child">
-      <object class="GtkListView" id="list_view">
-        <property name="factory">
-          <object class="GtkBuilderListItemFactory">
-            <property name="bytes"><![CDATA[
+    <property name="content">
+      <object class="GtkBox">
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkHeaderBar"/>
+        </child>
+        <child>
+          <object class="GtkScrolledWindow">
+            <property name="vexpand">True</property>
+            <property name="hscrollbar-policy">never</property>
+            <property name="child">
+              <object class="GtkListView" id="list_view">
+                <property name="factory">
+                  <object class="GtkBuilderListItemFactory">
+                    <property name="bytes"><![CDATA[
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <template class="GtkListItem">
@@ -19,9 +31,16 @@
     </property>
   </template>
 </interface>
-         ]]></property>
+                 ]]></property>
+                  </object>
+                </property>
+                <style>
+                  <class name="tag-dialog-list-view"/>
+                </style>
+              </object>
+            </property>
           </object>
-        </property>
+        </child>
       </object>
     </property>
   </template>

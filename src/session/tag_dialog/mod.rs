@@ -26,7 +26,7 @@ mod imp {
     impl ObjectSubclass for TagDialog {
         const NAME: &'static str = "NwtyTagDialog";
         type Type = super::TagDialog;
-        type ParentType = gtk::Dialog;
+        type ParentType = adw::Window;
 
         fn class_init(klass: &mut Self::Class) {
             Row::static_type();
@@ -98,12 +98,12 @@ mod imp {
 
     impl WidgetImpl for TagDialog {}
     impl WindowImpl for TagDialog {}
-    impl DialogImpl for TagDialog {}
+    impl AdwWindowImpl for TagDialog {}
 }
 
 glib::wrapper! {
     pub struct TagDialog(ObjectSubclass<imp::TagDialog>)
-        @extends gtk::Widget, gtk::Window, gtk::Dialog,
+        @extends gtk::Widget, gtk::Window, adw::Window,
         @implements gio::ActionMap, gio::ActionGroup;
 }
 
