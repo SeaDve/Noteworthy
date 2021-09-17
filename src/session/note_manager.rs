@@ -147,8 +147,18 @@ impl NoteManager {
         let note_list = NoteList::new();
 
         for file in files.flatten() {
+            let file_name = file.name();
+
+            if file_name.extension().unwrap_or_default() != "md" {
+                log::info!(
+                    "The file {} doesn't have an md extension, skipping...",
+                    file_name.display()
+                );
+                continue;
+            }
+
             let mut file_path = directory.path().unwrap();
-            file_path.push(file.name());
+            file_path.push(file_name);
 
             log::info!("Loading file: {}", file_path.display());
 
