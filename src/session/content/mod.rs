@@ -20,6 +20,8 @@ mod imp {
         #[template_child]
         pub no_selected_view: TemplateChild<adw::StatusPage>,
         #[template_child]
+        pub edit_tags_button: TemplateChild<gtk::Button>,
+        #[template_child]
         pub is_pinned_button: TemplateChild<gtk::ToggleButton>,
         #[template_child]
         pub is_trashed_button: TemplateChild<gtk::ToggleButton>,
@@ -69,6 +71,7 @@ mod imp {
             );
             is_some_note_expression.bind(&self.is_pinned_button.get(), "visible", None);
             is_some_note_expression.bind(&self.is_trashed_button.get(), "visible", None);
+            is_some_note_expression.bind(&self.edit_tags_button.get(), "visible", None);
         }
 
         fn properties() -> &'static [glib::ParamSpec] {

@@ -22,6 +22,11 @@
             <property name="icon-name">view-pin-symbolic</property>
           </object>
         </child>
+        <child type="end">
+          <object class="GtkButton" id="edit_tags_button">
+            <property name="icon-name">tag-symbolic</property>
+          </object>
+        </child>
       </object>
     </child>
     <child>
