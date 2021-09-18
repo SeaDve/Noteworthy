@@ -10,8 +10,6 @@ use gtk::{
 };
 use once_cell::unsync::OnceCell;
 
-use std::cell::RefCell;
-
 use self::row::Row;
 use super::note::{Tag, TagList};
 
@@ -25,9 +23,11 @@ mod imp {
         pub list_view: TemplateChild<gtk::ListView>,
         #[template_child]
         pub search_entry: TemplateChild<gtk::SearchEntry>,
+        #[template_child]
+        pub create_tag_button: TemplateChild<gtk::Button>,
 
         pub tag_list: OnceCell<TagList>,
-        pub other_tag_list: RefCell<TagList>,
+        pub other_tag_list: OnceCell<TagList>,
     }
 
     #[glib::object_subclass]
@@ -39,6 +39,15 @@ mod imp {
         fn class_init(klass: &mut Self::Class) {
             Row::static_type();
             Self::bind_template(klass);
+
+            klass.install_action("tag-dialog.create-tag", None, move |obj, _, _| {
+                let imp = imp::TagDialog::from_instance(obj);
+                let tag_name = imp.search_entry.text();
+                let new_tag = Tag::new(&tag_name);
+
+                obj.other_tag_list().append(new_tag.clone());
+                obj.tag_list().append(new_tag);
+            });
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
@@ -94,7 +103,7 @@ mod imp {
         fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
                 "tag-list" => self.tag_list.get().to_value(),
-                "other-tag-list" => self.other_tag_list.borrow().to_value(),
+                "other-tag-list" => self.other_tag_list.get().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -139,12 +148,17 @@ impl TagDialog {
 
     fn other_tag_list(&self) -> TagList {
         let imp = imp::TagDialog::from_instance(self);
-        imp.other_tag_list.borrow().clone()
+        imp.other_tag_list.get().unwrap().clone()
     }
 
     fn set_other_tag_list(&self, other_tag_list: TagList) {
         let imp = imp::TagDialog::from_instance(self);
-        imp.other_tag_list.replace(other_tag_list);
+        imp.other_tag_list.set(other_tag_list).unwrap();
+    }
+
+    fn tag_list(&self) -> TagList {
+        let imp = imp::TagDialog::from_instance(self);
+        imp.tag_list.get().unwrap().clone()
     }
 
     fn set_tag_list(&self, tag_list: TagList) {
@@ -164,7 +178,15 @@ impl TagDialog {
             .flags(glib::BindingFlags::SYNC_CREATE)
             .build();
 
+        filter_model.connect_items_changed(clone!(@weak self as obj => move |model, _, _, _| {
+            let is_empty = model.n_items() == 0;
+            let imp = imp::TagDialog::from_instance(&obj);
+            imp.create_tag_button.set_visible(is_empty);
+        }));
+
         let selection_model = gtk::NoSelection::new(Some(&filter_model));
         imp.list_view.set_model(Some(&selection_model));
+
+        imp.tag_list.set(tag_list).unwrap();
     }
 }

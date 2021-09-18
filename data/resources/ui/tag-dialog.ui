@@ -20,8 +20,22 @@
           <object class="GtkSearchBar">
             <property name="search-mode-enabled" bind-source="search_button" bind-property="active" bind-flags="sync-create"/>
             <property name="child">
-              <object class="GtkSearchEntry" id="search_entry">
-                <property name="placeholder-text" translatable="yes">Enter Tag Name</property>
+              <object class="GtkBox">
+                <child>
+                  <object class="GtkSearchEntry" id="search_entry">
+                    <property name="placeholder-text" translatable="yes">Enter Tag Name</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton" id="create_tag_button">
+                    <property name="visible">False</property>
+                    <property name="action-name">tag-dialog.create-tag</property>
+                    <property name="label" translatable="yes">Create Tag</property>
+                  </object>
+                </child>
+                <style>
+                  <class name="linked"/>
+                </style>
               </object>
             </property>
           </object>
