@@ -136,13 +136,17 @@ mod imp {
             self.check_button
                 .connect_active_notify(clone!(@weak obj => move |check_button| {
                     if let Some(tag) = obj.tag() {
-                        if check_button.is_active() {
-                            if !obj.other_tag_list().append(tag) {
-                                log::warn!("Trying to append an existing tag");
+                        let tag_name = tag.name();
+                        match check_button.is_active() {
+                            true => {
+                                if !obj.other_tag_list().append(tag) {
+                                    log::warn!("Trying to append an existing tag: {}", tag_name);
+                                }
                             }
-                        } else {
-                            if !obj.other_tag_list().remove(tag) {
-                                log::warn!("Trying to remove a tag that doesn't exist in the list");
+                            false => {
+                                if !obj.other_tag_list().remove(tag) {
+                                    log::warn!("Trying to remove a tag that doesn't exist in the list: {}", tag_name);
+                                }
                             }
                         }
                     }
