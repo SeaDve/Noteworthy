@@ -1,6 +1,7 @@
 mod row;
 
 use adw::subclass::prelude::*;
+use gettextrs::gettext;
 use gtk::{
     gio,
     glib::{self, clone},
@@ -25,6 +26,8 @@ mod imp {
         pub search_entry: TemplateChild<gtk::SearchEntry>,
         #[template_child]
         pub create_tag_button_revealer: TemplateChild<gtk::Revealer>,
+        #[template_child]
+        pub create_tag_button_label: TemplateChild<gtk::Label>,
 
         pub tag_list: OnceCell<TagList>,
         pub other_tag_list: OnceCell<TagList>,
@@ -183,10 +186,12 @@ impl TagDialog {
 
         imp.search_entry.connect_text_notify(
             clone!(@weak filter_model, @weak self as obj => move |search_entry| {
+                let search_entry_text = search_entry.text();
                 let is_model_empty = filter_model.n_items() == 0;
-                let is_search_entry_empty = search_entry.text().is_empty();
+                let is_search_entry_empty = search_entry_text.is_empty();
                 let imp = imp::TagDialog::from_instance(&obj);
                 imp.create_tag_button_revealer.set_reveal_child(is_model_empty && !is_search_entry_empty);
+                imp.create_tag_button_label.set_label(&gettext!("Create “{}”", search_entry_text));
             }),
         );
 

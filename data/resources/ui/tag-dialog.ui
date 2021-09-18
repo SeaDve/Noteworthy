@@ -42,10 +42,9 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkLabel">
+                      <object class="GtkLabel" id="create_tag_button_label">
                         <property name="xalign">0</property>
                         <property name="hexpand">True</property>
-                        <property name="label">Create Tag "TEST"</property>
                       </object>
                     </child>
                   </object>
