@@ -23,6 +23,8 @@ mod imp {
     pub struct TagDialog {
         #[template_child]
         pub list_view: TemplateChild<gtk::ListView>,
+        #[template_child]
+        pub search_entry: TemplateChild<gtk::SearchEntry>,
 
         pub tag_list: OnceCell<TagList>,
         pub other_tag_list: RefCell<TagList>,
@@ -148,7 +150,21 @@ impl TagDialog {
     fn set_tag_list(&self, tag_list: TagList) {
         let imp = imp::TagDialog::from_instance(self);
 
-        let selection_model = gtk::NoSelection::new(Some(&tag_list));
+        let tag_name_expression =
+            gtk::ClosureExpression::new(|value| value[0].get::<Tag>().unwrap().name(), &[]);
+        let filter = gtk::StringFilterBuilder::new()
+            .match_mode(gtk::StringFilterMatchMode::Substring)
+            .expression(&tag_name_expression)
+            .ignore_case(true)
+            .build();
+        let filter_model = gtk::FilterListModel::new(Some(&tag_list), Some(&filter));
+
+        imp.search_entry
+            .bind_property("text", &filter, "search")
+            .flags(glib::BindingFlags::SYNC_CREATE)
+            .build();
+
+        let selection_model = gtk::NoSelection::new(Some(&filter_model));
         imp.list_view.set_model(Some(&selection_model));
     }
 }
