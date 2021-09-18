@@ -1,9 +1,13 @@
 use adw::{prelude::*, subclass::prelude::*};
-use gtk::{glib, subclass::prelude::*, CompositeTemplate};
+use gtk::{
+    glib::{self, clone},
+    subclass::prelude::*,
+    CompositeTemplate,
+};
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 
-use super::Tag;
+use super::{Tag, TagList};
 
 mod imp {
     use super::*;
@@ -16,7 +20,9 @@ mod imp {
         #[template_child]
         pub check_button: TemplateChild<gtk::CheckButton>,
 
+        pub other_tag_list: RefCell<TagList>,
         pub tag: RefCell<Option<Tag>>,
+        pub is_checked: Cell<bool>,
     }
 
     #[glib::object_subclass]
@@ -38,13 +44,29 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_object(
-                    "tag",
-                    "tag",
-                    "The tag represented by this row",
-                    Tag::static_type(),
-                    glib::ParamFlags::READWRITE,
-                )]
+                vec![
+                    glib::ParamSpec::new_object(
+                        "other-tag-list",
+                        "Other Tag List",
+                        "The tag list to compare with",
+                        TagList::static_type(),
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
+                    ),
+                    glib::ParamSpec::new_object(
+                        "tag",
+                        "tag",
+                        "The tag represented by this row",
+                        Tag::static_type(),
+                        glib::ParamFlags::READWRITE,
+                    ),
+                    glib::ParamSpec::new_boolean(
+                        "is-checked",
+                        "Is Checked",
+                        "Whether the row has check",
+                        false,
+                        glib::ParamFlags::READWRITE,
+                    ),
+                ]
             });
 
             PROPERTIES.as_ref()
@@ -58,9 +80,17 @@ mod imp {
             pspec: &glib::ParamSpec,
         ) {
             match pspec.name() {
+                "other-tag-list" => {
+                    let other_tag_list = value.get().unwrap();
+                    self.other_tag_list.replace(other_tag_list);
+                }
                 "tag" => {
                     let tag = value.get().unwrap();
                     self.tag.replace(tag);
+                }
+                "is-checked" => {
+                    let is_checked = value.get().unwrap();
+                    self.is_checked.set(is_checked);
                 }
                 _ => unimplemented!(),
             }
@@ -68,13 +98,39 @@ mod imp {
 
         fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
+                "other-tag-list" => self.other_tag_list.borrow().to_value(),
                 "tag" => self.tag.borrow().to_value(),
+                "is-checked" => self.is_checked.get().to_value(),
                 _ => unimplemented!(),
             }
         }
 
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
+
+            // let gesture = gtk::GestureClick::new();
+            // gesture.connect_pressed(clone!(@weak obj => move |_,_,_,_| {
+            //     let imp = imp::Row::from_instance(&obj);
+            //     imp.check_button.set_active(!imp.check_button.is_active());
+            // }));
+            // obj.add_controller(&gesture);
+
+            let self_expression = gtk::ConstantExpression::new(&obj);
+            let tag_expression = gtk::PropertyExpression::new(
+                Self::Type::static_type(),
+                Some(&self_expression),
+                "tag",
+            );
+            let is_checked_expression = gtk::ClosureExpression::new(
+                clone!(@weak obj => @default-return false, move |args| {
+                    let tag: Option<Tag> = args[1].get().unwrap();
+
+                    tag.map_or(false, |tag| obj.other_tag_list().contains(tag))
+
+                }),
+                &[tag_expression.upcast()],
+            );
+            is_checked_expression.bind(&self.check_button.get(), "active", None);
         }
     }
 
@@ -89,7 +145,11 @@ glib::wrapper! {
 }
 
 impl Row {
-    pub fn new() -> Self {
-        glib::Object::new(&[]).expect("Failed to create Row")
+    pub fn new(other_tag_list: &TagList) -> Self {
+        glib::Object::new(&[("other-tag-list", other_tag_list)]).expect("Failed to create Row")
+    }
+
+    fn other_tag_list(&self) -> TagList {
+        self.property("other-tag-list").unwrap().get().unwrap()
     }
 }

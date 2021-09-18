@@ -1,7 +1,13 @@
 mod row;
 
 use adw::subclass::prelude::*;
-use gtk::{gio, glib, prelude::*, subclass::prelude::*, CompositeTemplate};
+use gtk::{
+    gio,
+    glib::{self, clone},
+    prelude::*,
+    subclass::prelude::*,
+    CompositeTemplate,
+};
 use once_cell::unsync::OnceCell;
 
 use std::cell::RefCell;
@@ -55,7 +61,7 @@ mod imp {
                         "Other Tag List",
                         "The list of tags to compare with",
                         TagList::static_type(),
-                        glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
                 ]
             });
@@ -93,6 +99,22 @@ mod imp {
 
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
+
+            let factory = gtk::SignalListItemFactory::new();
+            factory.connect_setup(clone!(@weak obj => move |_, list_item| {
+                let tag_row = Row::new(&obj.other_tag_list());
+
+                let list_item_expression = gtk::ConstantExpression::new(list_item);
+                let item_expression = gtk::PropertyExpression::new(
+                    gtk::ListItem::static_type(),
+                    Some(&list_item_expression),
+                    "item",
+                );
+                item_expression.bind(&tag_row, "tag", None);
+
+                list_item.set_child(Some(&tag_row));
+            }));
+            self.list_view.set_factory(Some(&factory));
         }
     }
 
@@ -108,20 +130,25 @@ glib::wrapper! {
 }
 
 impl TagDialog {
-    pub fn new(tag_list: TagList) -> Self {
-        glib::Object::new(&[("tag-list", &tag_list)]).expect("Failed to create TagDialog.")
+    pub fn new(tag_list: &TagList, other_tag_list: &TagList) -> Self {
+        glib::Object::new(&[("tag-list", tag_list), ("other-tag-list", other_tag_list)])
+            .expect("Failed to create TagDialog.")
     }
 
-    pub fn set_other_tag_list(&self, other_tag_list: TagList) {
+    fn other_tag_list(&self) -> TagList {
+        let imp = imp::TagDialog::from_instance(self);
+        imp.other_tag_list.borrow().clone()
+    }
+
+    fn set_other_tag_list(&self, other_tag_list: TagList) {
         let imp = imp::TagDialog::from_instance(self);
         imp.other_tag_list.replace(other_tag_list);
-        self.notify("other-tag-list");
     }
 
     fn set_tag_list(&self, tag_list: TagList) {
         let imp = imp::TagDialog::from_instance(self);
 
-        let selection_model = gtk::SingleSelection::new(Some(&tag_list));
+        let selection_model = gtk::NoSelection::new(Some(&tag_list));
         imp.list_view.set_model(Some(&selection_model));
     }
 }

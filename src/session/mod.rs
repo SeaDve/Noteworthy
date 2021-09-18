@@ -50,6 +50,22 @@ mod imp {
             Sidebar::static_type();
             Content::static_type();
             Self::bind_template(klass);
+
+            klass.install_action("session.edit-tags", None, move |obj, _, _| {
+                let imp = imp::Session::from_instance(obj);
+
+                let tag_list = imp.note_manager.get().unwrap().tag_list();
+                let other_tag_list = obj.selected_note().unwrap().metadata().tag_list();
+
+                let tag_dialog = TagDialog::new(&tag_list, &other_tag_list);
+                tag_dialog.set_modal(true);
+                tag_dialog.set_transient_for(
+                    obj.root()
+                        .map(|w| w.downcast::<gtk::Window>().unwrap())
+                        .as_ref(),
+                );
+                tag_dialog.present();
+            });
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {

@@ -113,6 +113,11 @@ impl TagList {
         removed.is_some()
     }
 
+    pub fn contains(&self, tag: Tag) -> bool {
+        let imp = &imp::TagList::from_instance(self);
+        imp.list.borrow().contains(&TagWrapper(tag))
+    }
+
     // FIXME remove this
     pub fn dbg(&self) {
         let imp = &imp::TagList::from_instance(self);

@@ -25,6 +25,7 @@
         <child type="end">
           <object class="GtkButton" id="edit_tags_button">
             <property name="icon-name">tag-symbolic</property>
+            <property name="action-name">session.edit-tags</property>
           </object>
         </child>
       </object>
