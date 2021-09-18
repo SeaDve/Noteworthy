@@ -108,10 +108,13 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
+            // TODO Implement this so clicking the row activates the checkbutton
+            // Works well when clicking the row but when you click the button it gets activated
+            // twice, Idk how to not let the click pass through both widgets
             // let gesture = gtk::GestureClick::new();
             // gesture.connect_pressed(clone!(@weak obj => move |_,_,_,_| {
             //     let imp = imp::Row::from_instance(&obj);
-            //     imp.check_button.set_active(!imp.check_button.is_active());
+            //     imp.check_button.activate();
             // }));
             // obj.add_controller(&gesture);
 
@@ -124,13 +127,26 @@ mod imp {
             let is_checked_expression = gtk::ClosureExpression::new(
                 clone!(@weak obj => @default-return false, move |args| {
                     let tag: Option<Tag> = args[1].get().unwrap();
-
                     tag.map_or(false, |tag| obj.other_tag_list().contains(tag))
-
                 }),
                 &[tag_expression.upcast()],
             );
             is_checked_expression.bind(&self.check_button.get(), "active", None);
+
+            self.check_button
+                .connect_active_notify(clone!(@weak obj => move |check_button| {
+                    if let Some(tag) = obj.tag() {
+                        if check_button.is_active() {
+                            if !obj.other_tag_list().append(tag) {
+                                log::warn!("Trying to append an existing tag");
+                            }
+                        } else {
+                            if !obj.other_tag_list().remove(tag) {
+                                log::warn!("Trying to remove a tag that doesn't exist in the list");
+                            }
+                        }
+                    }
+                }));
         }
     }
 
@@ -151,5 +167,9 @@ impl Row {
 
     fn other_tag_list(&self) -> TagList {
         self.property("other-tag-list").unwrap().get().unwrap()
+    }
+
+    fn tag(&self) -> Option<Tag> {
+        self.property("tag").unwrap().get().unwrap()
     }
 }

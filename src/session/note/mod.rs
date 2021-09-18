@@ -53,6 +53,12 @@ mod imp {
                     obj.set_is_saved(false);
                 }),
             );
+
+            obj.metadata()
+                .tag_list()
+                .connect_items_changed(clone!(@weak obj => move |_,_,_,_| {
+                    obj.set_is_saved(false);
+                }));
         }
 
         fn signals() -> &'static [Signal] {
