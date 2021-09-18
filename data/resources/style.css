@@ -60,7 +60,7 @@
 }
 
 .tag-dialog-create-tag-button {
-  background-color: @accent_fg_color;
+  background-color: @theme_base_color;
   color: @theme_text_color;
   padding-top: 9px;
   padding-bottom: 9px;
