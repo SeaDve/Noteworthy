@@ -32,11 +32,11 @@
 
 
 .content-view {
-  background-color: @theme_base_color;
   padding-left: 24px;
   padding-right: 24px;
   padding-top: 18px;
   padding-bottom: 18px;
+  background-color: @theme_base_color;
 }
 
 .content-view-tag-list-view row {
@@ -60,17 +60,17 @@
 }
 
 .tag-dialog-create-tag-button {
-  background-color: @theme_base_color;
-  color: @theme_text_color;
   padding-top: 9px;
   padding-bottom: 9px;
   padding-left: 12px;
   padding-right: 12px;
   border-radius: 0;
+  background-color: @theme_base_color;
+  color: @theme_text_color;
 }
 
 .tag-dialog-create-tag-button:hover {
-  background: @theme_bg_color;
+  background-color: @theme_bg_color;
 }
 
 .tag-dialog-create-tag-button label {
