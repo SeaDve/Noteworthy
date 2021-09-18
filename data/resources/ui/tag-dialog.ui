@@ -20,21 +20,38 @@
           <object class="GtkSearchBar">
             <property name="search-mode-enabled" bind-source="search_button" bind-property="active" bind-flags="sync-create"/>
             <property name="child">
-              <object class="GtkBox">
-                <child>
-                  <object class="GtkSearchEntry" id="search_entry">
-                    <property name="placeholder-text" translatable="yes">Enter Tag Name</property>
+              <object class="GtkSearchEntry" id="search_entry">
+                <property name="placeholder-text" translatable="yes">Enter Tag Name</property>
+              </object>
+            </property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkRevealer" id="create_tag_button_revealer">
+            <property name="reveal-child">False</property>
+            <property name="transition-type">slide-down</property>
+            <property name="child">
+              <object class="GtkButton">
+                <property name="action-name">tag-dialog.create-tag</property>
+                <property name="child">
+                  <object class="GtkBox">
+                    <property name="spacing">12</property>
+                    <child>
+                      <object class="GtkImage">
+                        <property name="icon-name">list-add-symbolic</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="xalign">0</property>
+                        <property name="hexpand">True</property>
+                        <property name="label">Create Tag "TEST"</property>
+                      </object>
+                    </child>
                   </object>
-                </child>
-                <child>
-                  <object class="GtkButton" id="create_tag_button">
-                    <property name="visible">False</property>
-                    <property name="action-name">tag-dialog.create-tag</property>
-                    <property name="label" translatable="yes">Create Tag</property>
-                  </object>
-                </child>
+                </property>
                 <style>
-                  <class name="linked"/>
+                  <class name="tag-dialog-create-tag-button"/>
                 </style>
               </object>
             </property>

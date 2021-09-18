@@ -58,3 +58,21 @@
 .tag-dialog-list-view row {
   padding: 12px;
 }
+
+.tag-dialog-create-tag-button {
+  background-color: @accent_fg_color;
+  color: @theme_text_color;
+  padding-top: 9px;
+  padding-bottom: 9px;
+  padding-left: 12px;
+  padding-right: 12px;
+  border-radius: 0;
+}
+
+.tag-dialog-create-tag-button:hover {
+  background: @theme_bg_color;
+}
+
+.tag-dialog-create-tag-button label {
+  font-weight: 400;
+}

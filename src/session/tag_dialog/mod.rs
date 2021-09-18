@@ -24,7 +24,7 @@ mod imp {
         #[template_child]
         pub search_entry: TemplateChild<gtk::SearchEntry>,
         #[template_child]
-        pub create_tag_button: TemplateChild<gtk::Button>,
+        pub create_tag_button_revealer: TemplateChild<gtk::Revealer>,
 
         pub tag_list: OnceCell<TagList>,
         pub other_tag_list: OnceCell<TagList>,
@@ -47,6 +47,9 @@ mod imp {
 
                 obj.other_tag_list().append(new_tag.clone());
                 obj.tag_list().append(new_tag);
+                // TODO new_tag should be added on top
+
+                imp.search_entry.set_text("");
             });
         }
 
@@ -183,14 +186,14 @@ impl TagDialog {
                 let is_model_empty = filter_model.n_items() == 0;
                 let is_search_entry_empty = search_entry.text().is_empty();
                 let imp = imp::TagDialog::from_instance(&obj);
-                imp.create_tag_button.set_visible(is_model_empty && !is_search_entry_empty);
+                imp.create_tag_button_revealer.set_reveal_child(is_model_empty && !is_search_entry_empty);
             }),
         );
 
         filter_model.connect_items_changed(clone!(@weak self as obj => move |model, _, _, _| {
             let is_empty = model.n_items() == 0;
             let imp = imp::TagDialog::from_instance(&obj);
-            imp.create_tag_button.set_visible(is_empty);
+            imp.create_tag_button_revealer.set_reveal_child(is_empty);
         }));
 
         let selection_model = gtk::NoSelection::new(Some(&filter_model));
