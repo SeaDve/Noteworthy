@@ -183,7 +183,7 @@ impl NoteManager {
                     "Data file found at {} is loaded successfully",
                     data_file_path.display()
                 );
-                serde_yaml::from_slice(&file_content)?
+                serde_yaml::from_slice(&file_content).unwrap_or_default()
             }
             Err(e) => {
                 log::warn!(
