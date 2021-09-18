@@ -133,6 +133,8 @@ mod imp {
             );
             is_checked_expression.bind(&self.check_button.get(), "active", None);
 
+            // FIXME This get activated on first launch which makes it try to append an
+            // existing tag
             self.check_button
                 .connect_active_notify(clone!(@weak obj => move |check_button| {
                     if let Some(tag) = obj.tag() {
