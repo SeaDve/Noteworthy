@@ -185,12 +185,12 @@ impl TagDialog {
             .build();
 
         imp.search_entry.connect_text_notify(
-            clone!(@weak filter_model, @weak self as obj => move |search_entry| {
+            clone!(@weak self as obj => move |search_entry| {
                 let search_entry_text = search_entry.text();
-                let is_model_empty = filter_model.n_items() == 0;
+                let does_contains_tag = obj.tag_list().contains(Tag::new(&search_entry_text));
                 let is_search_entry_empty = search_entry_text.is_empty();
                 let imp = imp::TagDialog::from_instance(&obj);
-                imp.create_tag_button_revealer.set_reveal_child(is_model_empty && !is_search_entry_empty);
+                imp.create_tag_button_revealer.set_reveal_child(!does_contains_tag && !is_search_entry_empty);
                 imp.create_tag_button_label.set_label(&gettext!("Create “{}”", search_entry_text));
             }),
         );
