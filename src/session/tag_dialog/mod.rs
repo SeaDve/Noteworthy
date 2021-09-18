@@ -195,12 +195,6 @@ impl TagDialog {
             }),
         );
 
-        filter_model.connect_items_changed(clone!(@weak self as obj => move |model, _, _, _| {
-            let is_empty = model.n_items() == 0;
-            let imp = imp::TagDialog::from_instance(&obj);
-            imp.create_tag_button_revealer.set_reveal_child(is_empty);
-        }));
-
         let selection_model = gtk::NoSelection::new(Some(&filter_model));
         imp.list_view.set_model(Some(&selection_model));
 
