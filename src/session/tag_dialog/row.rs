@@ -5,7 +5,7 @@ use gtk::{
     CompositeTemplate,
 };
 
-use std::cell::{Cell, RefCell};
+use std::cell::RefCell;
 
 use super::{Tag, TagList};
 
@@ -22,7 +22,6 @@ mod imp {
 
         pub other_tag_list: RefCell<TagList>,
         pub tag: RefCell<Option<Tag>>,
-        pub is_checked: Cell<bool>,
     }
 
     #[glib::object_subclass]
@@ -59,13 +58,6 @@ mod imp {
                         Tag::static_type(),
                         glib::ParamFlags::READWRITE,
                     ),
-                    glib::ParamSpec::new_boolean(
-                        "is-checked",
-                        "Is Checked",
-                        "Whether the row has check",
-                        false,
-                        glib::ParamFlags::READWRITE,
-                    ),
                 ]
             });
 
@@ -88,10 +80,6 @@ mod imp {
                     let tag = value.get().unwrap();
                     self.tag.replace(tag);
                 }
-                "is-checked" => {
-                    let is_checked = value.get().unwrap();
-                    self.is_checked.set(is_checked);
-                }
                 _ => unimplemented!(),
             }
         }
@@ -100,7 +88,6 @@ mod imp {
             match pspec.name() {
                 "other-tag-list" => self.other_tag_list.borrow().to_value(),
                 "tag" => self.tag.borrow().to_value(),
-                "is-checked" => self.is_checked.get().to_value(),
                 _ => unimplemented!(),
             }
         }
