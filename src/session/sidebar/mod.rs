@@ -220,7 +220,7 @@ impl Sidebar {
                         match imp.view_switcher.selected_type() {
                             ItemKind::AllNotes => !note.is_trashed(),
                             ItemKind::Trash => note.is_trashed(),
-                            ItemKind::Tag(tag) => note.tag_list().contains(tag),
+                            ItemKind::Tag(tag) => note.tag_list().contains(tag) && !note.is_trashed(),
                             ItemKind::Separator | ItemKind::Category => unreachable!("Separator cannot be selected"),
                         }
                     })
