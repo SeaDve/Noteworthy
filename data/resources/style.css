@@ -1,17 +1,20 @@
+.sidebar {
+  min-width: 300px;
+}
+
 .sidebar row {
   min-height: 30px;
-  min-width: 200px;
-  padding-left: 6px;
-  padding-right: 6px;
+  padding-left: 9px;
+  padding-right: 9px;
 }
 
 .sidebar .category {
-  padding-top: 6px;
+  padding-top: 9px;
 }
 
 .sidebar .note {
-  padding-top: 6px;
-  padding-bottom: 6px;
+  padding-top: 9px;
+  padding-bottom: 9px;
 }
 
 .sidebar-spinner {
