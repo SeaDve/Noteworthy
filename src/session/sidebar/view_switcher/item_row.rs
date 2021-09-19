@@ -3,7 +3,7 @@ use gtk::{glib, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::{Cell, RefCell};
 
-use super::{Item, Type};
+use super::{Item, Tag, Type};
 
 mod imp {
     use super::*;
@@ -16,12 +16,15 @@ mod imp {
         #[template_child]
         pub separator_child: TemplateChild<gtk::Separator>,
         #[template_child]
+        pub category_child: TemplateChild<gtk::Label>,
+        #[template_child]
         pub bin: TemplateChild<adw::Bin>,
         #[template_child]
         pub select_icon: TemplateChild<gtk::Image>,
 
         pub item: RefCell<Option<Item>>,
         pub selected: Cell<bool>,
+        pub list_row: RefCell<Option<gtk::TreeListRow>>,
     }
 
     #[glib::object_subclass]
@@ -62,6 +65,13 @@ mod imp {
                         false,
                         glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
+                    glib::ParamSpec::new_object(
+                        "list-row",
+                        "List Row",
+                        "The list row to track for expander state",
+                        gtk::TreeListRow::static_type(),
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
+                    ),
                 ]
             });
 
@@ -76,13 +86,13 @@ mod imp {
             pspec: &glib::ParamSpec,
         ) {
             match pspec.name() {
-                "item" => {
-                    let item = value.get().unwrap();
-                    obj.set_item(item);
-                }
                 "selected" => {
                     let selected = value.get().unwrap();
                     obj.set_selected(selected);
+                }
+                "list-row" => {
+                    let list_row = value.get().unwrap();
+                    obj.set_list_row(list_row);
                 }
                 _ => unimplemented!(),
             }
@@ -92,6 +102,7 @@ mod imp {
             match pspec.name() {
                 "item" => obj.item().to_value(),
                 "selected" => obj.selected().to_value(),
+                "list-row" => obj.list_row().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -112,50 +123,6 @@ impl ItemRow {
         glib::Object::new(&[]).expect("Failed to create ItemRow")
     }
 
-    pub fn item(&self) -> Option<Item> {
-        let imp = imp::ItemRow::from_instance(self);
-        imp.item.borrow().clone()
-    }
-
-    pub fn set_item(&self, item: Option<Item>) {
-        let imp = imp::ItemRow::from_instance(self);
-
-        if let Some(ref item) = item {
-            match item.type_() {
-                Type::AllNotes | Type::Trash => {
-                    imp.label_child.set_label(&item.display_name().unwrap());
-                    imp.bin.set_child(Some(&imp.label_child.get()));
-                    self.set_margin_start(6);
-                    self.set_margin_end(6);
-                }
-                Type::Tag(ref tag) => {
-                    imp.label_child.set_label(&tag.name());
-                    imp.bin.set_child(Some(&imp.label_child.get()));
-                    self.set_margin_start(6);
-                    self.set_margin_end(6);
-
-                    log::error!("test");
-                }
-                Type::Category => {
-                    imp.label_child.set_label(&item.display_name().unwrap());
-                    imp.bin.set_child(Some(&imp.label_child.get()));
-                    self.set_margin_start(0);
-                    self.set_margin_end(0);
-                }
-                Type::Separator => {
-                    imp.bin.set_child(Some(&imp.separator_child.get()));
-                    self.set_margin_start(0);
-                    self.set_margin_end(0);
-                }
-            }
-        } else {
-            imp.bin.set_child(None::<&gtk::Widget>);
-        }
-
-        imp.item.replace(item);
-        self.notify("item");
-    }
-
     pub fn selected(&self) -> bool {
         let imp = imp::ItemRow::from_instance(self);
         imp.selected.get()
@@ -167,5 +134,63 @@ impl ItemRow {
 
         imp.selected.set(selected);
         self.notify("selected");
+    }
+
+    pub fn item(&self) -> Option<glib::Object> {
+        self.list_row().and_then(|r| r.item())
+    }
+
+    pub fn list_row(&self) -> Option<gtk::TreeListRow> {
+        let imp = imp::ItemRow::from_instance(self);
+        imp.list_row.borrow().clone()
+    }
+
+    pub fn set_list_row(&self, list_row: Option<gtk::TreeListRow>) {
+        let imp = imp::ItemRow::from_instance(self);
+
+        if self.list_row() == list_row {
+            return;
+        }
+
+        if list_row.is_some() {
+            imp.list_row.replace(list_row);
+        } else {
+            return;
+        }
+
+        if let Some(item) = self.item() {
+            if let Some(item) = item.downcast_ref::<Item>() {
+                match item.type_() {
+                    Type::AllNotes | Type::Trash => {
+                        imp.label_child.set_label(&item.display_name().unwrap());
+                        imp.bin.set_child(Some(&imp.label_child.get()));
+                        self.set_margin_start(6);
+                        self.set_margin_end(6);
+                    }
+                    Type::Category => {
+                        imp.category_child.set_label(&item.display_name().unwrap());
+                        imp.bin.set_child(Some(&imp.category_child.get()));
+                        self.set_margin_start(6);
+                        self.set_margin_end(6);
+                    }
+                    Type::Separator => {
+                        imp.bin.set_child(Some(&imp.separator_child.get()));
+                        self.set_margin_start(0);
+                        self.set_margin_end(0);
+                    }
+                    Type::Tag(_) => unreachable!("This is handled by below"),
+                }
+            } else if let Some(tag) = item.downcast_ref::<Tag>() {
+                imp.label_child.set_label(&tag.name());
+                imp.bin.set_child(Some(&imp.label_child.get()));
+                self.set_margin_start(6);
+                self.set_margin_end(6);
+            } else {
+                panic!("Wrong row item: {:?}", item);
+            }
+        }
+
+        self.notify("item");
+        self.notify("list-row");
     }
 }

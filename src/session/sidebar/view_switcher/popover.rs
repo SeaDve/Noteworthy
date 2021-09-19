@@ -88,12 +88,7 @@ mod imp {
                     Some(&list_item_expression),
                     "item",
                 );
-                let item_expression = gtk::PropertyExpression::new(
-                    gtk::TreeListRow::static_type(),
-                    Some(&tree_list_row_expression),
-                    "item",
-                );
-                item_expression.bind(&item_row, "item", None);
+                tree_list_row_expression.bind(&item_row, "list-row", None);
 
                 let selected_expression = gtk::PropertyExpression::new(
                     gtk::ListItem::static_type(),

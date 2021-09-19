@@ -10,7 +10,7 @@ use std::cell::RefCell;
 
 pub use self::item::Type;
 use self::{item::Item, item_row::ItemRow, popover::Popover};
-use crate::session::note::TagList;
+use crate::session::note::{Tag, TagList};
 
 mod imp {
     use super::*;

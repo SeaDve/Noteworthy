@@ -1,7 +1,7 @@
 use adw::subclass::prelude::*;
 use gtk::{
     gio,
-    glib::{self, GBoxed},
+    glib::{self, clone, GBoxed},
     prelude::*,
 };
 
@@ -46,6 +46,12 @@ mod imp {
     impl ObjectImpl for Item {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
+
+            if let Some(ref model) = *self.model.borrow() {
+                model.connect_items_changed(clone!(@weak obj => move |_, pos, added, removed| {
+                    obj.items_changed(pos, added, removed);
+                }));
+            }
         }
 
         fn properties() -> &'static [glib::ParamSpec] {
@@ -129,7 +135,8 @@ mod imp {
 }
 
 glib::wrapper! {
-    pub struct Item(ObjectSubclass<imp::Item>);
+    pub struct Item(ObjectSubclass<imp::Item>)
+        @implements gio::ListModel;
 }
 
 impl Item {

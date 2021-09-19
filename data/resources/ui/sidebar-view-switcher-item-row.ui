@@ -3,10 +3,18 @@
   <object class="GtkLabel" id="label_child">
     <property name="margin-top">6</property>
     <property name="margin-bottom">6</property>
-    <property name="halign">start</property>
+    <property name="xalign">0</property>
   </object>
   <object class="GtkSeparator" id="separator_child">
     <property name="valign">center</property>
+  </object>
+  <object class="GtkLabel" id="category_child">
+    <property name="margin-top">6</property>
+    <property name="xalign">0</property>
+    <style>
+      <class name="caption-heading"/>
+      <class name="dim-label"/>
+    </style>
   </object>
   <template class="NwtySidebarViewSwitcherItemRow" parent="AdwBin">
     <property name="child">
