@@ -15,7 +15,6 @@ mod imp {
         #[template_child]
         pub listview: TemplateChild<gtk::ListView>,
 
-        pub tag_list: RefCell<TagList>,
         pub selected_item: RefCell<Option<Item>>,
     }
 
@@ -39,13 +38,22 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_object(
-                    "selected-item",
-                    "Selected-item",
-                    "The selected item in popover",
-                    Item::static_type(),
-                    glib::ParamFlags::READWRITE,
-                )]
+                vec![
+                    glib::ParamSpec::new_object(
+                        "selected-item",
+                        "Selected-item",
+                        "The selected item in popover",
+                        Item::static_type(),
+                        glib::ParamFlags::READWRITE,
+                    ),
+                    glib::ParamSpec::new_object(
+                        "tag-list",
+                        "Tag List",
+                        "The tag list in the view switcher",
+                        TagList::static_type(),
+                        glib::ParamFlags::WRITABLE | glib::ParamFlags::EXPLICIT_NOTIFY,
+                    ),
+                ]
             });
 
             PROPERTIES.as_ref()
@@ -53,7 +61,7 @@ mod imp {
 
         fn set_property(
             &self,
-            _obj: &Self::Type,
+            obj: &Self::Type,
             _id: usize,
             value: &glib::Value,
             pspec: &glib::ParamSpec,
@@ -62,6 +70,10 @@ mod imp {
                 "selected-item" => {
                     let selected_item = value.get().unwrap();
                     self.selected_item.replace(selected_item);
+                }
+                "tag-list" => {
+                    let tag_list = value.get().unwrap();
+                    obj.set_tag_list(tag_list);
                 }
                 _ => unimplemented!(),
             }
@@ -175,6 +187,6 @@ impl Popover {
 
         imp.listview.set_model(Some(&selection_model));
 
-        imp.tag_list.replace(tag_list);
+        self.notify("tag-list");
     }
 }
