@@ -57,6 +57,7 @@ mod imp {
             obj.metadata()
                 .tag_list()
                 .connect_items_changed(clone!(@weak obj => move |_,_,_,_| {
+                    obj.emit_by_name("metadata-changed", &[]).unwrap();
                     obj.set_is_saved(false);
                 }));
         }
