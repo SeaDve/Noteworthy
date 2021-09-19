@@ -23,7 +23,7 @@ use self::{
     note_row::NoteRow,
     row::Row,
     selection::Selection,
-    view_switcher::{Type, ViewSwitcher},
+    view_switcher::{ItemKind, ViewSwitcher},
 };
 use super::{note::TagList, Note, NoteList, Session};
 
@@ -218,10 +218,10 @@ impl Sidebar {
                         let note = note.metadata();
 
                         match imp.view_switcher.selected_type() {
-                            Type::AllNotes => !note.is_trashed(),
-                            Type::Trash => note.is_trashed(),
-                            Type::Tag(tag) => note.tag_list().contains(tag),
-                            Type::Separator | Type::Category => unreachable!("Separator cannot be selected"),
+                            ItemKind::AllNotes => !note.is_trashed(),
+                            ItemKind::Trash => note.is_trashed(),
+                            ItemKind::Tag(tag) => note.tag_list().contains(tag),
+                            ItemKind::Separator | ItemKind::Category => unreachable!("Separator cannot be selected"),
                         }
                     })
             }),

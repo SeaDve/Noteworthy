@@ -11,7 +11,7 @@ use crate::session::note::{Tag, TagList};
 
 #[derive(Debug, Clone, GBoxed, PartialEq)]
 #[gboxed(type_name = "NwtySidebarViewSwitcherType")]
-pub enum Type {
+pub enum ItemKind {
     Separator,
     Category,
     AllNotes,
@@ -19,7 +19,7 @@ pub enum Type {
     Trash,
 }
 
-impl Default for Type {
+impl Default for ItemKind {
     fn default() -> Self {
         Self::AllNotes
     }
@@ -30,7 +30,7 @@ mod imp {
 
     #[derive(Debug, Default)]
     pub struct Item {
-        type_: RefCell<Type>,
+        item_kind: RefCell<ItemKind>,
         display_name: RefCell<Option<String>>,
         model: RefCell<Option<gio::ListModel>>,
     }
@@ -59,10 +59,10 @@ mod imp {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
                     glib::ParamSpec::new_boxed(
-                        "type",
-                        "Item Type",
-                        "Type of this item",
-                        Type::static_type(),
+                        "item-kind",
+                        "Item Kind",
+                        "Kind of this item",
+                        ItemKind::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
                     glib::ParamSpec::new_string(
@@ -93,9 +93,9 @@ mod imp {
             pspec: &glib::ParamSpec,
         ) {
             match pspec.name() {
-                "type" => {
-                    let type_ = value.get().unwrap();
-                    self.type_.replace(type_);
+                "item-kind" => {
+                    let item_kind = value.get().unwrap();
+                    self.item_kind.replace(item_kind);
                 }
                 "display-name" => {
                     let display_name = value.get().unwrap();
@@ -111,7 +111,7 @@ mod imp {
 
         fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "type" => self.type_.borrow().to_value(),
+                "item-kind" => self.item_kind.borrow().to_value(),
                 "display-name" => self.display_name.borrow().to_value(),
                 "model" => self.model.borrow().to_value(),
                 _ => unimplemented!(),
@@ -140,17 +140,17 @@ glib::wrapper! {
 }
 
 impl Item {
-    pub fn new(type_: Type, display_name: Option<String>, model: Option<TagList>) -> Self {
+    pub fn new(item_kind: ItemKind, display_name: Option<String>, model: Option<TagList>) -> Self {
         glib::Object::new(&[
-            ("type", &type_),
+            ("item-kind", &item_kind),
             ("display-name", &display_name),
             ("model", &model),
         ])
         .expect("Failed to create Item.")
     }
 
-    pub fn type_(&self) -> Type {
-        self.property("type").unwrap().get().unwrap()
+    pub fn item_kind(&self) -> ItemKind {
+        self.property("item-kind").unwrap().get().unwrap()
     }
 
     pub fn display_name(&self) -> Option<String> {

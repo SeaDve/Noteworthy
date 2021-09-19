@@ -3,7 +3,7 @@ use gtk::{gio, glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::RefCell;
 
-use super::{item_list::ItemList, Item, ItemRow, Type};
+use super::{item_list::ItemList, Item, ItemKind, ItemRow};
 use crate::session::note::{Tag, TagList};
 
 mod imp {
@@ -110,8 +110,8 @@ mod imp {
                     .and_then(|o| o.downcast().ok());
 
                 if let Some(item) = item {
-                    match item.type_() {
-                        Type::Separator | Type::Category => {
+                    match item.item_kind() {
+                        ItemKind::Separator | ItemKind::Category => {
                             list_item.set_selectable(false);
                         }
                         _ => (),
@@ -163,7 +163,7 @@ impl Popover {
                         if let Some(item) = si.downcast_ref::<Item>() {
                             item.clone()
                         } else if let Some(tag) = si.downcast_ref::<Tag>() {
-                            Item::new(Type::Tag(tag.clone()), Some(tag.name()), None)
+                            Item::new(ItemKind::Tag(tag.clone()), Some(tag.name()), None)
                         } else {
                             panic!("Wrong row item: {:?}", si);
                         }

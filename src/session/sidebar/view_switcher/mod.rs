@@ -8,7 +8,7 @@ use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::RefCell;
 
-pub use self::item::Type;
+pub use self::item::ItemKind;
 use self::{item::Item, item_row::ItemRow, popover::Popover};
 use crate::session::note::{Tag, TagList};
 
@@ -23,7 +23,7 @@ mod imp {
         #[template_child]
         pub popover: TemplateChild<Popover>,
 
-        pub selected_type: RefCell<Type>,
+        pub selected_type: RefCell<ItemKind>,
     }
 
     #[glib::object_subclass]
@@ -51,7 +51,7 @@ mod imp {
                     "selected-type",
                     "Selected-type",
                     "The selected type in the switcher",
-                    Type::static_type(),
+                    ItemKind::static_type(),
                     glib::ParamFlags::READWRITE,
                 )]
             });
@@ -101,7 +101,7 @@ mod imp {
             let selected_type_expression = gtk::PropertyExpression::new(
                 Item::static_type(),
                 Some(&selected_item_expression),
-                "type",
+                "item-kind",
             );
             selected_type_expression.bind(obj, "selected-type", None);
         }
@@ -122,7 +122,7 @@ impl ViewSwitcher {
         glib::Object::new(&[]).expect("Failed to create ViewSwitcher.")
     }
 
-    pub fn selected_type(&self) -> Type {
+    pub fn selected_type(&self) -> ItemKind {
         self.property("selected-type").unwrap().get().unwrap()
     }
 

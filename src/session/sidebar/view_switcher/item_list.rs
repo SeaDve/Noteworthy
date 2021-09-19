@@ -3,7 +3,7 @@ use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::sync::Lazy;
 use once_cell::unsync::OnceCell;
 
-use super::{Item, TagList, Type};
+use super::{Item, ItemKind, TagList};
 
 mod imp {
     use super::*;
@@ -86,11 +86,16 @@ impl ItemList {
         let imp = imp::ItemList::from_instance(self);
 
         let list = [
-            Item::new(Type::AllNotes, Some(gettext("All Notes")), None::<TagList>).upcast(),
-            Item::new(Type::Separator, None, None::<TagList>).upcast(),
-            Item::new(Type::Category, Some(gettext("Tags")), Some(tag_list)).upcast(),
-            Item::new(Type::Separator, None, None::<TagList>).upcast(),
-            Item::new(Type::Trash, Some(gettext("Trash")), None::<TagList>).upcast(),
+            Item::new(
+                ItemKind::AllNotes,
+                Some(gettext("All Notes")),
+                None::<TagList>,
+            )
+            .upcast(),
+            Item::new(ItemKind::Separator, None, None::<TagList>).upcast(),
+            Item::new(ItemKind::Category, Some(gettext("Tags")), Some(tag_list)).upcast(),
+            Item::new(ItemKind::Separator, None, None::<TagList>).upcast(),
+            Item::new(ItemKind::Trash, Some(gettext("Trash")), None::<TagList>).upcast(),
         ];
         let len = list.len() as u32;
 

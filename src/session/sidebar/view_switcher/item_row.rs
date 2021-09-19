@@ -3,7 +3,7 @@ use gtk::{glib, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::{Cell, RefCell};
 
-use super::{Item, Tag, Type};
+use super::{Item, ItemKind, Tag};
 
 mod imp {
     use super::*;
@@ -160,25 +160,25 @@ impl ItemRow {
 
         if let Some(item) = self.item() {
             if let Some(item) = item.downcast_ref::<Item>() {
-                match item.type_() {
-                    Type::AllNotes | Type::Trash => {
+                match item.item_kind() {
+                    ItemKind::AllNotes | ItemKind::Trash => {
                         imp.label_child.set_label(&item.display_name().unwrap());
                         imp.bin.set_child(Some(&imp.label_child.get()));
                         self.set_margin_start(6);
                         self.set_margin_end(6);
                     }
-                    Type::Category => {
+                    ItemKind::Category => {
                         imp.category_child.set_label(&item.display_name().unwrap());
                         imp.bin.set_child(Some(&imp.category_child.get()));
                         self.set_margin_start(6);
                         self.set_margin_end(6);
                     }
-                    Type::Separator => {
+                    ItemKind::Separator => {
                         imp.bin.set_child(Some(&imp.separator_child.get()));
                         self.set_margin_start(0);
                         self.set_margin_end(0);
                     }
-                    Type::Tag(_) => unreachable!("This is handled by below"),
+                    ItemKind::Tag(_) => unreachable!("This is handled by below"),
                 }
             } else if let Some(tag) = item.downcast_ref::<Tag>() {
                 imp.label_child.set_label(&tag.name());
