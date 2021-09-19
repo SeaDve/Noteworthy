@@ -23,9 +23,9 @@ use self::{
     note_row::NoteRow,
     row::Row,
     selection::Selection,
-    view_switcher::{ItemType, ViewSwitcher},
+    view_switcher::{Type, ViewSwitcher},
 };
-use super::{Note, NoteList, Session};
+use super::{note::TagList, Note, NoteList, Session};
 
 mod imp {
     use super::*;
@@ -218,9 +218,10 @@ impl Sidebar {
                         let note = note.metadata();
 
                         match imp.view_switcher.selected_type() {
-                            ItemType::AllNotes => !note.is_trashed(),
-                            ItemType::Trash => note.is_trashed(),
-                            ItemType::Separator => unreachable!("Separator cannot be selected"),
+                            Type::AllNotes => !note.is_trashed(),
+                            Type::Trash => note.is_trashed(),
+                            Type::Tag(ref tag) => true,
+                            Type::Separator | Type::Category => unreachable!("Separator cannot be selected"),
                         }
                     })
             }),
@@ -256,6 +257,11 @@ impl Sidebar {
     pub fn selected_note(&self) -> Option<Note> {
         let imp = imp::Sidebar::from_instance(self);
         imp.selected_note.borrow().clone()
+    }
+
+    pub fn set_tag_list(&self, tag_list: TagList) {
+        let imp = imp::Sidebar::from_instance(self);
+        imp.view_switcher.set_tag_list(tag_list);
     }
 
     // TODO remove this in the future

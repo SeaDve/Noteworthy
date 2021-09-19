@@ -93,9 +93,11 @@ mod imp {
         fn item_type(&self, _list_model: &Self::Type) -> glib::Type {
             Note::static_type()
         }
+
         fn n_items(&self, _list_model: &Self::Type) -> u32 {
             self.model.get().map_or(0, |l| l.n_items())
         }
+
         fn item(&self, _list_model: &Self::Type, position: u32) -> Option<glib::Object> {
             self.model.get().and_then(|l| l.item(position))
         }

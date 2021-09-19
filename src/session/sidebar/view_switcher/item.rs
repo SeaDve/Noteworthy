@@ -1,20 +1,25 @@
 use adw::subclass::prelude::*;
 use gtk::{
+    gio,
     glib::{self, GBoxed},
     prelude::*,
 };
 
 use std::cell::RefCell;
 
+use crate::session::note::{Tag, TagList};
+
 #[derive(Debug, Clone, GBoxed, PartialEq)]
-#[gboxed(type_name = "NwtySidebarViewSwitcherItemType")]
-pub enum ItemType {
+#[gboxed(type_name = "NwtySidebarViewSwitcherType")]
+pub enum Type {
     Separator,
+    Category,
     AllNotes,
+    Tag(Tag),
     Trash,
 }
 
-impl Default for ItemType {
+impl Default for Type {
     fn default() -> Self {
         Self::AllNotes
     }
@@ -25,8 +30,9 @@ mod imp {
 
     #[derive(Debug, Default)]
     pub struct Item {
-        item_type: RefCell<ItemType>,
+        type_: RefCell<Type>,
         display_name: RefCell<Option<String>>,
+        model: RefCell<Option<gio::ListModel>>,
     }
 
     #[glib::object_subclass]
@@ -34,6 +40,7 @@ mod imp {
         const NAME: &'static str = "NwtySidebarViewSwitcherItem";
         type Type = super::Item;
         type ParentType = glib::Object;
+        type Interfaces = (gio::ListModel,);
     }
 
     impl ObjectImpl for Item {
@@ -46,10 +53,10 @@ mod imp {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
                     glib::ParamSpec::new_boxed(
-                        "item-type",
+                        "type",
                         "Item Type",
                         "Type of this item",
-                        ItemType::static_type(),
+                        Type::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
                     glib::ParamSpec::new_string(
@@ -57,6 +64,13 @@ mod imp {
                         "Display Name",
                         "Display name of this item",
                         None,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
+                    ),
+                    glib::ParamSpec::new_object(
+                        "model",
+                        "Model",
+                        "The model of this item",
+                        gio::ListModel::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
                 ]
@@ -73,13 +87,17 @@ mod imp {
             pspec: &glib::ParamSpec,
         ) {
             match pspec.name() {
-                "item-type" => {
-                    let item_type = value.get().unwrap();
-                    self.item_type.replace(item_type);
+                "type" => {
+                    let type_ = value.get().unwrap();
+                    self.type_.replace(type_);
                 }
                 "display-name" => {
                     let display_name = value.get().unwrap();
                     self.display_name.replace(display_name);
+                }
+                "model" => {
+                    let model = value.get().unwrap();
+                    self.model.replace(model);
                 }
                 _ => unimplemented!(),
             }
@@ -87,10 +105,25 @@ mod imp {
 
         fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "item-type" => self.item_type.borrow().to_value(),
+                "type" => self.type_.borrow().to_value(),
                 "display-name" => self.display_name.borrow().to_value(),
+                "model" => self.model.borrow().to_value(),
                 _ => unimplemented!(),
             }
+        }
+    }
+
+    impl ListModelImpl for Item {
+        fn item_type(&self, _list_model: &Self::Type) -> glib::Type {
+            Tag::static_type()
+        }
+
+        fn n_items(&self, _list_model: &Self::Type) -> u32 {
+            self.model.borrow().as_ref().map_or(0, |l| l.n_items())
+        }
+
+        fn item(&self, _list_model: &Self::Type, position: u32) -> Option<glib::Object> {
+            self.model.borrow().as_ref().and_then(|l| l.item(position))
         }
     }
 }
@@ -100,13 +133,17 @@ glib::wrapper! {
 }
 
 impl Item {
-    pub fn new(item_type: ItemType, display_name: Option<String>) -> Self {
-        glib::Object::new(&[("item-type", &item_type), ("display-name", &display_name)])
-            .expect("Failed to create Item.")
+    pub fn new(type_: Type, display_name: Option<String>, model: Option<TagList>) -> Self {
+        glib::Object::new(&[
+            ("type", &type_),
+            ("display-name", &display_name),
+            ("model", &model),
+        ])
+        .expect("Failed to create Item.")
     }
 
-    pub fn item_type(&self) -> ItemType {
-        self.property("item-type").unwrap().get().unwrap()
+    pub fn type_(&self) -> Type {
+        self.property("type").unwrap().get().unwrap()
     }
 
     pub fn display_name(&self) -> Option<String> {

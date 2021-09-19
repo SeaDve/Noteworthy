@@ -3,7 +3,7 @@ use gtk::{glib, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::{Cell, RefCell};
 
-use super::{Item, ItemType};
+use super::{Item, Type};
 
 mod imp {
     use super::*;
@@ -121,14 +121,28 @@ impl ItemRow {
         let imp = imp::ItemRow::from_instance(self);
 
         if let Some(ref item) = item {
-            match item.item_type() {
-                ItemType::AllNotes | ItemType::Trash => {
+            match item.type_() {
+                Type::AllNotes | Type::Trash => {
                     imp.label_child.set_label(&item.display_name().unwrap());
                     imp.bin.set_child(Some(&imp.label_child.get()));
                     self.set_margin_start(6);
                     self.set_margin_end(6);
                 }
-                ItemType::Separator => {
+                Type::Tag(ref tag) => {
+                    imp.label_child.set_label(&tag.name());
+                    imp.bin.set_child(Some(&imp.label_child.get()));
+                    self.set_margin_start(6);
+                    self.set_margin_end(6);
+
+                    log::error!("test");
+                }
+                Type::Category => {
+                    imp.label_child.set_label(&item.display_name().unwrap());
+                    imp.bin.set_child(Some(&imp.label_child.get()));
+                    self.set_margin_start(0);
+                    self.set_margin_end(0);
+                }
+                Type::Separator => {
                     imp.bin.set_child(Some(&imp.separator_child.get()));
                     self.set_margin_start(0);
                     self.set_margin_end(0);

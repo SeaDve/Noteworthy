@@ -83,9 +83,11 @@ mod imp {
                 note_manager.load_data_file().await.expect("Failed to load data file");
                 note_manager.load_notes().await.expect("Failed to load files");
                 let note_list = note_manager.note_list();
+                let tag_list = note_manager.tag_list();
 
                 let imp = imp::Session::from_instance(&obj);
                 imp.sidebar.set_note_list(note_list);
+                imp.sidebar.set_tag_list(tag_list);
             }));
 
             self.sidebar.set_session(obj.clone());

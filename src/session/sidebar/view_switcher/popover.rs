@@ -1,10 +1,10 @@
 use adw::subclass::prelude::*;
-use gettextrs::gettext;
 use gtk::{gio, glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::RefCell;
 
-use super::{Item, ItemRow, ItemType};
+use super::{item_list::ItemList, Item, ItemRow, Type};
+use crate::session::note::TagList;
 
 mod imp {
     use super::*;
@@ -13,9 +13,10 @@ mod imp {
     #[template(resource = "/io/github/seadve/Noteworthy/ui/sidebar-view-switcher-popover.ui")]
     pub struct Popover {
         #[template_child]
-        listview: TemplateChild<gtk::ListView>,
+        pub listview: TemplateChild<gtk::ListView>,
 
-        selected_item: RefCell<Option<Item>>,
+        pub tag_list: RefCell<TagList>,
+        pub selected_item: RefCell<Option<Item>>,
     }
 
     #[glib::object_subclass]
@@ -82,9 +83,14 @@ mod imp {
 
                 let list_item_expression = gtk::ConstantExpression::new(list_item);
 
-                let item_expression = gtk::PropertyExpression::new(
+                let tree_list_row_expression = gtk::PropertyExpression::new(
                     gtk::ListItem::static_type(),
                     Some(&list_item_expression),
+                    "item",
+                );
+                let item_expression = gtk::PropertyExpression::new(
+                    gtk::TreeListRow::static_type(),
+                    Some(&tree_list_row_expression),
                     "item",
                 );
                 item_expression.bind(&item_row, "item", None);
@@ -100,34 +106,25 @@ mod imp {
             });
 
             factory.connect_bind(|_, list_item| {
-                let item: Item = list_item.item().unwrap().downcast().unwrap();
+                let item: Option<Item> = list_item
+                    .item()
+                    .unwrap()
+                    .downcast::<gtk::TreeListRow>()
+                    .unwrap()
+                    .item()
+                    .and_then(|o| o.downcast().ok());
 
-                if item.item_type() == ItemType::Separator {
-                    list_item.set_selectable(false);
+                if let Some(item) = item {
+                    match item.type_() {
+                        Type::Separator | Type::Category => {
+                            list_item.set_selectable(false);
+                        }
+                        _ => (),
+                    }
                 }
             });
 
             self.listview.set_factory(Some(&factory));
-
-            let model = gio::ListStore::new(Item::static_type());
-            model.append(&Item::new(ItemType::AllNotes, Some(gettext("All Notes"))));
-            model.append(&Item::new(ItemType::Separator, None));
-            model.append(&Item::new(ItemType::Trash, Some(gettext("Trash"))));
-
-            let selection_model = gtk::SingleSelection::new(Some(&model));
-            selection_model
-                .bind_property("selected-item", obj, "selected-item")
-                .transform_to(|_, value| {
-                    let selected_item: Option<Item> = value
-                        .get::<Option<glib::Object>>()
-                        .unwrap()
-                        .map(|si| si.downcast().unwrap());
-                    Some(selected_item.to_value())
-                })
-                .flags(glib::BindingFlags::SYNC_CREATE)
-                .build();
-
-            self.listview.set_model(Some(&selection_model));
         }
     }
 
@@ -148,5 +145,33 @@ impl Popover {
 
     pub fn selected_item(&self) -> Option<Item> {
         self.property("selected-item").unwrap().get().unwrap()
+    }
+
+    pub fn set_tag_list(&self, tag_list: TagList) {
+        let imp = imp::Popover::from_instance(self);
+
+        let item_list = ItemList::new(&tag_list);
+        let tree_model = gtk::TreeListModel::new(&item_list, false, true, |item| {
+            item.clone().downcast::<gio::ListModel>().ok()
+        });
+
+        let selection_model = gtk::SingleSelection::new(Some(&tree_model));
+        selection_model
+            .bind_property("selected-item", self, "selected-item")
+            .transform_to(|_, value| {
+                let selected_item: Option<Item> = value
+                    .get::<Option<glib::Object>>()
+                    .unwrap()
+                    .map(|o| o.downcast::<gtk::TreeListRow>().unwrap())
+                    .map(|tlr| tlr.item().unwrap())
+                    .and_then(|si| si.downcast::<Item>().ok());
+                Some(selected_item.to_value())
+            })
+            .flags(glib::BindingFlags::SYNC_CREATE)
+            .build();
+
+        imp.listview.set_model(Some(&selection_model));
+
+        imp.tag_list.replace(tag_list);
     }
 }

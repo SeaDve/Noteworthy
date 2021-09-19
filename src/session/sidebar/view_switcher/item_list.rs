@@ -3,19 +3,19 @@ use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::sync::Lazy;
 use once_cell::unsync::OnceCell;
 
-use super::{category::Category, Note, NoteList};
+use super::{Item, TagList, Type};
 
 mod imp {
     use super::*;
 
     #[derive(Debug, Default)]
     pub struct ItemList {
-        pub list: OnceCell<[glib::Object; 2]>,
+        pub list: OnceCell<[glib::Object; 5]>,
     }
 
     #[glib::object_subclass]
     impl ObjectSubclass for ItemList {
-        const NAME: &'static str = "NwtyItemList";
+        const NAME: &'static str = "NwtyViewSwitcherItemList";
         type Type = super::ItemList;
         type ParentType = glib::Object;
         type Interfaces = (gio::ListModel,);
@@ -25,10 +25,10 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![glib::ParamSpec::new_object(
-                    "note-list",
-                    "Note list",
+                    "tag-list",
+                    "Tag list",
                     "Data model for the categories",
-                    NoteList::static_type(),
+                    TagList::static_type(),
                     glib::ParamFlags::WRITABLE | glib::ParamFlags::CONSTRUCT_ONLY,
                 )]
             });
@@ -44,9 +44,9 @@ mod imp {
             pspec: &glib::ParamSpec,
         ) {
             match pspec.name() {
-                "note-list" => {
-                    let note_list = value.get().unwrap();
-                    obj.set_note_list(&note_list);
+                "tag-list" => {
+                    let tag_list = value.get().unwrap();
+                    obj.set_tag_list(tag_list);
                 }
                 _ => unimplemented!(),
             }
@@ -78,34 +78,19 @@ glib::wrapper! {
 }
 
 impl ItemList {
-    pub fn new(note_list: &NoteList) -> Self {
-        glib::Object::new(&[("note-list", note_list)]).expect("Failed to create ItemList")
+    pub fn new(tag_list: &TagList) -> Self {
+        glib::Object::new(&[("tag-list", tag_list)]).expect("Failed to create ItemList")
     }
 
-    fn set_note_list(&self, note_list: &NoteList) {
+    fn set_tag_list(&self, tag_list: TagList) {
         let imp = imp::ItemList::from_instance(self);
 
         let list = [
-            Category::new(
-                &gettext("Pinned"),
-                &gtk::CustomFilter::new(|item| {
-                    let note = item.downcast_ref::<Note>().unwrap().metadata();
-                    note.is_pinned()
-                })
-                .upcast(),
-                note_list,
-            )
-            .upcast::<glib::Object>(),
-            Category::new(
-                &gettext("Other Notes"),
-                &gtk::CustomFilter::new(|item| {
-                    let note = item.downcast_ref::<Note>().unwrap().metadata();
-                    !note.is_pinned()
-                })
-                .upcast(),
-                note_list,
-            )
-            .upcast::<glib::Object>(),
+            Item::new(Type::AllNotes, Some(gettext("All Notes")), None::<TagList>).upcast(),
+            Item::new(Type::Separator, None, None::<TagList>).upcast(),
+            Item::new(Type::Category, Some(gettext("Tags")), Some(tag_list)).upcast(),
+            Item::new(Type::Separator, None, None::<TagList>).upcast(),
+            Item::new(Type::Trash, Some(gettext("Trash")), None::<TagList>).upcast(),
         ];
         let len = list.len() as u32;
 
