@@ -10,6 +10,7 @@
   </object>
   <object class="GtkLabel" id="category_child">
     <property name="margin-top">6</property>
+    <property name="margin-bottom">6</property>
     <property name="xalign">0</property>
     <style>
       <class name="caption-heading"/>
