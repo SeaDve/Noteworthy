@@ -51,7 +51,7 @@ mod imp {
             Content::static_type();
             Self::bind_template(klass);
 
-            klass.install_action("session.edit-tags", None, move |obj, _, _| {
+            klass.install_action("session.edit-note-tags", None, move |obj, _, _| {
                 let imp = imp::Session::from_instance(obj);
 
                 let tag_list = imp.note_manager.get().unwrap().tag_list();
