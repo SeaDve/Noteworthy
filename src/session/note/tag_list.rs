@@ -98,6 +98,7 @@ impl TagList {
         is_appended
     }
 
+    // TODO make the methods below take in only a reference of tag
     pub fn remove(&self, tag: Tag) -> bool {
         let imp = &imp::TagList::from_instance(self);
 

@@ -4,7 +4,7 @@ use gtk::{gio, glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 use std::cell::RefCell;
 
 use super::{item_list::ItemList, Item, ItemRow, Type};
-use crate::session::note::TagList;
+use crate::session::note::{Tag, TagList};
 
 mod imp {
     use super::*;
@@ -159,7 +159,15 @@ impl Popover {
                     .unwrap()
                     .map(|o| o.downcast::<gtk::TreeListRow>().unwrap())
                     .map(|tlr| tlr.item().unwrap())
-                    .and_then(|si| si.downcast::<Item>().ok());
+                    .map(|si| {
+                        if let Some(item) = si.downcast_ref::<Item>() {
+                            item.clone()
+                        } else if let Some(tag) = si.downcast_ref::<Tag>() {
+                            Item::new(Type::Tag(tag.clone()), Some(tag.name()), None)
+                        } else {
+                            panic!("Wrong row item: {:?}", si);
+                        }
+                    });
                 Some(selected_item.to_value())
             })
             .flags(glib::BindingFlags::SYNC_CREATE)
