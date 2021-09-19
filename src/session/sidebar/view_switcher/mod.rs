@@ -5,7 +5,7 @@ mod popover;
 use adw::subclass::prelude::*;
 use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
-use std::cell::Cell;
+use std::cell::RefCell;
 
 pub use self::item::ItemType;
 use self::{item::Item, item_row::ItemRow, popover::Popover};
@@ -21,7 +21,7 @@ mod imp {
         #[template_child]
         pub popover: TemplateChild<Popover>,
 
-        pub selected_type: Cell<ItemType>,
+        pub selected_type: RefCell<ItemType>,
     }
 
     #[glib::object_subclass]
@@ -45,12 +45,11 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_enum(
+                vec![glib::ParamSpec::new_boxed(
                     "selected-type",
                     "Selected-type",
                     "The selected type in the switcher",
                     ItemType::static_type(),
-                    ItemType::default() as i32,
                     glib::ParamFlags::READWRITE,
                 )]
             });
@@ -68,7 +67,7 @@ mod imp {
             match pspec.name() {
                 "selected-type" => {
                     let selected_type = value.get().unwrap();
-                    self.selected_type.set(selected_type);
+                    self.selected_type.replace(selected_type);
                 }
                 _ => unimplemented!(),
             }
@@ -76,7 +75,7 @@ mod imp {
 
         fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "selected-type" => self.selected_type.get().to_value(),
+                "selected-type" => self.selected_type.borrow().to_value(),
                 _ => unimplemented!(),
             }
         }

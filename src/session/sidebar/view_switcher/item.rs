@@ -1,13 +1,13 @@
 use adw::subclass::prelude::*;
 use gtk::{
-    glib::{self, GEnum},
+    glib::{self, GBoxed},
     prelude::*,
 };
 
-use std::cell::{Cell, RefCell};
+use std::cell::RefCell;
 
-#[derive(Debug, Clone, Copy, GEnum, PartialEq)]
-#[genum(type_name = "NwtySidebarViewSwitcherItemType")]
+#[derive(Debug, Clone, GBoxed, PartialEq)]
+#[gboxed(type_name = "NwtySidebarViewSwitcherItemType")]
 pub enum ItemType {
     Separator,
     AllNotes,
@@ -25,7 +25,7 @@ mod imp {
 
     #[derive(Debug, Default)]
     pub struct Item {
-        item_type: Cell<ItemType>,
+        item_type: RefCell<ItemType>,
         display_name: RefCell<Option<String>>,
     }
 
@@ -45,12 +45,11 @@ mod imp {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
-                    glib::ParamSpec::new_enum(
+                    glib::ParamSpec::new_boxed(
                         "item-type",
                         "Item Type",
                         "Type of this item",
                         ItemType::static_type(),
-                        ItemType::default() as i32,
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
                     glib::ParamSpec::new_string(
@@ -76,7 +75,7 @@ mod imp {
             match pspec.name() {
                 "item-type" => {
                     let item_type = value.get().unwrap();
-                    self.item_type.set(item_type);
+                    self.item_type.replace(item_type);
                 }
                 "display-name" => {
                     let display_name = value.get().unwrap();
@@ -88,7 +87,7 @@ mod imp {
 
         fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "item-type" => self.item_type.get().to_value(),
+                "item-type" => self.item_type.borrow().to_value(),
                 "display-name" => self.display_name.borrow().to_value(),
                 _ => unimplemented!(),
             }
