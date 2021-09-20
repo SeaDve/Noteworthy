@@ -24,6 +24,8 @@ mod imp {
         #[template_child]
         pub select_icon: TemplateChild<gtk::Image>,
 
+        pub binding: RefCell<Option<glib::Binding>>,
+
         pub item: RefCell<Option<Item>>,
         pub selected: Cell<bool>,
         pub list_row: RefCell<Option<gtk::TreeListRow>>,
@@ -160,6 +162,10 @@ impl ItemRow {
             return;
         }
 
+        if let Some(binding) = imp.binding.take() {
+            binding.unbind();
+        }
+
         if let Some(item) = self.item() {
             if let Some(item) = item.downcast_ref::<Item>() {
                 match item.item_kind() {
@@ -188,7 +194,11 @@ impl ItemRow {
                     ItemKind::Tag(_) => unreachable!("This is handled by below"),
                 }
             } else if let Some(tag) = item.downcast_ref::<Tag>() {
-                imp.label_child.set_label(&tag.name());
+                let binding = tag
+                    .bind_property("name", &imp.label_child.get(), "label")
+                    .flags(glib::BindingFlags::SYNC_CREATE)
+                    .build();
+                imp.binding.replace(binding);
                 imp.bin.set_child(Some(&imp.label_child.get()));
                 self.set_margin_start(6);
                 self.set_margin_end(6);

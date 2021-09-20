@@ -99,13 +99,13 @@ impl Application {
         imp.settings.clone()
     }
 
-    fn private(&self) -> &imp::Application {
-        imp::Application::from_instance(self)
-    }
-
-    fn main_window(&self) -> Window {
+    pub fn main_window(&self) -> Window {
         let imp = self.private();
         imp.window.get().unwrap().upgrade().unwrap()
+    }
+
+    fn private(&self) -> &imp::Application {
+        imp::Application::from_instance(self)
     }
 
     fn setup_gactions(&self) {

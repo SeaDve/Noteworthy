@@ -72,6 +72,11 @@ impl Window {
         glib::Object::new(&[("application", app)]).expect("Failed to create Window.")
     }
 
+    pub fn session(&self) -> Session {
+        let imp = imp::Window::from_instance(self);
+        imp.session.clone()
+    }
+
     fn save_window_size(&self) -> Result<(), glib::BoolError> {
         let settings = Application::default().settings();
 

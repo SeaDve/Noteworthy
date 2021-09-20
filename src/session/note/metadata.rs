@@ -3,8 +3,28 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use std::cell::{Cell, RefCell};
 
-use super::tag_list::TagList;
-use crate::date::Date;
+use super::{Tag, TagList};
+use crate::{date::Date, Application};
+
+fn deserialize_from_existing_tag_list<'de, D: Deserializer<'de>>(
+    deserializer: D,
+) -> Result<RefCell<TagList>, D::Error> {
+    let tag_name_list: Vec<String> = Vec::deserialize(deserializer)?;
+
+    let app = Application::default();
+    let tag_list = app.main_window().session().note_manager().tag_list();
+
+    let new_tag_list = TagList::new();
+    for name in tag_name_list {
+        let new_tag = tag_list.find_with_name(&name).unwrap_or_else(|| {
+            log::error!("Tag with name '{}' not found, Creating new instead", &name);
+            Tag::new(&name)
+        });
+        new_tag_list.append(new_tag);
+    }
+
+    Ok(RefCell::new(new_tag_list))
+}
 
 mod imp {
     use super::*;
@@ -13,6 +33,7 @@ mod imp {
     #[serde(default)]
     pub struct Metadata {
         pub title: RefCell<String>,
+        #[serde(deserialize_with = "deserialize_from_existing_tag_list")]
         pub tag_list: RefCell<TagList>,
         pub last_modified: RefCell<Date>,
         pub is_pinned: Cell<bool>,
