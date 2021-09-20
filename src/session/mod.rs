@@ -19,7 +19,7 @@ use std::cell::RefCell;
 
 use self::{
     content::Content, note::Note, note_list::NoteList, note_manager::NoteManager,
-    note_tag_dialog::NoteTagDialog, sidebar::Sidebar,
+    note_tag_dialog::NoteTagDialog, sidebar::Sidebar, tag_editor::TagEditor,
 };
 
 mod imp {
@@ -53,12 +53,21 @@ mod imp {
             Self::bind_template(klass);
 
             klass.install_action("session.edit-tags", None, move |obj, _, _| {
-                log::error!("This should open a tags window");
+                let imp = imp::Session::from_instance(obj);
+                let tag_list = imp.note_manager.get().unwrap().tag_list();
+
+                let tag_editor = TagEditor::new(&tag_list);
+                tag_editor.set_modal(true);
+                tag_editor.set_transient_for(
+                    obj.root()
+                        .map(|w| w.downcast::<gtk::Window>().unwrap())
+                        .as_ref(),
+                );
+                tag_editor.present();
             });
 
             klass.install_action("session.edit-note-tags", None, move |obj, _, _| {
                 let imp = imp::Session::from_instance(obj);
-
                 let tag_list = imp.note_manager.get().unwrap().tag_list();
                 let other_tag_list = obj.selected_note().unwrap().metadata().tag_list();
 

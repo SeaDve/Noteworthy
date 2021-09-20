@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="NwtyTagEditorRow" parent="AdwBin">
+    <property name="child">
+      <object class="GtkBox">
+        <property name="spacing">12</property>
+        <child>
+          <object class="GtkImage">
+            <property name="icon-name">tag-symbolic</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="label">
+            <property name="xalign">0</property>
+            <property name="hexpand">True</property>
+            <binding name="label">
+              <lookup name="name">
+                <lookup name="tag">NwtyTagEditorRow</lookup>
+              </lookup>
+            </binding>
+          </object>
+        </child>
+      </object>
+    </property>
+  </template>
+</interface>

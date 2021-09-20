@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="NwtyTagEditor" parent="AdwWindow">
+    <property name="default-width">300</property>
+    <property name="default-height">400</property>
+    <property name="title" translatable="yes">Edit Tags</property>
+    <property name="content">
+      <object class="GtkBox">
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkHeaderBar">
+            <child>
+              <object class="GtkToggleButton" id="search_button">
+                <property name="icon-name">system-search-symbolic</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkSearchBar">
+            <property name="search-mode-enabled" bind-source="search_button" bind-property="active" bind-flags="sync-create"/>
+            <property name="child">
+              <object class="GtkSearchEntry" id="search_entry">
+                <property name="placeholder-text" translatable="yes">Search tag name</property>
+              </object>
+            </property>
+          </object>
+        </child>
+        <child>
+         <object class="NwtyTagEditorRow">
+         </object>
+        </child>
+        <child>
+          <object class="GtkScrolledWindow">
+            <property name="vexpand">True</property>
+            <property name="hscrollbar-policy">never</property>
+            <property name="child">
+              <object class="GtkListView" id="list_view">
+                <property name="factory">
+                  <object class="GtkBuilderListItemFactory">
+                    <property name="bytes"><![CDATA[
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="GtkListItem">
+    <property name="child">
+      <object class="NwtyTagEditorRow">
+        <binding name="tag">
+          <lookup name="item">GtkListItem</lookup>
+        </binding>
+      </object>
+    </property>
+  </template>
+</interface>
+                 ]]></property>
+                  </object>
+                </property>
+                <style>
+                  <class name="tag-editor-list-view"/>
+                </style>
+              </object>
+            </property>
+          </object>
+        </child>
+      </object>
+    </property>
+  </template>
+</interface>

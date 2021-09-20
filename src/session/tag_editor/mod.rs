@@ -1,33 +1,24 @@
+mod row;
+
 use adw::subclass::prelude::*;
-use gettextrs::gettext;
-use gtk::{
-    gio,
-    glib::{self, clone},
-    prelude::*,
-    subclass::prelude::*,
-    CompositeTemplate,
-};
+use gtk::{gio, glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 use once_cell::unsync::OnceCell;
 
+use self::row::Row;
 use super::note::{Tag, TagList};
 
 mod imp {
     use super::*;
 
     #[derive(Debug, Default, CompositeTemplate)]
-    #[template(resource = "/io/github/seadve/Noteworthy/ui/tag-dialog.ui")]
+    #[template(resource = "/io/github/seadve/Noteworthy/ui/tag-editor.ui")]
     pub struct TagEditor {
         #[template_child]
         pub list_view: TemplateChild<gtk::ListView>,
         #[template_child]
         pub search_entry: TemplateChild<gtk::SearchEntry>,
-        #[template_child]
-        pub create_tag_button_revealer: TemplateChild<gtk::Revealer>,
-        #[template_child]
-        pub create_tag_button_label: TemplateChild<gtk::Label>,
 
         pub tag_list: OnceCell<TagList>,
-        pub other_tag_list: OnceCell<TagList>,
     }
 
     #[glib::object_subclass]
@@ -37,7 +28,7 @@ mod imp {
         type ParentType = adw::Window;
 
         fn class_init(klass: &mut Self::Class) {
-            // Row::static_type();
+            Row::static_type();
             Self::bind_template(klass);
         }
 
@@ -88,22 +79,6 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
-            // let factory = gtk::SignalListItemFactory::new();
-            // factory.connect_setup(clone!(@weak obj => move |_, list_item| {
-            //     let tag_row = Row::new(&obj.other_tag_list());
-
-            //     let list_item_expression = gtk::ConstantExpression::new(list_item);
-            //     let item_expression = gtk::PropertyExpression::new(
-            //         gtk::ListItem::static_type(),
-            //         Some(&list_item_expression),
-            //         "item",
-            //     );
-            //     item_expression.bind(&tag_row, "tag", None);
-
-            //     list_item.set_child(Some(&tag_row));
-            // }));
-            // self.list_view.set_factory(Some(&factory));
-
             // self.search_entry.connect_text_notify(
             //     clone!(@weak obj => move |search_entry| {
             //         let search_entry_text = search_entry.text();
@@ -129,9 +104,8 @@ glib::wrapper! {
 }
 
 impl TagEditor {
-    pub fn new(tag_list: &TagList, other_tag_list: &TagList) -> Self {
-        glib::Object::new(&[("tag-list", tag_list), ("other-tag-list", other_tag_list)])
-            .expect("Failed to create TagEditor.")
+    pub fn new(tag_list: &TagList) -> Self {
+        glib::Object::new(&[("tag-list", tag_list)]).expect("Failed to create TagEditor.")
     }
 
     fn tag_list(&self) -> TagList {
