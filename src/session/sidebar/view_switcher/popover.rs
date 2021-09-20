@@ -132,6 +132,8 @@ mod imp {
             });
 
             self.listview.set_factory(Some(&factory));
+
+            // FIXME popdown this popover when something is clicked
         }
     }
 
