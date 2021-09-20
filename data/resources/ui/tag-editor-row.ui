@@ -10,14 +10,9 @@
           </object>
         </child>
         <child>
-          <object class="GtkLabel" id="label">
+          <object class="GtkEditableLabel" id="editable_label">
             <property name="xalign">0</property>
             <property name="hexpand">True</property>
-            <binding name="label">
-              <lookup name="name">
-                <lookup name="tag">NwtyTagEditorRow</lookup>
-              </lookup>
-            </binding>
           </object>
         </child>
       </object>

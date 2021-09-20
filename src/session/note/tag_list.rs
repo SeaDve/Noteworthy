@@ -113,7 +113,6 @@ impl TagList {
         tag.connect_name_notify(clone!(@weak self as obj => move |tag, _| {
             if let Some((position, _)) = obj.get_full_with_name(&tag.name()) {
                 obj.items_changed(position as u32, 1, 1);
-                log::info!("Test {}", position);
             }
         }));
 

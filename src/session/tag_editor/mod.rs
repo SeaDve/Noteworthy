@@ -46,7 +46,7 @@ mod imp {
                     "Tag List",
                     "List of tags",
                     TagList::static_type(),
-                    glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
+                    glib::ParamFlags::WRITABLE | glib::ParamFlags::CONSTRUCT_ONLY,
                 )]
             });
 
@@ -65,13 +65,6 @@ mod imp {
                     let tag_list = value.get().unwrap();
                     obj.set_tag_list(tag_list);
                 }
-                _ => unimplemented!(),
-            }
-        }
-
-        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
-            match pspec.name() {
-                "tag-list" => self.tag_list.get().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -106,11 +99,6 @@ glib::wrapper! {
 impl TagEditor {
     pub fn new(tag_list: &TagList) -> Self {
         glib::Object::new(&[("tag-list", tag_list)]).expect("Failed to create TagEditor.")
-    }
-
-    fn tag_list(&self) -> TagList {
-        let imp = imp::TagEditor::from_instance(self);
-        imp.tag_list.get().unwrap().clone()
     }
 
     fn set_tag_list(&self, tag_list: TagList) {

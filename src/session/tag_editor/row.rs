@@ -1,13 +1,9 @@
 use adw::{prelude::*, subclass::prelude::*};
-use gtk::{
-    glib::{self, clone},
-    subclass::prelude::*,
-    CompositeTemplate,
-};
+use gtk::{glib, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::RefCell;
 
-use super::{Tag, TagList};
+use super::Tag;
 
 mod imp {
     use super::*;
@@ -16,7 +12,9 @@ mod imp {
     #[template(resource = "/io/github/seadve/Noteworthy/ui/tag-editor-row.ui")]
     pub struct Row {
         #[template_child]
-        pub label: TemplateChild<gtk::Label>,
+        pub editable_label: TemplateChild<gtk::EditableLabel>,
+
+        pub binding: RefCell<Option<glib::Binding>>,
 
         pub tag: RefCell<Option<Tag>>,
     }
@@ -45,7 +43,7 @@ mod imp {
                     "tag",
                     "The tag represented by this row",
                     Tag::static_type(),
-                    glib::ParamFlags::READWRITE,
+                    glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                 )]
             });
 
@@ -54,7 +52,7 @@ mod imp {
 
         fn set_property(
             &self,
-            _obj: &Self::Type,
+            obj: &Self::Type,
             _id: usize,
             value: &glib::Value,
             pspec: &glib::ParamSpec,
@@ -62,15 +60,15 @@ mod imp {
             match pspec.name() {
                 "tag" => {
                     let tag = value.get().unwrap();
-                    self.tag.replace(tag);
+                    obj.set_tag(tag);
                 }
                 _ => unimplemented!(),
             }
         }
 
-        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+        fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "tag" => self.tag.borrow().to_value(),
+                "tag" => obj.tag().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -91,11 +89,31 @@ glib::wrapper! {
 }
 
 impl Row {
-    pub fn new(other_tag_list: &TagList) -> Self {
-        glib::Object::new(&[("other-tag-list", other_tag_list)]).expect("Failed to create Row")
+    pub fn new() -> Self {
+        glib::Object::new(&[]).expect("Failed to create Row")
+    }
+
+    fn set_tag(&self, tag: Option<Tag>) {
+        let imp = imp::Row::from_instance(self);
+
+        if let Some(binding) = imp.binding.take() {
+            binding.unbind();
+        }
+
+        if let Some(ref tag) = tag {
+            let binding = tag
+                .bind_property("name", &imp.editable_label.get(), "text")
+                .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
+                .build();
+            imp.binding.replace(binding);
+        }
+
+        imp.tag.replace(tag);
+        self.notify("tag");
     }
 
     fn tag(&self) -> Option<Tag> {
-        self.property("tag").unwrap().get().unwrap()
+        let imp = imp::Row::from_instance(self);
+        imp.tag.borrow().clone()
     }
 }
