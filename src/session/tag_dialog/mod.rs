@@ -132,6 +132,17 @@ mod imp {
                 list_item.set_child(Some(&tag_row));
             }));
             self.list_view.set_factory(Some(&factory));
+
+            self.search_entry.connect_text_notify(
+                clone!(@weak obj => move |search_entry| {
+                    let search_entry_text = search_entry.text();
+                    let does_contain_tag = obj.tag_list().contains(Tag::new(&search_entry_text));
+                    let is_search_entry_empty = search_entry_text.is_empty();
+                    let imp = imp::TagDialog::from_instance(&obj);
+                    imp.create_tag_button_revealer.set_reveal_child(!does_contain_tag && !is_search_entry_empty);
+                    imp.create_tag_button_label.set_label(&gettext!("Create “{}”", search_entry_text));
+                }),
+            );
         }
     }
 
@@ -183,17 +194,6 @@ impl TagDialog {
             .bind_property("text", &filter, "search")
             .flags(glib::BindingFlags::SYNC_CREATE)
             .build();
-
-        imp.search_entry.connect_text_notify(
-            clone!(@weak self as obj => move |search_entry| {
-                let search_entry_text = search_entry.text();
-                let does_contain_tag = obj.tag_list().contains(Tag::new(&search_entry_text));
-                let is_search_entry_empty = search_entry_text.is_empty();
-                let imp = imp::TagDialog::from_instance(&obj);
-                imp.create_tag_button_revealer.set_reveal_child(!does_contain_tag && !is_search_entry_empty);
-                imp.create_tag_button_label.set_label(&gettext!("Create “{}”", search_entry_text));
-            }),
-        );
 
         let selection_model = gtk::NoSelection::new(Some(&filter_model));
         imp.list_view.set_model(Some(&selection_model));
