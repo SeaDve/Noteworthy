@@ -136,7 +136,7 @@ mod imp {
             self.search_entry.connect_text_notify(
                 clone!(@weak obj => move |search_entry| {
                     let search_entry_text = search_entry.text();
-                    let does_contain_tag = obj.tag_list().contains(Tag::new(&search_entry_text));
+                    let does_contain_tag = obj.tag_list().contains_with_name(&search_entry_text);
                     let is_search_entry_empty = search_entry_text.is_empty();
                     let imp = imp::TagDialog::from_instance(&obj);
                     imp.create_tag_button_revealer.set_reveal_child(!does_contain_tag && !is_search_entry_empty);

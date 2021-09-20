@@ -104,7 +104,7 @@ impl TagList {
     }
 
     pub fn append(&self, tag: Tag) -> bool {
-        let imp = &imp::TagList::from_instance(self);
+        let imp = imp::TagList::from_instance(self);
 
         let is_appended = {
             let mut list = imp.list.borrow_mut();
@@ -120,7 +120,7 @@ impl TagList {
 
     // TODO make the methods below take in only a reference of tag
     pub fn remove(&self, tag: Tag) -> bool {
-        let imp = &imp::TagList::from_instance(self);
+        let imp = imp::TagList::from_instance(self);
 
         let removed = {
             let mut list = imp.list.borrow_mut();
@@ -135,14 +135,19 @@ impl TagList {
     }
 
     pub fn contains(&self, tag: Tag) -> bool {
-        let imp = &imp::TagList::from_instance(self);
+        let imp = imp::TagList::from_instance(self);
         imp.list.borrow().contains(&TagWrapper(tag))
+    }
+
+    pub fn contains_with_name(&self, name: &str) -> bool {
+        let identifier = TagIdentifier::from_str(name);
+        let imp = imp::TagList::from_instance(self);
+        imp.list.borrow().contains(&identifier)
     }
 
     pub fn find_with_name(&self, name: &str) -> Option<Tag> {
         let identifier = TagIdentifier::from_str(name);
-
-        let imp = &imp::TagList::from_instance(self);
+        let imp = imp::TagList::from_instance(self);
         imp.list
             .borrow()
             .get(&identifier)
@@ -152,7 +157,7 @@ impl TagList {
 
     // FIXME remove this
     pub fn dbg(&self) {
-        let imp = &imp::TagList::from_instance(self);
+        let imp = imp::TagList::from_instance(self);
         dbg!(imp
             .list
             .borrow()
