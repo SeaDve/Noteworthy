@@ -76,6 +76,13 @@ impl Tag {
     pub fn name(&self) -> String {
         self.property("name").unwrap().get().unwrap()
     }
+
+    pub fn connect_name_notify<F: Fn(&Self, &glib::ParamSpec) + 'static>(
+        &self,
+        f: F,
+    ) -> glib::SignalHandlerId {
+        self.connect_notify_local(Some("name"), f)
+    }
 }
 
 // FIXME better ser & de

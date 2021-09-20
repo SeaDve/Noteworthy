@@ -1,5 +1,9 @@
 use adw::subclass::prelude::*;
-use gtk::{gio, glib, prelude::*};
+use gtk::{
+    gio,
+    glib::{self, clone},
+    prelude::*,
+};
 use indexmap::IndexSet;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -106,6 +110,13 @@ impl TagList {
     pub fn append(&self, tag: Tag) -> bool {
         let imp = imp::TagList::from_instance(self);
 
+        tag.connect_name_notify(clone!(@weak self as obj => move |tag, _| {
+            if let Some((position, _)) = obj.get_full_with_name(&tag.name()) {
+                obj.items_changed(position as u32, 1, 1);
+                log::info!("Test {}", position);
+            }
+        }));
+
         let is_appended = {
             let mut list = imp.list.borrow_mut();
             list.insert(TagWrapper(tag))
@@ -153,6 +164,15 @@ impl TagList {
             .get(&identifier)
             .map(TagWrapper::inner_ref)
             .cloned()
+    }
+
+    fn get_full_with_name(&self, name: &str) -> Option<(usize, Tag)> {
+        let imp = imp::TagList::from_instance(self);
+        let identifier = TagIdentifier::from_str(name);
+        imp.list
+            .borrow()
+            .get_full(&identifier)
+            .map(|(pos, tag_wrapper)| (pos, tag_wrapper.inner_ref().clone()))
     }
 
     // FIXME remove this

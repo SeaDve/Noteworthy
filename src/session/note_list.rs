@@ -101,7 +101,7 @@ impl NoteList {
         imp.list
             .borrow()
             .get_full(note_id)
-            .map(|(pos, note_id, room)| (pos, note_id.clone(), room.clone()))
+            .map(|(pos, note_id, note)| (pos, note_id.clone(), note.clone()))
     }
 
     pub fn iter(&self) -> Iter {
