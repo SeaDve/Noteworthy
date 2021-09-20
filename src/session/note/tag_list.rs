@@ -145,11 +145,6 @@ impl TagList {
         removed.is_some()
     }
 
-    pub fn contains(&self, tag: Tag) -> bool {
-        let imp = imp::TagList::from_instance(self);
-        imp.list.borrow().contains(&TagWrapper(tag))
-    }
-
     pub fn contains_with_name(&self, name: &str) -> bool {
         let identifier = TagIdentifier::from_str(name);
         let imp = imp::TagList::from_instance(self);

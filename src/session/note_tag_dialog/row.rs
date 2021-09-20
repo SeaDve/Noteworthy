@@ -114,7 +114,7 @@ mod imp {
             let is_checked_expression = gtk::ClosureExpression::new(
                 clone!(@weak obj => @default-return false, move |args| {
                     let tag: Option<Tag> = args[1].get().unwrap();
-                    tag.map_or(false, |tag| obj.other_tag_list().contains(tag))
+                    tag.map_or(false, |tag| obj.other_tag_list().contains_with_name(&tag.name()))
                 }),
                 &[tag_expression.upcast()],
             );
