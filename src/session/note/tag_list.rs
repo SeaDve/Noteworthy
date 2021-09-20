@@ -31,6 +31,26 @@ impl TagWrapper {
     }
 }
 
+struct TagIdentifier<'a>(&'a str);
+
+impl indexmap::Equivalent<TagWrapper> for TagIdentifier<'_> {
+    fn equivalent(&self, key: &TagWrapper) -> bool {
+        self.0 == key.inner_ref().name()
+    }
+}
+
+impl std::hash::Hash for TagIdentifier<'_> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.0.hash(state);
+    }
+}
+
+impl<'a> TagIdentifier<'a> {
+    pub fn from_str(string: &'a str) -> Self {
+        Self(string)
+    }
+}
+
 mod imp {
     use super::*;
 
@@ -117,6 +137,17 @@ impl TagList {
     pub fn contains(&self, tag: Tag) -> bool {
         let imp = &imp::TagList::from_instance(self);
         imp.list.borrow().contains(&TagWrapper(tag))
+    }
+
+    pub fn find_with_name(&self, name: &str) -> Option<Tag> {
+        let identifier = TagIdentifier::from_str(name);
+
+        let imp = &imp::TagList::from_instance(self);
+        imp.list
+            .borrow()
+            .get(&identifier)
+            .map(TagWrapper::inner_ref)
+            .cloned()
     }
 
     // FIXME remove this
