@@ -16,8 +16,8 @@
     <file compressed="true" preprocess="xml-stripblanks">ui/sidebar-view-switcher.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/sidebar-view-switcher-item-row.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/sidebar-view-switcher-popover.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">ui/tag-dialog.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">ui/tag-dialog-row.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">ui/note-tag-dialog.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">ui/note-tag-dialog-row.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/window.ui</file>
     <file compressed="true">style.css</file>
   </gresource>

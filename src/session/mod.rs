@@ -4,6 +4,7 @@ mod note_list;
 mod note_manager;
 mod note_tag_dialog;
 mod sidebar;
+mod tag_editor;
 
 use adw::subclass::prelude::*;
 use gtk::{

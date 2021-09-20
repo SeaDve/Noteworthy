@@ -13,7 +13,7 @@ mod imp {
     use super::*;
 
     #[derive(Debug, Default, CompositeTemplate)]
-    #[template(resource = "/io/github/seadve/Noteworthy/ui/tag-dialog-row.ui")]
+    #[template(resource = "/io/github/seadve/Noteworthy/ui/note-tag-dialog-row.ui")]
     pub struct Row {
         #[template_child]
         pub label: TemplateChild<gtk::Label>,

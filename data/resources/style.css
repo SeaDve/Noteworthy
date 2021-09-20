@@ -75,11 +75,11 @@
 }
 
 
-.tag-dialog-list-view row {
+.note-tag-dialog-list-view row {
   padding: 12px;
 }
 
-.tag-dialog-create-tag-button {
+.note-tag-dialog-create-tag-button {
   padding-top: 9px;
   padding-bottom: 9px;
   padding-left: 12px;
@@ -89,10 +89,10 @@
   color: @theme_text_color;
 }
 
-.tag-dialog-create-tag-button:hover {
+.note-tag-dialog-create-tag-button:hover {
   background-color: @theme_bg_color;
 }
 
-.tag-dialog-create-tag-button label {
+.note-tag-dialog-create-tag-button label {
   font-weight: 400;
 }

@@ -32,7 +32,7 @@
             <property name="transition-type">slide-down</property>
             <property name="child">
               <object class="GtkButton">
-                <property name="action-name">tag-dialog.create-tag</property>
+                <property name="action-name">note-tag-dialog.create-tag</property>
                 <property name="child">
                   <object class="GtkBox">
                     <property name="spacing">12</property>
@@ -50,7 +50,7 @@
                   </object>
                 </property>
                 <style>
-                  <class name="tag-dialog-create-tag-button"/>
+                  <class name="note-tag-dialog-create-tag-button"/>
                 </style>
               </object>
             </property>
@@ -63,7 +63,7 @@
             <property name="child">
               <object class="GtkListView" id="list_view">
                 <style>
-                  <class name="tag-dialog-list-view"/>
+                  <class name="note-tag-dialog-list-view"/>
                 </style>
               </object>
             </property>

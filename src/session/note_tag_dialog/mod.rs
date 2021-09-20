@@ -18,7 +18,7 @@ mod imp {
     use super::*;
 
     #[derive(Debug, Default, CompositeTemplate)]
-    #[template(resource = "/io/github/seadve/Noteworthy/ui/tag-dialog.ui")]
+    #[template(resource = "/io/github/seadve/Noteworthy/ui/note-tag-dialog.ui")]
     pub struct NoteTagDialog {
         #[template_child]
         pub list_view: TemplateChild<gtk::ListView>,
@@ -43,7 +43,7 @@ mod imp {
             Row::static_type();
             Self::bind_template(klass);
 
-            klass.install_action("tag-dialog.create-tag", None, move |obj, _, _| {
+            klass.install_action("note-tag-dialog.create-tag", None, move |obj, _, _| {
                 let imp = imp::NoteTagDialog::from_instance(obj);
                 let tag_name = imp.search_entry.text();
                 let new_tag = Tag::new(&tag_name);
