@@ -26,7 +26,7 @@ mod imp {
 
     #[glib::object_subclass]
     impl ObjectSubclass for Row {
-        const NAME: &'static str = "NwtyTagDialogRow";
+        const NAME: &'static str = "NwtyNoteTagDialogRow";
         type Type = super::Row;
         type ParentType = adw::Bin;
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <template class="NwtyTagDialogRow" parent="AdwBin">
+  <template class="NwtyNoteTagDialogRow" parent="AdwBin">
     <property name="child">
       <object class="GtkBox">
         <property name="spacing">12</property>
@@ -15,7 +15,7 @@
             <property name="hexpand">True</property>
             <binding name="label">
               <lookup name="name">
-                <lookup name="tag">NwtyTagDialogRow</lookup>
+                <lookup name="tag">NwtyNoteTagDialogRow</lookup>
               </lookup>
             </binding>
           </object>

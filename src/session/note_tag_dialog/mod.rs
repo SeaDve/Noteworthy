@@ -19,7 +19,7 @@ mod imp {
 
     #[derive(Debug, Default, CompositeTemplate)]
     #[template(resource = "/io/github/seadve/Noteworthy/ui/tag-dialog.ui")]
-    pub struct TagDialog {
+    pub struct NoteTagDialog {
         #[template_child]
         pub list_view: TemplateChild<gtk::ListView>,
         #[template_child]
@@ -34,9 +34,9 @@ mod imp {
     }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for TagDialog {
-        const NAME: &'static str = "NwtyTagDialog";
-        type Type = super::TagDialog;
+    impl ObjectSubclass for NoteTagDialog {
+        const NAME: &'static str = "NwtyNoteTagDialog";
+        type Type = super::NoteTagDialog;
         type ParentType = adw::Window;
 
         fn class_init(klass: &mut Self::Class) {
@@ -44,7 +44,7 @@ mod imp {
             Self::bind_template(klass);
 
             klass.install_action("tag-dialog.create-tag", None, move |obj, _, _| {
-                let imp = imp::TagDialog::from_instance(obj);
+                let imp = imp::NoteTagDialog::from_instance(obj);
                 let tag_name = imp.search_entry.text();
                 let new_tag = Tag::new(&tag_name);
 
@@ -61,7 +61,7 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for TagDialog {
+    impl ObjectImpl for NoteTagDialog {
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
@@ -138,7 +138,7 @@ mod imp {
                     let search_entry_text = search_entry.text();
                     let does_contain_tag = obj.tag_list().contains_with_name(&search_entry_text);
                     let is_search_entry_empty = search_entry_text.is_empty();
-                    let imp = imp::TagDialog::from_instance(&obj);
+                    let imp = imp::NoteTagDialog::from_instance(&obj);
                     imp.create_tag_button_revealer.set_reveal_child(!does_contain_tag && !is_search_entry_empty);
                     imp.create_tag_button_label.set_label(&gettext!("Create “{}”", search_entry_text));
                 }),
@@ -146,40 +146,40 @@ mod imp {
         }
     }
 
-    impl WidgetImpl for TagDialog {}
-    impl WindowImpl for TagDialog {}
-    impl AdwWindowImpl for TagDialog {}
+    impl WidgetImpl for NoteTagDialog {}
+    impl WindowImpl for NoteTagDialog {}
+    impl AdwWindowImpl for NoteTagDialog {}
 }
 
 glib::wrapper! {
-    pub struct TagDialog(ObjectSubclass<imp::TagDialog>)
+    pub struct NoteTagDialog(ObjectSubclass<imp::NoteTagDialog>)
         @extends gtk::Widget, gtk::Window, adw::Window,
         @implements gio::ActionMap, gio::ActionGroup;
 }
 
-impl TagDialog {
+impl NoteTagDialog {
     pub fn new(tag_list: &TagList, other_tag_list: &TagList) -> Self {
         glib::Object::new(&[("tag-list", tag_list), ("other-tag-list", other_tag_list)])
-            .expect("Failed to create TagDialog.")
+            .expect("Failed to create NoteTagDialog.")
     }
 
     fn other_tag_list(&self) -> TagList {
-        let imp = imp::TagDialog::from_instance(self);
+        let imp = imp::NoteTagDialog::from_instance(self);
         imp.other_tag_list.get().unwrap().clone()
     }
 
     fn set_other_tag_list(&self, other_tag_list: TagList) {
-        let imp = imp::TagDialog::from_instance(self);
+        let imp = imp::NoteTagDialog::from_instance(self);
         imp.other_tag_list.set(other_tag_list).unwrap();
     }
 
     fn tag_list(&self) -> TagList {
-        let imp = imp::TagDialog::from_instance(self);
+        let imp = imp::NoteTagDialog::from_instance(self);
         imp.tag_list.get().unwrap().clone()
     }
 
     fn set_tag_list(&self, tag_list: TagList) {
-        let imp = imp::TagDialog::from_instance(self);
+        let imp = imp::NoteTagDialog::from_instance(self);
 
         let tag_name_expression =
             gtk::ClosureExpression::new(|value| value[0].get::<Tag>().unwrap().name(), &[]);

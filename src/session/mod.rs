@@ -2,8 +2,8 @@ mod content;
 mod note;
 mod note_list;
 mod note_manager;
+mod note_tag_dialog;
 mod sidebar;
-mod tag_dialog;
 
 use adw::subclass::prelude::*;
 use gtk::{
@@ -17,8 +17,8 @@ use once_cell::unsync::OnceCell;
 use std::cell::RefCell;
 
 use self::{
-    content::Content, note::Note, note_list::NoteList, note_manager::NoteManager, sidebar::Sidebar,
-    tag_dialog::TagDialog,
+    content::Content, note::Note, note_list::NoteList, note_manager::NoteManager,
+    note_tag_dialog::NoteTagDialog, sidebar::Sidebar,
 };
 
 mod imp {
@@ -61,14 +61,14 @@ mod imp {
                 let tag_list = imp.note_manager.get().unwrap().tag_list();
                 let other_tag_list = obj.selected_note().unwrap().metadata().tag_list();
 
-                let tag_dialog = TagDialog::new(&tag_list, &other_tag_list);
-                tag_dialog.set_modal(true);
-                tag_dialog.set_transient_for(
+                let note_tag_dialog = NoteTagDialog::new(&tag_list, &other_tag_list);
+                note_tag_dialog.set_modal(true);
+                note_tag_dialog.set_transient_for(
                     obj.root()
                         .map(|w| w.downcast::<gtk::Window>().unwrap())
                         .as_ref(),
                 );
-                tag_dialog.present();
+                note_tag_dialog.present();
             });
         }
 
