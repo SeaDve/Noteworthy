@@ -15,6 +15,7 @@ pub enum ItemKind {
     Separator,
     Category,
     AllNotes,
+    EditTags,
     Tag(Tag),
     Trash,
 }

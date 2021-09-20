@@ -51,6 +51,10 @@ mod imp {
             Content::static_type();
             Self::bind_template(klass);
 
+            klass.install_action("session.edit-tags", None, move |obj, _, _| {
+                log::error!("This should open a tags window");
+            });
+
             klass.install_action("session.edit-note-tags", None, move |obj, _, _| {
                 let imp = imp::Session::from_instance(obj);
 

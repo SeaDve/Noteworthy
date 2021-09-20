@@ -18,6 +18,8 @@ mod imp {
         #[template_child]
         pub category_child: TemplateChild<gtk::Label>,
         #[template_child]
+        pub edit_tags_child: TemplateChild<gtk::Button>,
+        #[template_child]
         pub bin: TemplateChild<adw::Bin>,
         #[template_child]
         pub select_icon: TemplateChild<gtk::Image>,
@@ -170,6 +172,11 @@ impl ItemRow {
                     ItemKind::Category => {
                         imp.category_child.set_label(&item.display_name().unwrap());
                         imp.bin.set_child(Some(&imp.category_child.get()));
+                        self.set_margin_start(6);
+                        self.set_margin_end(6);
+                    }
+                    ItemKind::EditTags => {
+                        imp.bin.set_child(Some(&imp.edit_tags_child.get()));
                         self.set_margin_start(6);
                         self.set_margin_end(6);
                     }

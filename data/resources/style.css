@@ -33,6 +33,23 @@
   background: none;
 }
 
+.sidebar-view-switcher-item-row-edit-tags {
+  padding: 0px;
+  border-radius: 3px;
+  transition: box-shadow 0s;
+  background-color: @theme_base_color;
+  color: @theme_text_color;
+}
+
+.sidebar-view-switcher-item-row-edit-tags:hover {
+  background-color: @theme_bg_color;
+  box-shadow: 0 0 0 4px @theme_bg_color;
+}
+
+.sidebar-view-switcher-item-row-edit-tags label {
+  font-weight: 400;
+}
+
 
 .content-view {
   padding-left: 24px;

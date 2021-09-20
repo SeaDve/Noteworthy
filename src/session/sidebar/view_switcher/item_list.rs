@@ -10,7 +10,7 @@ mod imp {
 
     #[derive(Debug, Default)]
     pub struct ItemList {
-        pub list: OnceCell<[glib::Object; 5]>,
+        pub list: OnceCell<[glib::Object; 6]>,
     }
 
     #[glib::object_subclass]
@@ -92,10 +92,11 @@ impl ItemList {
                 None::<TagList>,
             )
             .upcast(),
-            Item::new(ItemKind::Separator, None, None::<TagList>).upcast(),
+            Item::new(ItemKind::Separator, None, None).upcast(),
             Item::new(ItemKind::Category, Some(gettext("Tags")), Some(tag_list)).upcast(),
-            Item::new(ItemKind::Separator, None, None::<TagList>).upcast(),
-            Item::new(ItemKind::Trash, Some(gettext("Trash")), None::<TagList>).upcast(),
+            Item::new(ItemKind::EditTags, None, None).upcast(),
+            Item::new(ItemKind::Separator, None, None).upcast(),
+            Item::new(ItemKind::Trash, Some(gettext("Trash")), None).upcast(),
         ];
         let len = list.len() as u32;
 

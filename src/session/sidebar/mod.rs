@@ -221,7 +221,9 @@ impl Sidebar {
                             ItemKind::AllNotes => !note.is_trashed(),
                             ItemKind::Trash => note.is_trashed(),
                             ItemKind::Tag(tag) => note.tag_list().contains(tag) && !note.is_trashed(),
-                            ItemKind::Separator | ItemKind::Category => unreachable!("Separator cannot be selected"),
+                            ItemKind::Separator | ItemKind::Category | ItemKind::EditTags => {
+                                unreachable!("Separator, Category, or EditTags cannot be selected");
+                            }
                         }
                     })
             }),

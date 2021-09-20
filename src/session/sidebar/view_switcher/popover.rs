@@ -123,7 +123,7 @@ mod imp {
 
                 if let Some(item) = item {
                     match item.item_kind() {
-                        ItemKind::Separator | ItemKind::Category => {
+                        ItemKind::Separator | ItemKind::Category | ItemKind::EditTags => {
                             list_item.set_selectable(false);
                         }
                         _ => (),
