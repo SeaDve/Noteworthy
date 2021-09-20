@@ -177,7 +177,11 @@ impl Popover {
                         if let Some(item) = si.downcast_ref::<Item>() {
                             item.clone()
                         } else if let Some(tag) = si.downcast_ref::<Tag>() {
-                            Item::new(ItemKind::Tag(tag.clone()), Some(tag.name()), None)
+                            let item = Item::new(ItemKind::Tag(tag.clone()), None, None);
+                            tag.bind_property("name", &item, "display-name")
+                                .flags(glib::BindingFlags::SYNC_CREATE)
+                                .build();
+                            item
                         } else {
                             panic!("Wrong row item: {:?}", si);
                         }

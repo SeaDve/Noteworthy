@@ -71,7 +71,7 @@ mod imp {
                         "Display Name",
                         "Display name of this item",
                         None,
-                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT,
                     ),
                     glib::ParamSpec::new_object(
                         "model",
