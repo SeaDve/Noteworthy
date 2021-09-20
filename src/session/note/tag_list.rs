@@ -156,7 +156,7 @@ impl TagList {
         imp.list.borrow().contains(&identifier)
     }
 
-    pub fn find_with_name(&self, name: &str) -> Option<Tag> {
+    pub fn get_with_name(&self, name: &str) -> Option<Tag> {
         let identifier = TagIdentifier::from_str(name);
         let imp = imp::TagList::from_instance(self);
         imp.list

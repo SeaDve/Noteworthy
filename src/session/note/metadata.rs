@@ -16,7 +16,7 @@ fn deserialize_from_existing_tag_list<'de, D: Deserializer<'de>>(
 
     let new_tag_list = TagList::new();
     for name in tag_name_list {
-        let new_tag = tag_list.find_with_name(&name).unwrap_or_else(|| {
+        let new_tag = tag_list.get_with_name(&name).unwrap_or_else(|| {
             log::error!("Tag with name '{}' not found, Creating new instead", &name);
             Tag::new(&name)
         });
