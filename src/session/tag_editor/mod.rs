@@ -5,7 +5,7 @@ use gtk::{gio, glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 use once_cell::unsync::OnceCell;
 
 use self::row::Row;
-use super::note::{Tag, TagList};
+use super::{tag::Tag, tag_list::TagList};
 
 mod imp {
     use super::*;
@@ -69,6 +69,13 @@ mod imp {
             }
         }
 
+        fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+            match pspec.name() {
+                "tag-list" => obj.tag_list().to_value(),
+                _ => unimplemented!(),
+            }
+        }
+
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
@@ -93,12 +100,17 @@ mod imp {
 glib::wrapper! {
     pub struct TagEditor(ObjectSubclass<imp::TagEditor>)
         @extends gtk::Widget, gtk::Window, adw::Window,
-        @implements gio::ActionMap, gio::ActionGroup;
+        @implements gio::ActionMap, gio::ActionGroup, gtk::Root;
 }
 
 impl TagEditor {
     pub fn new(tag_list: &TagList) -> Self {
         glib::Object::new(&[("tag-list", tag_list)]).expect("Failed to create TagEditor.")
+    }
+
+    pub fn tag_list(&self) -> TagList {
+        let imp = imp::TagEditor::from_instance(self);
+        imp.tag_list.get().unwrap().clone()
     }
 
     fn set_tag_list(&self, tag_list: TagList) {

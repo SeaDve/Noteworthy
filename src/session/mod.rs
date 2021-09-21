@@ -4,7 +4,9 @@ mod note_list;
 mod note_manager;
 mod note_tag_dialog;
 mod sidebar;
+mod tag;
 mod tag_editor;
+mod tag_list;
 
 use adw::subclass::prelude::*;
 use gtk::{
@@ -96,6 +98,8 @@ mod imp {
                 let note_manager = obj.note_manager();
                 note_manager.load_data_file().await.expect("Failed to load data file");
                 note_manager.load_notes().await.expect("Failed to load files");
+
+                note_manager.tag_list().dbg();
 
                 let imp = imp::Session::from_instance(&obj);
                 imp.sidebar.set_note_list(note_manager.note_list());

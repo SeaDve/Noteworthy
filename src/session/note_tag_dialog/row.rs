@@ -7,7 +7,7 @@ use gtk::{
 
 use std::cell::RefCell;
 
-use super::{Tag, TagList};
+use super::{NoteTagList, Tag};
 
 mod imp {
     use super::*;
@@ -20,7 +20,7 @@ mod imp {
         #[template_child]
         pub check_button: TemplateChild<gtk::CheckButton>,
 
-        pub other_tag_list: RefCell<TagList>,
+        pub other_tag_list: RefCell<NoteTagList>,
         pub tag: RefCell<Option<Tag>>,
     }
 
@@ -48,7 +48,7 @@ mod imp {
                         "other-tag-list",
                         "Other Tag List",
                         "The tag list to compare with",
-                        TagList::static_type(),
+                        NoteTagList::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
                     glib::ParamSpec::new_object(
@@ -114,7 +114,7 @@ mod imp {
             let is_checked_expression = gtk::ClosureExpression::new(
                 clone!(@weak obj => @default-return false, move |args| {
                     let tag: Option<Tag> = args[1].get().unwrap();
-                    tag.map_or(false, |tag| obj.other_tag_list().contains_with_name(&tag.name()))
+                    tag.map_or(false, |tag| obj.other_tag_list().contains(&tag))
                 }),
                 &[tag_expression.upcast()],
             );
@@ -128,12 +128,12 @@ mod imp {
                         let tag_name = tag.name();
                         match check_button.is_active() {
                             true => {
-                                if !obj.other_tag_list().append(tag) {
+                                if obj.other_tag_list().append(tag).is_err() {
                                     log::warn!("Trying to append an existing tag: {}", tag_name);
                                 }
                             }
                             false => {
-                                if !obj.other_tag_list().remove(tag) {
+                                if obj.other_tag_list().remove(&tag).is_err() {
                                     log::warn!("Trying to remove a tag that doesn't exist in the list: {}", tag_name);
                                 }
                             }
@@ -154,11 +154,11 @@ glib::wrapper! {
 }
 
 impl Row {
-    pub fn new(other_tag_list: &TagList) -> Self {
+    pub fn new(other_tag_list: &NoteTagList) -> Self {
         glib::Object::new(&[("other-tag-list", other_tag_list)]).expect("Failed to create Row")
     }
 
-    fn other_tag_list(&self) -> TagList {
+    fn other_tag_list(&self) -> NoteTagList {
         self.property("other-tag-list").unwrap().get().unwrap()
     }
 

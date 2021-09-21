@@ -11,57 +11,13 @@ use std::cell::RefCell;
 
 use super::tag::Tag;
 
-// This is used for two different tags with the same name to be treated
-// as equal and have the same hash
-#[derive(Debug, Serialize, Deserialize, Eq)]
-#[serde(transparent)]
-pub struct TagWrapper(Tag);
-
-impl std::hash::Hash for TagWrapper {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.0.name().hash(state);
-    }
-}
-
-impl PartialEq for TagWrapper {
-    fn eq(&self, other: &TagWrapper) -> bool {
-        self.0.name() == other.0.name()
-    }
-}
-
-impl TagWrapper {
-    fn inner_ref(&self) -> &Tag {
-        &self.0
-    }
-}
-
-struct TagIdentifier<'a>(&'a str);
-
-impl indexmap::Equivalent<TagWrapper> for TagIdentifier<'_> {
-    fn equivalent(&self, key: &TagWrapper) -> bool {
-        self.0 == key.inner_ref().name()
-    }
-}
-
-impl std::hash::Hash for TagIdentifier<'_> {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.0.hash(state);
-    }
-}
-
-impl<'a> TagIdentifier<'a> {
-    pub fn from_str(string: &'a str) -> Self {
-        Self(string)
-    }
-}
-
 mod imp {
     use super::*;
 
-    #[derive(Debug, Default, Serialize, Deserialize)]
-    #[serde(transparent)]
+    #[derive(Debug, Default)]
     pub struct TagList {
-        pub list: RefCell<IndexSet<TagWrapper>>,
+        pub list: RefCell<IndexSet<Tag>>,
+        pub name_list: RefCell<IndexSet<String>>,
     }
 
     #[glib::object_subclass]
@@ -91,7 +47,7 @@ mod imp {
             self.list
                 .borrow()
                 .get_index(position as usize)
-                .map(|o| o.inner_ref().upcast_ref::<glib::Object>())
+                .map(|o| o.upcast_ref::<glib::Object>())
                 .cloned()
         }
     }
@@ -107,66 +63,108 @@ impl TagList {
         glib::Object::new(&[]).expect("Failed to create TagList.")
     }
 
-    pub fn append(&self, tag: Tag) -> bool {
+    pub fn append(&self, tag: Tag) -> anyhow::Result<()> {
         let imp = imp::TagList::from_instance(self);
 
+        let tag_name = tag.name();
+
+        if self.contains_with_name(&tag_name) {
+            anyhow::bail!("Cannot append exisiting tag with same name");
+        }
+
         tag.connect_name_notify(clone!(@weak self as obj => move |tag, _| {
-            if let Some((position, _)) = obj.get_full_with_name(&tag.name()) {
+            if let Some(position) = obj.get_index_of(tag) {
                 obj.items_changed(position as u32, 1, 1);
             }
         }));
 
-        let is_appended = {
+        let is_list_appended = {
             let mut list = imp.list.borrow_mut();
-            list.insert(TagWrapper(tag))
+            list.insert(tag)
         };
 
-        if is_appended {
+        let is_name_list_appended = {
+            let mut name_list = imp.name_list.borrow_mut();
+            name_list.insert(tag_name)
+        };
+
+        if is_list_appended || is_name_list_appended {
             self.items_changed(self.n_items() - 1, 0, 1);
+        } else {
+            anyhow::bail!("Cannot append exisiting tag");
         }
 
-        is_appended
+        Ok(())
     }
 
-    // TODO make the methods below take in only a reference of tag
-    pub fn remove(&self, tag: Tag) -> bool {
+    pub fn remove(&self, tag: &Tag) -> anyhow::Result<()> {
         let imp = imp::TagList::from_instance(self);
+
+        if self.contains_with_name(&tag.name()) {
+            anyhow::bail!("Cannot remove tag name that doesnt exist");
+        }
 
         let removed = {
             let mut list = imp.list.borrow_mut();
-            list.shift_remove_full(&TagWrapper(tag))
+            list.shift_remove_full(tag)
         };
+
+        {
+            let mut name_list = imp.name_list.borrow_mut();
+            debug_assert!(name_list.shift_remove_full(&tag.name()).is_some());
+        }
 
         if let Some((position, _)) = removed {
             self.items_changed(position as u32, 1, 0);
+        } else {
+            anyhow::bail!("Cannot remove tag that doesnt exist");
         }
 
-        removed.is_some()
+        Ok(())
     }
 
-    pub fn contains_with_name(&self, name: &str) -> bool {
-        let identifier = TagIdentifier::from_str(name);
+    pub fn rename_tag(&self, tag: &Tag, name: &str) -> anyhow::Result<()> {
+        if self.contains_with_name(name) {
+            anyhow::bail!("Cannot remove tag name that doesnt exist");
+        }
+
         let imp = imp::TagList::from_instance(self);
-        imp.list.borrow().contains(&identifier)
+
+        let previous_name = tag.name();
+
+        {
+            let mut name_list = imp.name_list.borrow_mut();
+            dbg!(&name_list);
+            debug_assert!(name_list.insert(name.to_string()));
+            dbg!(&name_list);
+            debug_assert!(name_list.swap_remove(&previous_name));
+            dbg!(&name_list);
+        }
+
+        tag.set_name(name);
+
+        Ok(())
+    }
+
+    pub fn contains(&self, tag: &Tag) -> bool {
+        let imp = imp::TagList::from_instance(self);
+        imp.list.borrow().contains(tag)
     }
 
     pub fn get_with_name(&self, name: &str) -> Option<Tag> {
-        let identifier = TagIdentifier::from_str(name);
         let imp = imp::TagList::from_instance(self);
-        imp.list
-            .borrow()
-            .get(&identifier)
-            .map(TagWrapper::inner_ref)
-            .cloned()
+        let index = imp.name_list.borrow().get_index_of(name)?;
+        imp.list.borrow().get_index(index).cloned()
     }
 
-    fn get_full_with_name(&self, name: &str) -> Option<(usize, Tag)> {
+    pub fn contains_with_name(&self, name: &str) -> bool {
         let imp = imp::TagList::from_instance(self);
-        let identifier = TagIdentifier::from_str(name);
-        imp.list
-            .borrow()
-            .get_full(&identifier)
-            .map(|(pos, tag_wrapper)| (pos, tag_wrapper.inner_ref().clone()))
+        imp.name_list.borrow().contains(name)
+    }
+
+    fn get_index_of(&self, tag: &Tag) -> Option<usize> {
+        let imp = imp::TagList::from_instance(self);
+        imp.list.borrow().get_index_of(tag)
     }
 
     // FIXME remove this
@@ -176,8 +174,9 @@ impl TagList {
             .list
             .borrow()
             .iter()
-            .map(|t| t.inner_ref().name())
+            .map(Tag::name)
             .collect::<Vec<String>>());
+        dbg!(imp.name_list.borrow());
     }
 }
 
@@ -185,18 +184,21 @@ impl TagList {
 impl Serialize for TagList {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let imp = imp::TagList::from_instance(self);
-        imp.serialize(serializer)
+        self.dbg();
+        imp.name_list.serialize(serializer)
     }
 }
 
 impl<'de> Deserialize<'de> for TagList {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let deserialized_priv = imp::TagList::deserialize(deserializer)?;
-        let deserialized_priv_list = deserialized_priv.list.take();
+        let string_set: IndexSet<String> = IndexSet::deserialize(deserializer)?;
 
         let new_tag_list = Self::new();
         let new_tag_list_priv = imp::TagList::from_instance(&new_tag_list);
-        new_tag_list_priv.list.replace(deserialized_priv_list);
+        new_tag_list_priv
+            .list
+            .replace(string_set.iter().map(|name| Tag::new(name)).collect());
+        new_tag_list_priv.name_list.replace(string_set);
 
         Ok(new_tag_list)
     }

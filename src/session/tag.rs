@@ -6,8 +6,7 @@ use std::cell::RefCell;
 mod imp {
     use super::*;
 
-    #[derive(Debug, Default, Serialize, Deserialize)]
-    #[serde(transparent)]
+    #[derive(Debug, Default)]
     pub struct Tag {
         pub name: RefCell<String>,
     }
@@ -73,6 +72,10 @@ impl Tag {
         glib::Object::new::<Self>(&[("name", &name.to_string())]).expect("Failed to create Tag.")
     }
 
+    pub fn set_name(&self, name: &str) {
+        self.set_property("name", name).unwrap();
+    }
+
     pub fn name(&self) -> String {
         self.property("name").unwrap().get().unwrap()
     }
@@ -85,18 +88,16 @@ impl Tag {
     }
 }
 
-// FIXME better ser & de
 impl Serialize for Tag {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let imp = imp::Tag::from_instance(self);
-        imp.serialize(serializer)
+        imp.name.serialize(serializer)
     }
 }
 
 impl<'de> Deserialize<'de> for Tag {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let imp = imp::Tag::deserialize(deserializer)?;
-        let name = imp.name.borrow();
+        let name = String::deserialize(deserializer)?;
         Ok(Self::new(&name))
     }
 }

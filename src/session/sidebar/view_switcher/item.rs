@@ -7,7 +7,7 @@ use gtk::{
 
 use std::cell::RefCell;
 
-use crate::session::note::{Tag, TagList};
+use super::{Tag, TagList};
 
 #[derive(Debug, Clone, GBoxed, PartialEq)]
 #[gboxed(type_name = "NwtySidebarViewSwitcherType")]

@@ -25,7 +25,7 @@ use self::{
     selection::Selection,
     view_switcher::{ItemKind, ViewSwitcher},
 };
-use super::{note::TagList, Note, NoteList, Session};
+use super::{tag_list::TagList, Note, NoteList, Session};
 
 mod imp {
     use super::*;
@@ -220,8 +220,8 @@ impl Sidebar {
                         match imp.view_switcher.selected_type() {
                             ItemKind::AllNotes => !note.is_trashed(),
                             ItemKind::Trash => note.is_trashed(),
-                            ItemKind::Tag(tag) => {
-                                note.tag_list().contains_with_name(&tag.name()) && !note.is_trashed()
+                            ItemKind::Tag(ref tag) => {
+                                note.tag_list().contains(tag) && !note.is_trashed()
                             }
                             ItemKind::Separator | ItemKind::Category | ItemKind::EditTags => {
                                 unreachable!("Separator, Category, or EditTags cannot be selected");

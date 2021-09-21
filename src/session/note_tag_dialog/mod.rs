@@ -12,7 +12,7 @@ use gtk::{
 use once_cell::unsync::OnceCell;
 
 use self::row::Row;
-use super::note::{Tag, TagList};
+use super::{note::NoteTagList, tag::Tag, tag_list::TagList};
 
 mod imp {
     use super::*;
@@ -30,7 +30,7 @@ mod imp {
         pub create_tag_button_label: TemplateChild<gtk::Label>,
 
         pub tag_list: OnceCell<TagList>,
-        pub other_tag_list: OnceCell<TagList>,
+        pub other_tag_list: OnceCell<NoteTagList>,
     }
 
     #[glib::object_subclass]
@@ -48,8 +48,8 @@ mod imp {
                 let tag_name = imp.search_entry.text();
                 let new_tag = Tag::new(&tag_name);
 
-                obj.other_tag_list().append(new_tag.clone());
-                obj.tag_list().append(new_tag);
+                obj.other_tag_list().append(new_tag.clone()).unwrap();
+                obj.tag_list().append(new_tag).unwrap();
                 // TODO new_tag should be added on top
 
                 imp.search_entry.set_text("");
@@ -77,7 +77,7 @@ mod imp {
                         "other-tag-list",
                         "Other Tag List",
                         "The list of tags to compare with",
-                        TagList::static_type(),
+                        NoteTagList::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
                 ]
@@ -158,17 +158,17 @@ glib::wrapper! {
 }
 
 impl NoteTagDialog {
-    pub fn new(tag_list: &TagList, other_tag_list: &TagList) -> Self {
+    pub fn new(tag_list: &TagList, other_tag_list: &NoteTagList) -> Self {
         glib::Object::new(&[("tag-list", tag_list), ("other-tag-list", other_tag_list)])
             .expect("Failed to create NoteTagDialog.")
     }
 
-    fn other_tag_list(&self) -> TagList {
+    fn other_tag_list(&self) -> NoteTagList {
         let imp = imp::NoteTagDialog::from_instance(self);
         imp.other_tag_list.get().unwrap().clone()
     }
 
-    fn set_other_tag_list(&self, other_tag_list: TagList) {
+    fn set_other_tag_list(&self, other_tag_list: NoteTagList) {
         let imp = imp::NoteTagDialog::from_instance(self);
         imp.other_tag_list.set(other_tag_list).unwrap();
     }

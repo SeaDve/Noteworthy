@@ -4,7 +4,7 @@ use adw::{prelude::*, subclass::prelude::*};
 use gtk::{glib, subclass::prelude::*, CompositeTemplate};
 
 use self::row::Row;
-use crate::session::note::TagList;
+use crate::session::note::NoteTagList;
 
 mod imp {
     use super::*;
@@ -40,7 +40,7 @@ mod imp {
                     "tag-list",
                     "Tag List",
                     "The model of this view",
-                    TagList::static_type(),
+                    NoteTagList::static_type(),
                     glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                 )]
             });
@@ -84,7 +84,7 @@ impl TagListView {
         glib::Object::new(&[]).expect("Failed to create TagListView")
     }
 
-    pub fn set_tag_list(&self, tag_list: TagList) {
+    pub fn set_tag_list(&self, tag_list: NoteTagList) {
         let imp = imp::TagListView::from_instance(self);
 
         let selection_model = gtk::NoSelection::new(Some(&tag_list));

@@ -3,28 +3,8 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use std::cell::{Cell, RefCell};
 
-use super::{Tag, TagList};
-use crate::{date::Date, Application};
-
-fn deserialize_from_existing_tag_list<'de, D: Deserializer<'de>>(
-    deserializer: D,
-) -> Result<RefCell<TagList>, D::Error> {
-    let tag_name_list: Vec<String> = Vec::deserialize(deserializer)?;
-
-    let app = Application::default();
-    let tag_list = app.main_window().session().note_manager().tag_list();
-
-    let new_tag_list = TagList::new();
-    for name in tag_name_list {
-        let new_tag = tag_list.get_with_name(&name).unwrap_or_else(|| {
-            log::error!("Tag with name '{}' not found, Creating new instead", &name);
-            Tag::new(&name)
-        });
-        new_tag_list.append(new_tag);
-    }
-
-    Ok(RefCell::new(new_tag_list))
-}
+use super::note_tag_list::NoteTagList;
+use crate::date::Date;
 
 mod imp {
     use super::*;
@@ -33,8 +13,7 @@ mod imp {
     #[serde(default)]
     pub struct Metadata {
         pub title: RefCell<String>,
-        #[serde(deserialize_with = "deserialize_from_existing_tag_list")]
-        pub tag_list: RefCell<TagList>,
+        pub tag_list: RefCell<NoteTagList>,
         pub last_modified: RefCell<Date>,
         pub is_pinned: Cell<bool>,
         pub is_trashed: Cell<bool>,
@@ -67,7 +46,7 @@ mod imp {
                         "tag-list",
                         "Tag List",
                         "List containing the tags",
-                        TagList::static_type(),
+                        NoteTagList::static_type(),
                         glib::ParamFlags::READWRITE,
                     ),
                     glib::ParamSpec::new_boxed(
@@ -161,11 +140,11 @@ impl Metadata {
         self.property("title").unwrap().get().unwrap()
     }
 
-    pub fn set_tag_list(&self, tag_list: TagList) {
+    pub fn set_tag_list(&self, tag_list: NoteTagList) {
         self.set_property("tag-list", tag_list).unwrap();
     }
 
-    pub fn tag_list(&self) -> TagList {
+    pub fn tag_list(&self) -> NoteTagList {
         self.property("tag-list").unwrap().get().unwrap()
     }
 
@@ -197,6 +176,7 @@ impl Metadata {
 impl Serialize for Metadata {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let imp = imp::Metadata::from_instance(self);
+        imp.tag_list.borrow().dbg();
         imp.serialize(serializer)
     }
 }

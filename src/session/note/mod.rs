@@ -1,7 +1,6 @@
 mod id;
 mod metadata;
-mod tag;
-mod tag_list;
+mod note_tag_list;
 
 use gray_matter::{engine::YAML, Matter};
 use gtk::{
@@ -14,7 +13,7 @@ use once_cell::unsync::OnceCell;
 
 use std::cell::Cell;
 
-pub use self::{id::Id, metadata::Metadata, tag::Tag, tag_list::TagList};
+pub use self::{id::Id, metadata::Metadata, note_tag_list::NoteTagList};
 use crate::Result;
 
 mod imp {

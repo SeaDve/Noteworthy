@@ -3,8 +3,7 @@ use gtk::{gio, glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::RefCell;
 
-use super::{item_list::ItemList, Item, ItemKind, ItemRow};
-use crate::session::note::{Tag, TagList};
+use super::{item_list::ItemList, Item, ItemKind, ItemRow, Tag, TagList};
 
 mod imp {
     use super::*;

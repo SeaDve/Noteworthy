@@ -3,7 +3,7 @@ use gtk::{glib, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::RefCell;
 
-use crate::session::note::Tag;
+use crate::session::tag::Tag;
 
 mod imp {
     use super::*;

@@ -4,10 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use std::path::PathBuf;
 
-use super::{
-    note::{Id, TagList},
-    Note, NoteList,
-};
+use super::{note::Id, tag_list::TagList, Note, NoteList};
 use crate::Result;
 
 #[derive(Debug, Default, Serialize, Deserialize)]

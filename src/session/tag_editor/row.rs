@@ -1,9 +1,13 @@
 use adw::{prelude::*, subclass::prelude::*};
-use gtk::{glib, subclass::prelude::*, CompositeTemplate};
+use gtk::{
+    glib::{self, clone},
+    subclass::prelude::*,
+    CompositeTemplate,
+};
 
 use std::cell::RefCell;
 
-use super::Tag;
+use super::{Tag, TagEditor};
 
 mod imp {
     use super::*;
@@ -12,7 +16,7 @@ mod imp {
     #[template(resource = "/io/github/seadve/Noteworthy/ui/tag-editor-row.ui")]
     pub struct Row {
         #[template_child]
-        pub editable_label: TemplateChild<gtk::EditableLabel>,
+        pub entry: TemplateChild<gtk::Entry>,
 
         pub binding: RefCell<Option<glib::Binding>>,
 
@@ -27,6 +31,19 @@ mod imp {
 
         fn class_init(klass: &mut Self::Class) {
             Self::bind_template(klass);
+
+            klass.install_action("tag-editor-row.done-rename", None, move |obj, _, _| {
+                let imp = imp::Row::from_instance(obj);
+                let tag_list = obj
+                    .root()
+                    .unwrap()
+                    .downcast::<TagEditor>()
+                    .unwrap()
+                    .tag_list();
+                tag_list
+                    .rename_tag(&obj.tag().unwrap(), &imp.entry.text())
+                    .unwrap();
+            });
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
@@ -101,11 +118,18 @@ impl Row {
         }
 
         if let Some(ref tag) = tag {
-            let binding = tag
-                .bind_property("name", &imp.editable_label.get(), "text")
-                .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
-                .build();
-            imp.binding.replace(binding);
+            imp.entry.set_text(&tag.name());
+            imp.entry
+                .connect_text_notify(clone!(@weak tag, @weak self as obj => move |entry| {
+                    let tag_list = obj.root().unwrap().downcast::<TagEditor>().unwrap().tag_list();
+                    let new_name = entry.text();
+
+                    if tag_list.contains_with_name(&new_name) {
+                        entry.add_css_class("error");
+                    } else {
+                        entry.remove_css_class("error");
+                    }
+                }));
         }
 
         imp.tag.replace(tag);
