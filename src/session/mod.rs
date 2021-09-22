@@ -55,10 +55,10 @@ mod imp {
             Self::bind_template(klass);
 
             klass.install_action("session.edit-tags", None, move |obj, _, _| {
-                let imp = imp::Session::from_instance(obj);
-                let tag_list = imp.note_manager.get().unwrap().tag_list();
+                let tag_list = obj.note_manager().tag_list();
+                let note_list = obj.note_manager().note_list();
 
-                let tag_editor = TagEditor::new(&tag_list);
+                let tag_editor = TagEditor::new(&tag_list, &note_list);
                 tag_editor.set_modal(true);
                 tag_editor.set_transient_for(
                     obj.root()

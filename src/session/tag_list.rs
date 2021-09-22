@@ -104,7 +104,7 @@ impl TagList {
     pub fn remove(&self, tag: &Tag) -> anyhow::Result<()> {
         let imp = imp::TagList::from_instance(self);
 
-        if self.contains_with_name(&tag.name()) {
+        if !self.contains_with_name(&tag.name()) {
             anyhow::bail!("Cannot remove tag name that doesnt exist");
         }
 
@@ -115,7 +115,7 @@ impl TagList {
 
         {
             let mut name_list = imp.name_list.borrow_mut();
-            debug_assert!(name_list.shift_remove_full(&tag.name()).is_some());
+            debug_assert!(name_list.shift_remove(&tag.name()));
         }
 
         if let Some((position, _)) = removed {

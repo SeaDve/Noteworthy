@@ -33,16 +33,29 @@ mod imp {
             Self::bind_template(klass);
 
             klass.install_action("tag-editor-row.delete-tag", None, move |obj, _, _| {
-                // let imp = imp::Row::from_instance(obj);
-                // let tag_list = obj
-                //     .root()
-                //     .unwrap()
-                //     .downcast::<TagEditor>()
-                //     .unwrap()
-                //     .tag_list();
-                // if let Err(err) = tag_list.rename_tag(&obj.tag().unwrap(), &imp.entry.text()) {
-                //     log::warn!("Existing tag: {}", err);
-                // }
+                let tag_editor = obj.root().unwrap().downcast::<TagEditor>().unwrap();
+                let tag_list = tag_editor.tag_list();
+                let note_list = tag_editor.note_list();
+
+                // TODO add confirmation dialog before deleting tag
+
+                let tag = obj.tag().unwrap();
+
+                tag_list.remove(&tag).unwrap();
+
+                // FIXME make this faster
+                for note in note_list.iter() {
+                    let metadata = note.metadata();
+                    let note_tag_list = metadata.tag_list();
+                    if let Err(err) = note_tag_list.remove(&tag) {
+                        log::warn!(
+                            "Failed to remove tag {} on note {}: {}",
+                            tag.name(),
+                            metadata.title(),
+                            err
+                        );
+                    }
+                }
             });
         }
 

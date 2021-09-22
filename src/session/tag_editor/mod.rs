@@ -5,7 +5,7 @@ use gtk::{gio, glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 use once_cell::unsync::OnceCell;
 
 use self::row::Row;
-use super::{tag::Tag, tag_list::TagList};
+use super::{tag::Tag, tag_list::TagList, NoteList};
 
 mod imp {
     use super::*;
@@ -19,6 +19,7 @@ mod imp {
         pub search_entry: TemplateChild<gtk::SearchEntry>,
 
         pub tag_list: OnceCell<TagList>,
+        pub note_list: OnceCell<NoteList>,
     }
 
     #[glib::object_subclass]
@@ -41,13 +42,22 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_object(
-                    "tag-list",
-                    "Tag List",
-                    "List of tags",
-                    TagList::static_type(),
-                    glib::ParamFlags::WRITABLE | glib::ParamFlags::CONSTRUCT_ONLY,
-                )]
+                vec![
+                    glib::ParamSpec::new_object(
+                        "tag-list",
+                        "Tag List",
+                        "List of tags",
+                        TagList::static_type(),
+                        glib::ParamFlags::WRITABLE | glib::ParamFlags::CONSTRUCT_ONLY,
+                    ),
+                    glib::ParamSpec::new_object(
+                        "note-list",
+                        "Note List",
+                        "List of notes",
+                        NoteList::static_type(),
+                        glib::ParamFlags::WRITABLE | glib::ParamFlags::CONSTRUCT_ONLY,
+                    ),
+                ]
             });
 
             PROPERTIES.as_ref()
@@ -65,6 +75,10 @@ mod imp {
                     let tag_list = value.get().unwrap();
                     obj.set_tag_list(tag_list);
                 }
+                "note-list" => {
+                    let note_list = value.get().unwrap();
+                    obj.set_note_list(note_list);
+                }
                 _ => unimplemented!(),
             }
         }
@@ -72,23 +86,13 @@ mod imp {
         fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
                 "tag-list" => obj.tag_list().to_value(),
+                "note-list" => obj.note_list().to_value(),
                 _ => unimplemented!(),
             }
         }
 
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
-
-            // self.search_entry.connect_text_notify(
-            //     clone!(@weak obj => move |search_entry| {
-            //         let search_entry_text = search_entry.text();
-            //         let does_contain_tag = obj.tag_list().contains_with_name(&search_entry_text);
-            //         let is_search_entry_empty = search_entry_text.is_empty();
-            //         let imp = imp::TagEditor::from_instance(&obj);
-            //         imp.create_tag_button_revealer.set_reveal_child(!does_contain_tag && !is_search_entry_empty);
-            //         imp.create_tag_button_label.set_label(&gettext!("Create “{}”", search_entry_text));
-            //     }),
-            // );
         }
     }
 
@@ -104,13 +108,19 @@ glib::wrapper! {
 }
 
 impl TagEditor {
-    pub fn new(tag_list: &TagList) -> Self {
-        glib::Object::new(&[("tag-list", tag_list)]).expect("Failed to create TagEditor.")
+    pub fn new(tag_list: &TagList, note_list: &NoteList) -> Self {
+        glib::Object::new(&[("tag-list", tag_list), ("note-list", note_list)])
+            .expect("Failed to create TagEditor.")
     }
 
     pub fn tag_list(&self) -> TagList {
         let imp = imp::TagEditor::from_instance(self);
         imp.tag_list.get().unwrap().clone()
+    }
+
+    pub fn note_list(&self) -> NoteList {
+        let imp = imp::TagEditor::from_instance(self);
+        imp.note_list.get().unwrap().clone()
     }
 
     fn set_tag_list(&self, tag_list: TagList) {
@@ -134,5 +144,10 @@ impl TagEditor {
         imp.list_view.set_model(Some(&selection_model));
 
         imp.tag_list.set(tag_list).unwrap();
+    }
+
+    fn set_note_list(&self, note_list: NoteList) {
+        let imp = imp::TagEditor::from_instance(self);
+        imp.note_list.set(note_list).unwrap();
     }
 }
