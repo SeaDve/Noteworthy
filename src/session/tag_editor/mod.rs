@@ -48,6 +48,8 @@ mod imp {
 
                 let tag_list = obj.tag_list();
                 tag_list.append(Tag::new(&name)).unwrap();
+
+                imp.create_tag_entry.set_text("");
             });
         }
 
