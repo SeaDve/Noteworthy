@@ -131,12 +131,21 @@ impl TagList {
         let imp = imp::TagList::from_instance(self);
 
         let previous_name = tag.name();
+        let editing_tag_index = self.get_index_of(tag).unwrap();
 
         {
             let mut name_list = imp.name_list.borrow_mut();
+            let previous_len = name_list.len();
             debug_assert!(name_list.insert(name.to_string()));
+            debug_assert_eq!(name_list.last(), Some(&name.to_string()));
             debug_assert!(name_list.swap_remove(&previous_name));
+            debug_assert_eq!(previous_len, name_list.len());
         }
+
+        debug_assert_eq!(
+            imp.name_list.borrow().get_index(editing_tag_index),
+            Some(&name.to_string())
+        );
 
         tag.set_name(name);
 
