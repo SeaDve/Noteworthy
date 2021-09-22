@@ -125,7 +125,7 @@ impl TagList {
 
     pub fn rename_tag(&self, tag: &Tag, name: &str) -> anyhow::Result<()> {
         if self.contains_with_name(name) {
-            anyhow::bail!("Cannot remove tag name that doesnt exist");
+            anyhow::bail!("Cannot rename a tag that already exist");
         }
 
         let imp = imp::TagList::from_instance(self);
@@ -134,11 +134,8 @@ impl TagList {
 
         {
             let mut name_list = imp.name_list.borrow_mut();
-            dbg!(&name_list);
             debug_assert!(name_list.insert(name.to_string()));
-            dbg!(&name_list);
             debug_assert!(name_list.swap_remove(&previous_name));
-            dbg!(&name_list);
         }
 
         tag.set_name(name);

@@ -40,9 +40,9 @@ mod imp {
                     .downcast::<TagEditor>()
                     .unwrap()
                     .tag_list();
-                tag_list
-                    .rename_tag(&obj.tag().unwrap(), &imp.entry.text())
-                    .unwrap();
+                if let Err(err) = tag_list.rename_tag(&obj.tag().unwrap(), &imp.entry.text()) {
+                    log::warn!("Existing tag: {}", err);
+                }
             });
         }
 
@@ -124,7 +124,7 @@ impl Row {
                     let tag_list = obj.root().unwrap().downcast::<TagEditor>().unwrap().tag_list();
                     let new_name = entry.text();
 
-                    if tag_list.contains_with_name(&new_name) {
+                    if tag_list.contains_with_name(&new_name) && new_name != tag.name() {
                         entry.add_css_class("error");
                     } else {
                         entry.remove_css_class("error");
