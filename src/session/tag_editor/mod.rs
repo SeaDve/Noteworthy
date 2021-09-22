@@ -1,7 +1,13 @@
 mod row;
 
 use adw::subclass::prelude::*;
-use gtk::{gio, glib, prelude::*, subclass::prelude::*, CompositeTemplate};
+use gtk::{
+    gio,
+    glib::{self, clone},
+    prelude::*,
+    subclass::prelude::*,
+    CompositeTemplate,
+};
 use once_cell::unsync::OnceCell;
 
 use self::row::Row;
@@ -17,6 +23,10 @@ mod imp {
         pub list_view: TemplateChild<gtk::ListView>,
         #[template_child]
         pub search_entry: TemplateChild<gtk::SearchEntry>,
+        #[template_child]
+        pub create_tag_entry: TemplateChild<gtk::Entry>,
+        #[template_child]
+        pub create_tag_button: TemplateChild<gtk::Button>,
 
         pub tag_list: OnceCell<TagList>,
         pub note_list: OnceCell<NoteList>,
@@ -31,6 +41,14 @@ mod imp {
         fn class_init(klass: &mut Self::Class) {
             Row::static_type();
             Self::bind_template(klass);
+
+            klass.install_action("tag-editor.create-tag", None, move |obj, _, _| {
+                let imp = imp::TagEditor::from_instance(obj);
+                let name = imp.create_tag_entry.text();
+
+                let tag_list = obj.tag_list();
+                tag_list.append(Tag::new(&name)).unwrap();
+            });
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
@@ -93,6 +111,14 @@ mod imp {
 
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
+            self.create_tag_button.set_sensitive(false);
+            self.create_tag_entry
+                .connect_text_notify(clone!(@weak obj => move |entry| {
+                    let imp = imp::TagEditor::from_instance(&obj);
+                    let text = entry.text();
+                    let is_valid_name = obj.tag_list().is_valid_name(&text);
+                    imp.create_tag_button.set_sensitive(is_valid_name);
+                }));
         }
     }
 

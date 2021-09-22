@@ -176,6 +176,10 @@ impl TagList {
         imp.name_list.borrow().contains(name)
     }
 
+    pub fn is_valid_name(&self, name: &str) -> bool {
+        !self.contains_with_name(name) && !name.is_empty()
+    }
+
     fn get_index_of(&self, tag: &Tag) -> Option<usize> {
         let imp = imp::TagList::from_instance(self);
         imp.list.borrow().get_index_of(tag)
