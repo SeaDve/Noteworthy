@@ -12,8 +12,9 @@
 
 ## What's not working yet?
 * Multiple notes selection and editing
-* Login state
+* Login page
 * Git integration
 * Syncing
 * Attachments
 * WYSIWG Editing
+* Homepage (Includes reminders, mini notepads etc.)
