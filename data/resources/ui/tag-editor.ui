@@ -28,7 +28,6 @@
         </child>
         <child>
           <object class="GtkBox">
-            <property name="spacing">6</property>
             <child>
               <object class="GtkEntry" id="create_tag_entry">
                 <property name="xalign">0</property>
@@ -38,12 +37,12 @@
             <child>
               <object class="GtkButton" id="create_tag_button">
                 <property name="action-name">tag-editor.create-tag</property>
-                <property name="icon-name">list-add-symbolic</property>
-                <property name="has-frame">False</property>
+                <property name="label" translatable="yes">Add</property>
               </object>
             </child>
             <style>
               <class name="tag-editor-create-tag"/>
+              <class name="linked"/>
             </style>
           </object>
         </child>

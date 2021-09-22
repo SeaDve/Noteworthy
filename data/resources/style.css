@@ -99,11 +99,14 @@
 
 
 .tag-editor-create-tag {
+  padding-top: 12px;
+  padding-bottom: 6px;
+  padding-left: 12px;
+  padding-right: 6px;
   background-color: @theme_base_color;
 }
 
-.tag-editor-list-view row,
-.tag-editor-create-tag {
+.tag-editor-list-view row {
   padding-top: 6px;
   padding-bottom: 6px;
   padding-left: 12px;
