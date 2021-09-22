@@ -126,6 +126,11 @@ impl ViewSwitcher {
         self.property("selected-type").unwrap().get().unwrap()
     }
 
+    pub fn set_selected_item_to_default(&self) {
+        let imp = imp::ViewSwitcher::from_instance(self);
+        imp.popover.select_item(0);
+    }
+
     pub fn connect_selected_type_notify<F: Fn(&Self, &glib::ParamSpec) + 'static>(
         &self,
         f: F,

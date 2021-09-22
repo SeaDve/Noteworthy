@@ -155,6 +155,12 @@ impl Popover {
         self.property("selected-item").unwrap().get().unwrap()
     }
 
+    pub fn select_item(&self, index: u32) {
+        let imp = imp::Popover::from_instance(self);
+        let model = imp.listview.model().unwrap();
+        model.select_item(index, true);
+    }
+
     pub fn set_tag_list(&self, tag_list: TagList) {
         let imp = imp::Popover::from_instance(self);
 
