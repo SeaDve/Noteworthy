@@ -176,7 +176,6 @@ impl Metadata {
 impl Serialize for Metadata {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let imp = imp::Metadata::from_instance(self);
-        imp.tag_list.borrow().dbg();
         imp.serialize(serializer)
     }
 }

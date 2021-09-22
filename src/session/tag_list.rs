@@ -181,7 +181,6 @@ impl TagList {
 impl Serialize for TagList {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let imp = imp::TagList::from_instance(self);
-        self.dbg();
         imp.name_list.serialize(serializer)
     }
 }
