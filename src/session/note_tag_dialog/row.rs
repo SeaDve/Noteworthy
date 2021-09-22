@@ -118,7 +118,7 @@ mod imp {
                 }),
                 &[tag_expression.upcast()],
             );
-            is_checked_expression.bind(&self.check_button.get(), "active", None);
+            is_checked_expression.bind(&self.check_button.get(), "active", None::<&gtk::Widget>);
 
             // FIXME This get activated on first launch which makes it try to append an
             // existing tag

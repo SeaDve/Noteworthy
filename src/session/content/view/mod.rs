@@ -73,7 +73,11 @@ mod imp {
                 },
                 &[last_modified_expression.upcast()],
             );
-            last_modified_str_expr.bind(&self.last_modified_label.get(), "label", None);
+            last_modified_str_expr.bind(
+                &self.last_modified_label.get(),
+                "label",
+                None::<&gtk::Widget>,
+            );
         }
 
         fn properties() -> &'static [glib::ParamSpec] {

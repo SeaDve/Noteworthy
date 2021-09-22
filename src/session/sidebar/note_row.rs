@@ -62,7 +62,7 @@ mod imp {
                 },
                 &[text_expression.upcast()],
             );
-            subtitle_expression.bind(&self.subtitle_label.get(), "label", None);
+            subtitle_expression.bind(&self.subtitle_label.get(), "label", None::<&gtk::Widget>);
 
             // Expression describing how to get time label of self from date of note
             let self_expression = gtk::ConstantExpression::new(&obj);
@@ -88,7 +88,7 @@ mod imp {
                 },
                 &[last_modified_expression.upcast()],
             );
-            time_expression.bind(&self.time_label.get(), "label", None);
+            time_expression.bind(&self.time_label.get(), "label", None::<&gtk::Widget>);
         }
 
         fn properties() -> &'static [glib::ParamSpec] {

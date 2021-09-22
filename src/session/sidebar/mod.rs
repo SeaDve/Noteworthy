@@ -116,7 +116,11 @@ mod imp {
                 },
                 &[model_expression.upcast()],
             );
-            model_is_some_expression.bind(&self.stack.get(), "visible-child-name", None);
+            model_is_some_expression.bind(
+                &self.stack.get(),
+                "visible-child-name",
+                None::<&gtk::Widget>,
+            );
         }
 
         fn properties() -> &'static [glib::ParamSpec] {

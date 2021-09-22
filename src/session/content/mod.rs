@@ -69,9 +69,21 @@ mod imp {
                 },
                 &[note_expression.upcast()],
             );
-            is_some_note_expression.bind(&self.is_pinned_button.get(), "visible", None);
-            is_some_note_expression.bind(&self.is_trashed_button.get(), "visible", None);
-            is_some_note_expression.bind(&self.edit_tags_button.get(), "visible", None);
+            is_some_note_expression.bind(
+                &self.is_pinned_button.get(),
+                "visible",
+                None::<&gtk::Widget>,
+            );
+            is_some_note_expression.bind(
+                &self.is_trashed_button.get(),
+                "visible",
+                None::<&gtk::Widget>,
+            );
+            is_some_note_expression.bind(
+                &self.edit_tags_button.get(),
+                "visible",
+                None::<&gtk::Widget>,
+            );
         }
 
         fn properties() -> &'static [glib::ParamSpec] {

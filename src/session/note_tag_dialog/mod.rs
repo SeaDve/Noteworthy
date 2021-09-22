@@ -127,7 +127,7 @@ mod imp {
                     Some(&list_item_expression),
                     "item",
                 );
-                item_expression.bind(&tag_row, "tag", None);
+                item_expression.bind(&tag_row, "tag", None::<&gtk::Widget>);
 
                 list_item.set_child(Some(&tag_row));
             }));

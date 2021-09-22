@@ -96,14 +96,14 @@ mod imp {
                 Some(&selected_item_expression),
                 "display-name",
             );
-            label_expression.bind(&self.menu_button.get(), "label", None);
+            label_expression.bind(&self.menu_button.get(), "label", None::<&gtk::Widget>);
 
             let selected_type_expression = gtk::PropertyExpression::new(
                 Item::static_type(),
                 Some(&selected_item_expression),
                 "item-kind",
             );
-            selected_type_expression.bind(obj, "selected-type", None);
+            selected_type_expression.bind(obj, "selected-type", None::<&gtk::Widget>);
         }
     }
 
