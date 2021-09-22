@@ -224,6 +224,8 @@ impl Sidebar {
                                 note.tag_list().contains(tag) && !note.is_trashed()
                             }
                             ItemKind::Separator | ItemKind::Category | ItemKind::EditTags => {
+                                // FIXME Crashes here when a selected tag in viewswitcher is deleted
+                                // Consider setting the selected type to AllNotes when that happens.
                                 unreachable!("Separator, Category, or EditTags cannot be selected");
                             }
                         }
