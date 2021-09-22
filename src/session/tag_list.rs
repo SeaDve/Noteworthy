@@ -72,6 +72,10 @@ impl TagList {
             anyhow::bail!("Cannot append exisiting tag with same name");
         }
 
+        if tag_name.is_empty() {
+            anyhow::bail!("Tag name cannot be empty");
+        }
+
         tag.connect_name_notify(clone!(@weak self as obj => move |tag, _| {
             if let Some(position) = obj.get_index_of(tag) {
                 obj.items_changed(position as u32, 1, 1);
@@ -126,6 +130,10 @@ impl TagList {
     pub fn rename_tag(&self, tag: &Tag, name: &str) -> anyhow::Result<()> {
         if self.contains_with_name(name) {
             anyhow::bail!("Cannot rename a tag that already exist");
+        }
+
+        if name.is_empty() {
+            anyhow::bail!("Tag name cannot be empty");
         }
 
         let imp = imp::TagList::from_instance(self);

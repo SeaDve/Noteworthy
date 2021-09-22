@@ -32,17 +32,17 @@ mod imp {
         fn class_init(klass: &mut Self::Class) {
             Self::bind_template(klass);
 
-            klass.install_action("tag-editor-row.done-rename", None, move |obj, _, _| {
-                let imp = imp::Row::from_instance(obj);
-                let tag_list = obj
-                    .root()
-                    .unwrap()
-                    .downcast::<TagEditor>()
-                    .unwrap()
-                    .tag_list();
-                if let Err(err) = tag_list.rename_tag(&obj.tag().unwrap(), &imp.entry.text()) {
-                    log::warn!("Existing tag: {}", err);
-                }
+            klass.install_action("tag-editor-row.delete-tag", None, move |obj, _, _| {
+                // let imp = imp::Row::from_instance(obj);
+                // let tag_list = obj
+                //     .root()
+                //     .unwrap()
+                //     .downcast::<TagEditor>()
+                //     .unwrap()
+                //     .tag_list();
+                // if let Err(err) = tag_list.rename_tag(&obj.tag().unwrap(), &imp.entry.text()) {
+                //     log::warn!("Existing tag: {}", err);
+                // }
             });
         }
 
@@ -122,9 +122,10 @@ impl Row {
             imp.entry
                 .connect_text_notify(clone!(@weak tag, @weak self as obj => move |entry| {
                     let tag_list = obj.root().unwrap().downcast::<TagEditor>().unwrap().tag_list();
+                    let tag = obj.tag().unwrap();
                     let new_name = entry.text();
 
-                    if tag_list.contains_with_name(&new_name) && new_name != tag.name() {
+                    if new_name != tag.name() && tag_list.rename_tag(&tag, &new_name).is_err() {
                         entry.add_css_class("error");
                     } else {
                         entry.remove_css_class("error");

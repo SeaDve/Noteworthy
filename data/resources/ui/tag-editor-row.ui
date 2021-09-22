@@ -3,12 +3,7 @@
   <template class="NwtyTagEditorRow" parent="AdwBin">
     <property name="child">
       <object class="GtkBox">
-        <property name="spacing">12</property>
-        <child>
-          <object class="GtkImage">
-            <property name="icon-name">tag-symbolic</property>
-          </object>
-        </child>
+        <property name="spacing">6</property>
         <child>
           <object class="GtkEntry" id="entry">
             <property name="xalign">0</property>
@@ -17,9 +12,9 @@
         </child>
         <child>
           <object class="GtkButton">
-            <property name="action-name">tag-editor-row.done-rename</property>
-            <!-- replace this icon -->
-            <property name="icon-name">object-select-symbolic</property>
+            <property name="action-name">tag-editor-row.delete-tag</property>
+            <property name="icon-name">edit-delete-symbolic</property>
+            <property name="has-frame">False</property>
           </object>
         </child>
       </object>

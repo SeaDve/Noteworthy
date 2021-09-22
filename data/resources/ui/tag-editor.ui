@@ -26,10 +26,10 @@
             </property>
           </object>
         </child>
-        <child>
-         <object class="NwtyTagEditorRow">
-         </object>
-        </child>
+        <!-- <child> -->
+        <!--   <object class="NwtyTagEditorRow"> -->
+        <!--   </object> -->
+        <!-- </child> -->
         <child>
           <object class="GtkScrolledWindow">
             <property name="vexpand">True</property>

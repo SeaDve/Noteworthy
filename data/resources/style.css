@@ -96,3 +96,16 @@
 .note-tag-dialog-create-tag-button label {
   font-weight: 400;
 }
+
+
+.tag-editor-list-view {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.tag-editor-list-view row {
+  padding-top: 6px;
+  padding-bottom: 6px;
+  padding-left: 12px;
+  padding-right: 6px;
+}
