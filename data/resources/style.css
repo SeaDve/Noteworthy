@@ -33,11 +33,15 @@
   background: none;
 }
 
+.sidebar-view-switcher-popover row:hover {
+  background: none;
+}
+
 .sidebar-view-switcher-item-row-edit-tags {
   padding: 0px;
   border-radius: 3px;
   transition: box-shadow 0s;
-  background-color: @theme_base_color;
+  background: none;
   color: @theme_text_color;
 }
 
@@ -111,4 +115,8 @@
   padding-bottom: 6px;
   padding-left: 12px;
   padding-right: 6px;
+}
+
+.tag-editor-list-view row:hover {
+  background: none;
 }
