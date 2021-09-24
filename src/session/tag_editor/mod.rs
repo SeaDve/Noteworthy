@@ -118,8 +118,14 @@ mod imp {
                 .connect_text_notify(clone!(@weak obj => move |entry| {
                     let imp = imp::TagEditor::from_instance(&obj);
                     let text = entry.text();
-                    let is_valid_name = obj.tag_list().is_valid_name(&text);
-                    imp.create_tag_button.set_sensitive(is_valid_name);
+
+                    if obj.tag_list().is_valid_name(&text) {
+                        imp.create_tag_button.set_sensitive(true);
+                        imp.create_tag_entry.remove_css_class("error");
+                    } else {
+                        imp.create_tag_button.set_sensitive(false);
+                        imp.create_tag_entry.add_css_class("error");
+                    }
                 }));
         }
     }
