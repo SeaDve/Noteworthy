@@ -127,6 +127,15 @@ mod imp {
                         imp.create_tag_entry.add_css_class("error");
                     }
                 }));
+            self.create_tag_entry
+                .connect_activate(clone!(@weak obj => move |_| {
+                    let imp = imp::TagEditor::from_instance(&obj);
+
+                    if imp.create_tag_button.is_sensitive() {
+                        // TODO activate the action directly
+                        imp.create_tag_button.activate();
+                    }
+                }));
         }
     }
 
