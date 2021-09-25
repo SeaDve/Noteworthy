@@ -6,6 +6,9 @@ use std::cell::RefCell;
 use super::Note;
 use crate::{date::Date, session::note::Metadata};
 
+const MAX_SUBTITLE_LEN: usize = 100;
+const MAX_SUBTITLE_LINE: u32 = 3;
+
 mod imp {
     use super::*;
 
@@ -50,17 +53,37 @@ mod imp {
             );
             let buffer_expression =
                 gtk::PropertyExpression::new(Note::static_type(), Some(&note_expression), "buffer");
-            let text_expression = gtk::PropertyExpression::new(
-                sourceview::Buffer::static_type(),
-                Some(&buffer_expression),
-                "text",
-            );
             let subtitle_expression = gtk::ClosureExpression::new(
                 |args| {
-                    let text: String = args[1].get().unwrap();
-                    text.lines().next().unwrap_or_default().to_string()
+                    let buffer: sourceview::Buffer = args[1].get().unwrap();
+                    let mut iter = buffer.start_iter();
+                    let mut subtitle = String::from(iter.char());
+
+                    let mut line_count = 0;
+                    let mut last_non_empty_char_index = 0;
+
+                    while iter.forward_char() {
+                        if subtitle.len() >= MAX_SUBTITLE_LEN || line_count >= MAX_SUBTITLE_LINE {
+                            break;
+                        }
+
+                        let character = iter.char();
+
+                        if character == '\n' {
+                            line_count += 1;
+                        }
+
+                        subtitle.push(character);
+
+                        if !character.is_whitespace() {
+                            last_non_empty_char_index = subtitle.len() - 1;
+                        }
+                    }
+
+                    subtitle.truncate(last_non_empty_char_index + 1);
+                    subtitle
                 },
-                &[text_expression.upcast()],
+                &[buffer_expression.upcast()],
             );
             subtitle_expression.bind(&self.subtitle_label.get(), "label", None::<&gtk::Widget>);
 
