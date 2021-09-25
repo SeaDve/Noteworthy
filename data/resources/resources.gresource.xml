@@ -15,6 +15,7 @@
     <file compressed="true" preprocess="xml-stripblanks">ui/sidebar.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/sidebar-category-row.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/sidebar-note-row.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">ui/sidebar-theme-selector.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/sidebar-view-switcher.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/sidebar-view-switcher-item-row.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/sidebar-view-switcher-popover.ui</file>

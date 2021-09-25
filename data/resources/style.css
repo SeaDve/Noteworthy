@@ -54,6 +54,30 @@
   font-weight: 400;
 }
 
+checkbutton.theme-selector radio { /* from https://gitlab.gnome.org/GNOME/gnome-text-editor/-/blob/6f5b63cfe129a82c408614c01738fcd2df292eca/src/TextEditor.css#L40 */
+  -gtk-icon-source: none;
+  background: none;
+  box-shadow: none;
+  padding: 15px;
+  min-height: 24px;
+  min-width: 24px;
+  border-width: 3px;
+  border-style: solid;
+  border-color: transparent;
+}
+checkbutton.theme-selector radio:checked {
+  border-color: @theme_selected_bg_color;
+  -gtk-icon-source: -gtk-scaled(-gtk-icontheme("object-select-symbolic"));
+}
+checkbutton.theme-selector.light radio {
+  color: #2e3436;
+  background-color: #fff;
+}
+checkbutton.theme-selector.dark radio {
+  color: #fff;
+  background-color: #2e3436;
+}
+
 
 .content-view {
   padding-left: 24px;

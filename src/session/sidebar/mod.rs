@@ -4,6 +4,7 @@ mod item_list;
 mod note_row;
 mod row;
 mod selection;
+mod theme_selector;
 mod view_switcher;
 
 use gtk::{
@@ -23,6 +24,7 @@ use self::{
     note_row::NoteRow,
     row::Row,
     selection::Selection,
+    theme_selector::ThemeSelector,
     view_switcher::{ItemKind, ViewSwitcher},
 };
 use super::{tag_list::TagList, Note, NoteList, Session};
@@ -39,6 +41,8 @@ mod imp {
         pub stack: TemplateChild<gtk::Stack>,
         #[template_child]
         pub view_switcher: TemplateChild<ViewSwitcher>,
+        #[template_child]
+        pub primary_menu_button: TemplateChild<gtk::MenuButton>,
 
         pub compact: Cell<bool>,
         pub selected_note: RefCell<Option<Note>>,
@@ -56,6 +60,7 @@ mod imp {
             ViewSwitcher::static_type();
             NoteRow::static_type();
             Row::static_type();
+            ThemeSelector::static_type();
             Self::bind_template(klass);
 
             klass.install_action("sidebar.create-note", None, move |obj, _, _| {
@@ -78,6 +83,14 @@ mod imp {
     impl ObjectImpl for Sidebar {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
+
+            let menu_popover = self
+                .primary_menu_button
+                .popover()
+                .unwrap()
+                .downcast::<gtk::PopoverMenu>()
+                .unwrap();
+            menu_popover.add_child(&ThemeSelector::new(), "theme-selector");
 
             self.listview.get().connect_activate(move |listview, pos| {
                 let model: Option<Selection> = listview.model().and_then(|o| o.downcast().ok());
