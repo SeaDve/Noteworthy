@@ -17,4 +17,4 @@
 * Syncing
 * Attachments
 * WYSIWG Editing
-* Homepage (Includes reminders, mini notepads etc.)
+* Homepage (Includes reminders, recents, mini notepads etc.)
