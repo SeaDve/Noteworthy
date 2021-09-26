@@ -3,7 +3,7 @@ mod selection;
 mod view_switcher;
 
 use gtk::{
-    glib::{self, clone},
+    glib::{self, clone, GEnum},
     prelude::*,
     subclass::prelude::*,
     CompositeTemplate,
@@ -19,6 +19,19 @@ use self::{
 };
 use super::{tag_list::TagList, Note, NoteList, Session};
 
+#[derive(Debug, Clone, Copy, PartialEq, GEnum)]
+#[genum(type_name = "SidebarSelectionMode")]
+pub enum SelectionMode {
+    Single,
+    Multi,
+}
+
+impl Default for SelectionMode {
+    fn default() -> Self {
+        Self::Single
+    }
+}
+
 mod imp {
     use super::*;
 
@@ -26,15 +39,24 @@ mod imp {
     #[template(resource = "/io/github/seadve/Noteworthy/ui/sidebar.ui")]
     pub struct Sidebar {
         #[template_child]
-        pub listview: TemplateChild<gtk::ListView>,
+        pub list_view: TemplateChild<gtk::ListView>,
         #[template_child]
         pub stack: TemplateChild<gtk::Stack>,
         #[template_child]
         pub view_switcher: TemplateChild<ViewSwitcher>,
+        #[template_child]
+        pub header_bar_stack: TemplateChild<gtk::Stack>,
+        #[template_child]
+        pub main_header_bar: TemplateChild<adw::HeaderBar>,
+        #[template_child]
+        pub selection_header_bar: TemplateChild<adw::HeaderBar>,
 
         pub compact: Cell<bool>,
+        pub selection_mode: Cell<SelectionMode>,
         pub selected_note: RefCell<Option<Note>>,
 
+        pub single_selection_model: RefCell<Option<Selection>>,
+        pub multi_selection_model: RefCell<Option<gtk::MultiSelection>>,
         pub session: OnceCell<Session>,
     }
 
@@ -59,6 +81,21 @@ mod imp {
                     .create_note()
                     .expect("Failed to create note");
             });
+
+            klass.install_action(
+                "sidebar.cancel-multi-selection-mode",
+                None,
+                move |obj, _, _| {
+                    let imp = imp::Sidebar::from_instance(obj);
+                    imp.multi_selection_model
+                        .borrow()
+                        .as_ref()
+                        .unwrap()
+                        .unselect_all();
+
+                    obj.set_selection_mode(SelectionMode::Single);
+                },
+            );
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
@@ -70,40 +107,9 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
-            self.listview
-                .get()
-                .connect_activate(move |listview, index| {
-                    let model: Option<Selection> = listview.model().and_then(|o| o.downcast().ok());
-                    let note: Option<glib::Object> = model.as_ref().and_then(|m| m.item(index));
-
-                    if let (Some(model), Some(_)) = (model, note) {
-                        model.set_selected(index);
-                    }
-                });
-
-            let listview_expression = gtk::ConstantExpression::new(&self.listview.get());
-            let model_expression = gtk::PropertyExpression::new(
-                gtk::ListView::static_type(),
-                Some(&listview_expression),
-                "model",
-            );
-            let model_is_some_expression = gtk::ClosureExpression::new(
-                |args| {
-                    let model: Option<gtk::SelectionModel> = args[1].get().unwrap();
-
-                    if model.is_some() {
-                        "filled-view"
-                    } else {
-                        "empty-view"
-                    }
-                },
-                &[model_expression.upcast()],
-            );
-            model_is_some_expression.bind(
-                &self.stack.get(),
-                "visible-child-name",
-                None::<&gtk::Widget>,
-            );
+            obj.setup_list_view();
+            obj.setup_expressions();
+            obj.setup_signals();
         }
 
         fn properties() -> &'static [glib::ParamSpec] {
@@ -116,6 +122,14 @@ mod imp {
                         "Whether it is compact view mode",
                         false,
                         glib::ParamFlags::READWRITE,
+                    ),
+                    glib::ParamSpec::new_enum(
+                        "selection-mode",
+                        "Selection Mode",
+                        "Current selection mode",
+                        SelectionMode::static_type(),
+                        SelectionMode::default() as i32,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
                     glib::ParamSpec::new_object(
                         "note-list",
@@ -149,6 +163,10 @@ mod imp {
                     let compact = value.get().unwrap();
                     self.compact.set(compact);
                 }
+                "selection-mode" => {
+                    let selection_mode = value.get().unwrap();
+                    obj.set_selection_mode(selection_mode);
+                }
                 "note-list" => {
                     let note_list = value.get().unwrap();
                     obj.set_note_list(note_list);
@@ -164,6 +182,7 @@ mod imp {
         fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
                 "compact" => self.compact.get().to_value(),
+                "selection-mode" => obj.selection_mode().to_value(),
                 "selected-note" => obj.selected_note().to_value(),
                 _ => unimplemented!(),
             }
@@ -232,12 +251,18 @@ impl Sidebar {
             filter.changed(gtk::FilterChange::Different);
         });
 
-        let selection = Selection::new(Some(&filter_model));
-        self.bind_property("selected-note", &selection, "selected-item")
+        let single_selection_model = Selection::new(Some(&filter_model));
+        self.bind_property("selected-note", &single_selection_model, "selected-item")
             .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
             .build();
+        imp.single_selection_model
+            .replace(Some(single_selection_model));
 
-        imp.listview.set_model(Some(&selection));
+        let multi_selection_model = gtk::MultiSelection::new(Some(&filter_model));
+        imp.multi_selection_model
+            .replace(Some(multi_selection_model));
+
+        self.set_selection_mode(SelectionMode::Single);
     }
 
     pub fn set_selected_note(&self, selected_note: Option<Note>) {
@@ -264,5 +289,131 @@ impl Sidebar {
     pub fn set_session(&self, session: Session) {
         let imp = imp::Sidebar::from_instance(self);
         imp.session.set(session).unwrap();
+    }
+
+    pub fn selection_mode(&self) -> SelectionMode {
+        let imp = imp::Sidebar::from_instance(self);
+        imp.selection_mode.get()
+    }
+
+    pub fn set_selection_mode(&self, selection_mode: SelectionMode) {
+        let imp = imp::Sidebar::from_instance(self);
+
+        match selection_mode {
+            SelectionMode::Single => {
+                imp.header_bar_stack
+                    .set_visible_child(&imp.main_header_bar.get());
+
+                let model = imp
+                    .single_selection_model
+                    .borrow()
+                    .as_ref()
+                    .unwrap()
+                    .clone();
+                imp.list_view.set_model(Some(&model));
+                imp.list_view.set_single_click_activate(true);
+                imp.list_view
+                    .remove_css_class("sidebar-list-view-multi-selection-mode");
+            }
+            SelectionMode::Multi => {
+                imp.header_bar_stack
+                    .set_visible_child(&imp.selection_header_bar.get());
+
+                let model = imp.multi_selection_model.borrow().as_ref().unwrap().clone();
+                imp.list_view.set_model(Some(&model));
+                imp.list_view.set_single_click_activate(false);
+                imp.list_view
+                    .add_css_class("sidebar-list-view-multi-selection-mode");
+            }
+        }
+
+        imp.selection_mode.set(selection_mode);
+        self.notify("selection-mode");
+    }
+
+    pub fn multi_selection_model(&self) -> Option<gtk::MultiSelection> {
+        let imp = imp::Sidebar::from_instance(self);
+        imp.multi_selection_model.borrow().as_ref().cloned()
+    }
+
+    fn setup_signals(&self) {
+        let gesture_click = gtk::GestureClick::new();
+        gesture_click.set_button(3);
+        gesture_click.connect_pressed(clone!(@weak self as obj => move |_,_,_,_| {
+            obj.set_selection_mode(SelectionMode::Multi);
+        }));
+        self.add_controller(&gesture_click);
+    }
+
+    fn setup_expressions(&self) {
+        let imp = imp::Sidebar::from_instance(self);
+
+        let list_view_expression = gtk::ConstantExpression::new(&imp.list_view.get());
+        let model_expression = gtk::PropertyExpression::new(
+            gtk::ListView::static_type(),
+            Some(&list_view_expression),
+            "model",
+        );
+        let model_is_some_expression = gtk::ClosureExpression::new(
+            |args| {
+                let model: Option<gtk::SelectionModel> = args[1].get().unwrap();
+
+                if model.is_some() {
+                    "filled-view"
+                } else {
+                    "empty-view"
+                }
+            },
+            &[model_expression.upcast()],
+        );
+        model_is_some_expression.bind(&imp.stack.get(), "visible-child-name", None::<&gtk::Widget>);
+    }
+
+    fn setup_list_view(&self) {
+        let imp = imp::Sidebar::from_instance(self);
+
+        let factory = gtk::SignalListItemFactory::new();
+        factory.connect_setup(clone!(@weak self as obj => move |_, list_item| {
+            let note_row = NoteRow::new(&obj);
+            obj.bind_property("selection-mode", &note_row, "selection-mode").flags(glib::BindingFlags::SYNC_CREATE).build();
+
+            let list_item_expression = gtk::ConstantExpression::new(list_item);
+
+            let note_expression = gtk::PropertyExpression::new(
+                gtk::ListItem::static_type(),
+                Some(&list_item_expression),
+                "item",
+            );
+            note_expression.bind(&note_row, "note", None::<&gtk::Widget>);
+
+            let selected_expression = gtk::PropertyExpression::new(
+                gtk::ListItem::static_type(),
+                Some(&list_item_expression),
+                "selected",
+            );
+            selected_expression.bind(&note_row, "is-checked", None::<&gtk::Widget>);
+
+            let position_expression = gtk::PropertyExpression::new(
+                gtk::ListItem::static_type(),
+                Some(&list_item_expression),
+                "position"
+            );
+            position_expression.bind(&note_row, "position", None::<&gtk::Widget>);
+
+            list_item.set_child(Some(&note_row));
+        }));
+
+        imp.list_view.set_factory(Some(&factory));
+
+        imp.list_view
+            .get()
+            .connect_activate(move |list_view, index| {
+                let model: Option<Selection> = list_view.model().and_then(|o| o.downcast().ok());
+                let note: Option<glib::Object> = model.as_ref().and_then(|m| m.item(index));
+
+                if let (Some(model), Some(_)) = (model, note) {
+                    model.set_selected(index);
+                }
+            });
     }
 }

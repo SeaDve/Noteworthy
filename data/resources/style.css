@@ -7,6 +7,10 @@
   padding: 9px;
 }
 
+.sidebar-list-view-multi-selection-mode row:selected {
+  background: none;
+}
+
 .sidebar-spinner {
   min-width: 32px;
   min-height: 32px;

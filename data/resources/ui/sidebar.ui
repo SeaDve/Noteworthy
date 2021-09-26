@@ -22,24 +22,39 @@
       <class name="sidebar"/>
     </style>
     <child>
-      <object class="AdwHeaderBar">
-        <property name="centering-policy">strict</property>
-        <property name="show-end-title-buttons" bind-source="NwtySidebar" bind-property="compact" bind-flags="sync-create"/>
-        <property name="title-widget">
-          <object class="NwtySidebarViewSwitcher" id="view_switcher">
-          </object>
-        </property>
+      <object class="GtkStack" id="header_bar_stack">
         <child>
-          <object class="GtkButton">
-            <property name="icon-name">list-add-symbolic</property>
-            <property name="action-name">sidebar.create-note</property>
+          <object class="AdwHeaderBar" id="main_header_bar">
+            <property name="centering-policy">strict</property>
+            <property name="show-end-title-buttons" bind-source="NwtySidebar" bind-property="compact" bind-flags="sync-create"/>
+            <property name="title-widget">
+              <object class="NwtySidebarViewSwitcher" id="view_switcher">
+              </object>
+            </property>
+            <child>
+              <object class="GtkButton">
+                <property name="icon-name">list-add-symbolic</property>
+                <property name="action-name">sidebar.create-note</property>
+              </object>
+            </child>
+            <child type="end">
+              <object class="GtkMenuButton">
+                <property name="icon-name">open-menu-symbolic</property>
+                <property name="menu-model">primary_menu</property>
+                <property name="primary">True</property>
+              </object>
+            </child>
           </object>
         </child>
-        <child type="end">
-          <object class="GtkMenuButton">
-            <property name="icon-name">open-menu-symbolic</property>
-            <property name="menu-model">primary_menu</property>
-            <property name="primary">True</property>
+        <child>
+          <object class="AdwHeaderBar" id="selection_header_bar">
+            <property name="show-end-title-buttons" bind-source="NwtySidebar" bind-property="compact" bind-flags="sync-create"/>
+            <child type="end">
+              <object class="GtkButton">
+                <property name="label" translatable="yes">Cancel</property>
+                <property name="action-name">sidebar.cancel-multi-selection-mode</property>
+              </object>
+            </child>
           </object>
         </child>
       </object>
@@ -53,27 +68,9 @@
               <object class="GtkScrolledWindow">
                 <property name="vexpand">True</property>
                 <property name="hscrollbar-policy">never</property>
-                  <property name="child">
-                    <object class="GtkListView" id="listview">
-                      <property name="single-click-activate">True</property>
-                      <property name="factory">
-                        <object class="GtkBuilderListItemFactory">
-                          <property name="bytes"><![CDATA[
-<?xml version="1.0" encoding="UTF-8"?>
-<interface>
-  <template class="GtkListItem">
-    <property name="child">
-      <object class="NwtySidebarNoteRow">
-        <binding name="note">
-          <lookup name="item">GtkListItem</lookup>
-        </binding>
-      </object>
-    </property>
-  </template>
-</interface>
-                      ]]></property>
-                      </object>
-                    </property>
+                <property name="child">
+                  <object class="GtkListView" id="list_view">
+                    <property name="single-click-activate">True</property>
                     <style>
                       <class name="navigation-sidebar"/>
                       <class name="sidebar-list-view"/>

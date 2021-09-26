@@ -1,7 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <template class="NwtySidebarNoteRow" parent="AdwBin">
-    <property name="child">
+  <template class="NwtySidebarNoteRow" parent="GtkBox">
+    <child>
+      <object class="GtkRevealer" id="check_button_revealer">
+        <property name="transition-type">slide-right</property>
+        <property name="child">
+          <object class="GtkCheckButton" id="check_button">
+            <property name="margin-start">6</property>
+            <property name="margin-end">12</property>
+          </object>
+        </property>
+      </object>
+    </child>
+    <child>
       <object class="GtkBox">
         <property name="spacing">6</property>
         <property name="orientation">vertical</property>
@@ -61,6 +72,6 @@
           </object>
         </child>
       </object>
-    </property>
+    </child>
   </template>
 </interface>
