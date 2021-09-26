@@ -1,13 +1,7 @@
-mod category;
-mod category_row;
-mod item_list;
 mod note_row;
-mod row;
-mod selection;
 mod view_switcher;
 
 use gtk::{
-    gio,
     glib::{self, clone},
     prelude::*,
     subclass::prelude::*,
@@ -18,11 +12,7 @@ use once_cell::unsync::OnceCell;
 use std::cell::{Cell, RefCell};
 
 use self::{
-    category_row::CategoryRow,
-    item_list::ItemList,
     note_row::NoteRow,
-    row::Row,
-    selection::Selection,
     view_switcher::{ItemKind, ViewSwitcher},
 };
 use super::{tag_list::TagList, Note, NoteList, Session};
@@ -55,7 +45,6 @@ mod imp {
         fn class_init(klass: &mut Self::Class) {
             ViewSwitcher::static_type();
             NoteRow::static_type();
-            Row::static_type();
             Self::bind_template(klass);
 
             klass.install_action("sidebar.create-note", None, move |obj, _, _| {
@@ -78,25 +67,6 @@ mod imp {
     impl ObjectImpl for Sidebar {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
-
-            self.listview.get().connect_activate(move |listview, pos| {
-                let model: Option<Selection> = listview.model().and_then(|o| o.downcast().ok());
-                let row: Option<gtk::TreeListRow> = model
-                    .as_ref()
-                    .and_then(|m| m.item(pos))
-                    .and_then(|o| o.downcast().ok());
-
-                let (model, row) = match (model, row) {
-                    (Some(model), Some(row)) => (model, row),
-                    _ => return,
-                };
-
-                match row.item() {
-                    // Some(o) if o.is::<Category>() => row.set_expanded(!row.is_expanded()),
-                    Some(o) if o.is::<Note>() => model.set_selected(pos),
-                    _ => {}
-                }
-            });
 
             let listview_expression = gtk::ConstantExpression::new(&self.listview.get());
             let model_expression = gtk::PropertyExpression::new(
@@ -204,51 +174,63 @@ impl Sidebar {
     pub fn set_note_list(&self, note_list: NoteList) {
         let imp = imp::Sidebar::from_instance(self);
 
-        // TODO: hide empty categories
-        let item_list = ItemList::new(&note_list);
-        let tree_model = gtk::TreeListModel::new(&item_list, false, true, |item| {
-            item.clone().downcast::<gio::ListModel>().ok()
+        let sorter = gtk::CustomSorter::new(move |obj1, obj2| {
+            let note_1 = obj1.downcast_ref::<Note>().unwrap().metadata();
+            let note_2 = obj2.downcast_ref::<Note>().unwrap().metadata();
+
+            // Sort is pinned first before classifying by last modified
+            if note_1.is_pinned() == note_2.is_pinned() {
+                note_2.last_modified().cmp(&note_1.last_modified()).into()
+            } else if note_1.is_pinned() && !note_2.is_pinned() {
+                gtk::Ordering::Smaller
+            } else {
+                gtk::Ordering::Larger
+            }
         });
+        let sorter_model = gtk::SortListModelBuilder::new()
+            .incremental(true)
+            .sorter(&sorter)
+            .model(&note_list)
+            .build();
 
         let filter_expression = gtk::ClosureExpression::new(
             clone!(@weak self as obj => @default-return true, move |value| {
-                value[0]
-                    .get::<gtk::TreeListRow>()
-                    .unwrap()
-                    .item()
-                    .and_then(|o| o.downcast::<Note>().ok())
-                    .map_or(true, |note| {
-                        let imp = imp::Sidebar::from_instance(&obj);
-                        let note = note.metadata();
+                let note = value[0].get::<Note>().unwrap().metadata();
+                let imp = imp::Sidebar::from_instance(&obj);
 
-                        match imp.view_switcher.selected_type() {
-                            ItemKind::AllNotes => !note.is_trashed(),
-                            ItemKind::Trash => note.is_trashed(),
-                            ItemKind::Tag(ref tag) => {
-                                note.tag_list().contains(tag) && !note.is_trashed()
-                            }
-                            ItemKind::Separator | ItemKind::Category | ItemKind::EditTags => {
-                                log::warn!("Trying to select an unselectable row");
-                                imp.view_switcher.set_selected_item_to_default();
-                                true
-                            }
-                        }
-                    })
+                match imp.view_switcher.selected_type() {
+                    ItemKind::AllNotes => !note.is_trashed(),
+                    ItemKind::Trash => note.is_trashed(),
+                    ItemKind::Tag(ref tag) => {
+                        note.tag_list().contains(tag) && !note.is_trashed()
+                    }
+                    ItemKind::Separator | ItemKind::Category | ItemKind::EditTags => {
+                        // FIXME handle this inside view_switcher
+                        log::warn!("Trying to select an unselectable row");
+                        imp.view_switcher.set_selected_item_to_default();
+                        true
+                    }
+                }
             }),
             &[],
         );
         let filter = gtk::BoolFilterBuilder::new()
             .expression(&filter_expression)
             .build();
-        let filter_model = gtk::FilterListModel::new(Some(&tree_model), Some(&filter));
+        let filter_model = gtk::FilterListModelBuilder::new()
+            .incremental(true)
+            .filter(&filter)
+            .model(&sorter_model)
+            .build();
 
         imp.view_switcher.connect_selected_type_notify(move |_, _| {
             filter.changed(gtk::FilterChange::Different);
         });
 
-        let selection = Selection::new(Some(&filter_model));
-        self.bind_property("selected-note", &selection, "selected-item")
-            .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
+        let selection = gtk::SingleSelection::new(Some(&filter_model));
+        selection
+            .bind_property("selected-item", self, "selected-note")
+            .flags(glib::BindingFlags::SYNC_CREATE)
             .build();
 
         imp.listview.set_model(Some(&selection));

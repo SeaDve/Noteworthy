@@ -55,7 +55,6 @@
                 <property name="hscrollbar-policy">never</property>
                   <property name="child">
                     <object class="GtkListView" id="listview">
-                      <property name="single-click-activate">true</property>
                       <property name="factory">
                         <object class="GtkBuilderListItemFactory">
                           <property name="bytes"><![CDATA[
@@ -63,8 +62,8 @@
 <interface>
   <template class="GtkListItem">
     <property name="child">
-      <object class="NwtySidebarRow">
-        <binding name="list-row">
+      <object class="NwtySidebarNoteRow">
+        <binding name="note">
           <lookup name="item">GtkListItem</lookup>
         </binding>
       </object>
@@ -76,6 +75,7 @@
                     </property>
                     <style>
                       <class name="navigation-sidebar"/>
+                      <class name="sidebar-list-view"/>
                     </style>
                   </object>
                 </property>

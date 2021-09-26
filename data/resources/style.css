@@ -2,19 +2,9 @@
   min-width: 300px;
 }
 
-.sidebar row {
+.sidebar-list-view row {
   min-height: 30px;
-  padding-left: 9px;
-  padding-right: 9px;
-}
-
-.sidebar .category {
-  padding-top: 9px;
-}
-
-.sidebar .note {
-  padding-top: 9px;
-  padding-bottom: 9px;
+  padding: 9px;
 }
 
 .sidebar-spinner {
@@ -25,8 +15,6 @@
 .sidebar-view-switcher-popover row {
   min-height: 6px;
   min-width: 120px;
-  padding-right: 0px;
-  padding-left: 0px;
 }
 
 .sidebar-view-switcher-popover row:selected {

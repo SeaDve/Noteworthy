@@ -25,6 +25,19 @@
               </object>
             </child>
             <child>
+              <object class="GtkImage">
+                <property name="icon-name">view-pin-symbolic</property>
+                <property name="pixel-size">12</property>
+                <binding name="visible">
+                  <lookup name="is-pinned">
+                    <lookup name="metadata">
+                      <lookup name="note">NwtySidebarNoteRow</lookup>
+                    </lookup>
+                  </lookup>
+                </binding>
+              </object>
+            </child>
+            <child>
               <object class="GtkLabel" id="time_label">
                 <property name="hexpand">True</property>
                 <property name="halign">end</property>
