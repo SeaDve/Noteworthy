@@ -176,11 +176,6 @@ impl NoteRow {
 
     pub fn set_is_checked(&self, is_checked: bool) {
         let imp = imp::NoteRow::from_instance(self);
-
-        if self.selection_mode() == SelectionMode::Single {
-            return;
-        }
-
         imp.check_button.set_active(is_checked);
         imp.is_checked.set(is_checked);
         self.notify("is-checked");
@@ -313,5 +308,13 @@ impl NoteRow {
                     model.unselect_item(obj.position());
                 }
             }));
+
+        let gesture_click = gtk::GestureClick::new();
+        gesture_click.set_button(3);
+        gesture_click.connect_pressed(clone!(@weak self as obj => move |_,_,_,_| {
+            obj.set_is_checked(true);
+            obj.sidebar().set_selection_mode(SelectionMode::Multi);
+        }));
+        self.add_controller(&gesture_click);
     }
 }

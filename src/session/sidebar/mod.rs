@@ -118,7 +118,6 @@ mod imp {
 
             obj.setup_list_view();
             obj.setup_expressions();
-            obj.setup_signals();
         }
 
         fn properties() -> &'static [glib::ParamSpec] {
@@ -353,15 +352,6 @@ impl Sidebar {
     pub fn multi_selection_model(&self) -> Option<gtk::MultiSelection> {
         let imp = imp::Sidebar::from_instance(self);
         imp.multi_selection_model.borrow().as_ref().cloned()
-    }
-
-    fn setup_signals(&self) {
-        let gesture_click = gtk::GestureClick::new();
-        gesture_click.set_button(3);
-        gesture_click.connect_pressed(clone!(@weak self as obj => move |_,_,_,_| {
-            obj.set_selection_mode(SelectionMode::Multi);
-        }));
-        self.add_controller(&gesture_click);
     }
 
     fn setup_expressions(&self) {
