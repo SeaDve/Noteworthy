@@ -38,6 +38,7 @@ rust_sources = files(
   'session/sidebar/view_switcher/popover.rs',
   'session/sidebar/mod.rs',
   'session/sidebar/note_row.rs',
+  'session/sidebar/selection.rs',
   'session/tag_editor/mod.rs',
   'session/tag_editor/row.rs',
   'session/mod.rs',

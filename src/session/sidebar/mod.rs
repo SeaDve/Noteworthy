@@ -1,4 +1,5 @@
 mod note_row;
+mod selection;
 mod view_switcher;
 
 use gtk::{
@@ -13,6 +14,7 @@ use std::cell::{Cell, RefCell};
 
 use self::{
     note_row::NoteRow,
+    selection::Selection,
     view_switcher::{ItemKind, ViewSwitcher},
 };
 use super::{tag_list::TagList, Note, NoteList, Session};
@@ -67,6 +69,17 @@ mod imp {
     impl ObjectImpl for Sidebar {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
+
+            self.listview
+                .get()
+                .connect_activate(move |listview, index| {
+                    let model: Option<Selection> = listview.model().and_then(|o| o.downcast().ok());
+                    let note: Option<glib::Object> = model.as_ref().and_then(|m| m.item(index));
+
+                    if let (Some(model), Some(_)) = (model, note) {
+                        model.set_selected(index);
+                    }
+                });
 
             let listview_expression = gtk::ConstantExpression::new(&self.listview.get());
             let model_expression = gtk::PropertyExpression::new(
@@ -219,13 +232,9 @@ impl Sidebar {
             filter.changed(gtk::FilterChange::Different);
         });
 
-        let selection = gtk::SingleSelection::new(Some(&filter_model));
-        selection.set_autoselect(false);
-        // FIXME remove this after using custom selection
-        selection.set_selected(gtk::INVALID_LIST_POSITION);
-        selection
-            .bind_property("selected-item", self, "selected-note")
-            .flags(glib::BindingFlags::SYNC_CREATE)
+        let selection = Selection::new(Some(&filter_model));
+        self.bind_property("selected-note", &selection, "selected-item")
+            .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
             .build();
 
         imp.listview.set_model(Some(&selection));
@@ -237,13 +246,6 @@ impl Sidebar {
         }
 
         let imp = imp::Sidebar::from_instance(self);
-
-        // FIXME remove this after using custom selection
-        if selected_note.is_none() {
-            let model: gtk::SingleSelection = imp.listview.model().unwrap().downcast().unwrap();
-            model.set_selected(gtk::INVALID_LIST_POSITION);
-        }
-
         imp.selected_note.replace(selected_note);
         self.notify("selected-note");
     }
