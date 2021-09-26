@@ -274,9 +274,9 @@ impl Sidebar {
 
             let imp = imp::Sidebar::from_instance(&obj);
             if n_selected_items == 0 {
-                imp.selection_menu_button.set_label(&gettext("No selected item"));
+                imp.selection_menu_button.set_label(&gettext("No note selected"));
             } else {
-                imp.selection_menu_button.set_label(&gettext!("{} selected items", n_selected_items));
+                imp.selection_menu_button.set_label(&gettext!("{} note selected", n_selected_items));
             }
         }));
         imp.multi_selection_model

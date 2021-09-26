@@ -63,7 +63,6 @@
             <property name="show-end-title-buttons" bind-source="NwtySidebar" bind-property="compact" bind-flags="sync-create"/>
             <property name="title-widget">
               <object class="GtkMenuButton" id="selection_menu_button">
-                <property name="label" translatable="yes">No selected item</property>
                 <property name="menu-model">selection_menu</property>
                 <property name="has-frame">False</property>
               </object>
