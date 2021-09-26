@@ -42,6 +42,7 @@ mod imp {
 
             obj.buffer().connect_changed(clone!(@weak obj => move |_| {
                 obj.metadata().update_last_modified();
+                obj.notify("buffer"); // For some reason the subtitle doesn't get updated when the filter model is not incremental
                 obj.set_is_saved(false);
             }));
 
