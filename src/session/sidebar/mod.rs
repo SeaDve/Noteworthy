@@ -88,12 +88,9 @@ mod imp {
             });
 
             klass.install_action(
-                "sidebar.cancel-multi-selection-mode",
+                "sidebar.multi-selection-mode-done",
                 None,
                 move |obj, _, _| {
-                    let model = obj.multi_selection_model().unwrap();
-                    model.unselect_all();
-
                     obj.set_selection_mode(SelectionMode::Single);
                 },
             );
