@@ -54,6 +54,11 @@ mod imp {
             Content::static_type();
             Self::bind_template(klass);
 
+            klass.install_action("session.create-note", None, move |obj, _, _| {
+                let note_manager = obj.note_manager();
+                note_manager.create_note().expect("Failed to create note");
+            });
+
             klass.install_action("session.edit-tags", None, move |obj, _, _| {
                 let tag_list = obj.note_manager().tag_list();
                 let note_list = obj.note_manager().note_list();
@@ -103,8 +108,6 @@ mod imp {
                 imp.sidebar.set_note_list(note_manager.note_list());
                 imp.sidebar.set_tag_list(note_manager.tag_list());
             }));
-
-            self.sidebar.set_session(obj.clone());
         }
 
         fn properties() -> &'static [glib::ParamSpec] {

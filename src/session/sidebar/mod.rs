@@ -9,7 +9,6 @@ use gtk::{
     subclass::prelude::*,
     CompositeTemplate,
 };
-use once_cell::unsync::OnceCell;
 
 use std::cell::{Cell, RefCell};
 
@@ -18,7 +17,7 @@ use self::{
     selection::Selection,
     view_switcher::{ItemKind, ViewSwitcher},
 };
-use super::{tag_list::TagList, Note, NoteList, Session};
+use super::{tag_list::TagList, Note, NoteList};
 
 #[derive(Debug, Clone, Copy, PartialEq, GEnum)]
 #[genum(type_name = "SidebarSelectionMode")]
@@ -62,7 +61,6 @@ mod imp {
 
         pub single_selection_model: RefCell<Option<Selection>>,
         pub multi_selection_model: RefCell<Option<gtk::MultiSelection>>,
-        pub session: OnceCell<Session>,
     }
 
     #[glib::object_subclass]
@@ -75,17 +73,6 @@ mod imp {
             ViewSwitcher::static_type();
             NoteRow::static_type();
             Self::bind_template(klass);
-
-            klass.install_action("sidebar.create-note", None, move |obj, _, _| {
-                // FIXME more proper way to create note
-                let imp = imp::Sidebar::from_instance(obj);
-                imp.session
-                    .get()
-                    .unwrap()
-                    .note_manager()
-                    .create_note()
-                    .expect("Failed to create note");
-            });
 
             klass.install_action(
                 "sidebar.multi-selection-mode-done",
@@ -300,12 +287,6 @@ impl Sidebar {
     pub fn set_tag_list(&self, tag_list: TagList) {
         let imp = imp::Sidebar::from_instance(self);
         imp.view_switcher.set_tag_list(tag_list);
-    }
-
-    // TODO remove this in the future
-    pub fn set_session(&self, session: Session) {
-        let imp = imp::Sidebar::from_instance(self);
-        imp.session.set(session).unwrap();
     }
 
     pub fn selection_mode(&self) -> SelectionMode {
