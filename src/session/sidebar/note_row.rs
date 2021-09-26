@@ -312,7 +312,8 @@ impl NoteRow {
         let gesture_click = gtk::GestureClick::new();
         gesture_click.set_button(3);
         gesture_click.connect_pressed(clone!(@weak self as obj => move |_,_,_,_| {
-            obj.set_is_checked(true);
+            let model = obj.sidebar().multi_selection_model().unwrap();
+            model.select_item(obj.position(), true);
             obj.sidebar().set_selection_mode(SelectionMode::Multi);
         }));
         self.add_controller(&gesture_click);
