@@ -69,8 +69,8 @@
             </property>
             <child type="end">
               <object class="GtkButton">
-                <property name="label" translatable="yes">Cancel</property>
-                <property name="action-name">sidebar.cancel-multi-selection-mode</property>
+                <property name="label" translatable="yes">Done</property>
+                <property name="action-name">sidebar.multi-selection-mode-done</property>
               </object>
             </child>
           </object>
