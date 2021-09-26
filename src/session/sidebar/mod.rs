@@ -220,6 +220,9 @@ impl Sidebar {
         });
 
         let selection = gtk::SingleSelection::new(Some(&filter_model));
+        selection.set_autoselect(false);
+        // FIXME remove this after using custom selection
+        selection.set_selected(gtk::INVALID_LIST_POSITION);
         selection
             .bind_property("selected-item", self, "selected-note")
             .flags(glib::BindingFlags::SYNC_CREATE)
@@ -234,6 +237,13 @@ impl Sidebar {
         }
 
         let imp = imp::Sidebar::from_instance(self);
+
+        // FIXME remove this after using custom selection
+        if selected_note.is_none() {
+            let model: gtk::SingleSelection = imp.listview.model().unwrap().downcast().unwrap();
+            model.set_selected(gtk::INVALID_LIST_POSITION);
+        }
+
         imp.selected_note.replace(selected_note);
         self.notify("selected-note");
     }

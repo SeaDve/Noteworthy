@@ -65,7 +65,7 @@ impl NoteList {
         let imp = &imp::NoteList::from_instance(self);
 
         note.connect_metadata_changed(clone!(@weak self as obj => move |note| {
-            if let Some((position, _, _)) = obj.get_full(&note.id()) {
+            if let Some(position) = obj.get_index_of(&note.id()) {
                 obj.items_changed(position as u32, 1, 1);
             }
         }));
@@ -96,12 +96,9 @@ impl NoteList {
         imp.list.borrow().get(note_id).cloned()
     }
 
-    fn get_full(&self, note_id: &Id) -> Option<(usize, Id, Note)> {
+    pub fn get_index_of(&self, note_id: &Id) -> Option<usize> {
         let imp = imp::NoteList::from_instance(self);
-        imp.list
-            .borrow()
-            .get_full(note_id)
-            .map(|(pos, note_id, note)| (pos, note_id.clone(), note.clone()))
+        imp.list.borrow().get_index_of(note_id)
     }
 
     pub fn iter(&self) -> Iter {
