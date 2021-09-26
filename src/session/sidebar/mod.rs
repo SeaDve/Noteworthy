@@ -187,11 +187,7 @@ impl Sidebar {
                 gtk::Ordering::Larger
             }
         });
-        let sorter_model = gtk::SortListModelBuilder::new()
-            .incremental(true)
-            .sorter(&sorter)
-            .model(&note_list)
-            .build();
+        let sorter_model = gtk::SortListModel::new(Some(&note_list), Some(&sorter));
 
         let filter_expression = gtk::ClosureExpression::new(
             clone!(@weak self as obj => @default-return true, move |value| {
@@ -217,11 +213,7 @@ impl Sidebar {
         let filter = gtk::BoolFilterBuilder::new()
             .expression(&filter_expression)
             .build();
-        let filter_model = gtk::FilterListModelBuilder::new()
-            .incremental(true)
-            .filter(&filter)
-            .model(&sorter_model)
-            .build();
+        let filter_model = gtk::FilterListModel::new(Some(&sorter_model), Some(&filter));
 
         imp.view_switcher.connect_selected_type_notify(move |_, _| {
             filter.changed(gtk::FilterChange::Different);
