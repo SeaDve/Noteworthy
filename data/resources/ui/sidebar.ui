@@ -117,5 +117,41 @@
         </child>
       </object>
     </child>
+    <child>
+      <object class="GtkSeparator"/>
+    </child>
+    <child>
+      <object class="GtkRevealer" id="action_bar_revealer">
+        <property name="transition-type">slide-up</property>
+        <style>
+          <class name="sidebar-action-bar"/>
+        </style>
+        <property name="child">
+          <object class="GtkBox">
+            <property name="halign">end</property>
+            <property name="spacing">12</property>
+            <child type="end">
+              <object class="GtkToggleButton" id="is_trashed_button">
+                <property name="icon-name">user-trash-symbolic</property>
+                <property name="has-frame">False</property>
+              </object>
+            </child>
+            <child type="end">
+              <object class="GtkToggleButton" id="is_pinned_button">
+                <property name="icon-name">view-pin-symbolic</property>
+                <property name="has-frame">False</property>
+              </object>
+            </child>
+            <child type="end">
+              <object class="GtkButton" id="edit_tags_button">
+                <property name="icon-name">tag-symbolic</property>
+                <property name="action-name">session.edit-note-tags</property>
+                <property name="has-frame">False</property>
+              </object>
+            </child>
+          </object>
+        </property>
+      </object>
+    </child>
   </template>
 </interface>

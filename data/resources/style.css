@@ -11,6 +11,14 @@
   background: none;
 }
 
+.sidebar-action-bar {
+  background: @theme_bg_color;
+}
+
+.sidebar-action-bar box {
+  padding: 6px;
+}
+
 .sidebar-spinner {
   min-width: 32px;
   min-height: 32px;

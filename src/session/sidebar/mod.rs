@@ -53,6 +53,8 @@ mod imp {
         pub selection_header_bar: TemplateChild<adw::HeaderBar>,
         #[template_child]
         pub selection_menu_button: TemplateChild<gtk::MenuButton>,
+        #[template_child]
+        pub action_bar_revealer: TemplateChild<gtk::Revealer>,
 
         pub compact: Cell<bool>,
         pub selection_mode: Cell<SelectionMode>,
@@ -321,6 +323,7 @@ impl Sidebar {
             SelectionMode::Single => {
                 imp.header_bar_stack
                     .set_visible_child(&imp.main_header_bar.get());
+                imp.action_bar_revealer.set_reveal_child(false);
 
                 let model = imp
                     .single_selection_model
@@ -336,6 +339,7 @@ impl Sidebar {
             SelectionMode::Multi => {
                 imp.header_bar_stack
                     .set_visible_child(&imp.selection_header_bar.get());
+                imp.action_bar_revealer.set_reveal_child(true);
 
                 let model = imp.multi_selection_model.borrow().as_ref().unwrap().clone();
                 imp.list_view.set_model(Some(&model));

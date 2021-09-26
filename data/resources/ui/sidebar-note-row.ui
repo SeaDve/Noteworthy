@@ -6,7 +6,6 @@
         <property name="transition-type">slide-right</property>
         <property name="child">
           <object class="GtkCheckButton" id="check_button">
-            <property name="margin-start">6</property>
             <property name="margin-end">12</property>
           </object>
         </property>
