@@ -16,6 +16,18 @@
       </item>
     </section>
   </menu>
+  <menu id="selection_menu">
+    <section>
+      <item>
+        <attribute name="label" translatable="yes">Select _All</attribute>
+        <attribute name="action">sidebar.select-all</attribute>
+      </item>
+      <item>
+        <attribute name="label" translatable="yes">Select _None</attribute>
+        <attribute name="action">sidebar.select-none</attribute>
+      </item>
+    </section>
+  </menu>
   <template class="NwtySidebar" parent="GtkBox">
     <property name="orientation">vertical</property>
     <style>
@@ -49,6 +61,11 @@
         <child>
           <object class="AdwHeaderBar" id="selection_header_bar">
             <property name="show-end-title-buttons" bind-source="NwtySidebar" bind-property="compact" bind-flags="sync-create"/>
+            <property name="title-widget">
+              <object class="GtkMenuButton">
+                <property name="menu-model">selection_menu</property>
+              </object>
+            </property>
             <child type="end">
               <object class="GtkButton">
                 <property name="label" translatable="yes">Cancel</property>

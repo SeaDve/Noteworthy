@@ -86,16 +86,22 @@ mod imp {
                 "sidebar.cancel-multi-selection-mode",
                 None,
                 move |obj, _, _| {
-                    let imp = imp::Sidebar::from_instance(obj);
-                    imp.multi_selection_model
-                        .borrow()
-                        .as_ref()
-                        .unwrap()
-                        .unselect_all();
+                    let model = obj.multi_selection_model().unwrap();
+                    model.unselect_all();
 
                     obj.set_selection_mode(SelectionMode::Single);
                 },
             );
+
+            klass.install_action("sidebar.select-all", None, move |obj, _, _| {
+                let model = obj.multi_selection_model().unwrap();
+                model.select_all();
+            });
+
+            klass.install_action("sidebar.select-none", None, move |obj, _, _| {
+                let model = obj.multi_selection_model().unwrap();
+                model.unselect_all();
+            });
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
