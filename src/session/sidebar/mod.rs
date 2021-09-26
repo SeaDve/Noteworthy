@@ -2,6 +2,7 @@ mod note_row;
 mod selection;
 mod view_switcher;
 
+use gettextrs::gettext;
 use gtk::{
     glib::{self, clone, GEnum},
     prelude::*,
@@ -50,6 +51,8 @@ mod imp {
         pub main_header_bar: TemplateChild<adw::HeaderBar>,
         #[template_child]
         pub selection_header_bar: TemplateChild<adw::HeaderBar>,
+        #[template_child]
+        pub selection_menu_button: TemplateChild<gtk::MenuButton>,
 
         pub compact: Cell<bool>,
         pub selection_mode: Cell<SelectionMode>,
@@ -265,6 +268,16 @@ impl Sidebar {
             .replace(Some(single_selection_model));
 
         let multi_selection_model = gtk::MultiSelection::new(Some(&filter_model));
+        multi_selection_model.connect_selection_changed(clone!(@weak self as obj => move |model,_,_| {
+            let n_selected_items = model.selection().size();
+
+            let imp = imp::Sidebar::from_instance(&obj);
+            if n_selected_items == 0 {
+                imp.selection_menu_button.set_label(&gettext("No selected item"));
+            } else {
+                imp.selection_menu_button.set_label(&gettext!("{} selected items", n_selected_items));
+            }
+        }));
         imp.multi_selection_model
             .replace(Some(multi_selection_model));
 
