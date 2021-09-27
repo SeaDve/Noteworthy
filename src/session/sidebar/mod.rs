@@ -85,8 +85,6 @@ mod imp {
                 None,
                 move |obj, _, _| {
                     obj.set_selection_mode(SelectionMode::Single);
-
-                    dbg!(obj.multi_selection_model().unwrap().selection().size());
                 },
             );
 
