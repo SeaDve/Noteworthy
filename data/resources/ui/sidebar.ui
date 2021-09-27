@@ -131,19 +131,19 @@
             <property name="halign">end</property>
             <property name="spacing">12</property>
             <child type="end">
-              <object class="GtkToggleButton" id="trash_button">
-                <property name="icon-name">user-trash-symbolic</property>
-                <property name="has-frame">False</property>
-              </object>
-            </child>
-            <child type="end">
               <object class="GtkToggleButton" id="pin_button">
                 <property name="icon-name">view-pin-symbolic</property>
                 <property name="has-frame">False</property>
               </object>
             </child>
             <child type="end">
-              <object class="GtkButton" id="edit_tags_button">
+              <object class="GtkToggleButton" id="trash_button">
+                <property name="icon-name">user-trash-symbolic</property>
+                <property name="has-frame">False</property>
+              </object>
+            </child>
+            <child type="end">
+              <object class="GtkButton" id="tag_button">
                 <property name="icon-name">tag-symbolic</property>
                 <property name="action-name">session.edit-note-tags</property>
                 <property name="has-frame">False</property>

@@ -58,6 +58,8 @@ mod imp {
         pub pin_button: TemplateChild<gtk::ToggleButton>,
         #[template_child]
         pub trash_button: TemplateChild<gtk::ToggleButton>,
+        #[template_child]
+        pub tag_button: TemplateChild<gtk::Button>,
 
         pub compact: Cell<bool>,
         pub selection_mode: Cell<SelectionMode>,
@@ -108,6 +110,7 @@ mod imp {
 
             obj.setup_list_view();
             obj.setup_expressions();
+            obj.setup_signals();
         }
 
         fn properties() -> &'static [glib::ParamSpec] {
@@ -261,12 +264,14 @@ impl Sidebar {
             clone!(@weak self as obj => move |model,_,_| {
                 obj.update_selection_menu_button_label(model.selection().size());
                 obj.update_action_bar();
+                obj.update_action_bar_sensitivity();
             }),
         );
         multi_selection_model.connect_items_changed(
             clone!(@weak self as obj => move |model,_,_,_| {
                 obj.update_selection_menu_button_label(model.selection().size());
                 obj.update_action_bar();
+                obj.update_action_bar_sensitivity();
             }),
         );
         imp.multi_selection_model
@@ -342,17 +347,31 @@ impl Sidebar {
         model.selection()
     }
 
+    fn update_action_bar_sensitivity(&self) {
+        let model = self.multi_selection_model().unwrap();
+        let is_selection_empty = model.selection().size() == 0;
+
+        let imp = imp::Sidebar::from_instance(self);
+        imp.tag_button.set_sensitive(!is_selection_empty);
+        imp.trash_button.set_sensitive(!is_selection_empty);
+        imp.pin_button.set_sensitive(!is_selection_empty);
+    }
+
     fn update_action_bar(&self) {
         let imp = imp::Sidebar::from_instance(self);
+        let model = self.multi_selection_model().unwrap();
 
         let is_there_pinned_in_selected_notes = {
-            let model = self.multi_selection_model().unwrap();
             let bitset = self.selected_notes_bitset();
 
             // Just check the first selectednote since the selection is always sorted pinned first
             if let Some((_, index)) = gtk::BitsetIter::init_first(&bitset) {
-                let first_selected_note = model.item(index).unwrap().downcast::<Note>().unwrap();
-                first_selected_note.metadata().is_pinned()
+                if let Some(item) = model.item(index) {
+                    let first_selected_note = item.downcast::<Note>().unwrap();
+                    first_selected_note.metadata().is_pinned()
+                } else {
+                    false
+                }
             } else {
                 false
             }
@@ -362,7 +381,9 @@ impl Sidebar {
 
         // It is only possible for trash button to be active when we are on trash page
         let is_on_trash_page = imp.view_switcher.selected_type() == ItemKind::Trash;
-        imp.trash_button.set_active(is_on_trash_page);
+        let is_selection_empty = model.selection().size() == 0;
+        imp.trash_button
+            .set_active(is_on_trash_page && !is_selection_empty);
     }
 
     fn update_selection_menu_button_label(&self, n_selected_items: u64) {
@@ -373,6 +394,42 @@ impl Sidebar {
             gettext!("{} selected", n_selected_items)
         };
         imp.selection_menu_button.set_label(&label);
+    }
+
+    // FIXME make this an iterator to not iterate twice
+    fn selected_notes(&self) -> Vec<Note> {
+        let model = self.multi_selection_model().unwrap();
+        let bitset = model.selection();
+        let mut note_vec = Vec::new();
+
+        if let Some((bitset_iter, index)) = gtk::BitsetIter::init_first(&bitset) {
+            note_vec.push(model.item(index).unwrap().downcast::<Note>().unwrap());
+            for index in bitset_iter {
+                note_vec.push(model.item(index).unwrap().downcast::<Note>().unwrap());
+            }
+        }
+
+        note_vec
+    }
+
+    fn setup_signals(&self) {
+        let imp = imp::Sidebar::from_instance(self);
+
+        imp.trash_button
+            .connect_clicked(clone!(@weak self as obj => move |button| {
+                let is_active = button.is_active();
+                for note in obj.selected_notes().iter() {
+                    note.metadata().set_is_trashed(is_active);
+                }
+            }));
+
+        imp.pin_button
+            .connect_clicked(clone!(@weak self as obj => move |button| {
+                let is_active = button.is_active();
+                for note in obj.selected_notes().iter() {
+                    note.metadata().set_is_pinned(is_active);
+                }
+            }));
     }
 
     fn setup_expressions(&self) {
