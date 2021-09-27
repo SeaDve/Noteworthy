@@ -4,7 +4,7 @@ use adw::subclass::prelude::*;
 use gettextrs::gettext;
 use gtk::{
     gio,
-    glib::{self, clone},
+    glib::{self, clone, GBoxed},
     prelude::*,
     subclass::prelude::*,
     CompositeTemplate,
@@ -13,6 +13,28 @@ use once_cell::unsync::OnceCell;
 
 use self::row::Row;
 use super::{note::NoteTagList, tag::Tag, tag_list::TagList};
+
+#[derive(Debug, Clone, GBoxed)]
+#[gboxed(type_name = "NwtyTagLists")]
+pub struct NoteTagLists(Vec<NoteTagList>);
+
+impl NoteTagLists {
+    fn iter(&self) -> std::slice::Iter<NoteTagList> {
+        self.0.iter()
+    }
+}
+
+impl From<Vec<NoteTagList>> for NoteTagLists {
+    fn from(vec: Vec<NoteTagList>) -> Self {
+        Self(vec)
+    }
+}
+
+impl Default for NoteTagLists {
+    fn default() -> Self {
+        Self(Vec::new())
+    }
+}
 
 mod imp {
     use super::*;
@@ -30,7 +52,7 @@ mod imp {
         pub create_tag_button_label: TemplateChild<gtk::Label>,
 
         pub tag_list: OnceCell<TagList>,
-        pub other_tag_list: OnceCell<NoteTagList>,
+        pub other_tag_lists: OnceCell<NoteTagLists>,
     }
 
     #[glib::object_subclass]
@@ -48,7 +70,10 @@ mod imp {
                 let tag_name = imp.search_entry.text();
                 let new_tag = Tag::new(&tag_name);
 
-                obj.other_tag_list().append(new_tag.clone()).unwrap();
+                for tag_list in obj.other_tag_lists().iter() {
+                    tag_list.append(new_tag.clone()).unwrap();
+                }
+
                 obj.tag_list().append(new_tag).unwrap();
                 // TODO new_tag should be added on top
 
@@ -73,11 +98,11 @@ mod imp {
                         TagList::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
-                    glib::ParamSpec::new_object(
-                        "other-tag-list",
-                        "Other Tag List",
+                    glib::ParamSpec::new_boxed(
+                        "other-tag-lists",
+                        "List of other tag lists",
                         "The list of tags to compare with",
-                        NoteTagList::static_type(),
+                        NoteTagLists::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
                 ]
@@ -98,18 +123,18 @@ mod imp {
                     let tag_list = value.get().unwrap();
                     obj.set_tag_list(tag_list);
                 }
-                "other-tag-list" => {
-                    let other_tag_list = value.get().unwrap();
-                    obj.set_other_tag_list(other_tag_list);
+                "other-tag-lists" => {
+                    let other_tag_lists = value.get().unwrap();
+                    obj.set_other_tag_lists(other_tag_lists);
                 }
                 _ => unimplemented!(),
             }
         }
 
-        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+        fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "tag-list" => self.tag_list.get().to_value(),
-                "other-tag-list" => self.other_tag_list.get().to_value(),
+                "tag-list" => obj.tag_list().to_value(),
+                "other-tag-lists" => obj.other_tag_lists().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -119,7 +144,7 @@ mod imp {
 
             let factory = gtk::SignalListItemFactory::new();
             factory.connect_setup(clone!(@weak obj => move |_, list_item| {
-                let tag_row = Row::new(&obj.other_tag_list());
+                let tag_row = Row::new(&obj.other_tag_lists());
 
                 let list_item_expression = gtk::ConstantExpression::new(list_item);
                 let item_expression = gtk::PropertyExpression::new(
@@ -158,19 +183,22 @@ glib::wrapper! {
 }
 
 impl NoteTagDialog {
-    pub fn new(tag_list: &TagList, other_tag_list: &NoteTagList) -> Self {
-        glib::Object::new(&[("tag-list", tag_list), ("other-tag-list", other_tag_list)])
-            .expect("Failed to create NoteTagDialog.")
+    pub fn new(tag_list: &TagList, other_tag_lists: &NoteTagLists) -> Self {
+        glib::Object::new(&[
+            ("tag-list", tag_list),
+            ("other-tag-lists", &other_tag_lists),
+        ])
+        .expect("Failed to create NoteTagDialog.")
     }
 
-    fn other_tag_list(&self) -> NoteTagList {
+    fn other_tag_lists(&self) -> NoteTagLists {
         let imp = imp::NoteTagDialog::from_instance(self);
-        imp.other_tag_list.get().unwrap().clone()
+        imp.other_tag_lists.get().unwrap().clone()
     }
 
-    fn set_other_tag_list(&self, other_tag_list: NoteTagList) {
+    fn set_other_tag_lists(&self, other_tag_list: NoteTagLists) {
         let imp = imp::NoteTagDialog::from_instance(self);
-        imp.other_tag_list.set(other_tag_list).unwrap();
+        imp.other_tag_lists.set(other_tag_list).unwrap();
     }
 
     fn tag_list(&self) -> TagList {

@@ -7,7 +7,7 @@ use gtk::{
 
 use std::cell::RefCell;
 
-use super::{NoteTagList, Tag};
+use super::{NoteTagLists, Tag};
 
 mod imp {
     use super::*;
@@ -20,7 +20,7 @@ mod imp {
         #[template_child]
         pub check_button: TemplateChild<gtk::CheckButton>,
 
-        pub other_tag_list: RefCell<NoteTagList>,
+        pub other_tag_lists: RefCell<NoteTagLists>,
         pub tag: RefCell<Option<Tag>>,
     }
 
@@ -44,11 +44,11 @@ mod imp {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
-                    glib::ParamSpec::new_object(
-                        "other-tag-list",
-                        "Other Tag List",
+                    glib::ParamSpec::new_boxed(
+                        "other-tag-lists",
+                        "A list of other tag lists",
                         "The tag list to compare with",
-                        NoteTagList::static_type(),
+                        NoteTagLists::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
                     glib::ParamSpec::new_object(
@@ -56,7 +56,7 @@ mod imp {
                         "tag",
                         "The tag represented by this row",
                         Tag::static_type(),
-                        glib::ParamFlags::READWRITE,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
                 ]
             });
@@ -66,28 +66,28 @@ mod imp {
 
         fn set_property(
             &self,
-            _obj: &Self::Type,
+            obj: &Self::Type,
             _id: usize,
             value: &glib::Value,
             pspec: &glib::ParamSpec,
         ) {
             match pspec.name() {
-                "other-tag-list" => {
-                    let other_tag_list = value.get().unwrap();
-                    self.other_tag_list.replace(other_tag_list);
+                "other-tag-lists" => {
+                    let other_tag_lists = value.get().unwrap();
+                    self.other_tag_lists.replace(other_tag_lists);
                 }
                 "tag" => {
                     let tag = value.get().unwrap();
-                    self.tag.replace(tag);
+                    obj.set_tag(tag);
                 }
                 _ => unimplemented!(),
             }
         }
 
-        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+        fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "other-tag-list" => self.other_tag_list.borrow().to_value(),
-                "tag" => self.tag.borrow().to_value(),
+                "other-tag-lists" => self.other_tag_lists.borrow().to_value(),
+                "tag" => obj.tag().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -95,51 +95,7 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
-            // TODO Implement this so clicking the row activates the checkbutton
-            // Works well when clicking the row but when you click the button it gets activated
-            // twice, Idk how to not let the click pass through both widgets
-            // let gesture = gtk::GestureClick::new();
-            // gesture.connect_pressed(clone!(@weak obj => move |_,_,_,_| {
-            //     let imp = imp::Row::from_instance(&obj);
-            //     imp.check_button.activate();
-            // }));
-            // obj.add_controller(&gesture);
-
-            let self_expression = gtk::ConstantExpression::new(&obj);
-            let tag_expression = gtk::PropertyExpression::new(
-                Self::Type::static_type(),
-                Some(&self_expression),
-                "tag",
-            );
-            let is_checked_expression = gtk::ClosureExpression::new(
-                clone!(@weak obj => @default-return false, move |args| {
-                    let tag: Option<Tag> = args[1].get().unwrap();
-                    tag.map_or(false, |tag| obj.other_tag_list().contains(&tag))
-                }),
-                &[tag_expression.upcast()],
-            );
-            is_checked_expression.bind(&self.check_button.get(), "active", None::<&gtk::Widget>);
-
-            // FIXME This get activated on first launch which makes it try to append an
-            // existing tag
-            self.check_button
-                .connect_active_notify(clone!(@weak obj => move |check_button| {
-                    if let Some(tag) = obj.tag() {
-                        let tag_name = tag.name();
-                        match check_button.is_active() {
-                            true => {
-                                if obj.other_tag_list().append(tag).is_err() {
-                                    log::warn!("Trying to append an existing tag: {}", tag_name);
-                                }
-                            }
-                            false => {
-                                if obj.other_tag_list().remove(&tag).is_err() {
-                                    log::warn!("Trying to remove a tag that doesn't exist in the list: {}", tag_name);
-                                }
-                            }
-                        }
-                    }
-                }));
+            obj.setup_signals();
         }
     }
 
@@ -154,15 +110,78 @@ glib::wrapper! {
 }
 
 impl Row {
-    pub fn new(other_tag_list: &NoteTagList) -> Self {
-        glib::Object::new(&[("other-tag-list", other_tag_list)]).expect("Failed to create Row")
+    pub fn new(other_tag_lists: &NoteTagLists) -> Self {
+        glib::Object::new(&[("other-tag-lists", other_tag_lists)]).expect("Failed to create Row")
     }
 
-    fn other_tag_list(&self) -> NoteTagList {
-        self.property("other-tag-list").unwrap().get().unwrap()
+    pub fn tag(&self) -> Option<Tag> {
+        let imp = imp::Row::from_instance(self);
+        imp.tag.borrow().clone()
     }
 
-    fn tag(&self) -> Option<Tag> {
-        self.property("tag").unwrap().get().unwrap()
+    pub fn set_tag(&self, tag: Option<Tag>) {
+        let imp = imp::Row::from_instance(self);
+
+        if let Some(ref tag) = tag {
+            // FIXME make this more efficient by only iterating once
+            if self.other_tag_lists().iter().all(|t| t.contains(tag)) {
+                imp.check_button.set_active(true);
+            } else if self.other_tag_lists().iter().all(|t| !t.contains(tag)) {
+                imp.check_button.set_active(false);
+            } else {
+                imp.check_button.set_inconsistent(true);
+            }
+        }
+
+        imp.tag.replace(tag);
+        self.notify("tag");
+    }
+
+    fn other_tag_lists(&self) -> NoteTagLists {
+        self.property("other-tag-lists").unwrap().get().unwrap()
+    }
+
+    fn setup_signals(&self) {
+        let imp = imp::Row::from_instance(self);
+
+        // FIXME This get activated on first launch which makes it try to append an
+        // existing tag
+        imp.check_button
+            .connect_active_notify(clone!(@weak self as obj => move |check_button| {
+                let tag = match obj.tag() {
+                    Some(tag) => tag,
+                    None => return,
+                };
+
+                let imp = imp::Row::from_instance(&obj);
+                imp.check_button.set_inconsistent(false);
+
+                if check_button.is_active() {
+                    for tag_list in obj.other_tag_lists().iter() {
+                        if tag_list.append(tag.clone()).is_err() {
+                            log::warn!("Trying to append an existing tag: {}", tag.name());
+                        }
+                    }
+                } else {
+                    for tag_list in obj.other_tag_lists().iter() {
+                        if tag_list.remove(&tag).is_err() {
+                            log::warn!(
+                                "Trying to remove a tag that doesn't exist in the list: {}",
+                                tag.name()
+                            );
+                        }
+                    }
+                }
+            }));
+
+        // TODO Implement this so clicking the row activates the checkbutton
+        // Works well when clicking the row but when you click the button it gets activated
+        // twice, Idk how to not let the click pass through both widgets
+        // let gesture = gtk::GestureClick::new();
+        // gesture.connect_pressed(clone!(@weak self as obj => move |_,_,_,_| {
+        //     let imp = imp::Row::from_instance(&obj);
+        //     imp.check_button.activate();
+        // }));
+        // self.add_controller(&gesture);
     }
 }

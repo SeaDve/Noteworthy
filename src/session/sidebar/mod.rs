@@ -351,7 +351,7 @@ impl Sidebar {
     }
 
     // FIXME make this an iterator to not iterate twice
-    fn selected_notes(&self) -> Vec<Note> {
+    pub fn selected_notes(&self) -> Vec<Note> {
         let model = self.multi_selection_model().unwrap();
         let bitset = model.selection();
         let mut note_vec = Vec::new();

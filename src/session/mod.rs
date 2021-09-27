@@ -20,8 +20,13 @@ use once_cell::unsync::OnceCell;
 use std::cell::RefCell;
 
 use self::{
-    content::Content, note::Note, note_list::NoteList, note_manager::NoteManager,
-    note_tag_dialog::NoteTagDialog, sidebar::Sidebar, tag_editor::TagEditor,
+    content::Content,
+    note::Note,
+    note_list::NoteList,
+    note_manager::NoteManager,
+    note_tag_dialog::{NoteTagDialog, NoteTagLists},
+    sidebar::Sidebar,
+    tag_editor::TagEditor,
 };
 
 mod imp {
@@ -76,9 +81,15 @@ mod imp {
             klass.install_action("session.edit-note-tags", None, move |obj, _, _| {
                 let imp = imp::Session::from_instance(obj);
                 let tag_list = imp.note_manager.get().unwrap().tag_list();
-                let other_tag_list = obj.selected_note().unwrap().metadata().tag_list();
+                let other_tag_lists = imp
+                    .sidebar
+                    .selected_notes()
+                    .iter()
+                    .map(|note| note.metadata().tag_list())
+                    .collect::<Vec<_>>();
 
-                let note_tag_dialog = NoteTagDialog::new(&tag_list, &other_tag_list);
+                let note_tag_dialog =
+                    NoteTagDialog::new(&tag_list, &NoteTagLists::from(other_tag_lists));
                 note_tag_dialog.set_modal(true);
                 note_tag_dialog.set_transient_for(
                     obj.root()
