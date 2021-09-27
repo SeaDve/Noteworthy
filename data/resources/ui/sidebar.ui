@@ -131,13 +131,13 @@
             <property name="halign">end</property>
             <property name="spacing">12</property>
             <child type="end">
-              <object class="GtkToggleButton" id="is_trashed_button">
+              <object class="GtkToggleButton" id="trash_button">
                 <property name="icon-name">user-trash-symbolic</property>
                 <property name="has-frame">False</property>
               </object>
             </child>
             <child type="end">
-              <object class="GtkToggleButton" id="is_pinned_button">
+              <object class="GtkToggleButton" id="pin_button">
                 <property name="icon-name">view-pin-symbolic</property>
                 <property name="has-frame">False</property>
               </object>

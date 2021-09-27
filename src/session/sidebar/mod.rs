@@ -54,6 +54,10 @@ mod imp {
         pub selection_menu_button: TemplateChild<gtk::MenuButton>,
         #[template_child]
         pub action_bar_revealer: TemplateChild<gtk::Revealer>,
+        #[template_child]
+        pub pin_button: TemplateChild<gtk::ToggleButton>,
+        #[template_child]
+        pub trash_button: TemplateChild<gtk::ToggleButton>,
 
         pub compact: Cell<bool>,
         pub selection_mode: Cell<SelectionMode>,
@@ -256,11 +260,13 @@ impl Sidebar {
         multi_selection_model.connect_selection_changed(
             clone!(@weak self as obj => move |model,_,_| {
                 obj.update_selection_menu_button_label(model.selection().size());
+                obj.update_action_bar();
             }),
         );
         multi_selection_model.connect_items_changed(
             clone!(@weak self as obj => move |model,_,_,_| {
                 obj.update_selection_menu_button_label(model.selection().size());
+                obj.update_action_bar();
             }),
         );
         imp.multi_selection_model
@@ -331,22 +337,32 @@ impl Sidebar {
         imp.multi_selection_model.borrow().as_ref().cloned()
     }
 
-    pub fn selected_notes(&self) -> Vec<Note> {
-        assert_eq!(self.selection_mode(), SelectionMode::Multi);
-
+    pub fn selected_notes_bitset(&self) -> gtk::Bitset {
         let model = self.multi_selection_model().unwrap();
-        let bitset = model.selection();
-        let mut note_vec = Vec::new();
+        model.selection()
+    }
 
-        if let Some((bitset_iter, index)) = gtk::BitsetIter::init_first(&bitset) {
-            note_vec.push(model.item(index).unwrap().downcast::<Note>().unwrap());
+    fn update_action_bar(&self) {
+        let imp = imp::Sidebar::from_instance(self);
 
-            for index in bitset_iter {
-                note_vec.push(model.item(index).unwrap().downcast::<Note>().unwrap());
+        let is_there_pinned_in_selected_notes = {
+            let model = self.multi_selection_model().unwrap();
+            let bitset = self.selected_notes_bitset();
+
+            // Just check the first selectednote since the selection is always sorted pinned first
+            if let Some((_, index)) = gtk::BitsetIter::init_first(&bitset) {
+                let first_selected_note = model.item(index).unwrap().downcast::<Note>().unwrap();
+                first_selected_note.metadata().is_pinned()
+            } else {
+                false
             }
-        }
+        };
 
-        note_vec
+        imp.pin_button.set_active(is_there_pinned_in_selected_notes);
+
+        // It is only possible for trash button to be active when we are on trash page
+        let is_on_trash_page = imp.view_switcher.selected_type() == ItemKind::Trash;
+        imp.trash_button.set_active(is_on_trash_page);
     }
 
     fn update_selection_menu_button_label(&self, n_selected_items: u64) {
