@@ -124,13 +124,22 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_object(
-                    "selected-note",
-                    "Selected Note",
-                    "The selected note",
-                    Note::static_type(),
-                    glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
-                )]
+                vec![
+                    glib::ParamSpec::new_object(
+                        "note-manager",
+                        "Note Manager",
+                        "Manages the notes",
+                        NoteManager::static_type(),
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
+                    ),
+                    glib::ParamSpec::new_object(
+                        "selected-note",
+                        "Selected Note",
+                        "The selected note",
+                        Note::static_type(),
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
+                    ),
+                ]
             });
 
             PROPERTIES.as_ref()
@@ -144,6 +153,10 @@ mod imp {
             pspec: &glib::ParamSpec,
         ) {
             match pspec.name() {
+                "note-manager" => {
+                    let note_manager = value.get().unwrap();
+                    obj.set_note_manager(note_manager);
+                }
                 "selected-note" => {
                     let selected_note = value.get().unwrap();
                     obj.set_selected_note(selected_note);
@@ -154,6 +167,7 @@ mod imp {
 
         fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
+                "note-manager" => obj.note_manager().to_value(),
                 "selected-note" => obj.selected_note().to_value(),
                 _ => unimplemented!(),
             }
@@ -170,8 +184,9 @@ glib::wrapper! {
 }
 
 impl Session {
-    pub fn new() -> Self {
-        glib::Object::new(&[]).expect("Failed to create Session.")
+    pub fn new(directory: &gio::File) -> Self {
+        glib::Object::new(&[("note-manager", &NoteManager::for_directory(directory))])
+            .expect("Failed to create Session.")
     }
 
     pub fn selected_note(&self) -> Option<Note> {
@@ -201,10 +216,12 @@ impl Session {
 
     pub fn note_manager(&self) -> &NoteManager {
         let imp = imp::Session::from_instance(self);
-        imp.note_manager.get_or_init(|| {
-            let directory = gio::File::for_path("/home/dave/NotesDevel");
-            NoteManager::for_directory(&directory)
-        })
+        imp.note_manager.get().unwrap()
+    }
+
+    pub fn set_note_manager(&self, note_manager: NoteManager) {
+        let imp = imp::Session::from_instance(self);
+        imp.note_manager.set(note_manager).unwrap();
     }
 
     // TODO Add autosave

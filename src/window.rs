@@ -1,18 +1,17 @@
-use adw::subclass::prelude::*;
-use gtk::{gio, glib, prelude::*, subclass::prelude::*};
+use adw::{subclass::prelude::*, traits::*};
+use gtk::{gio, glib, prelude::*, subclass::prelude::*, CompositeTemplate};
+
+use std::cell::RefCell;
 
 use crate::{application::Application, config::PROFILE, session::Session};
 
 mod imp {
     use super::*;
 
-    use gtk::CompositeTemplate;
-
     #[derive(Debug, Default, CompositeTemplate)]
     #[template(resource = "/io/github/seadve/Noteworthy/ui/window.ui")]
     pub struct Window {
-        #[template_child]
-        pub session: TemplateChild<Session>,
+        pub session: RefCell<Option<Session>>,
     }
 
     #[glib::object_subclass]
@@ -22,7 +21,6 @@ mod imp {
         type ParentType = adw::ApplicationWindow;
 
         fn class_init(klass: &mut Self::Class) {
-            Session::static_type();
             Self::bind_template(klass);
         }
 
@@ -40,6 +38,10 @@ mod imp {
             }
 
             obj.load_window_size();
+
+            let session = Session::new(&gio::File::for_path("/home/dave/NotesDevel"));
+            obj.set_content(Some(&session));
+            self.session.replace(Some(session));
         }
     }
 
@@ -51,7 +53,7 @@ mod imp {
             }
 
             // TODO what if app crashed?
-            self.session.save();
+            window.session().save();
 
             self.parent_close_request(window)
         }
@@ -74,7 +76,7 @@ impl Window {
 
     pub fn session(&self) -> Session {
         let imp = imp::Window::from_instance(self);
-        imp.session.clone()
+        imp.session.borrow().as_ref().unwrap().clone()
     }
 
     fn save_window_size(&self) -> Result<(), glib::BoolError> {

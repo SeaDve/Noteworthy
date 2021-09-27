@@ -309,6 +309,7 @@ impl Sidebar {
     pub fn set_selection_mode(&self, selection_mode: SelectionMode) {
         let imp = imp::Sidebar::from_instance(self);
 
+        // FIXME just use one model so scroll level will be saved
         match selection_mode {
             SelectionMode::Single => {
                 imp.header_bar_stack
