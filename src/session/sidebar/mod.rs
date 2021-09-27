@@ -303,13 +303,8 @@ impl Sidebar {
                     .set_visible_child(&imp.main_header_bar.get());
                 imp.action_bar_revealer.set_reveal_child(false);
 
-                let model = imp
-                    .single_selection_model
-                    .borrow()
-                    .as_ref()
-                    .unwrap()
-                    .clone();
-                imp.list_view.set_model(Some(&model));
+                let model = imp.single_selection_model.borrow();
+                imp.list_view.set_model(Some(model.as_ref().unwrap()));
                 imp.list_view.set_single_click_activate(true);
                 imp.list_view
                     .remove_css_class("sidebar-list-view-multi-selection-mode");
@@ -319,8 +314,8 @@ impl Sidebar {
                     .set_visible_child(&imp.selection_header_bar.get());
                 imp.action_bar_revealer.set_reveal_child(true);
 
-                let model = imp.multi_selection_model.borrow().as_ref().unwrap().clone();
-                imp.list_view.set_model(Some(&model));
+                let model = imp.multi_selection_model.borrow();
+                imp.list_view.set_model(Some(model.as_ref().unwrap()));
                 imp.list_view.set_single_click_activate(false);
                 imp.list_view
                     .add_css_class("sidebar-list-view-multi-selection-mode");
