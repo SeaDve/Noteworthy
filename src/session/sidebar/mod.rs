@@ -400,6 +400,8 @@ impl Sidebar {
             }
         };
 
+        // TODO change behavior of this so that it will only get active when every
+        // selected note is pinned
         imp.pin_button.set_active(is_there_pinned_in_selected_notes);
 
         // It is only possible for trash button to be active when we are on trash page
