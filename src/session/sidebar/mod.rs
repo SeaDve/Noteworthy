@@ -85,6 +85,8 @@ mod imp {
                 None,
                 move |obj, _, _| {
                     obj.set_selection_mode(SelectionMode::Single);
+
+                    dbg!(obj.multi_selection_model().unwrap().selection().size());
                 },
             );
 
@@ -266,14 +268,13 @@ impl Sidebar {
                 obj.update_selection_menu_button_label(selection_size);
                 obj.update_action_bar_sensitivity(selection_size);
                 obj.update_action_bar(model);
+                log::info!("Selection changed, n_items: {}", selection_size);
             }),
         );
         multi_selection_model.connect_items_changed(
             clone!(@weak self as obj => move |model,_,_,_| {
-                let selection_size = model.selection().size();
-                obj.update_selection_menu_button_label(selection_size);
-                obj.update_action_bar_sensitivity(selection_size);
                 obj.update_action_bar(model);
+                log::info!("Selection items changed");
             }),
         );
         imp.multi_selection_model

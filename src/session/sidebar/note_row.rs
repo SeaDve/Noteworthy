@@ -302,6 +302,10 @@ impl NoteRow {
                 let is_active = check_button.is_active();
                 let model = obj.sidebar().multi_selection_model().unwrap();
 
+                if obj.selection_mode() != SelectionMode::Multi {
+                    return;
+                }
+
                 if is_active {
                     model.select_item(obj.position(), false);
                 } else {
