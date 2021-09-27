@@ -393,6 +393,9 @@ impl Sidebar {
 
             // Just check the first selectednote since the selection is always sorted pinned first
             if let Some((_, index)) = gtk::BitsetIter::init_first(&bitset) {
+                // FIXME this will panic when you have a selected note in single selection
+                // then switch to multi selection and select another note that is not
+                // selected in single selection then switch view switcher selected_type
                 let first_selected_note = model.item(index).unwrap().downcast::<Note>().unwrap();
                 first_selected_note.metadata().is_pinned()
             } else {
