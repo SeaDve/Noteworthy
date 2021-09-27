@@ -253,16 +253,16 @@ impl Sidebar {
             .replace(Some(single_selection_model));
 
         let multi_selection_model = gtk::MultiSelection::new(Some(&filter_model));
-        multi_selection_model.connect_selection_changed(clone!(@weak self as obj => move |model,_,_| {
-            let n_selected_items = model.selection().size();
-
-            let imp = imp::Sidebar::from_instance(&obj);
-            if n_selected_items == 0 {
-                imp.selection_menu_button.set_label(&gettext("No note selected"));
-            } else {
-                imp.selection_menu_button.set_label(&gettext!("{} note selected", n_selected_items));
-            }
-        }));
+        multi_selection_model.connect_selection_changed(
+            clone!(@weak self as obj => move |model,_,_| {
+                obj.update_selection_menu_button_label(model.selection().size());
+            }),
+        );
+        multi_selection_model.connect_items_changed(
+            clone!(@weak self as obj => move |model,_,_,_| {
+                obj.update_selection_menu_button_label(model.selection().size());
+            }),
+        );
         imp.multi_selection_model
             .replace(Some(multi_selection_model));
 
@@ -352,6 +352,16 @@ impl Sidebar {
         }
 
         note_vec
+    }
+
+    fn update_selection_menu_button_label(&self, n_selected_items: u64) {
+        let imp = imp::Sidebar::from_instance(self);
+        let label = if n_selected_items == 0 {
+            gettext("No note selected")
+        } else {
+            gettext!("{} note selected", n_selected_items)
+        };
+        imp.selection_menu_button.set_label(&label);
     }
 
     fn setup_expressions(&self) {
