@@ -393,12 +393,8 @@ impl Sidebar {
 
             // Just check the first selectednote since the selection is always sorted pinned first
             if let Some((_, index)) = gtk::BitsetIter::init_first(&bitset) {
-                if let Some(item) = model.item(index) {
-                    let first_selected_note = item.downcast::<Note>().unwrap();
-                    first_selected_note.metadata().is_pinned()
-                } else {
-                    false
-                }
+                let first_selected_note = model.item(index).unwrap().downcast::<Note>().unwrap();
+                first_selected_note.metadata().is_pinned()
             } else {
                 false
             }
