@@ -336,6 +336,24 @@ impl Sidebar {
         imp.multi_selection_model.borrow().as_ref().cloned()
     }
 
+    pub fn selected_notes(&self) -> Vec<Note> {
+        assert_eq!(self.selection_mode(), SelectionMode::Multi);
+
+        let model = self.multi_selection_model().unwrap();
+        let bitset = model.selection();
+        let mut note_vec = Vec::new();
+
+        if let Some((bitset_iter, index)) = gtk::BitsetIter::init_first(&bitset) {
+            note_vec.push(model.item(index).unwrap().downcast::<Note>().unwrap());
+
+            for index in bitset_iter {
+                note_vec.push(model.item(index).unwrap().downcast::<Note>().unwrap());
+            }
+        }
+
+        note_vec
+    }
+
     fn setup_expressions(&self) {
         let imp = imp::Sidebar::from_instance(self);
 
