@@ -138,7 +138,12 @@ impl<'de> Deserialize<'de> for NoteTagList {
         let tag_name_list: Vec<String> = Vec::deserialize(deserializer)?;
 
         let app = Application::default();
-        let tag_list = app.main_window().session().note_manager().tag_list();
+        let tag_list = app
+            .main_window()
+            .session()
+            .unwrap()
+            .note_manager()
+            .tag_list();
 
         let new_tag_list = NoteTagList::new();
         for name in tag_name_list {

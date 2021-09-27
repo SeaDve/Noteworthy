@@ -15,6 +15,7 @@ mod components;
 mod config;
 mod date;
 mod error;
+mod login;
 mod session;
 mod window;
 

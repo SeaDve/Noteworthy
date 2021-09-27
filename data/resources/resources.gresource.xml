@@ -8,6 +8,7 @@
     <file compressed="true" preprocess="xml-stripblanks">ui/content-view-tag-list-view.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/content-view-tag-list-view-row.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/context-menu-bin.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">ui/login.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/note-tag-dialog.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/note-tag-dialog-row.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/session.ui</file>

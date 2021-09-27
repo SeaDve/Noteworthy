@@ -3,5 +3,12 @@
   <template class="NwtyWindow" parent="AdwApplicationWindow">
     <property name="default-width">600</property>
     <property name="default-height">400</property>
+    <property name="content">
+      <object class="GtkStack" id="main_stack">
+        <child>
+          <object class="NwtyLogin" id="login"/>
+        </child>
+      </object>
+    </property>
   </template>
 </interface>

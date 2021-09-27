@@ -1,9 +1,15 @@
-use adw::{subclass::prelude::*, traits::*};
-use gtk::{gio, glib, prelude::*, subclass::prelude::*, CompositeTemplate};
+use adw::subclass::prelude::*;
+use gtk::{
+    gio,
+    glib::{self, clone},
+    prelude::*,
+    subclass::prelude::*,
+    CompositeTemplate,
+};
 
 use std::cell::RefCell;
 
-use crate::{application::Application, config::PROFILE, session::Session};
+use crate::{application::Application, config::PROFILE, login::Login, session::Session};
 
 mod imp {
     use super::*;
@@ -11,6 +17,11 @@ mod imp {
     #[derive(Debug, Default, CompositeTemplate)]
     #[template(resource = "/io/github/seadve/Noteworthy/ui/window.ui")]
     pub struct Window {
+        #[template_child]
+        pub main_stack: TemplateChild<gtk::Stack>,
+        #[template_child]
+        pub login: TemplateChild<Login>,
+
         pub session: RefCell<Option<Session>>,
     }
 
@@ -21,6 +32,7 @@ mod imp {
         type ParentType = adw::ApplicationWindow;
 
         fn class_init(klass: &mut Self::Class) {
+            Login::static_type();
             Self::bind_template(klass);
         }
 
@@ -39,23 +51,27 @@ mod imp {
 
             obj.load_window_size();
 
-            let session = Session::new(&gio::File::for_path("/home/dave/NotesDevel"));
-            obj.set_content(Some(&session));
-            self.session.replace(Some(session));
+            self.login
+                .connect_new_session(clone!(@weak obj => move |_, session| {
+                    obj.set_session(Some(session.clone()));
+                    obj.switch_to_session_page();
+                }));
         }
     }
 
     impl WidgetImpl for Window {}
     impl WindowImpl for Window {
-        fn close_request(&self, window: &Self::Type) -> gtk::Inhibit {
-            if let Err(err) = window.save_window_size() {
+        fn close_request(&self, obj: &Self::Type) -> gtk::Inhibit {
+            if let Err(err) = obj.save_window_size() {
                 log::warn!("Failed to save window state, {}", &err);
             }
 
             // TODO what if app crashed?
-            window.session().save();
+            if let Some(session) = obj.session() {
+                session.save();
+            }
 
-            self.parent_close_request(window)
+            self.parent_close_request(obj)
         }
     }
 
@@ -74,9 +90,25 @@ impl Window {
         glib::Object::new(&[("application", app)]).expect("Failed to create Window.")
     }
 
-    pub fn session(&self) -> Session {
+    pub fn session(&self) -> Option<Session> {
         let imp = imp::Window::from_instance(self);
-        imp.session.borrow().as_ref().unwrap().clone()
+        imp.session.borrow().clone()
+    }
+
+    pub fn set_session(&self, session: Option<Session>) {
+        let imp = imp::Window::from_instance(self);
+
+        if let Some(ref session) = session {
+            imp.main_stack.add_child(session);
+        }
+
+        imp.session.replace(session);
+    }
+
+    fn switch_to_session_page(&self) {
+        let imp = imp::Window::from_instance(self);
+        imp.main_stack
+            .set_visible_child(imp.session.borrow().as_ref().unwrap());
     }
 
     fn save_window_size(&self) -> Result<(), glib::BoolError> {

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="NwtyLogin" parent="GtkBox">
+    <property name="orientation">vertical</property>
+    <child>
+      <object class="AdwHeaderBar">
+      </object>
+    </child>
+    <child>
+      <object class="GtkBox">
+        <property name="orientation">vertical</property>
+        <property name="halign">center</property>
+        <property name="vexpand">True</property>
+        <property name="valign">center</property>
+        <child>
+          <object class="GtkEntry" id="path_entry">
+          </object>
+        </child>
+        <child>
+          <object class="GtkButton">
+            <property name="label" translatable="yes">Create</property>
+            <property name="action-name">login.new-session</property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>
