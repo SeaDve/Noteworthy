@@ -8,10 +8,10 @@
 * Powerful tag system
 * Filtering
 * Basic markdown
+* Batch notes selection and editing
 
 
 ## What's not working yet?
-* Multiple notes selection and editing
 * Login page
 * Git integration
 * Syncing
