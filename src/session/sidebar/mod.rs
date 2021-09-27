@@ -262,16 +262,18 @@ impl Sidebar {
         let multi_selection_model = gtk::MultiSelection::new(Some(&filter_model));
         multi_selection_model.connect_selection_changed(
             clone!(@weak self as obj => move |model,_,_| {
-                obj.update_selection_menu_button_label(model.selection().size());
-                obj.update_action_bar();
-                obj.update_action_bar_sensitivity();
+                let selection_size = model.selection().size();
+                obj.update_selection_menu_button_label(selection_size);
+                obj.update_action_bar_sensitivity(selection_size);
+                obj.update_action_bar(model);
             }),
         );
         multi_selection_model.connect_items_changed(
             clone!(@weak self as obj => move |model,_,_,_| {
-                obj.update_selection_menu_button_label(model.selection().size());
-                obj.update_action_bar();
-                obj.update_action_bar_sensitivity();
+                let selection_size = model.selection().size();
+                obj.update_selection_menu_button_label(selection_size);
+                obj.update_action_bar_sensitivity(selection_size);
+                obj.update_action_bar(model);
             }),
         );
         imp.multi_selection_model
@@ -342,14 +344,30 @@ impl Sidebar {
         imp.multi_selection_model.borrow().as_ref().cloned()
     }
 
+    // FIXME merge this with selected_notes()
     pub fn selected_notes_bitset(&self) -> gtk::Bitset {
         let model = self.multi_selection_model().unwrap();
         model.selection()
     }
 
-    fn update_action_bar_sensitivity(&self) {
+    // FIXME make this an iterator to not iterate twice
+    fn selected_notes(&self) -> Vec<Note> {
         let model = self.multi_selection_model().unwrap();
-        let is_selection_empty = model.selection().size() == 0;
+        let bitset = model.selection();
+        let mut note_vec = Vec::new();
+
+        if let Some((bitset_iter, index)) = gtk::BitsetIter::init_first(&bitset) {
+            note_vec.push(model.item(index).unwrap().downcast::<Note>().unwrap());
+            for index in bitset_iter {
+                note_vec.push(model.item(index).unwrap().downcast::<Note>().unwrap());
+            }
+        }
+
+        note_vec
+    }
+
+    fn update_action_bar_sensitivity(&self, n_selected_items: u64) {
+        let is_selection_empty = n_selected_items == 0;
 
         let imp = imp::Sidebar::from_instance(self);
         imp.tag_button.set_sensitive(!is_selection_empty);
@@ -357,9 +375,18 @@ impl Sidebar {
         imp.pin_button.set_sensitive(!is_selection_empty);
     }
 
-    fn update_action_bar(&self) {
+    fn update_selection_menu_button_label(&self, n_selected_items: u64) {
         let imp = imp::Sidebar::from_instance(self);
-        let model = self.multi_selection_model().unwrap();
+        let label = if n_selected_items == 0 {
+            gettext("No selected")
+        } else {
+            gettext!("{} selected", n_selected_items)
+        };
+        imp.selection_menu_button.set_label(&label);
+    }
+
+    fn update_action_bar(&self, model: &gtk::MultiSelection) {
+        let imp = imp::Sidebar::from_instance(self);
 
         let is_there_pinned_in_selected_notes = {
             let bitset = self.selected_notes_bitset();
@@ -384,32 +411,6 @@ impl Sidebar {
         let is_selection_empty = model.selection().size() == 0;
         imp.trash_button
             .set_active(is_on_trash_page && !is_selection_empty);
-    }
-
-    fn update_selection_menu_button_label(&self, n_selected_items: u64) {
-        let imp = imp::Sidebar::from_instance(self);
-        let label = if n_selected_items == 0 {
-            gettext("No selected")
-        } else {
-            gettext!("{} selected", n_selected_items)
-        };
-        imp.selection_menu_button.set_label(&label);
-    }
-
-    // FIXME make this an iterator to not iterate twice
-    fn selected_notes(&self) -> Vec<Note> {
-        let model = self.multi_selection_model().unwrap();
-        let bitset = model.selection();
-        let mut note_vec = Vec::new();
-
-        if let Some((bitset_iter, index)) = gtk::BitsetIter::init_first(&bitset) {
-            note_vec.push(model.item(index).unwrap().downcast::<Note>().unwrap());
-            for index in bitset_iter {
-                note_vec.push(model.item(index).unwrap().downcast::<Note>().unwrap());
-            }
-        }
-
-        note_vec
     }
 
     fn setup_signals(&self) {
