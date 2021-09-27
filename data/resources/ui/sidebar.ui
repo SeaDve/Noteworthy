@@ -35,6 +35,7 @@
     </style>
     <child>
       <object class="GtkStack" id="header_bar_stack">
+        <property name="transition-type">crossfade</property>
         <child>
           <object class="AdwHeaderBar" id="main_header_bar">
             <property name="centering-policy">strict</property>
