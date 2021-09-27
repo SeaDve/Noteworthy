@@ -388,22 +388,31 @@ impl Sidebar {
     fn update_action_bar(&self, model: &gtk::MultiSelection) {
         let imp = imp::Sidebar::from_instance(self);
 
-        let is_there_pinned_in_selected_notes = {
+        let is_all_pinned_in_selected_notes = {
             let bitset = self.selected_notes_bitset();
 
-            // Just check the first selectednote since the selection is always sorted pinned first
-            if let Some((_, index)) = gtk::BitsetIter::init_first(&bitset) {
-                model.item(index).map_or(false, |i| {
-                    i.downcast::<Note>().unwrap().metadata().is_pinned()
-                })
+            // Just check the last selected note to short circuit faster
+            // since the selection is always sorted pinned first
+            if let Some((mut iter, index)) = gtk::BitsetIter::init_last(&bitset) {
+                if let Some(item) = model.item(index) {
+                    if item.downcast::<Note>().unwrap().metadata().is_pinned() {
+                        iter.all(|index| {
+                            model.item(index).map_or(false, |i| {
+                                i.downcast::<Note>().unwrap().metadata().is_pinned()
+                            })
+                        })
+                    } else {
+                        false
+                    }
+                } else {
+                    false
+                }
             } else {
                 false
             }
         };
 
-        // TODO change behavior of this so that it will only get active when every
-        // selected note is pinned
-        imp.pin_button.set_active(is_there_pinned_in_selected_notes);
+        imp.pin_button.set_active(is_all_pinned_in_selected_notes);
 
         // It is only possible for trash button to be active when we are on trash page
         let is_on_trash_page = imp.view_switcher.selected_type() == ItemKind::Trash;
