@@ -1,43 +1,49 @@
 use adw::subclass::prelude::*;
 use gtk::{
+    gio,
     glib::{self, subclass::Signal},
     prelude::*,
     subclass::prelude::*,
     CompositeTemplate,
 };
 
-use super::{components::FileChooserButton, session::Session};
+use super::session::Session;
 
 mod imp {
     use super::*;
 
     #[derive(Debug, Default, CompositeTemplate)]
-    #[template(resource = "/io/github/seadve/Noteworthy/ui/login.ui")]
-    pub struct Login {
-        #[template_child]
-        pub file_chooser_button: TemplateChild<FileChooserButton>,
-    }
+    #[template(resource = "/io/github/seadve/Noteworthy/ui/setup.ui")]
+    pub struct Setup {}
 
     #[glib::object_subclass]
-    impl ObjectSubclass for Login {
-        const NAME: &'static str = "NwtyLogin";
-        type Type = super::Login;
+    impl ObjectSubclass for Setup {
+        const NAME: &'static str = "NwtySetup";
+        type Type = super::Setup;
         type ParentType = gtk::Box;
 
         fn class_init(klass: &mut Self::Class) {
-            FileChooserButton::static_type();
             Self::bind_template(klass);
 
-            klass.install_action("login.new-session", None, move |obj, _, _| {
-                let imp = imp::Login::from_instance(obj);
+            klass.install_action("setup.create-session", None, move |obj, _, _| {
+                let notes_folder = {
+                    let mut data_dir = glib::user_data_dir();
+                    data_dir.push("Notes");
+                    gio::File::for_path(&data_dir)
+                };
 
-                if let Some(folder) = imp.file_chooser_button.current_folder() {
-                    let session = Session::new(&folder);
-                    obj.emit_by_name("new-session", &[&session]).unwrap();
-                } else {
-                    // FIXME handle this
-                    log::warn!("File chooser button has no file!");
+                // FIXME make this async
+                // TODO Add separate load existing session so not always query_exists
+                // TODO maybe move this to window
+                if !notes_folder.query_exists(None::<&gio::Cancellable>) {
+                    log::info!("Note folder not found, creating...");
+                    if let Err(err) = notes_folder.make_directory(None::<&gio::Cancellable>) {
+                        log::error!("Failed to create note folder, {:?}", err);
+                    }
                 }
+
+                let session = Session::new(&notes_folder);
+                obj.emit_by_name("new-session", &[&session]).unwrap();
             });
         }
 
@@ -46,7 +52,7 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for Login {
+    impl ObjectImpl for Setup {
         fn signals() -> &'static [Signal] {
             use once_cell::sync::Lazy;
             static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
@@ -61,18 +67,18 @@ mod imp {
         }
     }
 
-    impl WidgetImpl for Login {}
-    impl BoxImpl for Login {}
+    impl WidgetImpl for Setup {}
+    impl BoxImpl for Setup {}
 }
 
 glib::wrapper! {
-    pub struct Login(ObjectSubclass<imp::Login>)
+    pub struct Setup(ObjectSubclass<imp::Setup>)
         @extends gtk::Widget, gtk::Box;
 }
 
-impl Login {
+impl Setup {
     pub fn new() -> Self {
-        glib::Object::new(&[]).expect("Failed to create Login.")
+        glib::Object::new(&[]).expect("Failed to create Setup.")
     }
 
     pub fn connect_new_session<F: Fn(&Self, &Session) + 'static>(

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="NwtySetup" parent="GtkBox">
+    <property name="orientation">vertical</property>
+    <child>
+      <object class="AdwHeaderBar">
+        <property name="title-widget">
+          <object class="AdwWindowTitle">
+            <property name="title" translatable="yes">Setup</property>
+          </object>
+        </property>
+      </object>
+    </child>
+    <child>
+      <object class="AdwClamp">
+        <property name="vexpand">True</property>
+        <property name="child">
+          <object class="AdwStatusPage">
+            <property name="icon-name">editor-symbolic</property> <!-- TODO Add proper image -->
+            <property name="title" translatable="yes">Welcome to Noteworthy</property>
+            <property name="description">Notes can be synchronized with any git hosting site or stored locally on this device.</property>
+            <property name="child">
+              <object class="GtkBox">
+                <property name="orientation">vertical</property>
+                <property name="spacing">18</property>
+                <property name="halign">center</property>
+                <child>
+                  <object class="GtkButton">
+                    <property name="label" translatable="yes">Setup Git Host</property>
+                    <style>
+                      <class name="pill-button"/>
+                      <class name="suggested-action"/>
+                    </style>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton">
+                    <property name="label" translatable="yes">Local Storage</property>
+                    <property name="action-name">setup.create-session</property>
+                    <style>
+                      <class name="pill-button"/>
+                    </style>
+                  </object>
+                </child>
+                <style>
+                  <class name="setup-button-box"/>
+                </style>
+              </object>
+            </property>
+          </object>
+        </property>
+      </object>
+    </child>
+  </template>
+</interface>

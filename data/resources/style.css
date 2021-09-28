@@ -1,3 +1,14 @@
+.pill-button {
+  border-radius: 9999px;
+  padding: 12px 40px;
+}
+
+
+.setup-button-box {
+  min-width: 240px;
+}
+
+
 .sidebar {
   min-width: 300px;
 }
@@ -123,13 +134,4 @@
 
 .tag-editor-list-view row:hover {
   background: none;
-}
-
-
-.login-list-box {
-  min-width: 300px;
-}
-
-.login-file-chooser-button {
-  min-width: 180px;
 }

@@ -9,10 +9,10 @@
     <file compressed="true" preprocess="xml-stripblanks">ui/content-view-tag-list-view-row.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/context-menu-bin.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/file-chooser-button.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">ui/login.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/note-tag-dialog.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/note-tag-dialog-row.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/session.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">ui/setup.ui</file>
     <file compressed="true" preprocess="xml-stripblanks" alias="gtk/help-overlay.ui">ui/shortcuts.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/sidebar.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/sidebar-note-row.ui</file>

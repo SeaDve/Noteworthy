@@ -15,8 +15,8 @@ mod components;
 mod config;
 mod date;
 mod error;
-mod login;
 mod session;
+mod setup;
 mod window;
 
 use application::Application;

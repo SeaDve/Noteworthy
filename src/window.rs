@@ -9,7 +9,7 @@ use gtk::{
 
 use std::cell::RefCell;
 
-use crate::{application::Application, config::PROFILE, login::Login, session::Session};
+use crate::{application::Application, config::PROFILE, session::Session, setup::Setup};
 
 mod imp {
     use super::*;
@@ -20,7 +20,7 @@ mod imp {
         #[template_child]
         pub main_stack: TemplateChild<gtk::Stack>,
         #[template_child]
-        pub login: TemplateChild<Login>,
+        pub setup: TemplateChild<Setup>,
 
         pub session: RefCell<Option<Session>>,
     }
@@ -32,7 +32,7 @@ mod imp {
         type ParentType = adw::ApplicationWindow;
 
         fn class_init(klass: &mut Self::Class) {
-            Login::static_type();
+            Setup::static_type();
             Self::bind_template(klass);
 
             klass.install_action("win.close", None, move |obj, _, _| {
@@ -55,7 +55,7 @@ mod imp {
 
             obj.load_window_size();
 
-            self.login
+            self.setup
                 .connect_new_session(clone!(@weak obj => move |_, session| {
                     obj.set_session(Some(session.clone()));
                     obj.switch_to_session_page();
