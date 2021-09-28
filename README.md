@@ -9,10 +9,10 @@
 * Filtering
 * Basic markdown
 * Batch notes selection and editing
+* Login page
 
 
 ## What's not working yet?
-* Login page
 * Git integration
 * Syncing
 * Attachments
