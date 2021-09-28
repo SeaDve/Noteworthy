@@ -37,13 +37,6 @@ mod imp {
             klass.install_action("win.close", None, move |obj, _, _| {
                 obj.close();
             });
-
-            klass.install_action("win.load-session", None, move |obj, _, _| {
-                let ctx = glib::MainContext::default();
-                ctx.spawn_local(clone!(@weak obj => async move {
-                    obj.load_session().await;
-                }));
-            });
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
@@ -59,6 +52,19 @@ mod imp {
                 obj.add_css_class("devel");
             }
 
+            self.setup
+                .connect_session_setup_done(clone!(@weak obj => move |_| {
+                    obj.load_session();
+                    obj.switch_to_session_page();
+                }));
+
+            if utils::default_notes_dir().exists() {
+                obj.load_session();
+                obj.switch_to_session_page();
+            } else {
+                obj.switch_to_setup_page();
+            }
+
             obj.load_window_size();
         }
     }
@@ -71,7 +77,9 @@ mod imp {
             }
 
             // TODO what if app crashed?
-            obj.session().save();
+            if let Some(session) = self.session.get() {
+                session.save();
+            }
 
             self.parent_close_request(obj)
         }
@@ -94,7 +102,16 @@ impl Window {
 
     pub fn session(&self) -> Session {
         let imp = imp::Window::from_instance(self);
-        imp.session.get().unwrap().clone()
+        imp.session.get().expect("Call load_session first").clone()
+    }
+
+    fn load_session(&self) {
+        let imp = imp::Window::from_instance(self);
+
+        let notes_folder = gio::File::for_path(&utils::default_notes_dir());
+        let session = Session::new(&notes_folder);
+        imp.main_stack.add_child(&session);
+        imp.session.set(session).unwrap();
     }
 
     fn switch_to_session_page(&self) {
@@ -102,24 +119,9 @@ impl Window {
         imp.main_stack.set_visible_child(&self.session());
     }
 
-    async fn load_session(&self) {
-        let notes_folder = gio::File::for_path(&utils::default_notes_dir());
-        if !notes_folder.query_exists(None::<&gio::Cancellable>) {
-            log::info!("Note folder not found, creating...");
-            if let Err(err) = notes_folder
-                .make_directory_async_future(glib::PRIORITY_HIGH_IDLE)
-                .await
-            {
-                log::error!("Failed to create note folder, {:?}", err);
-            }
-        }
-        let session = Session::new(&notes_folder);
-
+    fn switch_to_setup_page(&self) {
         let imp = imp::Window::from_instance(self);
-        imp.main_stack.add_child(&session);
-        imp.session.set(session).unwrap();
-
-        self.switch_to_session_page()
+        imp.main_stack.set_visible_child(&imp.setup.get());
     }
 
     fn save_window_size(&self) -> Result<(), glib::BoolError> {
