@@ -1,13 +1,12 @@
 use adw::subclass::prelude::*;
 use gtk::{
-    gio,
     glib::{self, subclass::Signal},
     prelude::*,
     subclass::prelude::*,
     CompositeTemplate,
 };
 
-use super::session::Session;
+use super::{components::FileChooserButton, session::Session};
 
 mod imp {
     use super::*;
@@ -16,7 +15,7 @@ mod imp {
     #[template(resource = "/io/github/seadve/Noteworthy/ui/login.ui")]
     pub struct Login {
         #[template_child]
-        pub path_entry: TemplateChild<gtk::Entry>,
+        pub file_chooser_button: TemplateChild<FileChooserButton>,
     }
 
     #[glib::object_subclass]
@@ -26,14 +25,19 @@ mod imp {
         type ParentType = gtk::Box;
 
         fn class_init(klass: &mut Self::Class) {
+            FileChooserButton::static_type();
             Self::bind_template(klass);
 
             klass.install_action("login.new-session", None, move |obj, _, _| {
                 let imp = imp::Login::from_instance(obj);
-                let path = imp.path_entry.text();
 
-                let session = Session::new(&gio::File::for_path(path.as_str()));
-                obj.emit_by_name("new-session", &[&session]).unwrap();
+                if let Some(folder) = imp.file_chooser_button.current_folder() {
+                    let session = Session::new(&folder);
+                    obj.emit_by_name("new-session", &[&session]).unwrap();
+                } else {
+                    // FIXME handle this
+                    log::warn!("File chooser button has no file!");
+                }
             });
         }
 

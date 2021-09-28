@@ -5,6 +5,7 @@
     <property name="default-height">400</property>
     <property name="content">
       <object class="GtkStack" id="main_stack">
+        <property name="transition-type">crossfade</property>
         <child>
           <object class="NwtyLogin" id="login"/>
         </child>

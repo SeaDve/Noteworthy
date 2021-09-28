@@ -34,6 +34,10 @@ mod imp {
         fn class_init(klass: &mut Self::Class) {
             Login::static_type();
             Self::bind_template(klass);
+
+            klass.install_action("win.close", None, move |obj, _, _| {
+                obj.close();
+            });
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
@@ -82,7 +86,7 @@ mod imp {
 glib::wrapper! {
     pub struct Window(ObjectSubclass<imp::Window>)
         @extends gtk::Widget, gtk::Window, gtk::ApplicationWindow, adw::ApplicationWindow,
-        @implements gio::ActionMap, gio::ActionGroup;
+        @implements gio::ActionMap, gio::ActionGroup, gtk::Root;
 }
 
 impl Window {

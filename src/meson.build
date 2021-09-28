@@ -20,6 +20,7 @@ run_command(
 
 rust_sources = files(
   'components/context_menu_bin.rs',
+  'components/file_chooser_button.rs',
   'components/mod.rs',
   'session/content/view/tag_list_view/mod.rs',
   'session/content/view/tag_list_view/row.rs',

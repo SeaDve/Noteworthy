@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="NwtyFileChooserButton" parent="AdwBin">
+    <property name="child">
+      <object class="GtkButton" id="inner_button">
+        <property name="action-name">file-chooser-button.choose</property>
+        <property name="child">
+          <object class="GtkBox">
+            <property name="spacing">12</property>
+            <child>
+              <object class="GtkImage">
+                <property name="icon-name">folder-symbolic</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label">
+              </object>
+            </child>
+          </object>
+        </property>
+      </object>
+    </property>
+  </template>
+</interface>

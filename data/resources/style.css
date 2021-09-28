@@ -124,3 +124,12 @@
 .tag-editor-list-view row:hover {
   background: none;
 }
+
+
+.login-list-box {
+  min-width: 300px;
+}
+
+.login-file-chooser-button {
+  min-width: 180px;
+}
