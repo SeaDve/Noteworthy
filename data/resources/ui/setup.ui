@@ -1,51 +1,102 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <template class="NwtySetup" parent="GtkBox">
-    <property name="orientation">vertical</property>
-    <child>
-      <object class="AdwHeaderBar">
-        <property name="title-widget">
-          <object class="AdwWindowTitle">
-            <property name="title" translatable="yes">Setup</property>
-          </object>
-        </property>
-      </object>
-    </child>
-    <child>
-      <object class="AdwStatusPage">
-        <property name="vexpand">True</property>
-        <property name="icon-name">editor-symbolic</property> <!-- TODO Add proper image -->
-        <property name="title" translatable="yes">Welcome to Noteworthy</property>
-        <property name="description">Notes can be synchronized with any git hosting site or stored locally on this device.</property>
-        <property name="child">
-          <object class="GtkBox">
+  <template class="NwtySetup" parent="AdwBin">
+    <property name="child">
+      <object class="GtkStack" id="stack">
+        <property name="transition-type">crossfade</property>
+        <child>
+          <object class="GtkBox" id="welcome">
             <property name="orientation">vertical</property>
-            <property name="spacing">18</property>
-            <property name="halign">center</property>
             <child>
-              <object class="GtkButton">
-                <property name="label" translatable="yes">Setup Git Host</property>
-                <style>
-                  <class name="pill-button"/>
-                  <class name="suggested-action"/>
-                </style>
+              <object class="AdwHeaderBar">
+                <property name="title-widget">
+                  <object class="AdwWindowTitle">
+                    <property name="title" translatable="yes">Setup</property>
+                  </object>
+                </property>
               </object>
             </child>
             <child>
-              <object class="GtkButton">
-                <property name="label" translatable="yes">Local Storage</property>
-                <property name="action-name">setup.setup-session</property>
-                <style>
-                  <class name="pill-button"/>
-                </style>
+              <object class="AdwStatusPage">
+                <property name="vexpand">True</property>
+                <property name="icon-name">editor-symbolic</property> <!-- TODO Add proper image -->
+                <property name="title" translatable="yes">Welcome to Noteworthy</property>
+                <property name="description" translatable="yes">Notes can be synchronized with any git hosting provider or stored locally on this device.</property>
+                <property name="child">
+                  <object class="GtkBox">
+                    <property name="orientation">vertical</property>
+                    <property name="spacing">18</property>
+                    <property name="halign">center</property>
+                    <child>
+                      <object class="GtkButton">
+                        <property name="label" translatable="yes">Setup Git Host</property>
+                        <property name="action-name">setup.setup-git-host</property>
+                        <style>
+                          <class name="pill-button"/>
+                          <class name="suggested-action"/>
+                        </style>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkButton">
+                        <property name="label" translatable="yes">Local Storage</property>
+                        <property name="action-name">setup.setup-session</property>
+                        <style>
+                          <class name="pill-button"/>
+                        </style>
+                      </object>
+                    </child>
+                    <style>
+                      <class name="setup-button-box"/>
+                    </style>
+                  </object>
+                </property>
               </object>
             </child>
-            <style>
-              <class name="setup-button-box"/>
-            </style>
           </object>
-        </property>
+        </child>
+        <child>
+          <object class="GtkBox" id="select_provider">
+            <property name="orientation">vertical</property>
+            <child>
+              <object class="AdwHeaderBar">
+                <property name="title-widget">
+                  <object class="AdwWindowTitle">
+                    <property name="title" translatable="yes">Setup Git Host</property>
+                  </object>
+                </property>
+              </object>
+            </child>
+            <child>
+              <object class="AdwStatusPage">
+                <property name="vexpand">True</property>
+                <property name="title" translatable="yes">Select a Git Hosting Provider</property>
+                <property name="child">
+                  <object class="GtkBox">
+                    <property name="spacing">12</property>
+                    <property name="halign">center</property>
+                    <child>
+                      <object class="GtkButton">
+                        <property name="icon-name">face-cool-symbolic</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkButton">
+                        <property name="icon-name">audio-x-generic-symbolic</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkButton">
+                        <property name="label" translatable="yes">Custom</property>
+                      </object>
+                    </child>
+                  </object>
+                </property>
+              </object>
+            </child>
+          </object>
+        </child>
       </object>
-    </child>
+    </property>
   </template>
 </interface>
