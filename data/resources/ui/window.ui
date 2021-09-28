@@ -6,6 +6,7 @@
     <property name="content">
       <object class="GtkStack" id="main_stack">
         <property name="transition-type">crossfade</property>
+        <property name="visible-child">setup</property>
         <child>
           <object class="NwtySetup" id="setup"/>
         </child>

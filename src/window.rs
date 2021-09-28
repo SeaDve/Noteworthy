@@ -61,8 +61,6 @@ mod imp {
             if utils::default_notes_dir().exists() {
                 obj.load_session();
                 obj.switch_to_session_page();
-            } else {
-                obj.switch_to_setup_page();
             }
 
             obj.load_window_size();
@@ -117,11 +115,6 @@ impl Window {
     fn switch_to_session_page(&self) {
         let imp = imp::Window::from_instance(self);
         imp.main_stack.set_visible_child(&self.session());
-    }
-
-    fn switch_to_setup_page(&self) {
-        let imp = imp::Window::from_instance(self);
-        imp.main_stack.set_visible_child(&imp.setup.get());
     }
 
     fn save_window_size(&self) -> Result<(), glib::BoolError> {
