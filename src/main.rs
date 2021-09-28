@@ -17,6 +17,7 @@ mod date;
 mod error;
 mod session;
 mod setup;
+mod utils;
 mod window;
 
 use application::Application;

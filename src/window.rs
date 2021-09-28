@@ -6,10 +6,9 @@ use gtk::{
     subclass::prelude::*,
     CompositeTemplate,
 };
+use once_cell::unsync::OnceCell;
 
-use std::cell::RefCell;
-
-use crate::{application::Application, config::PROFILE, session::Session, setup::Setup};
+use crate::{application::Application, config::PROFILE, session::Session, setup::Setup, utils};
 
 mod imp {
     use super::*;
@@ -22,7 +21,7 @@ mod imp {
         #[template_child]
         pub setup: TemplateChild<Setup>,
 
-        pub session: RefCell<Option<Session>>,
+        pub session: OnceCell<Session>,
     }
 
     #[glib::object_subclass]
@@ -37,6 +36,13 @@ mod imp {
 
             klass.install_action("win.close", None, move |obj, _, _| {
                 obj.close();
+            });
+
+            klass.install_action("win.load-session", None, move |obj, _, _| {
+                let ctx = glib::MainContext::default();
+                ctx.spawn_local(clone!(@weak obj => async move {
+                    obj.load_session().await;
+                }));
             });
         }
 
@@ -54,12 +60,6 @@ mod imp {
             }
 
             obj.load_window_size();
-
-            self.setup
-                .connect_new_session(clone!(@weak obj => move |_, session| {
-                    obj.set_session(Some(session.clone()));
-                    obj.switch_to_session_page();
-                }));
         }
     }
 
@@ -71,9 +71,7 @@ mod imp {
             }
 
             // TODO what if app crashed?
-            if let Some(session) = obj.session() {
-                session.save();
-            }
+            obj.session().save();
 
             self.parent_close_request(obj)
         }
@@ -94,25 +92,34 @@ impl Window {
         glib::Object::new(&[("application", app)]).expect("Failed to create Window.")
     }
 
-    pub fn session(&self) -> Option<Session> {
+    pub fn session(&self) -> Session {
         let imp = imp::Window::from_instance(self);
-        imp.session.borrow().clone()
-    }
-
-    pub fn set_session(&self, session: Option<Session>) {
-        let imp = imp::Window::from_instance(self);
-
-        if let Some(ref session) = session {
-            imp.main_stack.add_child(session);
-        }
-
-        imp.session.replace(session);
+        imp.session.get().unwrap().clone()
     }
 
     fn switch_to_session_page(&self) {
         let imp = imp::Window::from_instance(self);
-        imp.main_stack
-            .set_visible_child(imp.session.borrow().as_ref().unwrap());
+        imp.main_stack.set_visible_child(&self.session());
+    }
+
+    async fn load_session(&self) {
+        let notes_folder = gio::File::for_path(&utils::default_notes_dir());
+        if !notes_folder.query_exists(None::<&gio::Cancellable>) {
+            log::info!("Note folder not found, creating...");
+            if let Err(err) = notes_folder
+                .make_directory_async_future(glib::PRIORITY_HIGH_IDLE)
+                .await
+            {
+                log::error!("Failed to create note folder, {:?}", err);
+            }
+        }
+        let session = Session::new(&notes_folder);
+
+        let imp = imp::Window::from_instance(self);
+        imp.main_stack.add_child(&session);
+        imp.session.set(session).unwrap();
+
+        self.switch_to_session_page()
     }
 
     fn save_window_size(&self) -> Result<(), glib::BoolError> {

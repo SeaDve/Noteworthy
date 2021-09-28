@@ -36,7 +36,7 @@
                 <child>
                   <object class="GtkButton">
                     <property name="label" translatable="yes">Local Storage</property>
-                    <property name="action-name">setup.create-session</property>
+                    <property name="action-name">win.load-session</property>
                     <style>
                       <class name="pill-button"/>
                     </style>
