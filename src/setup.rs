@@ -18,6 +18,8 @@ mod imp {
         #[template_child]
         pub stack: TemplateChild<gtk::Stack>,
         #[template_child]
+        pub welcome: TemplateChild<gtk::Box>,
+        #[template_child]
         pub select_provider: TemplateChild<gtk::Box>,
     }
 
@@ -30,13 +32,18 @@ mod imp {
         fn class_init(klass: &mut Self::Class) {
             Self::bind_template(klass);
 
-            // TODO consider changing this action name
+            // TODO consider changing these action names
             klass.install_action("setup.setup-session", None, move |obj, _, _| {
                 let ctx = glib::MainContext::default();
                 ctx.spawn_local(clone!(@weak obj => async move {
                     obj.setup_session().await;
                     obj.emit_by_name("session-setup-done", &[]).unwrap();
                 }));
+            });
+
+            klass.install_action("setup.go-back-welcome", None, move |obj, _, _| {
+                let imp = imp::Setup::from_instance(obj);
+                imp.stack.set_visible_child(&imp.welcome.get());
             });
 
             klass.install_action("setup.setup-git-host", None, move |obj, _, _| {

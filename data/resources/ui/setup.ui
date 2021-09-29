@@ -65,6 +65,12 @@
                     <property name="title" translatable="yes">Setup Git Host</property>
                   </object>
                 </property>
+                <child>
+                  <object class="GtkButton">
+                    <property name="icon-name">go-previous-symbolic</property>
+                    <property name="action-name">setup.go-back-welcome</property>
+                  </object>
+                </child>
               </object>
             </child>
             <child>
