@@ -81,6 +81,25 @@ mod imp {
             klass.install_action("session.edit-note-tags", None, move |obj, _, _| {
                 let imp = imp::Session::from_instance(obj);
                 let tag_list = imp.note_manager.get().unwrap().tag_list();
+                let selected_note_tag_list =
+                    imp.sidebar.selected_note().unwrap().metadata().tag_list();
+
+                let note_tag_dialog = NoteTagDialog::new(
+                    &tag_list,
+                    &NoteTagLists::from(vec![selected_note_tag_list]),
+                );
+                note_tag_dialog.set_modal(true);
+                note_tag_dialog.set_transient_for(
+                    obj.root()
+                        .map(|w| w.downcast::<gtk::Window>().unwrap())
+                        .as_ref(),
+                );
+                note_tag_dialog.present();
+            });
+
+            klass.install_action("session.edit-multi-note-tags", None, move |obj, _, _| {
+                let imp = imp::Session::from_instance(obj);
+                let tag_list = imp.note_manager.get().unwrap().tag_list();
                 let other_tag_lists = imp
                     .sidebar
                     .selected_notes()

@@ -149,7 +149,7 @@
             <child type="end">
               <object class="GtkButton" id="tag_button">
                 <property name="icon-name">tag-symbolic</property>
-                <property name="action-name">session.edit-note-tags</property>
+                <property name="action-name">session.edit-multi-note-tags</property>
                 <style>
                   <class name="flat"/>
                 </style>
