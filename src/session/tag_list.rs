@@ -208,16 +208,17 @@ impl Serialize for TagList {
 
 impl<'de> Deserialize<'de> for TagList {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let string_set: IndexSet<String> = IndexSet::deserialize(deserializer)?;
+        let name_set: Vec<String> = Vec::deserialize(deserializer)?;
 
-        let new_tag_list = Self::new();
-        let new_tag_list_priv = imp::TagList::from_instance(&new_tag_list);
-        new_tag_list_priv
-            .list
-            .replace(string_set.iter().map(|name| Tag::new(name)).collect());
-        new_tag_list_priv.name_list.replace(string_set);
+        let tag_list = Self::new();
+        for name in name_set.iter() {
+            let tag = Tag::new(name);
+            if let Err(err) = tag_list.append(tag) {
+                log::warn!("Error appending a tag, skipping: {}", err);
+            }
+        }
 
-        Ok(new_tag_list)
+        Ok(tag_list)
     }
 }
 
