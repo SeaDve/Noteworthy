@@ -89,7 +89,7 @@ impl TagList {
 
         {
             let mut list = imp.list.borrow_mut();
-            debug_assert!(list.insert(tag));
+            assert!(list.insert(tag));
         }
 
         self.items_changed(self.n_items() - 1, 0, 1);
@@ -133,23 +133,15 @@ impl TagList {
         }
 
         let imp = imp::TagList::from_instance(self);
-
         let previous_name = tag.name();
-        let editing_tag_index = self.get_index_of(tag).unwrap();
 
         {
             let mut name_list = imp.name_list.borrow_mut();
-            let previous_len = name_list.len();
-            debug_assert!(name_list.insert(name.to_string()));
-            debug_assert_eq!(name_list.last(), Some(&name.to_string()));
-            debug_assert!(name_list.swap_remove(&previous_name));
-            debug_assert_eq!(previous_len, name_list.len());
+            // Put new name at the end
+            assert!(name_list.insert(name.to_string()));
+            // Remove the old name at the name_list and replace it with name from the end
+            assert!(name_list.swap_remove(&previous_name));
         }
-
-        debug_assert_eq!(
-            imp.name_list.borrow().get_index(editing_tag_index),
-            Some(&name.to_string())
-        );
 
         tag.set_name(name);
 
