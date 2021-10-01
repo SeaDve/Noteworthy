@@ -389,27 +389,15 @@ impl Sidebar {
         let imp = imp::Sidebar::from_instance(self);
 
         let is_all_pinned_in_selected_notes = {
-            let bitset = self.selected_notes_bitset();
-
             // Just check the last selected note to short circuit faster
-            // since the selection is always sorted pinned first
-            if let Some((mut iter, index)) = gtk::BitsetIter::init_last(&bitset) {
-                if let Some(item) = model.item(index) {
-                    if item.downcast::<Note>().unwrap().metadata().is_pinned() {
-                        iter.all(|index| {
-                            model.item(index).map_or(false, |i| {
-                                i.downcast::<Note>().unwrap().metadata().is_pinned()
-                            })
-                        })
-                    } else {
-                        false
-                    }
-                } else {
-                    false
-                }
-            } else {
-                false
-            }
+            // since the selection is always sorted pinned first. Therefore, for all selected notes
+            // to be all pinned, the last one has to be pinned.
+            gtk::BitsetIter::init_last(&self.selected_notes_bitset())
+                .and_then(|(_, index)| model.item(index))
+                .map_or(false, |item| {
+                    let note = item.downcast::<Note>().unwrap();
+                    note.metadata().is_pinned()
+                })
         };
 
         imp.pin_button.set_active(is_all_pinned_in_selected_notes);
