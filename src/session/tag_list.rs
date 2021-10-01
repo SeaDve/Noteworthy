@@ -68,12 +68,17 @@ impl TagList {
 
         let tag_name = tag.name();
 
-        if self.contains_with_name(&tag_name) {
-            anyhow::bail!("Cannot append exisiting tag with same name");
-        }
-
         if tag_name.is_empty() {
             anyhow::bail!("Tag name cannot be empty");
+        }
+
+        let is_name_list_appended = {
+            let mut name_list = imp.name_list.borrow_mut();
+            name_list.insert(tag_name)
+        };
+
+        if !is_name_list_appended {
+            anyhow::bail!("Cannot append exisiting tag name");
         }
 
         tag.connect_name_notify(clone!(@weak self as obj => move |tag, _| {
@@ -82,21 +87,12 @@ impl TagList {
             }
         }));
 
-        let is_list_appended = {
+        {
             let mut list = imp.list.borrow_mut();
-            list.insert(tag)
-        };
-
-        let is_name_list_appended = {
-            let mut name_list = imp.name_list.borrow_mut();
-            name_list.insert(tag_name)
-        };
-
-        if is_list_appended || is_name_list_appended {
-            self.items_changed(self.n_items() - 1, 0, 1);
-        } else {
-            anyhow::bail!("Cannot append exisiting tag");
+            debug_assert!(list.insert(tag));
         }
+
+        self.items_changed(self.n_items() - 1, 0, 1);
 
         Ok(())
     }
@@ -104,7 +100,12 @@ impl TagList {
     pub fn remove(&self, tag: &Tag) -> anyhow::Result<()> {
         let imp = imp::TagList::from_instance(self);
 
-        if !self.contains_with_name(&tag.name()) {
+        let name_list_removed = {
+            let mut name_list = imp.name_list.borrow_mut();
+            name_list.shift_remove(&tag.name())
+        };
+
+        if !name_list_removed {
             anyhow::bail!("Cannot remove tag name that doesnt exist");
         }
 
@@ -112,11 +113,6 @@ impl TagList {
             let mut list = imp.list.borrow_mut();
             list.shift_remove_full(tag)
         };
-
-        {
-            let mut name_list = imp.name_list.borrow_mut();
-            debug_assert!(name_list.shift_remove(&tag.name()));
-        }
 
         if let Some((position, _)) = removed {
             self.items_changed(position as u32, 1, 0);
