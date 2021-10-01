@@ -76,3 +76,11 @@ custom_target(
     meson.project_name(),
   ]
 )
+
+test(
+  'cargo-test',
+  test_script,
+  args: meson.build_root(),
+  workdir: meson.source_root(),
+  timeout: 3000
+)
