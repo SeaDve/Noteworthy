@@ -161,15 +161,15 @@ impl TagList {
         imp.list.borrow().contains(tag)
     }
 
+    pub fn contains_with_name(&self, name: &str) -> bool {
+        let imp = imp::TagList::from_instance(self);
+        imp.name_list.borrow().contains(name)
+    }
+
     pub fn get_with_name(&self, name: &str) -> Option<Tag> {
         let imp = imp::TagList::from_instance(self);
         let index = imp.name_list.borrow().get_index_of(name)?;
         imp.list.borrow().get_index(index).cloned()
-    }
-
-    pub fn contains_with_name(&self, name: &str) -> bool {
-        let imp = imp::TagList::from_instance(self);
-        imp.name_list.borrow().contains(name)
     }
 
     pub fn is_valid_name(&self, name: &str) -> bool {
@@ -221,5 +221,217 @@ impl<'de> Deserialize<'de> for TagList {
 impl Default for TagList {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn append() {
+        let tag_list = TagList::new();
+        assert!(tag_list.append(Tag::new("A")).is_ok());
+        assert_eq!(tag_list.n_items(), 1);
+    }
+
+    #[test]
+    fn multiple_append() {
+        let tag_list = TagList::new();
+        assert!(tag_list.append(Tag::new("A")).is_ok());
+        assert_eq!(tag_list.n_items(), 1);
+        assert!(tag_list.append(Tag::new("a")).is_ok());
+        assert_eq!(tag_list.n_items(), 2);
+        assert!(tag_list.append(Tag::new("B")).is_ok());
+        assert_eq!(tag_list.n_items(), 3);
+        assert!(tag_list.append(Tag::new("b")).is_ok());
+        assert_eq!(tag_list.n_items(), 4);
+    }
+
+    #[test]
+    fn double_same_append() {
+        let tag_list = TagList::new();
+        assert!(tag_list.append(Tag::new("A")).is_ok());
+        assert!(tag_list.append(Tag::new("A")).is_err());
+        assert_eq!(tag_list.n_items(), 1);
+    }
+
+    #[test]
+    fn multiple_remove() {
+        let tag_list = TagList::new();
+        let tag_a = Tag::new("A");
+        let tag_a2 = Tag::new("a");
+        let tag_b = Tag::new("B");
+        let tag_b2 = Tag::new("b");
+
+        assert!(tag_list.append(tag_a.clone()).is_ok());
+        assert!(tag_list.append(tag_a2.clone()).is_ok());
+        assert!(tag_list.append(tag_b.clone()).is_ok());
+        assert!(tag_list.append(tag_b2.clone()).is_ok());
+        assert_eq!(tag_list.n_items(), 4);
+
+        assert!(tag_list.remove(&tag_a).is_ok());
+        assert_eq!(tag_list.n_items(), 3);
+        assert!(tag_list.remove(&tag_a2).is_ok());
+        assert_eq!(tag_list.n_items(), 2);
+        assert!(tag_list.remove(&tag_b).is_ok());
+        assert_eq!(tag_list.n_items(), 1);
+        assert!(tag_list.remove(&tag_b2).is_ok());
+        assert_eq!(tag_list.n_items(), 0);
+    }
+
+    #[test]
+    fn remove() {
+        let tag_list = TagList::new();
+        let tag = Tag::new("A");
+
+        assert!(tag_list.append(tag.clone()).is_ok());
+        assert_eq!(tag_list.n_items(), 1);
+
+        assert!(tag_list.remove(&tag).is_ok());
+        assert_eq!(tag_list.n_items(), 0);
+    }
+
+    #[test]
+    fn double_same_remove() {
+        let tag_list = TagList::new();
+        let tag = Tag::new("A");
+
+        assert!(tag_list.append(tag.clone()).is_ok());
+        assert_eq!(tag_list.n_items(), 1);
+
+        assert!(tag_list.remove(&tag).is_ok());
+        assert_eq!(tag_list.n_items(), 0);
+
+        assert!(tag_list.remove(&tag).is_err());
+        assert_eq!(tag_list.n_items(), 0);
+    }
+
+    #[test]
+    fn rename() {
+        let tag_list = TagList::new();
+        let tag = Tag::new("A");
+        assert!(!tag_list.contains_with_name("A"));
+        assert!(!tag_list.contains_with_name("A"));
+
+        assert!(tag_list.append(tag.clone()).is_ok());
+        assert!(tag_list.contains_with_name("A"));
+        assert!(tag_list.contains(&tag));
+        assert_eq!(tag_list.n_items(), 1);
+
+        tag.set_name("Ab");
+        assert!(!tag_list.contains_with_name("A"));
+        assert!(tag_list.contains_with_name("Ab"));
+        assert!(tag_list.contains(&tag));
+        assert_eq!(tag_list.n_items(), 1);
+
+        tag.set_name("A");
+        assert!(!tag_list.contains_with_name("Ab"));
+        assert!(tag_list.contains_with_name("A"));
+        assert!(tag_list.contains(&tag));
+        assert_eq!(tag_list.n_items(), 1);
+    }
+
+    #[test]
+    fn contains() {
+        let tag_list = TagList::new();
+        let tag_a = Tag::new("A");
+        let tag_a2 = Tag::new("a");
+        let tag_b = Tag::new("B");
+        let tag_b2 = Tag::new("b");
+
+        assert!(tag_list.append(tag_a.clone()).is_ok());
+        assert!(tag_list.append(tag_a2.clone()).is_ok());
+        assert!(tag_list.append(tag_b.clone()).is_ok());
+        assert!(tag_list.append(tag_b2.clone()).is_ok());
+
+        assert!(tag_list.contains(&tag_a));
+        assert!(tag_list.contains(&tag_a2));
+        assert!(tag_list.contains(&tag_b));
+        assert!(tag_list.contains(&tag_b2));
+        assert!(!tag_list.contains(&Tag::new("C")));
+        assert!(!tag_list.contains(&Tag::new("c")));
+    }
+
+    #[test]
+    fn contains_with_name() {
+        let tag_list = TagList::new();
+
+        assert!(tag_list.append(Tag::new("A")).is_ok());
+        assert!(tag_list.append(Tag::new("a")).is_ok());
+        assert!(tag_list.append(Tag::new("B")).is_ok());
+        assert!(tag_list.append(Tag::new("b")).is_ok());
+
+        assert!(tag_list.contains_with_name("A"));
+        assert!(tag_list.contains_with_name("a"));
+        assert!(tag_list.contains_with_name("B"));
+        assert!(tag_list.contains_with_name("b"));
+        assert!(!tag_list.contains_with_name("C"));
+        assert!(!tag_list.contains_with_name("c"));
+    }
+
+    #[test]
+    fn get_with_name() {
+        let tag_list = TagList::new();
+        let tag_a = Tag::new("A");
+        let tag_a2 = Tag::new("a");
+        let tag_b = Tag::new("B");
+        let tag_b2 = Tag::new("b");
+
+        assert!(tag_list.append(tag_a.clone()).is_ok());
+        assert!(tag_list.append(tag_a2.clone()).is_ok());
+        assert!(tag_list.append(tag_b.clone()).is_ok());
+        assert!(tag_list.append(tag_b2.clone()).is_ok());
+
+        assert_eq!(tag_list.get_with_name("A"), Some(tag_a));
+        assert_eq!(tag_list.get_with_name("a"), Some(tag_a2));
+        assert_eq!(tag_list.get_with_name("B"), Some(tag_b));
+        assert_eq!(tag_list.get_with_name("b"), Some(tag_b2));
+        assert!(tag_list.get_with_name("C").is_none());
+        assert!(tag_list.get_with_name("c").is_none());
+    }
+
+    #[test]
+    fn get_index_of() {
+        let tag_list = TagList::new();
+        assert_eq!(tag_list.n_items(), 0);
+        assert!(tag_list.append(Tag::new("A")).is_ok());
+        assert_eq!(tag_list.n_items(), 1);
+        assert!(tag_list.append(Tag::new("B")).is_ok());
+        assert_eq!(tag_list.n_items(), 2);
+        assert!(tag_list.append(Tag::new("C")).is_ok());
+        assert_eq!(tag_list.n_items(), 3);
+
+        assert_eq!(
+            tag_list.get_index_of(&tag_list.get_with_name("A").unwrap()),
+            Some(0)
+        );
+        assert_eq!(
+            tag_list.get_index_of(&tag_list.get_with_name("B").unwrap()),
+            Some(1)
+        );
+        assert_eq!(
+            tag_list.get_index_of(&tag_list.get_with_name("C").unwrap()),
+            Some(2)
+        );
+    }
+
+    #[test]
+    fn is_valid_name_repeating() {
+        let tag_list = TagList::new();
+        let tag = Tag::new("A");
+        assert!(tag_list.is_valid_name("A"));
+
+        assert!(tag_list.append(tag.clone()).is_ok());
+        assert!(!tag_list.is_valid_name("A"));
+
+        assert!(tag_list.remove(&tag).is_ok());
+        assert!(tag_list.is_valid_name("A"));
+    }
+
+    #[test]
+    fn is_valid_name_empty() {
+        let tag_list = TagList::new();
+        assert!(!tag_list.is_valid_name(""));
     }
 }
