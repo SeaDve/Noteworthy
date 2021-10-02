@@ -516,7 +516,6 @@ mod test {
     #[test]
     fn get_index_of() {
         let tag_list = TagList::new();
-        assert_eq!(tag_list.n_items(), 0);
         assert!(tag_list.append(Tag::new("A")).is_ok());
         assert!(tag_list.append(Tag::new("B")).is_ok());
         assert!(tag_list.append(Tag::new("C")).is_ok());
