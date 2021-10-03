@@ -270,9 +270,9 @@ impl Sidebar {
             }),
         );
         multi_selection_model.connect_items_changed(
-            clone!(@weak self as obj => move |model,_,_,_| {
+            clone!(@weak self as obj => move |model,pos,removed,added| {
                 obj.update_action_bar(model);
-                log::info!("Selection items changed");
+                log::info!("Selection items changed at {}; {} removed, {} added", pos, removed, added);
             }),
         );
         imp.multi_selection_model
