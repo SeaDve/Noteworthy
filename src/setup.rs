@@ -7,7 +7,7 @@ use gtk::{
     CompositeTemplate,
 };
 
-use crate::utils;
+use crate::{repository::Repository, utils};
 
 mod imp {
     use super::*;
@@ -21,6 +21,10 @@ mod imp {
         pub welcome: TemplateChild<gtk::Box>,
         #[template_child]
         pub select_provider: TemplateChild<gtk::Box>,
+        #[template_child]
+        pub repo_url_entry: TemplateChild<gtk::Entry>,
+        #[template_child]
+        pub passphrase_entry: TemplateChild<gtk::Entry>,
     }
 
     #[glib::object_subclass]
@@ -49,6 +53,17 @@ mod imp {
             klass.install_action("setup.setup-git-host", None, move |obj, _, _| {
                 let imp = imp::Setup::from_instance(obj);
                 imp.stack.set_visible_child(&imp.select_provider.get());
+            });
+
+            klass.install_action("setup.enter-repo-url", None, move |obj, _, _| {
+                let imp = imp::Setup::from_instance(obj);
+                let repo_url = imp.repo_url_entry.text();
+                let passphrase = imp.passphrase_entry.text();
+
+                let repo = Repository::new(repo_url.to_string(), glib::user_data_dir());
+                if let Err(err) = repo.clone(Some(&passphrase)) {
+                    log::error!("Failed to clone: {}", err);
+                }
             });
         }
 

@@ -76,24 +76,25 @@
             <child>
               <object class="AdwStatusPage">
                 <property name="vexpand">True</property>
-                <property name="title" translatable="yes">Select a Git Hosting Provider</property>
+                <property name="title" translatable="yes">Clone a Repository</property>
                 <property name="child">
                   <object class="GtkBox">
                     <property name="spacing">12</property>
                     <property name="halign">center</property>
                     <child>
-                      <object class="GtkButton">
-                        <property name="icon-name">face-cool-symbolic</property>
+                      <object class="GtkEntry" id="repo_url_entry">
+                        <property name="placeholder-text" translatable="yes">Repository URL</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkEntry" id="passphrase_entry">
+                        <property name="placeholder-text" translatable="yes">Passphrase</property>
                       </object>
                     </child>
                     <child>
                       <object class="GtkButton">
-                        <property name="icon-name">audio-x-generic-symbolic</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkButton">
-                        <property name="label" translatable="yes">Custom</property>
+                        <property name="label" translatable="yes">Clone</property>
+                        <property name="action-name">setup.enter-repo-url</property>
                       </object>
                     </child>
                   </object>

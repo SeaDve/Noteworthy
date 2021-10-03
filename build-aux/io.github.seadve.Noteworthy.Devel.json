@@ -6,6 +6,7 @@
     "sdk-extensions": ["org.freedesktop.Sdk.Extension.rust-stable"],
     "command": "noteworthy",
     "finish-args" : [
+        "--share=network",
         "--socket=fallback-x11",
         "--socket=wayland",
         "--device=dri",

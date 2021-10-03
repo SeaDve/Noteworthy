@@ -20,3 +20,5 @@ chrono = { version = "0.4", features = ["serde"] }
 serde = { version = "1.0.130", features = ["derive"] }
 serde_yaml = "0.8"
 gray_matter = "0.2"
+
+git2 = "0.13"

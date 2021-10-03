@@ -52,6 +52,7 @@ rust_sources = files(
   'date.rs',
   'error.rs',
   'main.rs',
+  'repository.rs',
   'setup.rs',
   'window.rs',
 )

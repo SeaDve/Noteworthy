@@ -15,6 +15,7 @@ mod components;
 mod config;
 mod date;
 mod error;
+mod repository;
 mod session;
 mod setup;
 mod utils;
