@@ -60,10 +60,15 @@ mod imp {
                 let repo_url = imp.repo_url_entry.text();
                 let passphrase = imp.passphrase_entry.text();
 
-                let repo = Repository::new(repo_url.to_string(), glib::user_data_dir());
-                if let Err(err) = repo.clone(Some(&passphrase)) {
-                    log::error!("Failed to clone: {}", err);
-                }
+                let ctx = glib::MainContext::default();
+                ctx.spawn_local(async move {
+                    let repo = Repository::new(repo_url.to_string(), glib::user_data_dir());
+                    if let Err(err) = repo.clone(Some(&passphrase)).await {
+                        log::error!("Failed to clone: {}", err);
+                    } else {
+                        log::info!("Successfull repo clone");
+                    }
+                });
             });
         }
 

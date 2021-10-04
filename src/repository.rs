@@ -1,13 +1,10 @@
-use git2::{Cred, RemoteCallbacks, Repository as Git2Repository};
 use gtk::glib;
-use once_cell::sync::OnceCell;
 
-use std::path::PathBuf;
+use std::{path::PathBuf, thread};
 
 pub struct Repository {
     remote_url: String,
     local_path: PathBuf,
-    inner: OnceCell<Git2Repository>,
 }
 
 impl Repository {
@@ -15,36 +12,59 @@ impl Repository {
         Self {
             remote_url,
             local_path,
-            inner: OnceCell::new(),
         }
     }
 
-    pub fn clone(&self, passphrase: Option<&str>) -> anyhow::Result<()> {
-        let mut callbacks = RemoteCallbacks::new();
-        callbacks.credentials(|_url, username_from_url, _allowed_types| {
-            let mut ssh_key_path = glib::home_dir();
-            ssh_key_path.push(".ssh/id_ed25519");
+    pub async fn clone(&self, passphrase: Option<&str>) -> anyhow::Result<()> {
+        let (sender, receiver) = futures::channel::oneshot::channel();
 
-            log::info!("Credential callback");
+        // FIXME dont clone
+        let passphrase = passphrase.map(std::string::ToString::to_string);
+        let remote_url = self.remote_url.clone();
+        let local_path = self.local_path.clone();
 
-            Cred::ssh_key(username_from_url.unwrap(), None, &ssh_key_path, passphrase)
+        thread::spawn(move || {
+            let mut callbacks = git2::RemoteCallbacks::new();
+            callbacks.credentials(|_url, username_from_url, _allowed_types| {
+                let mut ssh_key_path = glib::home_dir();
+                ssh_key_path.push(".ssh/id_ed25519");
+
+                log::info!("Credential callback");
+
+                git2::Cred::ssh_key(
+                    username_from_url.unwrap(),
+                    None,
+                    &ssh_key_path,
+                    passphrase.as_deref(),
+                )
+            });
+            callbacks.transfer_progress(|progress| {
+                dbg!(progress.total_objects());
+                dbg!(progress.indexed_objects());
+                dbg!(progress.received_objects());
+                dbg!(progress.local_objects());
+                dbg!(progress.total_deltas());
+                dbg!(progress.indexed_deltas());
+                dbg!(progress.received_bytes());
+                true
+            });
+
+            log::info!("Preparing to clone");
+
+            let mut fo = git2::FetchOptions::new();
+            fo.remote_callbacks(callbacks);
+
+            let mut builder = git2::build::RepoBuilder::new();
+            builder.fetch_options(fo);
+
+            let res = builder.clone(&remote_url, &local_path);
+
+            sender.send(match res {
+                Ok(_) => Ok(()),
+                Err(err) => Err(err),
+            })
         });
 
-        log::info!("Preparing to clone");
-
-        let mut fo = git2::FetchOptions::new();
-        fo.remote_callbacks(callbacks);
-
-        let mut builder = git2::build::RepoBuilder::new();
-        builder.fetch_options(fo);
-
-        let repo = builder.clone(&self.remote_url, &self.local_path)?;
-        if self.inner.set(repo).is_err() {
-            panic!("inner repo already set.");
-        }
-
-        log::info!("Clone done");
-
-        Ok(())
+        Ok(receiver.await.unwrap()?)
     }
 }
