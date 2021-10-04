@@ -1,22 +1,7 @@
-// use gtk::glib;
-
-// use std::{path::PathBuf, thread};
-
-// pub struct Repository {
-//     remote_url: String,
-//     local_path: PathBuf,
-// }
-
-// impl Repository {
-//     pub fn new(remote_url: String, local_path: PathBuf) -> Self {
-//         Self {
-//             remote_url,
-//             local_path,
-//         }
 use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::unsync::OnceCell;
 
-use std::{path::PathBuf, thread};
+use std::thread;
 
 mod imp {
     use super::*;
