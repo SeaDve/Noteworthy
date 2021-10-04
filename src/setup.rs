@@ -62,7 +62,10 @@ mod imp {
 
                 let ctx = glib::MainContext::default();
                 ctx.spawn_local(async move {
-                    let repo = Repository::new(repo_url.to_string(), glib::user_data_dir());
+                    let repo = Repository::new(
+                        &repo_url.to_string(),
+                        &gio::File::for_path(&glib::user_data_dir()),
+                    );
                     if let Err(err) = repo.clone(Some(&passphrase)).await {
                         log::error!("Failed to clone: {}", err);
                     } else {
