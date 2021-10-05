@@ -162,7 +162,11 @@ impl Repository {
 
     fn inner_repo(&self) -> Arc<Mutex<git2::Repository>> {
         let imp = imp::Repository::from_instance(self);
-        Arc::clone(imp.inner_repo.get().unwrap())
+        let inner_repo = imp
+            .inner_repo
+            .get()
+            .expect("Please clone or open the repo first");
+        Arc::clone(inner_repo)
     }
 
     fn set_inner_repo(&self, repo: git2::Repository) {
