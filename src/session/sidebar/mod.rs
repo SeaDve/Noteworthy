@@ -53,7 +53,7 @@ mod imp {
         #[template_child]
         pub selection_menu_button: TemplateChild<gtk::MenuButton>,
         #[template_child]
-        pub action_bar_revealer: TemplateChild<gtk::Revealer>,
+        pub action_bar: TemplateChild<gtk::ActionBar>,
         #[template_child]
         pub pin_button: TemplateChild<gtk::ToggleButton>,
         #[template_child]
@@ -314,7 +314,7 @@ impl Sidebar {
             SelectionMode::Single => {
                 imp.header_bar_stack
                     .set_visible_child(&imp.main_header_bar.get());
-                imp.action_bar_revealer.set_reveal_child(false);
+                imp.action_bar.set_revealed(false);
 
                 let model = imp.single_selection_model.borrow();
                 imp.list_view.set_model(Some(model.as_ref().unwrap()));
@@ -325,7 +325,7 @@ impl Sidebar {
             SelectionMode::Multi => {
                 imp.header_bar_stack
                     .set_visible_child(&imp.selection_header_bar.get());
-                imp.action_bar_revealer.set_reveal_child(true);
+                imp.action_bar.set_revealed(true);
 
                 let model = imp.multi_selection_model.borrow();
                 imp.list_view.set_model(Some(model.as_ref().unwrap()));

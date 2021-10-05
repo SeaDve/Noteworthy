@@ -118,45 +118,23 @@
       </object>
     </child>
     <child>
-      <object class="GtkSeparator"/>
-    </child>
-    <child>
-      <object class="GtkRevealer" id="action_bar_revealer">
-        <property name="transition-type">slide-up</property>
-        <style>
-          <class name="sidebar-action-bar"/>
-        </style>
-        <property name="child">
-          <object class="GtkBox">
-            <property name="halign">end</property>
-            <property name="spacing">12</property>
-            <child type="end">
-              <object class="GtkToggleButton" id="pin_button">
-                <property name="icon-name">view-pin-symbolic</property>
-                <style>
-                  <class name="flat"/>
-                </style>
-              </object>
-            </child>
-            <child type="end">
-              <object class="GtkToggleButton" id="trash_button">
-                <property name="icon-name">user-trash-symbolic</property>
-                <style>
-                  <class name="flat"/>
-                </style>
-              </object>
-            </child>
-            <child type="end">
-              <object class="GtkButton" id="tag_button">
-                <property name="icon-name">tag-symbolic</property>
-                <property name="action-name">session.edit-multi-note-tags</property>
-                <style>
-                  <class name="flat"/>
-                </style>
-              </object>
-            </child>
+      <object class="GtkActionBar" id="action_bar">
+        <child type="end">
+          <object class="GtkButton" id="tag_button">
+            <property name="icon-name">tag-symbolic</property>
+            <property name="action-name">session.edit-multi-note-tags</property>
           </object>
-        </property>
+        </child>
+        <child type="end">
+          <object class="GtkToggleButton" id="trash_button">
+            <property name="icon-name">user-trash-symbolic</property>
+          </object>
+        </child>
+        <child type="end">
+          <object class="GtkToggleButton" id="pin_button">
+            <property name="icon-name">view-pin-symbolic</property>
+          </object>
+        </child>
       </object>
     </child>
   </template>
