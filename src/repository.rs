@@ -1,15 +1,19 @@
 use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::unsync::OnceCell;
 
-use std::thread;
+use std::{
+    sync::{Arc, Mutex},
+    thread,
+};
 
 mod imp {
     use super::*;
 
-    #[derive(Debug, Default)]
+    #[derive(Default)]
     pub struct Repository {
         pub remote_url: OnceCell<String>,
         pub local_path: OnceCell<gio::File>,
+        pub inner_repo: OnceCell<Arc<Mutex<git2::Repository>>>,
     }
 
     #[glib::object_subclass]
@@ -96,6 +100,13 @@ impl Repository {
         self.property("local-path").unwrap().get().unwrap()
     }
 
+    pub fn open(&self) -> anyhow::Result<()> {
+        let repo = git2::Repository::open(self.local_path().path().unwrap())?;
+        self.set_inner_repo(repo);
+
+        Ok(())
+    }
+
     pub async fn clone(&self, passphrase: Option<&str>) -> anyhow::Result<()> {
         let (sender, receiver) = futures::channel::oneshot::channel();
 
@@ -140,12 +151,26 @@ impl Repository {
 
             let res = builder.clone(&remote_url, &local_path.path().unwrap());
 
-            sender.send(match res {
-                Ok(_) => Ok(()),
-                Err(err) => Err(err),
-            })
+            sender.send(res)
         });
 
-        Ok(receiver.await.unwrap()?)
+        let repo = receiver.await.unwrap()?;
+        self.set_inner_repo(repo);
+
+        Ok(())
+    }
+
+    fn inner_repo(&self) -> Arc<Mutex<git2::Repository>> {
+        let imp = imp::Repository::from_instance(self);
+        Arc::clone(imp.inner_repo.get().unwrap())
+    }
+
+    fn set_inner_repo(&self, repo: git2::Repository) {
+        let imp = imp::Repository::from_instance(self);
+
+        // FIXME why unwrap needs Debug
+        if imp.inner_repo.set(Arc::new(Mutex::new(repo))).is_err() {
+            panic!("Inner repo already set");
+        }
     }
 }
