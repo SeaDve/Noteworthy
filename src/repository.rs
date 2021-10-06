@@ -1,10 +1,7 @@
 use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::unsync::OnceCell;
 
-use std::{
-    sync::{Arc, Mutex},
-    thread,
-};
+use std::thread;
 
 mod imp {
     use super::*;
@@ -13,7 +10,6 @@ mod imp {
     pub struct Repository {
         pub remote_url: OnceCell<String>,
         pub local_path: OnceCell<gio::File>,
-        pub inner_repo: OnceCell<Arc<Mutex<git2::Repository>>>,
     }
 
     #[glib::object_subclass]
@@ -100,13 +96,6 @@ impl Repository {
         self.property("local-path").unwrap().get().unwrap()
     }
 
-    pub fn open(&self) -> anyhow::Result<()> {
-        let repo = git2::Repository::open(self.local_path().path().unwrap())?;
-        self.set_inner_repo(repo);
-
-        Ok(())
-    }
-
     pub async fn clone(&self, passphrase: Option<&str>) -> anyhow::Result<()> {
         let (sender, receiver) = futures::channel::oneshot::channel();
 
@@ -154,27 +143,43 @@ impl Repository {
             sender.send(res)
         });
 
-        let repo = receiver.await.unwrap()?;
-        self.set_inner_repo(repo);
+        receiver.await.unwrap()?;
 
         Ok(())
     }
 
-    fn inner_repo(&self) -> Arc<Mutex<git2::Repository>> {
-        let imp = imp::Repository::from_instance(self);
-        let inner_repo = imp
-            .inner_repo
-            .get()
-            .expect("Please clone or open the repo first");
-        Arc::clone(inner_repo)
-    }
+    pub fn commit(
+        &self,
+        author_name: &str,
+        author_email: &str,
+        message: &str,
+    ) -> anyhow::Result<()> {
+        let repo = git2::Repository::open(self.local_path().path().unwrap())?;
 
-    fn set_inner_repo(&self, repo: git2::Repository) {
-        let imp = imp::Repository::from_instance(self);
+        let mut index = repo.index()?;
+        let tree_id = index.write_tree()?;
+        let tree = repo.find_tree(tree_id)?;
 
-        // FIXME why unwrap needs Debug
-        if imp.inner_repo.set(Arc::new(Mutex::new(repo))).is_err() {
-            panic!("Inner repo already set");
-        }
+        let signature = git2::Signature::now(author_name, author_email)?;
+
+        match repo.refname_to_id("HEAD") {
+            Ok(parent_id) => {
+                let parent_commit = repo.find_commit(parent_id)?;
+                repo.commit(
+                    Some("HEAD"),
+                    &signature,
+                    &signature,
+                    message,
+                    &tree,
+                    &[&parent_commit],
+                )?;
+            }
+            Err(err) => {
+                repo.commit(Some("HEAD"), &signature, &signature, message, &tree, &[])?;
+                log::warn!("Failed to refname_to_id: {}", err);
+            }
+        };
+
+        Ok(())
     }
 }
