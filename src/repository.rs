@@ -139,11 +139,75 @@ impl Repository {
             builder.fetch_options(fo);
 
             let res = builder.clone(&remote_url, &local_path.path().unwrap());
-
             sender.send(res)
         });
 
         receiver.await.unwrap()?;
+
+        Ok(())
+    }
+
+    pub async fn push(&self, remote_name: &str, passphrase: Option<&str>) -> anyhow::Result<()> {
+        let (sender, receiver) = futures::channel::oneshot::channel();
+
+        let remote_name = remote_name.to_string();
+        let passphrase = passphrase.map(std::string::ToString::to_string);
+        let local_path = self.local_path();
+
+        thread::spawn(move || {
+            let res = Repository::_push(&local_path, &remote_name, passphrase.as_deref());
+            sender.send(res).unwrap();
+        });
+
+        receiver.await.unwrap()?;
+
+        Ok(())
+    }
+
+    fn _push(
+        local_path: &gio::File,
+        remote_name: &str,
+        passphrase: Option<&str>,
+    ) -> anyhow::Result<()> {
+        let repo = git2::Repository::open(&local_path.path().unwrap())?;
+        let mut remote = repo.find_remote(remote_name)?;
+        let ref_head = repo.head()?;
+        let ref_head_name = ref_head
+            .name()
+            .ok_or_else(|| anyhow::anyhow!("Ref head name not found"))?;
+
+        let head_type = ref_head.kind();
+
+        if head_type != Some(git2::ReferenceType::Direct) {
+            anyhow::bail!("Head is not a direct reference.")
+        }
+
+        let mut callbacks = git2::RemoteCallbacks::new();
+        callbacks.credentials(|_url, username_from_url, _allowed_types| {
+            let mut ssh_key_path = glib::home_dir();
+            ssh_key_path.push(".ssh/id_ed25519");
+
+            log::info!("Credential callback");
+
+            git2::Cred::ssh_key(username_from_url.unwrap(), None, &ssh_key_path, passphrase)
+        });
+        callbacks.transfer_progress(|progress| {
+            dbg!(progress.total_objects());
+            dbg!(progress.indexed_objects());
+            dbg!(progress.received_objects());
+            dbg!(progress.local_objects());
+            dbg!(progress.total_deltas());
+            dbg!(progress.indexed_deltas());
+            dbg!(progress.received_bytes());
+            true
+        });
+
+        log::info!("Preparing to push local changes");
+
+        let mut po = git2::PushOptions::new();
+        po.remote_callbacks(callbacks);
+
+        remote.push(&[ref_head_name], Some(&mut po))?;
 
         Ok(())
     }
