@@ -1,9 +1,12 @@
 mod wrapper;
 
 use gtk::{gio, glib, prelude::*, subclass::prelude::*};
-use once_cell::unsync::OnceCell;
+use once_cell::{sync::Lazy, unsync::OnceCell};
 
 use std::thread;
+
+static DEFAULT_AUTHOR_NAME: Lazy<String> = Lazy::new(|| String::from("NoteworthyApp"));
+static DEFAULT_AUTHOR_EMAIL: Lazy<String> = Lazy::new(|| String::from("app@noteworthy.io"));
 
 mod imp {
     use super::*;
@@ -22,7 +25,6 @@ mod imp {
 
     impl ObjectImpl for Repository {
         fn properties() -> &'static [glib::ParamSpec] {
-            use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![glib::ParamSpec::new_object(
                     "base-path",
@@ -95,16 +97,18 @@ impl Repository {
         Ok(())
     }
 
-    pub async fn commit(
-        &self,
-        message: String,
-        author_name: String,
-        author_email: String,
-    ) -> anyhow::Result<()> {
+    pub async fn commit(&self, message: String) -> anyhow::Result<()> {
         let base_path = self.base_path().path().unwrap();
 
-        Self::run_async(move || wrapper::commit(&base_path, &message, &author_name, &author_email))
-            .await?;
+        Self::run_async(move || {
+            wrapper::commit(
+                &base_path,
+                &message,
+                &DEFAULT_AUTHOR_NAME,
+                &DEFAULT_AUTHOR_EMAIL,
+            )
+        })
+        .await?;
 
         Ok(())
     }
@@ -117,16 +121,16 @@ impl Repository {
         Ok(())
     }
 
-    pub async fn merge(
-        &self,
-        source_branch: String,
-        author_name: String,
-        author_email: String,
-    ) -> anyhow::Result<()> {
+    pub async fn merge(&self, source_branch: String) -> anyhow::Result<()> {
         let base_path = self.base_path().path().unwrap();
 
         Self::run_async(move || {
-            wrapper::merge(&base_path, &source_branch, &author_name, &author_email)
+            wrapper::merge(
+                &base_path,
+                &source_branch,
+                &DEFAULT_AUTHOR_NAME,
+                &DEFAULT_AUTHOR_EMAIL,
+            )
         })
         .await?;
 
