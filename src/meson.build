@@ -22,6 +22,8 @@ rust_sources = files(
   'components/context_menu_bin.rs',
   'components/file_chooser_button.rs',
   'components/mod.rs',
+  'repository/mod.rs',
+  'repository/wrapper.rs',
   'session/content/view/tag_list_view/mod.rs',
   'session/content/view/tag_list_view/row.rs',
   'session/content/view/mod.rs',
@@ -52,7 +54,6 @@ rust_sources = files(
   'date.rs',
   'error.rs',
   'main.rs',
-  'repository.rs',
   'setup.rs',
   'window.rs',
 )
