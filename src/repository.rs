@@ -1,7 +1,7 @@
 use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::unsync::OnceCell;
 
-use std::thread;
+use std::{fs::File, io::Write, path::PathBuf, thread};
 
 mod imp {
     use super::*;
@@ -243,6 +243,140 @@ impl Repository {
                 log::warn!("Failed to refname_to_id: {}", err);
             }
         };
+
+        Ok(())
+    }
+
+    pub fn fetch(&self, remote_name: &str, passphrase: Option<&str>) -> anyhow::Result<()> {
+        let repo = git2::Repository::open(self.local_path().path().unwrap())?;
+        let mut remote = repo.find_remote(remote_name)?;
+
+        let mut callbacks = git2::RemoteCallbacks::new();
+        callbacks.credentials(|_url, username_from_url, _allowed_types| {
+            let mut ssh_key_path = glib::home_dir();
+            ssh_key_path.push(".ssh/id_ed25519");
+
+            log::info!("Credential callback");
+
+            git2::Cred::ssh_key(
+                username_from_url.unwrap(),
+                None,
+                &ssh_key_path,
+                passphrase.as_deref(),
+            )
+        });
+        callbacks.transfer_progress(|progress| {
+            dbg!(progress.total_objects());
+            dbg!(progress.indexed_objects());
+            dbg!(progress.received_objects());
+            dbg!(progress.local_objects());
+            dbg!(progress.total_deltas());
+            dbg!(progress.indexed_deltas());
+            dbg!(progress.received_bytes());
+            true
+        });
+
+        log::info!("Preparing to clone");
+
+        let mut fo = git2::FetchOptions::new();
+        fo.remote_callbacks(callbacks);
+
+        remote.fetch::<&str>(&[], Some(&mut fo), None)?;
+
+        Ok(())
+    }
+
+    // From https://github.com/GitJournal/git_bindings/blob/master/gj_common/gitjournal.c
+    pub fn merge(
+        &self,
+        source_branch: &str,
+        author_name: &str,
+        author_email: &str,
+    ) -> anyhow::Result<()> {
+        let repo = git2::Repository::open(self.local_path().path().unwrap())?;
+        let origin_head_ref = repo.find_branch(source_branch, git2::BranchType::Remote)?;
+        let origin_annotated_commit = repo.reference_to_annotated_commit(origin_head_ref.get())?;
+        let (merge_analysis, _) = repo.merge_analysis(&[&origin_annotated_commit])?;
+
+        dbg!(merge_analysis);
+
+        if merge_analysis.contains(git2::MergeAnalysis::ANALYSIS_UP_TO_DATE) {
+            log::info!("Merge analysis: Up to date");
+            return Ok(());
+        } else if merge_analysis.contains(git2::MergeAnalysis::ANALYSIS_UNBORN) {
+            anyhow::bail!("Merge analysis: Unborn");
+        } else if merge_analysis.contains(git2::MergeAnalysis::ANALYSIS_FASTFORWARD) {
+            log::info!("Merge analysis: Fastforwarding...");
+            let target_oid = origin_annotated_commit.id();
+            Self::perform_fastforward(&repo, target_oid)?;
+        } else if merge_analysis.contains(git2::MergeAnalysis::ANALYSIS_NORMAL) {
+            log::info!("Merge analysis: Performing normal merge...");
+
+            repo.merge(&[&origin_annotated_commit], None, None)?;
+            let mut index = repo.index()?;
+            let conflicts = index.conflicts()?;
+
+            for conflict in conflicts.flatten() {
+                let our = conflict.our.unwrap();
+                let their = conflict.their.unwrap();
+
+                let current_conflict_path = std::str::from_utf8(&their.path).unwrap();
+                log::info!("Pull: Conflict on file {}", current_conflict_path);
+                Repository::resolve_conflict(&repo, &our)?;
+                log::info!("Resolved conflict on file {}", current_conflict_path);
+
+                let path = std::str::from_utf8(&our.path).unwrap();
+                let path = PathBuf::from(&path);
+
+                let mut index = repo.index()?;
+                index.remove_path(&path)?;
+                index.add_all([our.path], git2::IndexAddOption::DEFAULT, None)?;
+                index.write()?;
+            }
+
+            let tree_id = index.write_tree()?;
+            let tree = repo.find_tree(tree_id)?;
+            let signature = git2::Signature::now(author_name, author_email)?;
+            let head_id = repo.refname_to_id("HEAD")?;
+            let head_commit = repo.find_commit(head_id)?;
+            let origin_head_commit = repo.find_commit(origin_annotated_commit.id())?;
+
+            let parents = [&head_commit, &origin_head_commit];
+            let message = "Custom merge commit";
+            repo.commit(
+                Some("HEAD"),
+                &signature,
+                &signature,
+                message,
+                &tree,
+                &parents,
+            )?;
+        }
+
+        Ok(())
+    }
+
+    fn perform_fastforward(repo: &git2::Repository, target_oid: git2::Oid) -> anyhow::Result<()> {
+        let mut target_ref = repo.head()?;
+        let target = repo.find_object(target_oid, Some(git2::ObjectType::Commit))?;
+
+        repo.checkout_tree(&target, None)?;
+        target_ref.set_target(target_oid, "")?;
+
+        Ok(())
+    }
+
+    fn resolve_conflict(repo: &git2::Repository, our: &git2::IndexEntry) -> anyhow::Result<()> {
+        let odb = repo.odb()?;
+        let odb_object = odb.read(our.id)?;
+        let file_data = odb_object.data();
+
+        let file_path = &our.path;
+        let mut file_full_path = PathBuf::from(repo.path());
+        file_full_path.push(std::str::from_utf8(file_path).unwrap());
+
+        let mut file = File::open(file_full_path)?;
+        file.write_all(file_data)?;
 
         Ok(())
     }
