@@ -48,15 +48,15 @@ pub fn merge(
     author_email: &str,
 ) -> anyhow::Result<()> {
     let repo = git2::Repository::open(git_base_path)?;
+
     let origin_head_ref = repo.find_branch(source_branch, git2::BranchType::Remote)?;
     let origin_annotated_commit = repo.reference_to_annotated_commit(origin_head_ref.get())?;
-    let (merge_analysis, _) = repo.merge_analysis(&[&origin_annotated_commit])?;
 
+    let (merge_analysis, _) = repo.merge_analysis(&[&origin_annotated_commit])?;
     log::info!("Merge analysis: {:?}", merge_analysis);
 
     if merge_analysis.contains(git2::MergeAnalysis::ANALYSIS_UP_TO_DATE) {
         log::info!("Merge analysis: Up to date");
-        return Ok(());
     } else if merge_analysis.contains(git2::MergeAnalysis::ANALYSIS_UNBORN) {
         anyhow::bail!("Merge analysis: Unborn");
     } else if merge_analysis.contains(git2::MergeAnalysis::ANALYSIS_FASTFORWARD) {
