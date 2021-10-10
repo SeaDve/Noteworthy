@@ -16,7 +16,7 @@ mod imp {
     #[template(resource = "/io/github/seadve/Noteworthy/ui/setup.ui")]
     pub struct Setup {
         #[template_child]
-        pub stack: TemplateChild<gtk::Stack>,
+        pub content: TemplateChild<adw::Leaflet>,
         #[template_child]
         pub welcome: TemplateChild<gtk::Box>,
         #[template_child]
@@ -47,12 +47,12 @@ mod imp {
 
             klass.install_action("setup.go-back-welcome", None, move |obj, _, _| {
                 let imp = imp::Setup::from_instance(obj);
-                imp.stack.set_visible_child(&imp.welcome.get());
+                imp.content.set_visible_child(&imp.welcome.get());
             });
 
             klass.install_action("setup.setup-git-host", None, move |obj, _, _| {
                 let imp = imp::Setup::from_instance(obj);
-                imp.stack.set_visible_child(&imp.select_provider.get());
+                imp.content.set_visible_child(&imp.select_provider.get());
             });
 
             klass.install_action("setup.enter-repo-url", None, move |obj, _, _| {

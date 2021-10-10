@@ -2,8 +2,8 @@
 <interface>
   <template class="NwtySetup" parent="AdwBin">
     <property name="child">
-      <object class="GtkStack" id="stack">
-        <property name="transition-type">crossfade</property>
+      <object class="AdwLeaflet" id="content">
+        <property name="can-unfold">False</property>
         <child>
           <object class="GtkBox" id="welcome">
             <property name="orientation">vertical</property>
@@ -21,7 +21,7 @@
                 <property name="vexpand">True</property>
                 <property name="icon-name">editor-symbolic</property> <!-- TODO Add proper image -->
                 <property name="title" translatable="yes">Welcome to Noteworthy</property>
-                <property name="description" translatable="yes">Notes can be synchronized with any git hosting provider or stored locally on this device.</property>
+                <property name="description" translatable="yes">Notes can either be synchronized with any git hosting provider or stored locally on this device.</property>
                 <property name="child">
                   <object class="GtkBox">
                     <property name="orientation">vertical</property>
