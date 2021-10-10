@@ -35,201 +35,216 @@
             <property name="vexpand">True</property>
             <property name="can-unfold">False</property>
             <child>
-              <object class="AdwStatusPage" id="welcome">
-                <property name="icon-name">editor-symbolic</property>
-                <!-- TODO Add proper image -->
-                <property name="title" translatable="yes">Welcome to Noteworthy</property>
-                <property name="description" translatable="yes">Notes can either be synchronized with any git hosting provider or stored locally on this device.</property>
+              <object class="AdwLeafletPage">
+                <property name="name">welcome</property>
                 <property name="child">
-                  <object class="GtkBox">
-                    <property name="orientation">vertical</property>
-                    <property name="spacing">18</property>
-                    <property name="halign">center</property>
-                    <child>
-                      <object class="GtkButton">
-                        <property name="label" translatable="yes">Setup Git Host</property>
-                        <property name="action-name">setup.setup-git-host</property>
-                        <style>
-                          <class name="pill-button"/>
-                          <class name="suggested-action"/>
-                        </style>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkButton">
-                        <property name="label" translatable="yes">Local Storage</property>
-                        <property name="action-name">setup.setup-session</property>
-                        <style>
-                          <class name="pill-button"/>
-                        </style>
-                      </object>
-                    </child>
-                    <style>
-                      <class name="setup-button-box"/>
-                    </style>
-                  </object>
-                </property>
-              </object>
-            </child>
-            <child>
-              <object class="AdwStatusPage" id="select_provider">
-                <property name="title" translatable="yes">Select a Provider</property>
-                <property name="child">
-                  <object class="GtkListBox">
-                    <property name="selection-mode">none</property>
-                    <property name="halign">center</property>
-                    <child>
-                      <object class="AdwComboRow">
-                        <property name="title" translatable="yes">Git host provider</property>
-                        <property name="subtitle" translatable="yes">The provider where the notes will be stored remotely</property>
-                        <property name="model">
-                          <object class="GtkStringList">
-                            <items>
-                              <item>GitHub</item>
-                              <item>GitLab</item>
-                              <item>Custom</item>
-                            </items>
-                          </object>
-                        </property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="AdwActionRow">
-                        <property name="title" translatable="yes">Automatic setup</property>
-                        <property name="subtitle" translatable="yes">Whether to setup the repository automatically</property>
-                        <property name="activatable-widget">automatic_switch</property>
-                        <child type="suffix">
-                          <object class="GtkSwitch" id="automatic_switch">
-                            <property name="valign">center</property>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                    <style>
-                      <class name="content"/>
-                    </style>
-                  </object>
-                </property>
-              </object>
-            </child>
-            <child>
-              <object class="AdwStatusPage" id="create_repo">
-                <property name="title" translatable="yes">Create a New Git Repository</property>
-                <property name="child">
-                  <object class="GtkListBox">
-                    <property name="selection-mode">none</property>
-                    <property name="halign">center</property>
-                    <child>
-                      <object class="AdwActionRow">
-                        <property name="title" translatable="yes">1. Open create new repo webpage</property>
-                        <property name="activatable-widget">create_new_webpage_button</property>
-                        <child type="suffix">
-                          <object class="GtkButton" id="create_new_webpage_button">
-                            <property name="valign">center</property>
-                            <property name="icon-name">external-link-symbolic</property>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="AdwActionRow">
-                        <property name="title" translatable="yes">2. Enter SSH clone url</property>
-                        <child type="suffix">
-                          <object class="GtkEntry">
-                            <property name="valign">center</property>
-                            <property name="placeholder-text">git@github.com:username/reponame.git</property>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="AdwExpanderRow" id="ssh_key_provider_row">
-                        <property name="title" translatable="yes">3. Provide SSH key</property>
-                        <property name="activatable">False</property>
+                  <object class="AdwStatusPage">
+                    <property name="icon-name">editor-symbolic</property>
+                    <!-- TODO Add proper image -->
+                    <property name="title" translatable="yes">Welcome to Noteworthy</property>
+                    <property name="description" translatable="yes">Notes can either be synchronized with any git hosting provider or stored locally on this device.</property>
+                    <property name="child">
+                      <object class="GtkBox">
+                        <property name="orientation">vertical</property>
+                        <property name="spacing">18</property>
+                        <property name="halign">center</property>
                         <child>
-                          <object class="GtkBox">
-                            <property name="orientation">vertical</property>
-                            <property name="spacing">6</property>
-                            <property name="margin-start">6</property>
-                            <property name="margin-end">6</property>
-                            <property name="margin-top">6</property>
-                            <property name="margin-bottom">6</property>
-                            <child>
-                              <object class="GtkStackSwitcher">
-                                <property name="halign">center</property>
-                                <property name="stack">ssh_key_provider_stack</property>
+                          <object class="GtkButton">
+                            <property name="label" translatable="yes">Setup Git Host</property>
+                            <property name="action-name">setup.setup-git-host</property>
+                            <style>
+                              <class name="pill-button"/>
+                              <class name="suggested-action"/>
+                            </style>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkButton">
+                            <property name="label" translatable="yes">Local Storage</property>
+                            <property name="action-name">setup.setup-session</property>
+                            <style>
+                              <class name="pill-button"/>
+                            </style>
+                          </object>
+                        </child>
+                        <style>
+                          <class name="setup-button-box"/>
+                        </style>
+                      </object>
+                    </property>
+                  </object>
+                </property>
+              </object>
+            </child>
+            <child>
+              <object class="AdwLeafletPage">
+                <property name="name">select-provider</property>
+                <property name="child">
+                  <object class="AdwStatusPage">
+                    <property name="title" translatable="yes">Select a Provider</property>
+                    <property name="child">
+                      <object class="GtkListBox">
+                        <property name="selection-mode">none</property>
+                        <property name="halign">center</property>
+                        <child>
+                          <object class="AdwComboRow" id="git_host_provider_row">
+                            <property name="title" translatable="yes">Git host provider</property>
+                            <property name="subtitle" translatable="yes">The provider where the notes will be stored remotely</property>
+                            <property name="model">
+                              <object class="GtkStringList">
+                                <items>
+                                  <item>GitHub</item>
+                                  <item>GitLab</item>
+                                  <item>Custom</item>
+                                </items>
+                              </object>
+                            </property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="AdwActionRow">
+                            <property name="title" translatable="yes">Automatic setup</property>
+                            <property name="subtitle" translatable="yes">Login with your account to setup the repository automatically</property>
+                            <property name="activatable-widget">is_automatic_switch</property>
+                            <child type="suffix">
+                              <object class="GtkSwitch" id="is_automatic_switch">
+                                <property name="valign">center</property>
                               </object>
                             </child>
+                          </object>
+                        </child>
+                        <style>
+                          <class name="content"/>
+                        </style>
+                      </object>
+                    </property>
+                  </object>
+                </property>
+              </object>
+            </child>
+            <child>
+              <object class="AdwLeafletPage">
+                <property name="name">create-repo</property>
+                <property name="child">
+                  <object class="AdwStatusPage">
+                    <property name="title" translatable="yes">Create a New Git Repository</property>
+                    <property name="child">
+                      <object class="GtkListBox">
+                        <property name="selection-mode">none</property>
+                        <property name="halign">center</property>
+                        <child>
+                          <object class="AdwActionRow">
+                            <property name="title" translatable="yes">1. Open create new repo webpage</property>
+                            <property name="activatable-widget">create_new_webpage_button</property>
+                            <child type="suffix">
+                              <object class="GtkButton" id="create_new_webpage_button">
+                                <property name="valign">center</property>
+                                <property name="icon-name">external-link-symbolic</property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="AdwActionRow">
+                            <property name="title" translatable="yes">2. Enter SSH clone url</property>
+                            <child type="suffix">
+                              <object class="GtkEntry" id="clone_url_entry">
+                                <property name="valign">center</property>
+                                <property name="placeholder-text">git@github.com:username/reponame.git</property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="AdwExpanderRow" id="ssh_key_provider_row">
+                            <property name="title" translatable="yes">3. Provide SSH key</property>
+                            <property name="activatable">False</property>
                             <child>
-                              <object class="GtkStack" id="ssh_key_provider_stack">
+                              <object class="GtkBox">
+                                <property name="orientation">vertical</property>
+                                <property name="spacing">6</property>
+                                <property name="margin-start">6</property>
+                                <property name="margin-end">6</property>
+                                <property name="margin-top">6</property>
+                                <property name="margin-bottom">6</property>
                                 <child>
-                                  <object class="GtkStackPage">
-                                    <property name="title">Generate New Key</property>
-                                    <property name="child">
-                                      <object class="GtkListBox">
-                                        <property name="selection-mode">none</property>
-                                        <child>
-                                          <object class="AdwActionRow">
-                                            <property name="title" translatable="yes">Copy key</property>
-                                            <property name="activatable-widget">copy_ssh_key_button</property>
-                                            <child type="suffix">
-                                              <object class="GtkButton" id="copy_ssh_key_button">
-                                                <property name="valign">center</property>
-                                                <property name="icon-name">edit-copy-symbolic</property>
-                                              </object>
-                                            </child>
-                                          </object>
-                                        </child>
-                                        <child>
-                                          <object class="AdwActionRow">
-                                            <property name="title" translatable="yes">Open deploy key webpage</property>
-                                            <property name="activatable-widget">deploy_key_webpage_button</property>
-                                            <child type="suffix">
-                                              <object class="GtkButton" id="deploy_key_webpage_button">
-                                                <property name="valign">center</property>
-                                                <property name="icon-name">external-link-symbolic</property>
-                                              </object>
-                                            </child>
-                                          </object>
-                                        </child>
-                                        <child>
-                                          <object class="AdwActionRow">
-                                            <property name="title" translatable="yes">Try cloning</property>
-                                            <property name="activatable-widget">try_clone_button</property>
-                                            <child type="suffix">
-                                              <object class="GtkButton" id="try_clone_button">
-                                                <property name="valign">center</property>
-                                                <property name="icon-name">folder-download-symbolic</property>
-                                              </object>
-                                            </child>
-                                          </object>
-                                        </child>
-                                        <style>
-                                          <class name="content"/>
-                                        </style>
-                                      </object>
-                                    </property>
+                                  <object class="GtkStackSwitcher">
+                                    <property name="halign">center</property>
+                                    <property name="stack">ssh_key_provider_stack</property>
                                   </object>
                                 </child>
                                 <child>
-                                  <object class="GtkStackPage">
-                                    <property name="title">Custom Keys</property>
-                                    <property name="child">
-                                      <object class="GtkLabel">
-                                        <property name="label">test2</property>
+                                  <object class="GtkStack" id="ssh_key_provider_stack">
+                                    <child>
+                                      <object class="GtkStackPage">
+                                        <property name="title">Generate New Key</property>
+                                        <property name="child">
+                                          <object class="GtkListBox">
+                                            <property name="selection-mode">none</property>
+                                            <child>
+                                              <object class="AdwActionRow">
+                                                <property name="title" translatable="yes">Copy key</property>
+                                                <property name="activatable-widget">copy_ssh_key_button</property>
+                                                <child type="suffix">
+                                                  <object class="GtkButton" id="copy_ssh_key_button">
+                                                    <property name="valign">center</property>
+                                                    <property name="icon-name">edit-copy-symbolic</property>
+                                                  </object>
+                                                </child>
+                                              </object>
+                                            </child>
+                                            <child>
+                                              <object class="AdwActionRow">
+                                                <property name="title" translatable="yes">Open deploy key webpage</property>
+                                                <property name="activatable-widget">deploy_key_webpage_button</property>
+                                                <child type="suffix">
+                                                  <object class="GtkButton" id="deploy_key_webpage_button">
+                                                    <property name="valign">center</property>
+                                                    <property name="icon-name">external-link-symbolic</property>
+                                                  </object>
+                                                </child>
+                                              </object>
+                                            </child>
+                                            <child>
+                                              <object class="AdwActionRow">
+                                                <property name="title" translatable="yes">Try cloning</property>
+                                                <property name="activatable-widget">try_clone_button</property>
+                                                <child type="suffix">
+                                                  <object class="GtkButton" id="try_clone_button">
+                                                    <property name="valign">center</property>
+                                                    <property name="icon-name">folder-download-symbolic</property>
+                                                  </object>
+                                                </child>
+                                              </object>
+                                            </child>
+                                            <style>
+                                              <class name="content"/>
+                                            </style>
+                                          </object>
+                                        </property>
                                       </object>
-                                    </property>
+                                    </child>
+                                    <child>
+                                      <object class="GtkStackPage">
+                                        <property name="title">Custom Keys</property>
+                                        <property name="child">
+                                          <object class="GtkLabel">
+                                            <property name="label">test2</property>
+                                          </object>
+                                        </property>
+                                      </object>
+                                    </child>
                                   </object>
                                 </child>
                               </object>
                             </child>
                           </object>
                         </child>
+                        <style>
+                          <class name="content"/>
+                        </style>
                       </object>
-                    </child>
-                    <style>
-                      <class name="content"/>
-                    </style>
+                    </property>
                   </object>
                 </property>
               </object>

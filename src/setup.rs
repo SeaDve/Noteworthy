@@ -1,16 +1,38 @@
-use adw::subclass::prelude::*;
+use adw::{prelude::*, subclass::prelude::*};
 use gtk::{
     gio,
     glib::{self, clone, subclass::Signal},
-    prelude::*,
     subclass::prelude::*,
     CompositeTemplate,
 };
 
-use crate::utils;
+use std::cell::RefCell;
+
+use crate::{repository::Repository, utils};
 
 mod imp {
     use super::*;
+
+    #[repr(u8)]
+    #[derive(Debug, PartialEq)]
+    pub enum GitHost {
+        Github = 0,
+        Gitlab = 1,
+        Custom = 2,
+    }
+
+    impl GitHost {
+        pub fn from_int(int: u8) -> Self {
+            unsafe { std::mem::transmute(int) }
+        }
+    }
+
+    #[derive(Debug, Default)]
+    pub struct SetupConfig {
+        pub provider: Option<GitHost>,
+        pub is_automatic: Option<bool>,
+        pub clone_url: Option<String>,
+    }
 
     #[derive(Debug, Default, CompositeTemplate)]
     #[template(resource = "/io/github/seadve/Noteworthy/ui/setup.ui")]
@@ -21,10 +43,18 @@ mod imp {
         pub navigate_forward_button: TemplateChild<gtk::Button>,
         #[template_child]
         pub content: TemplateChild<adw::Leaflet>,
+
+        // select provider page
         #[template_child]
-        pub welcome: TemplateChild<adw::StatusPage>,
+        pub git_host_provider_row: TemplateChild<adw::ComboRow>,
         #[template_child]
-        pub select_provider: TemplateChild<adw::StatusPage>,
+        pub is_automatic_switch: TemplateChild<gtk::Switch>,
+
+        // create repo page
+        #[template_child]
+        pub clone_url_entry: TemplateChild<gtk::Entry>,
+
+        pub config: RefCell<SetupConfig>,
     }
 
     #[glib::object_subclass]
@@ -37,13 +67,11 @@ mod imp {
             Self::bind_template(klass);
 
             klass.install_action("setup.navigate-back", None, move |obj, _, _| {
-                let imp = imp::Setup::from_instance(obj);
-                imp.content.navigate(adw::NavigationDirection::Back);
+                obj.navigate_back();
             });
 
             klass.install_action("setup.navigate-forward", None, move |obj, _, _| {
-                let imp = imp::Setup::from_instance(obj);
-                imp.content.navigate(adw::NavigationDirection::Forward);
+                obj.navigate_forward();
             });
 
             // TODO consider changing these action names
@@ -57,7 +85,7 @@ mod imp {
 
             klass.install_action("setup.setup-git-host", None, move |obj, _, _| {
                 let imp = imp::Setup::from_instance(obj);
-                imp.content.set_visible_child(&imp.select_provider.get());
+                imp.content.set_visible_child_name("select-provider");
             });
 
             // klass.install_action("setup.enter-repo-url", None, move |obj, _, _| {
@@ -99,9 +127,19 @@ mod imp {
             self.content
                 .connect_visible_child_notify(clone!(@weak obj => move |content| {
                     let imp = imp::Setup::from_instance(&obj);
-                    let is_main_page = content.visible_child() == Some(imp.welcome.get().upcast());
+                    let is_main_page = content.visible_child_name().unwrap().as_str() == "welcome";
                     imp.navigate_back_button.set_visible(!is_main_page);
                     imp.navigate_forward_button.set_visible(!is_main_page);
+                }));
+
+            self.clone_url_entry
+                .connect_text_notify(clone!(@weak obj => move |entry| {
+                    let imp = imp::Setup::from_instance(&obj);
+                    if imp.content.visible_child_name().unwrap().as_str() == "create-repo" {
+                        let entry_text = entry.text();
+                        let is_valid = Repository::validate_remote_url(&entry_text);
+                        obj.action_set_enabled("setup.navigate-forward", is_valid);
+                    }
                 }));
         }
     }
@@ -141,5 +179,67 @@ impl Setup {
             // TODO add user facing error dialog
             log::error!("Failed to create note folder, {:?}", err);
         }
+    }
+
+    fn navigate_forward(&self) {
+        let imp = imp::Setup::from_instance(self);
+        let visible_page_name = imp.content.visible_child_name().unwrap();
+
+        match visible_page_name.as_str() {
+            "select-provider" => {
+                self.select_provider();
+
+                imp.content.set_visible_child_name("create-repo");
+                imp.clone_url_entry.notify("text");
+            }
+            "create-repo" => {
+                self.create_repo();
+            }
+            other => unreachable!("Invalid page name '{}'", other),
+        }
+    }
+
+    fn navigate_back(&self) {
+        let imp = imp::Setup::from_instance(self);
+        let visible_page_name = imp.content.visible_child_name().unwrap();
+
+        match visible_page_name.as_str() {
+            "select-provider" => {
+                imp.content.set_visible_child_name("welcome");
+            }
+            "create-repo" => {
+                imp.content.set_visible_child_name("select-provider");
+            }
+            other => unreachable!("Invalid page name '{}'", other),
+        }
+
+        self.action_set_enabled("setup.navigate-forward", true);
+    }
+
+    fn select_provider(&self) {
+        let imp = imp::Setup::from_instance(self);
+        let mut config = imp.config.borrow_mut();
+
+        dbg!(&config);
+
+        let is_automatic = imp.is_automatic_switch.state();
+        config.is_automatic = Some(is_automatic);
+
+        let provider = imp::GitHost::from_int(imp.git_host_provider_row.selected() as u8);
+        config.provider = Some(provider);
+
+        dbg!(&config);
+    }
+
+    fn create_repo(&self) {
+        let imp = imp::Setup::from_instance(self);
+        let mut config = imp.config.borrow_mut();
+
+        let clone_url = imp.clone_url_entry.text();
+        config.clone_url = Some(clone_url.to_string());
+
+        dbg!(Repository::validate_remote_url(&clone_url));
+
+        dbg!(&config);
     }
 }

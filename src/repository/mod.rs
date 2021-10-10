@@ -2,11 +2,15 @@ mod wrapper;
 
 use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::{sync::Lazy, unsync::OnceCell};
+use regex::Regex;
 
 use std::thread;
 
 static DEFAULT_AUTHOR_NAME: Lazy<String> = Lazy::new(|| String::from("NoteworthyApp"));
 static DEFAULT_AUTHOR_EMAIL: Lazy<String> = Lazy::new(|| String::from("app@noteworthy.io"));
+
+static RE_VALIDATE_URL: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(git@[\w\.]+)(:(//)?)([\w\.@:/\-~]+)(\.git)(/)?").unwrap());
 
 mod imp {
     use super::*;
@@ -75,6 +79,14 @@ impl Repository {
     pub fn new(base_path: &gio::File) -> Self {
         glib::Object::new::<Self>(&[("base-path", base_path)])
             .expect("Failed to create Repository.")
+    }
+
+    pub fn validate_remote_url(remote_url: &str) -> bool {
+        if remote_url.is_empty() {
+            return false;
+        }
+
+        RE_VALIDATE_URL.is_match(remote_url)
     }
 
     pub fn base_path(&self) -> gio::File {
