@@ -132,7 +132,6 @@ impl Application {
         let dialog = gtk::AboutDialogBuilder::new()
             .transient_for(&self.main_window())
             .modal(true)
-            .program_name(&gettext("Noteworthy"))
             // .comments(&gettext("Elegantly record your screen"))
             .version(VERSION)
             .logo_icon_name(APP_ID)
