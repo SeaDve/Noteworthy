@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 use super::{note::Id, tag_list::TagList, Note, NoteList};
-use crate::Result;
+use crate::{repository::Repository, Result};
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(default)]
@@ -19,6 +19,7 @@ mod imp {
     #[derive(Debug, Default)]
     pub struct NoteManager {
         pub directory: OnceCell<gio::File>,
+        pub repository: OnceCell<Repository>,
         pub note_list: OnceCell<NoteList>,
         pub tag_list: OnceCell<TagList>,
     }
@@ -44,6 +45,13 @@ mod imp {
                         "Directory",
                         "Directory where the notes are stored",
                         gio::File::static_type(),
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
+                    ),
+                    glib::ParamSpec::new_object(
+                        "repository",
+                        "Repository",
+                        "Repository where the notes are stored",
+                        Repository::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
                     glib::ParamSpec::new_object(
@@ -78,6 +86,10 @@ mod imp {
                     let directory = value.get().unwrap();
                     self.directory.set(directory).unwrap();
                 }
+                "repository" => {
+                    let repository = value.get().unwrap();
+                    self.repository.set(repository).unwrap();
+                }
                 "note-list" => {
                     let note_list = value.get().unwrap();
                     self.note_list.set(note_list).unwrap();
@@ -93,6 +105,7 @@ mod imp {
         fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
                 "directory" => obj.directory().to_value(),
+                "repository" => obj.repository().to_value(),
                 "note-list" => obj.note_list().to_value(),
                 "tag-list" => obj.tag_list().to_value(),
                 _ => unimplemented!(),
@@ -107,13 +120,19 @@ glib::wrapper! {
 
 impl NoteManager {
     pub fn for_directory(directory: &gio::File) -> Self {
-        glib::Object::new::<Self>(&[("directory", &directory)])
+        let repository = Repository::new(directory);
+        glib::Object::new::<Self>(&[("directory", directory), ("repository", &repository)])
             .expect("Failed to create NoteManager.")
     }
 
     pub fn directory(&self) -> gio::File {
         let imp = imp::NoteManager::from_instance(self);
         imp.directory.get().unwrap().clone()
+    }
+
+    pub fn repository(&self) -> Repository {
+        let imp = imp::NoteManager::from_instance(self);
+        Clone::clone(imp.repository.get().unwrap())
     }
 
     pub fn note_list(&self) -> NoteList {
