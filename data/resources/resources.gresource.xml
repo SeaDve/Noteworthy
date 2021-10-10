@@ -2,6 +2,7 @@
 <gresources>
   <gresource prefix="/io/github/seadve/Noteworthy/">
     <file compressed="true" preprocess="xml-stripblanks">icons/scalable/status/editor-symbolic.svg</file>
+    <file compressed="true" preprocess="xml-stripblanks">icons/scalable/status/external-link-symbolic.svg</file>
     <file compressed="true" preprocess="xml-stripblanks">icons/scalable/status/tag-symbolic.svg</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/content.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/content-view.ui</file>
