@@ -119,8 +119,19 @@ glib::wrapper! {
 }
 
 impl NoteManager {
-    pub fn for_directory(directory: &gio::File) -> Self {
-        let repository = Repository::new(directory);
+    pub async fn for_directory(directory: &gio::File) -> Self {
+        let repository = {
+            let res = Repository::clone("git@github.com:SeaDve/test.git".into(), directory).await;
+
+            if let Err(err) = res {
+                log::warn!("Failed to clone repo: {}", err);
+                log::warn!("Opening existing instead...");
+                Repository::open(directory).await.unwrap()
+            } else {
+                res.unwrap()
+            }
+        };
+
         glib::Object::new::<Self>(&[("directory", directory), ("repository", &repository)])
             .expect("Failed to create NoteManager.")
     }
@@ -216,7 +227,7 @@ impl NoteManager {
     }
 
     pub async fn save_note(&self, note: Note) -> anyhow::Result<()> {
-        self.sync().await?;
+        // self.sync().await?;
 
         if note.is_saved() {
             log::info!("Note is already saved returning");
@@ -316,9 +327,12 @@ impl NoteManager {
     }
 
     pub async fn load(&self) -> anyhow::Result<()> {
-        let repo = self.repository();
-        repo.fetch("origin".into()).await?;
-        repo.merge("origin/main".into()).await?;
+        // let repo = self.repository();
+
+        // repo.fetch("origin".into()).await?;
+        // repo.merge("origin/main".into()).await?;
+
+        // dbg!(repo.current_branch().await);
 
         self.load_data_file().await?;
         self.load_notes().await?;
@@ -326,22 +340,22 @@ impl NoteManager {
         Ok(())
     }
 
-    async fn sync(&self) -> anyhow::Result<()> {
-        let repo = self.repository();
+    // async fn sync(&self) -> anyhow::Result<()> {
+    //     let repo = self.repository();
 
-        if let Err(err) = repo.clone("git@github.com:SeaDve/test.git".into()).await {
-            log::error!("Error cloning {}", err);
-        }
+    //     if let Err(err) = repo.clone("git@github.com:SeaDve/test.git".into()).await {
+    //         log::error!("Error cloning {}", err);
+    //     }
 
-        repo.fetch("origin".into()).await?;
-        repo.merge("origin/main".into()).await?;
+    //     repo.fetch("origin".into()).await?;
+    //     repo.merge("origin/main".into()).await?;
 
-        repo.add(vec![".".into()]).await?;
-        repo.commit("Sync commit".into()).await?;
-        repo.push("origin".into()).await?;
+    //     repo.add(vec![".".into()]).await?;
+    //     repo.commit("Sync commit".into()).await?;
+    //     repo.push("origin".into()).await?;
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
 
     fn data_file_path(&self) -> PathBuf {
         let mut data_file_path = self.directory().path().unwrap();

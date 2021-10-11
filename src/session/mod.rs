@@ -2,6 +2,7 @@ mod content;
 mod note;
 mod note_list;
 mod note_manager;
+mod note_repository;
 mod note_tag_dialog;
 mod sidebar;
 mod tag;
@@ -202,9 +203,9 @@ glib::wrapper! {
 }
 
 impl Session {
-    pub fn new(directory: &gio::File) -> Self {
-        glib::Object::new(&[("note-manager", &NoteManager::for_directory(directory))])
-            .expect("Failed to create Session.")
+    pub async fn new(directory: &gio::File) -> Self {
+        let note_manager = NoteManager::for_directory(directory).await;
+        glib::Object::new(&[("note-manager", &note_manager)]).expect("Failed to create Session.")
     }
 
     pub fn selected_note(&self) -> Option<Note> {

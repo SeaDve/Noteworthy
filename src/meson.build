@@ -47,6 +47,7 @@ rust_sources = files(
   'session/mod.rs',
   'session/note_list.rs',
   'session/note_manager.rs',
+  'session/note_repository.rs',
   'session/tag.rs',
   'session/tag_list.rs',
   'application.rs',

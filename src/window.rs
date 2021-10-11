@@ -55,12 +55,10 @@ mod imp {
             self.setup
                 .connect_session_setup_done(clone!(@weak obj => move |_| {
                     obj.load_session();
-                    obj.switch_to_session_page();
                 }));
 
             if utils::default_notes_dir().exists() {
                 obj.load_session();
-                obj.switch_to_session_page();
             }
 
             obj.load_window_size();
@@ -104,12 +102,17 @@ impl Window {
     }
 
     fn load_session(&self) {
-        let imp = imp::Window::from_instance(self);
-
         let notes_folder = gio::File::for_path(&utils::default_notes_dir());
-        let session = Session::new(&notes_folder);
-        imp.main_stack.add_child(&session);
-        imp.session.set(session).unwrap();
+
+        let ctx = glib::MainContext::default();
+        ctx.spawn_local(clone!(@weak self as obj => async move {
+            let session = Session::new(&notes_folder).await;
+
+            let imp = imp::Window::from_instance(&obj);
+            imp.main_stack.add_child(&session);
+            imp.session.set(session).unwrap();
+            obj.switch_to_session_page();
+        }));
     }
 
     fn switch_to_session_page(&self) {

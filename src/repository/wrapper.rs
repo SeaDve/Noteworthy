@@ -4,9 +4,10 @@ use std::{
     fs::{self, File},
     io::Write,
     path::Path,
+    sync::Mutex,
 };
 
-pub fn clone(git_base_path: &Path, remote_url: &str) -> anyhow::Result<()> {
+pub fn clone(git_base_path: &Path, remote_url: &str) -> anyhow::Result<git2::Repository> {
     let mut callbacks = git2::RemoteCallbacks::new();
     callbacks.credentials(|_, username_from_url, _| credentials_cb(username_from_url));
     callbacks.transfer_progress(transfer_progress_cb);
@@ -18,13 +19,19 @@ pub fn clone(git_base_path: &Path, remote_url: &str) -> anyhow::Result<()> {
     repo_builder.fetch_options(fetch_options);
 
     log::info!("Cloning from {} ...", remote_url);
-    repo_builder.clone(remote_url, git_base_path)?;
+    let repo = repo_builder.clone(remote_url, git_base_path)?;
 
-    Ok(())
+    Ok(repo)
 }
 
-pub fn fetch(git_base_path: &Path, remote_name: &str) -> anyhow::Result<()> {
+pub fn open(git_base_path: &Path) -> anyhow::Result<git2::Repository> {
     let repo = git2::Repository::open(git_base_path)?;
+
+    Ok(repo)
+}
+
+pub fn fetch(repo: &Mutex<git2::Repository>, remote_name: &str) -> anyhow::Result<()> {
+    let repo = repo.lock().unwrap();
     let mut remote = repo.find_remote(remote_name)?;
 
     let mut callbacks = git2::RemoteCallbacks::new();
@@ -41,10 +48,10 @@ pub fn fetch(git_base_path: &Path, remote_name: &str) -> anyhow::Result<()> {
 }
 
 pub fn add<P: AsRef<Path> + Clone + git2::IntoCString>(
-    git_base_path: &Path,
+    repo: &Mutex<git2::Repository>,
     paths: &[P],
 ) -> anyhow::Result<()> {
-    let repo = git2::Repository::open(git_base_path)?;
+    let repo = repo.lock().unwrap();
     let mut index = repo.index()?;
 
     index.add_all(
@@ -61,16 +68,16 @@ pub fn add<P: AsRef<Path> + Clone + git2::IntoCString>(
 }
 
 pub fn remove<P: AsRef<Path> + Clone + git2::IntoCString>(
-    git_base_path: &Path,
+    repo: &Mutex<git2::Repository>,
     paths: &[P],
 ) -> anyhow::Result<()> {
-    let repo = git2::Repository::open(git_base_path)?;
+    let repo = repo.lock().unwrap();
     let mut index = repo.index()?;
 
     index.remove_all(
         paths,
         Some(&mut |path: &Path, _: &[u8]| {
-            let full_path = git_base_path.join(path);
+            let full_path = repo.path().join(path);
 
             log::info!("Removing file: {}", full_path.display());
             if let Err(err) = fs::remove_file(&full_path) {
@@ -86,12 +93,12 @@ pub fn remove<P: AsRef<Path> + Clone + git2::IntoCString>(
 
 // From https://github.com/GitJournal/git_bindings/blob/master/gj_common/gitjournal.c
 pub fn merge(
-    git_base_path: &Path,
+    repo: &Mutex<git2::Repository>,
     source_branch: &str,
     author_name: &str,
     author_email: &str,
 ) -> anyhow::Result<()> {
-    let repo = git2::Repository::open(git_base_path)?;
+    let repo = repo.lock().unwrap();
 
     let origin_head_ref = repo.find_branch(source_branch, git2::BranchType::Remote)?;
     let origin_annotated_commit = repo.reference_to_annotated_commit(origin_head_ref.get())?;
@@ -155,12 +162,12 @@ pub fn merge(
 }
 
 pub fn commit(
-    git_base_path: &Path,
+    repo: &Mutex<git2::Repository>,
     message: &str,
     author_name: &str,
     author_email: &str,
 ) -> anyhow::Result<()> {
-    let repo = git2::Repository::open(git_base_path)?;
+    let repo = repo.lock().unwrap();
 
     let mut index = repo.index()?;
     let tree_id = index.write_tree()?;
@@ -190,8 +197,8 @@ pub fn commit(
     Ok(())
 }
 
-pub fn push(git_base_path: &Path, remote_name: &str) -> anyhow::Result<()> {
-    let repo = git2::Repository::open(git_base_path)?;
+pub fn push(repo: &Mutex<git2::Repository>, remote_name: &str) -> anyhow::Result<()> {
+    let repo = repo.lock().unwrap();
     let mut remote = repo.find_remote(remote_name)?;
     let ref_head = repo.head()?;
     let ref_head_name = ref_head
@@ -227,13 +234,21 @@ fn credentials_cb(username_from_url: Option<&str>) -> Result<git2::Cred, git2::E
 }
 
 fn transfer_progress_cb(progress: git2::Progress) -> bool {
-    dbg!(progress.total_objects());
-    dbg!(progress.indexed_objects());
-    dbg!(progress.received_objects());
-    dbg!(progress.local_objects());
-    dbg!(progress.total_deltas());
-    dbg!(progress.indexed_deltas());
-    dbg!(progress.received_bytes());
+    if progress.received_objects() == progress.total_objects() {
+        log::info!(
+            "Resolving deltas {}/{}",
+            progress.indexed_deltas(),
+            progress.total_deltas()
+        );
+    } else if progress.total_objects() > 0 {
+        log::info!(
+            "Received {}/{} objects ({}) in {} bytes",
+            progress.received_objects(),
+            progress.total_objects(),
+            progress.indexed_objects(),
+            progress.received_bytes()
+        );
+    }
     true
 }
 
