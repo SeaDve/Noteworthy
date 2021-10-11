@@ -251,11 +251,10 @@ pub fn pull(
 }
 
 fn credentials_cb(username_from_url: Option<&str>) -> Result<git2::Cred, git2::Error> {
-    let mut ssh_key_path = glib::home_dir();
-    ssh_key_path.push(".ssh/id_ed25519");
-
-    log::info!("Credential callback");
-
+    log::info!(
+        "Credential callback with username: {}",
+        username_from_url.unwrap()
+    );
     git2::Cred::ssh_key_from_agent(username_from_url.unwrap())
 }
 
