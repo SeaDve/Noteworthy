@@ -4,7 +4,7 @@ use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::{sync::Lazy, unsync::OnceCell};
 use regex::Regex;
 
-use std::thread;
+use std::{path::PathBuf, thread};
 
 static DEFAULT_AUTHOR_NAME: Lazy<String> = Lazy::new(|| String::from("NoteworthyApp"));
 static DEFAULT_AUTHOR_EMAIL: Lazy<String> = Lazy::new(|| String::from("app@noteworthy.io"));
@@ -93,18 +93,18 @@ impl Repository {
         self.property("base-path").unwrap().get().unwrap()
     }
 
-    pub async fn clone(&self, remote_url: String, passphrase: String) -> anyhow::Result<()> {
+    pub async fn clone(&self, remote_url: String) -> anyhow::Result<()> {
         let base_path = self.base_path().path().unwrap();
 
-        Self::run_async(move || wrapper::clone(&base_path, &remote_url, &passphrase)).await?;
+        Self::run_async(move || wrapper::clone(&base_path, &remote_url)).await?;
 
         Ok(())
     }
 
-    pub async fn push(&self, remote_name: String, passphrase: String) -> anyhow::Result<()> {
+    pub async fn push(&self, remote_name: String) -> anyhow::Result<()> {
         let base_path = self.base_path().path().unwrap();
 
-        Self::run_async(move || wrapper::push(&base_path, &remote_name, &passphrase)).await?;
+        Self::run_async(move || wrapper::push(&base_path, &remote_name)).await?;
 
         Ok(())
     }
@@ -125,10 +125,26 @@ impl Repository {
         Ok(())
     }
 
-    pub async fn fetch(&self, remote_name: String, passphrase: String) -> anyhow::Result<()> {
+    pub async fn fetch(&self, remote_name: String) -> anyhow::Result<()> {
         let base_path = self.base_path().path().unwrap();
 
-        Self::run_async(move || wrapper::fetch(&base_path, &remote_name, &passphrase)).await?;
+        Self::run_async(move || wrapper::fetch(&base_path, &remote_name)).await?;
+
+        Ok(())
+    }
+
+    pub async fn add(&self, paths: Vec<PathBuf>) -> anyhow::Result<()> {
+        let base_path = self.base_path().path().unwrap();
+
+        Self::run_async(move || wrapper::add(&base_path, &paths)).await?;
+
+        Ok(())
+    }
+
+    pub async fn remove(&self, paths: Vec<PathBuf>) -> anyhow::Result<()> {
+        let base_path = self.base_path().path().unwrap();
+
+        Self::run_async(move || wrapper::remove(&base_path, &paths)).await?;
 
         Ok(())
     }

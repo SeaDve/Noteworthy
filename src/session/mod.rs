@@ -131,8 +131,7 @@ mod imp {
             let ctx = glib::MainContext::default();
             ctx.spawn_local(clone!(@weak obj => async move {
                 let note_manager = obj.note_manager();
-                note_manager.load_data_file().await.expect("Failed to load data file");
-                note_manager.load_notes().await.expect("Failed to load files");
+                note_manager.load().await.expect("Failed to load notes and data file");
 
                 let imp = imp::Session::from_instance(&obj);
                 imp.sidebar.set_note_list(note_manager.note_list());

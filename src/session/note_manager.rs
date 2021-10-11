@@ -151,7 +151,7 @@ impl NoteManager {
             .clone()
     }
 
-    pub async fn load_notes(&self) -> Result<()> {
+    async fn load_notes(&self) -> anyhow::Result<()> {
         let directory = self.directory();
         let files = directory
             .enumerate_children_async_future(
@@ -189,7 +189,7 @@ impl NoteManager {
         Ok(())
     }
 
-    pub async fn load_data_file(&self) -> Result<()> {
+    async fn load_data_file(&self) -> Result<()> {
         let data_file_path = self.data_file_path();
         let file = gio::File::for_path(&data_file_path);
 
@@ -215,7 +215,9 @@ impl NoteManager {
         Ok(())
     }
 
-    pub async fn save_note(&self, note: Note) -> Result<()> {
+    pub async fn save_note(&self, note: Note) -> anyhow::Result<()> {
+        self.sync().await?;
+
         if note.is_saved() {
             log::info!("Note is already saved returning");
             return Ok(());
@@ -309,6 +311,34 @@ impl NoteManager {
         note.delete().unwrap();
 
         log::info!("Deleted note {}", note.file().path().unwrap().display());
+
+        Ok(())
+    }
+
+    pub async fn load(&self) -> anyhow::Result<()> {
+        let repo = self.repository();
+        repo.fetch("origin".into()).await?;
+        repo.merge("origin/main".into()).await?;
+
+        self.load_data_file().await?;
+        self.load_notes().await?;
+
+        Ok(())
+    }
+
+    async fn sync(&self) -> anyhow::Result<()> {
+        let repo = self.repository();
+
+        if let Err(err) = repo.clone("git@github.com:SeaDve/test.git".into()).await {
+            log::error!("Error cloning {}", err);
+        }
+
+        repo.fetch("origin".into()).await?;
+        repo.merge("origin/main".into()).await?;
+
+        repo.add(vec![".".into()]).await?;
+        repo.commit("Sync commit".into()).await?;
+        repo.push("origin".into()).await?;
 
         Ok(())
     }

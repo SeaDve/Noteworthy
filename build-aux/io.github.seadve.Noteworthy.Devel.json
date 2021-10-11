@@ -9,6 +9,7 @@
         "--share=network",
         "--socket=fallback-x11",
         "--socket=wayland",
+        "--socket=ssh-auth",
         "--device=dri",
         "--filesystem=home",
         "--talk-name=org.a11y.Bus",

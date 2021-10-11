@@ -1,14 +1,14 @@
 use gtk::glib;
 
 use std::{
-    fs::File,
+    fs::{self, File},
     io::Write,
-    path::{Path, PathBuf},
+    path::Path,
 };
 
-pub fn clone(git_base_path: &Path, remote_url: &str, passphrase: &str) -> anyhow::Result<()> {
+pub fn clone(git_base_path: &Path, remote_url: &str) -> anyhow::Result<()> {
     let mut callbacks = git2::RemoteCallbacks::new();
-    callbacks.credentials(|_, username_from_url, _| credentials_cb(username_from_url, passphrase));
+    callbacks.credentials(|_, username_from_url, _| credentials_cb(username_from_url));
     callbacks.transfer_progress(transfer_progress_cb);
 
     let mut fetch_options = git2::FetchOptions::new();
@@ -23,12 +23,12 @@ pub fn clone(git_base_path: &Path, remote_url: &str, passphrase: &str) -> anyhow
     Ok(())
 }
 
-pub fn fetch(git_base_path: &Path, remote_name: &str, passphrase: &str) -> anyhow::Result<()> {
+pub fn fetch(git_base_path: &Path, remote_name: &str) -> anyhow::Result<()> {
     let repo = git2::Repository::open(git_base_path)?;
     let mut remote = repo.find_remote(remote_name)?;
 
     let mut callbacks = git2::RemoteCallbacks::new();
-    callbacks.credentials(|_, username_from_url, _| credentials_cb(username_from_url, passphrase));
+    callbacks.credentials(|_, username_from_url, _| credentials_cb(username_from_url));
     callbacks.transfer_progress(transfer_progress_cb);
 
     let mut fetch_options = git2::FetchOptions::new();
@@ -36,6 +36,50 @@ pub fn fetch(git_base_path: &Path, remote_name: &str, passphrase: &str) -> anyho
 
     log::info!("Fetching from {} ...", remote_name);
     remote.fetch::<&str>(&[], Some(&mut fetch_options), None)?;
+
+    Ok(())
+}
+
+pub fn add<P: AsRef<Path> + Clone + git2::IntoCString>(
+    git_base_path: &Path,
+    paths: &[P],
+) -> anyhow::Result<()> {
+    let repo = git2::Repository::open(git_base_path)?;
+    let mut index = repo.index()?;
+
+    index.add_all(
+        paths,
+        git2::IndexAddOption::DEFAULT,
+        Some(&mut |path: &Path, _: &[u8]| {
+            log::info!("Add match: {}", path.display());
+            0
+        }),
+    )?;
+    index.write()?;
+
+    Ok(())
+}
+
+pub fn remove<P: AsRef<Path> + Clone + git2::IntoCString>(
+    git_base_path: &Path,
+    paths: &[P],
+) -> anyhow::Result<()> {
+    let repo = git2::Repository::open(git_base_path)?;
+    let mut index = repo.index()?;
+
+    index.remove_all(
+        paths,
+        Some(&mut |path: &Path, _: &[u8]| {
+            let full_path = git_base_path.join(path);
+
+            log::info!("Removing file: {}", full_path.display());
+            if let Err(err) = fs::remove_file(&full_path) {
+                log::info!("File {} could not be delted {}", full_path.display(), err);
+            }
+
+            0
+        }),
+    )?;
 
     Ok(())
 }
@@ -80,10 +124,10 @@ pub fn merge(
             log::info!("Resolved conflict on file {}", current_conflict_path);
 
             let path = std::str::from_utf8(&our.path).unwrap();
-            let path = PathBuf::from(&path);
+            let path = Path::new(&path);
 
             let mut index = repo.index()?;
-            index.remove_path(&path)?;
+            index.remove_path(path)?;
             index.add_all([our.path], git2::IndexAddOption::DEFAULT, None)?;
             index.write()?;
         }
@@ -146,7 +190,7 @@ pub fn commit(
     Ok(())
 }
 
-pub fn push(git_base_path: &Path, remote_name: &str, passphrase: &str) -> anyhow::Result<()> {
+pub fn push(git_base_path: &Path, remote_name: &str) -> anyhow::Result<()> {
     let repo = git2::Repository::open(git_base_path)?;
     let mut remote = repo.find_remote(remote_name)?;
     let ref_head = repo.head()?;
@@ -161,7 +205,7 @@ pub fn push(git_base_path: &Path, remote_name: &str, passphrase: &str) -> anyhow
     }
 
     let mut callbacks = git2::RemoteCallbacks::new();
-    callbacks.credentials(|_, username_from_url, _| credentials_cb(username_from_url, passphrase));
+    callbacks.credentials(|_, username_from_url, _| credentials_cb(username_from_url));
     callbacks.transfer_progress(transfer_progress_cb);
 
     let mut push_options = git2::PushOptions::new();
@@ -173,21 +217,13 @@ pub fn push(git_base_path: &Path, remote_name: &str, passphrase: &str) -> anyhow
     Ok(())
 }
 
-fn credentials_cb(
-    username_from_url: Option<&str>,
-    passphrase: &str,
-) -> Result<git2::Cred, git2::Error> {
+fn credentials_cb(username_from_url: Option<&str>) -> Result<git2::Cred, git2::Error> {
     let mut ssh_key_path = glib::home_dir();
     ssh_key_path.push(".ssh/id_ed25519");
 
     log::info!("Credential callback");
 
-    git2::Cred::ssh_key(
-        username_from_url.unwrap(),
-        None,
-        &ssh_key_path,
-        Some(passphrase),
-    )
+    git2::Cred::ssh_key_from_agent(username_from_url.unwrap())
 }
 
 fn transfer_progress_cb(progress: git2::Progress) -> bool {
@@ -217,8 +253,7 @@ fn resolve_conflict(repo: &git2::Repository, our: &git2::IndexEntry) -> anyhow::
     let file_data = odb_object.data();
 
     let file_path = &our.path;
-    let mut file_full_path = PathBuf::from(repo.path());
-    file_full_path.push(std::str::from_utf8(file_path).unwrap());
+    let file_full_path = repo.path().join(std::str::from_utf8(file_path).unwrap());
 
     let mut file = File::open(file_full_path)?;
     file.write_all(file_data)?;
