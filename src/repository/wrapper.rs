@@ -88,16 +88,22 @@ pub fn remove<P: AsRef<Path> + Clone + git2::IntoCString>(
 }
 
 // From https://github.com/GitJournal/git_bindings/blob/master/gj_common/gitjournal.c
-pub fn merge(
-    repo: &git2::Repository,
+pub fn merge<'a>(
+    repo: &'a git2::Repository,
     source_branch: &str,
+    fetch_commit: Option<git2::AnnotatedCommit<'a>>,
     author_name: &str,
     author_email: &str,
 ) -> anyhow::Result<()> {
-    let origin_head_ref = repo.find_branch(source_branch, git2::BranchType::Remote)?;
-    let origin_annotated_commit = repo.reference_to_annotated_commit(origin_head_ref.get())?;
+    let annotated_commit = match fetch_commit {
+        Some(commit) => commit,
+        None => {
+            let origin_head_ref = repo.find_branch(source_branch, git2::BranchType::Remote)?;
+            repo.reference_to_annotated_commit(origin_head_ref.get())?
+        }
+    };
 
-    let (merge_analysis, _) = repo.merge_analysis(&[&origin_annotated_commit])?;
+    let (merge_analysis, _) = repo.merge_analysis(&[&annotated_commit])?;
     log::info!("Merge analysis: {:?}", merge_analysis);
 
     if merge_analysis.contains(git2::MergeAnalysis::ANALYSIS_UP_TO_DATE) {
@@ -106,12 +112,12 @@ pub fn merge(
         anyhow::bail!("Merge analysis: Unborn");
     } else if merge_analysis.contains(git2::MergeAnalysis::ANALYSIS_FASTFORWARD) {
         log::info!("Merge analysis: Fastforwarding...");
-        let target_oid = origin_annotated_commit.id();
-        perform_fastforward(&repo, target_oid)?;
+        let target_oid = annotated_commit.id();
+        perform_fastforward(repo, target_oid)?;
     } else if merge_analysis.contains(git2::MergeAnalysis::ANALYSIS_NORMAL) {
         log::info!("Merge analysis: Performing normal merge...");
 
-        repo.merge(&[&origin_annotated_commit], None, None)?;
+        repo.merge(&[&annotated_commit], None, None)?;
         let mut index = repo.index()?;
         let conflicts = index.conflicts()?;
 
@@ -121,7 +127,7 @@ pub fn merge(
 
             let current_conflict_path = std::str::from_utf8(&their.path).unwrap();
             log::info!("Pull: Conflict on file {}", current_conflict_path);
-            resolve_conflict(&repo, &our)?;
+            resolve_conflict(repo, &our)?;
             log::info!("Resolved conflict on file {}", current_conflict_path);
 
             let path = std::str::from_utf8(&our.path).unwrap();
@@ -138,7 +144,7 @@ pub fn merge(
         let signature = git2::Signature::now(author_name, author_email)?;
         let head_id = repo.refname_to_id("HEAD")?;
         let head_commit = repo.find_commit(head_id)?;
-        let origin_head_commit = repo.find_commit(origin_annotated_commit.id())?;
+        let origin_head_commit = repo.find_commit(annotated_commit.id())?;
 
         let parents = [&head_commit, &origin_head_commit];
         let message = "Custom merge commit";
@@ -211,6 +217,35 @@ pub fn push(repo: &git2::Repository, remote_name: &str) -> anyhow::Result<()> {
 
     log::info!("Pushing to {} ...", remote_name);
     remote.push(&[ref_head_name], Some(&mut push_options))?;
+
+    Ok(())
+}
+
+pub fn pull(
+    repo: &git2::Repository,
+    remote_name: &str,
+    author_name: &str,
+    author_email: &str,
+) -> anyhow::Result<()> {
+    fetch(repo, remote_name)?;
+
+    let fetch_head = repo.find_reference("FETCH_HEAD")?;
+    let fetch_commit = repo.reference_to_annotated_commit(&fetch_head)?;
+
+    // TODO better way to get this?
+    let head = repo.head()?;
+    let branch_name = head
+        .name()
+        .ok_or_else(|| anyhow::anyhow!("Ref head name not found"))?;
+    let source_branch = format!("{}/{}", remote_name, branch_name);
+
+    merge(
+        repo,
+        &source_branch,
+        Some(fetch_commit),
+        author_name,
+        author_email,
+    )?;
 
     Ok(())
 }

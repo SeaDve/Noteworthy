@@ -128,6 +128,23 @@ impl Repository {
         Ok(())
     }
 
+    pub async fn pull(&self, remote_name: String) -> anyhow::Result<()> {
+        let git2_repo = self.git2_repo();
+
+        Self::run_async(move || {
+            let repo = git2_repo.lock().unwrap();
+            wrapper::pull(
+                &repo,
+                &remote_name,
+                &DEFAULT_AUTHOR_NAME,
+                &DEFAULT_AUTHOR_EMAIL,
+            )
+        })
+        .await?;
+
+        Ok(())
+    }
+
     pub async fn commit(&self, message: String) -> anyhow::Result<()> {
         let git2_repo = self.git2_repo();
 
@@ -184,16 +201,13 @@ impl Repository {
             wrapper::merge(
                 &repo,
                 &source_branch,
+                None,
                 &DEFAULT_AUTHOR_NAME,
                 &DEFAULT_AUTHOR_EMAIL,
             )
         })
         .await?;
 
-        Ok(())
-    }
-
-    pub async fn pull(&self) -> anyhow::Result<()> {
         Ok(())
     }
 
