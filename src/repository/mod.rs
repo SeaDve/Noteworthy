@@ -13,9 +13,6 @@ use std::{
 
 use self::git2_repo::Git2Repo;
 
-static DEFAULT_AUTHOR_NAME: Lazy<String> = Lazy::new(|| String::from("NoteworthyApp"));
-static DEFAULT_AUTHOR_EMAIL: Lazy<String> = Lazy::new(|| String::from("app@noteworthy.io"));
-
 static RE_VALIDATE_URL: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"(git@[\w\.]+)(:(//)?)([\w\.@:/\-~]+)(\.git)(/)?").unwrap());
 
@@ -128,29 +125,34 @@ impl Repository {
         Ok(())
     }
 
-    pub async fn pull(&self, remote_name: String) -> anyhow::Result<()> {
+    pub async fn pull(
+        &self,
+        remote_name: String,
+        author_name: String,
+        author_email: String,
+    ) -> anyhow::Result<()> {
         let git2_repo = self.git2_repo();
 
         Self::run_async(move || {
             let repo = git2_repo.lock().unwrap();
-            wrapper::pull(
-                &repo,
-                &remote_name,
-                &DEFAULT_AUTHOR_NAME,
-                &DEFAULT_AUTHOR_EMAIL,
-            )
+            wrapper::pull(&repo, &remote_name, &author_name, &author_email)
         })
         .await?;
 
         Ok(())
     }
 
-    pub async fn commit(&self, message: String) -> anyhow::Result<()> {
+    pub async fn commit(
+        &self,
+        message: String,
+        author_name: String,
+        author_email: String,
+    ) -> anyhow::Result<()> {
         let git2_repo = self.git2_repo();
 
         Self::run_async(move || {
             let repo = git2_repo.lock().unwrap();
-            wrapper::commit(&repo, &message, &DEFAULT_AUTHOR_NAME, &DEFAULT_AUTHOR_EMAIL)
+            wrapper::commit(&repo, &message, &author_name, &author_email)
         })
         .await?;
 
@@ -193,18 +195,17 @@ impl Repository {
         Ok(())
     }
 
-    pub async fn merge(&self, source_branch: String) -> anyhow::Result<()> {
+    pub async fn merge(
+        &self,
+        source_branch: String,
+        author_name: String,
+        author_email: String,
+    ) -> anyhow::Result<()> {
         let git2_repo = self.git2_repo();
 
         Self::run_async(move || {
             let repo = git2_repo.lock().unwrap();
-            wrapper::merge(
-                &repo,
-                &source_branch,
-                None,
-                &DEFAULT_AUTHOR_NAME,
-                &DEFAULT_AUTHOR_EMAIL,
-            )
+            wrapper::merge(&repo, &source_branch, None, &author_name, &author_email)
         })
         .await?;
 
