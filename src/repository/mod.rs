@@ -119,7 +119,11 @@ impl Repository {
     pub async fn push(&self, remote_name: String) -> anyhow::Result<()> {
         let git2_repo = self.git2_repo();
 
-        Self::run_async(move || wrapper::push(&git2_repo, &remote_name)).await?;
+        Self::run_async(move || {
+            let repo = git2_repo.lock().unwrap();
+            wrapper::push(&repo, &remote_name)
+        })
+        .await?;
 
         Ok(())
     }
@@ -128,12 +132,8 @@ impl Repository {
         let git2_repo = self.git2_repo();
 
         Self::run_async(move || {
-            wrapper::commit(
-                &git2_repo,
-                &message,
-                &DEFAULT_AUTHOR_NAME,
-                &DEFAULT_AUTHOR_EMAIL,
-            )
+            let repo = git2_repo.lock().unwrap();
+            wrapper::commit(&repo, &message, &DEFAULT_AUTHOR_NAME, &DEFAULT_AUTHOR_EMAIL)
         })
         .await?;
 
@@ -143,7 +143,11 @@ impl Repository {
     pub async fn fetch(&self, remote_name: String) -> anyhow::Result<()> {
         let git2_repo = self.git2_repo();
 
-        Self::run_async(move || wrapper::fetch(&git2_repo, &remote_name)).await?;
+        Self::run_async(move || {
+            let repo = git2_repo.lock().unwrap();
+            wrapper::fetch(&repo, &remote_name)
+        })
+        .await?;
 
         Ok(())
     }
@@ -151,7 +155,11 @@ impl Repository {
     pub async fn add(&self, paths: Vec<PathBuf>) -> anyhow::Result<()> {
         let git2_repo = self.git2_repo();
 
-        Self::run_async(move || wrapper::add(&git2_repo, &paths)).await?;
+        Self::run_async(move || {
+            let repo = git2_repo.lock().unwrap();
+            wrapper::add(&repo, &paths)
+        })
+        .await?;
 
         Ok(())
     }
@@ -159,7 +167,11 @@ impl Repository {
     pub async fn remove(&self, paths: Vec<PathBuf>) -> anyhow::Result<()> {
         let git2_repo = self.git2_repo();
 
-        Self::run_async(move || wrapper::remove(&git2_repo, &paths)).await?;
+        Self::run_async(move || {
+            let repo = git2_repo.lock().unwrap();
+            wrapper::remove(&repo, &paths)
+        })
+        .await?;
 
         Ok(())
     }
@@ -168,8 +180,9 @@ impl Repository {
         let git2_repo = self.git2_repo();
 
         Self::run_async(move || {
+            let repo = git2_repo.lock().unwrap();
             wrapper::merge(
-                &git2_repo,
+                &repo,
                 &source_branch,
                 &DEFAULT_AUTHOR_NAME,
                 &DEFAULT_AUTHOR_EMAIL,

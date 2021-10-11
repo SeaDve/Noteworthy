@@ -4,7 +4,6 @@ use std::{
     fs::{self, File},
     io::Write,
     path::Path,
-    sync::Mutex,
 };
 
 pub fn clone(git_base_path: &Path, remote_url: &str) -> anyhow::Result<git2::Repository> {
@@ -30,8 +29,7 @@ pub fn open(git_base_path: &Path) -> anyhow::Result<git2::Repository> {
     Ok(repo)
 }
 
-pub fn fetch(repo: &Mutex<git2::Repository>, remote_name: &str) -> anyhow::Result<()> {
-    let repo = repo.lock().unwrap();
+pub fn fetch(repo: &git2::Repository, remote_name: &str) -> anyhow::Result<()> {
     let mut remote = repo.find_remote(remote_name)?;
 
     let mut callbacks = git2::RemoteCallbacks::new();
@@ -48,10 +46,9 @@ pub fn fetch(repo: &Mutex<git2::Repository>, remote_name: &str) -> anyhow::Resul
 }
 
 pub fn add<P: AsRef<Path> + Clone + git2::IntoCString>(
-    repo: &Mutex<git2::Repository>,
+    repo: &git2::Repository,
     paths: &[P],
 ) -> anyhow::Result<()> {
-    let repo = repo.lock().unwrap();
     let mut index = repo.index()?;
 
     index.add_all(
@@ -68,10 +65,9 @@ pub fn add<P: AsRef<Path> + Clone + git2::IntoCString>(
 }
 
 pub fn remove<P: AsRef<Path> + Clone + git2::IntoCString>(
-    repo: &Mutex<git2::Repository>,
+    repo: &git2::Repository,
     paths: &[P],
 ) -> anyhow::Result<()> {
-    let repo = repo.lock().unwrap();
     let mut index = repo.index()?;
 
     index.remove_all(
@@ -93,13 +89,11 @@ pub fn remove<P: AsRef<Path> + Clone + git2::IntoCString>(
 
 // From https://github.com/GitJournal/git_bindings/blob/master/gj_common/gitjournal.c
 pub fn merge(
-    repo: &Mutex<git2::Repository>,
+    repo: &git2::Repository,
     source_branch: &str,
     author_name: &str,
     author_email: &str,
 ) -> anyhow::Result<()> {
-    let repo = repo.lock().unwrap();
-
     let origin_head_ref = repo.find_branch(source_branch, git2::BranchType::Remote)?;
     let origin_annotated_commit = repo.reference_to_annotated_commit(origin_head_ref.get())?;
 
@@ -162,13 +156,11 @@ pub fn merge(
 }
 
 pub fn commit(
-    repo: &Mutex<git2::Repository>,
+    repo: &git2::Repository,
     message: &str,
     author_name: &str,
     author_email: &str,
 ) -> anyhow::Result<()> {
-    let repo = repo.lock().unwrap();
-
     let mut index = repo.index()?;
     let tree_id = index.write_tree()?;
     let tree = repo.find_tree(tree_id)?;
@@ -197,8 +189,7 @@ pub fn commit(
     Ok(())
 }
 
-pub fn push(repo: &Mutex<git2::Repository>, remote_name: &str) -> anyhow::Result<()> {
-    let repo = repo.lock().unwrap();
+pub fn push(repo: &git2::Repository, remote_name: &str) -> anyhow::Result<()> {
     let mut remote = repo.find_remote(remote_name)?;
     let ref_head = repo.head()?;
     let ref_head_name = ref_head
