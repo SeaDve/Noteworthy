@@ -10,6 +10,9 @@
           </object>
         </child>
         <child>
+          <object class="GtkSeparator"/>
+        </child>
+        <child>
           <object class="NwtyContent" id="content">
             <property name="hexpand">True</property>
             <property name="compact" bind-source="leaflet" bind-property="folded" bind-flags="sync-create"/>
