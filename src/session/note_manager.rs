@@ -5,7 +5,6 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 use super::{note::Id, note_repository::NoteRepository, tag_list::TagList, Note, NoteList};
-use crate::Result;
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(default)]
@@ -204,7 +203,7 @@ impl NoteManager {
         Ok(())
     }
 
-    async fn load_data_file(&self) -> Result<()> {
+    async fn load_data_file(&self) -> anyhow::Result<()> {
         let data_file_path = self.data_file_path();
         let file = gio::File::for_path(&data_file_path);
 
@@ -256,7 +255,7 @@ impl NoteManager {
         Ok(())
     }
 
-    pub fn save_all_notes(&self) -> Result<()> {
+    pub fn save_all_notes(&self) -> anyhow::Result<()> {
         for note in self.note_list().iter() {
             if note.is_saved() {
                 log::info!("Note already saved, skipping...");
@@ -285,7 +284,7 @@ impl NoteManager {
         Ok(())
     }
 
-    pub fn save_data_file(&self) -> Result<()> {
+    pub fn save_data_file(&self) -> anyhow::Result<()> {
         let data = Data {
             tag_list: self.tag_list(),
         };
@@ -303,7 +302,7 @@ impl NoteManager {
         Ok(())
     }
 
-    pub fn create_note(&self) -> Result<()> {
+    pub fn create_note(&self) -> anyhow::Result<()> {
         let mut file_path = self.directory().path().unwrap();
         file_path.push(Self::generate_unique_file_name());
         file_path.set_extension("md");
@@ -318,7 +317,7 @@ impl NoteManager {
         Ok(())
     }
 
-    pub fn delete_note(&self, note_id: &Id) -> Result<()> {
+    pub fn delete_note(&self, note_id: &Id) -> anyhow::Result<()> {
         let note_list = self.note_list();
         note_list.remove(note_id);
 

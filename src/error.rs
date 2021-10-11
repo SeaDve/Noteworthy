@@ -1,8 +1,9 @@
+// TODO remove this file, since it is not currently used
+
 use gtk::glib;
 
 #[derive(Debug)]
 pub enum Error {
-    Content(String),
     Str(std::str::Utf8Error),
     Io(std::io::Error),
     Glib(glib::Error),
@@ -14,7 +15,6 @@ impl std::error::Error for Error {}
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Content(e) => f.write_str(&format!("NoteError: {}", e)),
             Self::Str(e) => f.write_str(&format!("Utf8Error: {}", e)),
             Self::Io(e) => f.write_str(&format!("IoError: {}", e)),
             Self::Glib(e) => f.write_str(&format!("GlibError: {}", e)),

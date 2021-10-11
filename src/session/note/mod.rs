@@ -14,7 +14,6 @@ use once_cell::unsync::OnceCell;
 use std::cell::Cell;
 
 pub use self::{id::Id, metadata::Metadata, note_tag_list::NoteTagList};
-use crate::Result;
 
 mod imp {
     use super::*;
@@ -201,7 +200,7 @@ impl Note {
         self.set_property("is-saved", is_saved).unwrap();
     }
 
-    pub fn delete(&self) -> Result<()> {
+    pub fn delete(&self) -> anyhow::Result<()> {
         self.file().delete(None::<&gio::Cancellable>)?;
         Ok(())
     }
@@ -215,7 +214,7 @@ impl Note {
         .unwrap()
     }
 
-    pub async fn deserialize(file: &gio::File) -> Result<Self> {
+    pub async fn deserialize(file: &gio::File) -> anyhow::Result<Self> {
         let (file_content, _) = file.load_contents_async_future().await?;
         let file_content = std::str::from_utf8(&file_content)?;
         let parsed_entity = Matter::<YAML>::new().parse(file_content);
@@ -240,7 +239,7 @@ impl Note {
         Ok(Self::new(file, &metadata, &buffer))
     }
 
-    pub fn serialize(&self) -> Result<Vec<u8>> {
+    pub fn serialize(&self) -> anyhow::Result<Vec<u8>> {
         // FIXME replace with not hacky implementation
         let mut bytes = serde_yaml::to_vec(&self.metadata())?;
         bytes.append(&mut "---\n".as_bytes().to_vec());
