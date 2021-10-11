@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 
 use std::path::PathBuf;
 
-use super::{note::Id, tag_list::TagList, Note, NoteList};
-use crate::{repository::Repository, Result};
+use super::{note::Id, note_repository::NoteRepository, tag_list::TagList, Note, NoteList};
+use crate::Result;
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(default)]
@@ -19,7 +19,7 @@ mod imp {
     #[derive(Debug, Default)]
     pub struct NoteManager {
         pub directory: OnceCell<gio::File>,
-        pub repository: OnceCell<Repository>,
+        pub repository: OnceCell<NoteRepository>,
         pub note_list: OnceCell<NoteList>,
         pub tag_list: OnceCell<TagList>,
     }
@@ -51,7 +51,7 @@ mod imp {
                         "repository",
                         "Repository",
                         "Repository where the notes are stored",
-                        Repository::static_type(),
+                        NoteRepository::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
                     glib::ParamSpec::new_object(
@@ -121,12 +121,16 @@ glib::wrapper! {
 impl NoteManager {
     pub async fn for_directory(directory: &gio::File) -> Self {
         let repository = {
-            let res = Repository::clone("git@github.com:SeaDve/test.git".into(), directory).await;
+            let res =
+                NoteRepository::clone("git@github.com:SeaDve/test.git".into(), directory).await;
 
             if let Err(err) = res {
                 log::warn!("Failed to clone repo: {}", err);
                 log::warn!("Opening existing instead...");
-                Repository::open(directory).await.unwrap()
+                let repo = NoteRepository::open(directory).await.unwrap();
+                // TODO dont update here
+                repo.update().await.unwrap();
+                repo
             } else {
                 res.unwrap()
             }
@@ -141,7 +145,7 @@ impl NoteManager {
         imp.directory.get().unwrap().clone()
     }
 
-    pub fn repository(&self) -> Repository {
+    pub fn repository(&self) -> NoteRepository {
         let imp = imp::NoteManager::from_instance(self);
         Clone::clone(imp.repository.get().unwrap())
     }

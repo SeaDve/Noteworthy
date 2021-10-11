@@ -29,7 +29,7 @@ mod imp {
                     "repository",
                     "Repository",
                     "Repository handler",
-                    gio::File::static_type(),
+                    Repository::static_type(),
                     glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                 )]
             });
