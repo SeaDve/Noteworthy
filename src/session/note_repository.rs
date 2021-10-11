@@ -84,6 +84,7 @@ impl NoteRepository {
             .expect("Failed to create NoteRepository."))
     }
 
+    // TODO Should return a list of changed file to notify the UI
     pub async fn update(&self) -> anyhow::Result<()> {
         let repo = self.repository();
         repo.pull(
@@ -95,9 +96,11 @@ impl NoteRepository {
         Ok(())
     }
 
+    // TODO Should return a list of changed file to notify the UI
     pub async fn sync(&self) -> anyhow::Result<()> {
         self.update().await?;
 
+        // TODO return when there is no changed files
         let repo = self.repository();
         repo.add(vec![".".into()]).await?;
         repo.commit(
