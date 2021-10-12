@@ -126,10 +126,7 @@ impl NoteManager {
             if let Err(err) = res {
                 log::warn!("Failed to clone repo: {}", err);
                 log::warn!("Opening existing instead...");
-                let repo = NoteRepository::open(directory).await.unwrap();
-                // TODO dont update here
-                repo.update().await.unwrap();
-                repo
+                NoteRepository::open(directory).await.unwrap()
             } else {
                 res.unwrap()
             }
@@ -230,8 +227,6 @@ impl NoteManager {
     }
 
     pub async fn save_note(&self, note: Note) -> anyhow::Result<()> {
-        // self.sync().await?;
-
         if note.is_saved() {
             log::info!("Note is already saved returning");
             return Ok(());
@@ -251,6 +246,8 @@ impl NoteManager {
             note.metadata().title(),
             note.file().path().unwrap().display()
         );
+
+        self.sync().await?;
 
         Ok(())
     }
@@ -330,12 +327,8 @@ impl NoteManager {
     }
 
     pub async fn load(&self) -> anyhow::Result<()> {
-        // let repo = self.repository();
-
-        // repo.fetch("origin".into()).await?;
-        // repo.merge("origin/main".into()).await?;
-
-        // dbg!(repo.current_branch().await);
+        let repo = self.repository();
+        repo.update().await?;
 
         self.load_data_file().await?;
         self.load_notes().await?;
@@ -343,22 +336,15 @@ impl NoteManager {
         Ok(())
     }
 
-    // async fn sync(&self) -> anyhow::Result<()> {
-    //     let repo = self.repository();
+    async fn sync(&self) -> anyhow::Result<()> {
+        let repo = self.repository();
 
-    //     if let Err(err) = repo.clone("git@github.com:SeaDve/test.git".into()).await {
-    //         log::error!("Error cloning {}", err);
-    //     }
+        // TODO handle changed files
+        repo.sync().await?;
+        log::info!("Notes synced {}", chrono::Local::now().format("%H:%M:%S"));
 
-    //     repo.fetch("origin".into()).await?;
-    //     repo.merge("origin/main".into()).await?;
-
-    //     repo.add(vec![".".into()]).await?;
-    //     repo.commit("Sync commit".into()).await?;
-    //     repo.push("origin".into()).await?;
-
-    //     Ok(())
-    // }
+        Ok(())
+    }
 
     fn data_file_path(&self) -> PathBuf {
         let mut data_file_path = self.directory().path().unwrap();

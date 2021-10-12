@@ -113,6 +113,18 @@ impl Repository {
         RE_VALIDATE_URL.is_match(remote_url)
     }
 
+    pub async fn is_file_changed_in_workdir(&self) -> anyhow::Result<bool> {
+        let git2_repo = self.git2_repo();
+
+        let res = Self::run_async(move || {
+            let repo = git2_repo.lock().unwrap();
+            wrapper::is_file_changed_in_workdir(&repo)
+        })
+        .await?;
+
+        Ok(res)
+    }
+
     pub async fn push(&self, remote_name: String) -> anyhow::Result<()> {
         let git2_repo = self.git2_repo();
 

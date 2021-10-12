@@ -104,6 +104,12 @@ impl NoteRepository {
 
         // TODO return when there is no changed files
         let repo = self.repository();
+        if !repo.is_file_changed_in_workdir().await? {
+            log::info!("Sync: There is no changed files in directory");
+            log::info!("Sync: Skipping pushing and commit...");
+            return Ok(Vec::new());
+        }
+
         repo.add(vec![".".into()]).await?;
         repo.commit(
             "Sync commit".into(),

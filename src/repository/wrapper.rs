@@ -47,6 +47,12 @@ pub fn diff_tree_to_tree(
     Ok(files)
 }
 
+pub fn is_file_changed_in_workdir(repo: &git2::Repository) -> anyhow::Result<bool> {
+    let diff = repo.diff_index_to_workdir(None, None)?;
+    let diff_stats = diff.stats()?;
+    Ok(diff_stats.files_changed() > 0)
+}
+
 pub fn fetch(repo: &git2::Repository, remote_name: &str) -> anyhow::Result<()> {
     let mut remote = repo.find_remote(remote_name)?;
 
