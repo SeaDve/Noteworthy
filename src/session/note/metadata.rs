@@ -171,6 +171,14 @@ impl Metadata {
     pub fn is_trashed(&self) -> bool {
         self.property("is-trashed").unwrap().get().unwrap()
     }
+
+    pub fn update(&self, other: &Metadata) {
+        self.set_title(other.title());
+        self.set_tag_list(other.tag_list());
+        self.update_last_modified();
+        self.set_is_pinned(other.is_pinned());
+        self.set_is_trashed(other.is_trashed());
+    }
 }
 
 impl Serialize for Metadata {

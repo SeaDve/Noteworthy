@@ -2,7 +2,7 @@ use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::unsync::OnceCell;
 use serde::{Deserialize, Serialize};
 
-use std::path::PathBuf;
+use std::{cell::RefCell, path::PathBuf};
 
 use super::{note::Id, note_repository::NoteRepository, tag_list::TagList, Note, NoteList};
 
@@ -20,7 +20,7 @@ mod imp {
         pub directory: OnceCell<gio::File>,
         pub repository: OnceCell<NoteRepository>,
         pub note_list: OnceCell<NoteList>,
-        pub tag_list: OnceCell<TagList>,
+        pub tag_list: RefCell<Option<TagList>>,
     }
 
     #[glib::object_subclass]
@@ -95,7 +95,7 @@ mod imp {
                 }
                 "tag-list" => {
                     let tag_list = value.get().unwrap();
-                    self.tag_list.set(tag_list).unwrap();
+                    self.tag_list.replace(Some(tag_list));
                 }
                 _ => unimplemented!(),
             }
@@ -157,9 +157,9 @@ impl NoteManager {
     pub fn tag_list(&self) -> TagList {
         let imp = imp::NoteManager::from_instance(self);
         imp.tag_list
-            .get()
-            .expect("Please call `load_data_file` first")
+            .borrow()
             .clone()
+            .expect("Please call `load_data_file` first")
     }
 
     async fn load_notes(&self) -> anyhow::Result<()> {
@@ -327,11 +327,24 @@ impl NoteManager {
     }
 
     pub async fn load(&self) -> anyhow::Result<()> {
-        let repo = self.repository();
-        repo.update().await?;
-
         self.load_data_file().await?;
         self.load_notes().await?;
+
+        Ok(())
+    }
+
+    pub async fn update(&self) -> anyhow::Result<()> {
+        let repo = self.repository();
+        let changed_files = repo.update().await?;
+
+        // TODO Handle new files and deleted files
+        for path in changed_files {
+            let note_id = Id::from_path(&path);
+            let note = self.note_list().get(&note_id).unwrap();
+            note.update().await?;
+        }
+
+        self.load_data_file().await?;
 
         Ok(())
     }

@@ -214,6 +214,27 @@ impl Note {
         .unwrap()
     }
 
+    pub async fn update(&self) -> anyhow::Result<()> {
+        let (file_content, _) = self.file().load_contents_async_future().await?;
+        let file_content = std::str::from_utf8(&file_content)?;
+        let parsed_entity = Matter::<YAML>::new().parse(file_content);
+
+        let new_metadata: Metadata = parsed_entity
+            .data
+            .and_then(|p| p.deserialize().ok())
+            .unwrap_or_default();
+
+        let imp = imp::Note::from_instance(self);
+
+        let metadata = imp.metadata.get().unwrap();
+        metadata.update(&new_metadata);
+
+        let buffer = imp.buffer.get().unwrap();
+        buffer.set_text(&parsed_entity.content);
+
+        Ok(())
+    }
+
     pub async fn deserialize(file: &gio::File) -> anyhow::Result<Self> {
         let (file_content, _) = file.load_contents_async_future().await?;
         let file_content = std::str::from_utf8(&file_content)?;
