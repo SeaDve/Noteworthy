@@ -48,7 +48,10 @@ pub fn diff_tree_to_tree(
 }
 
 pub fn is_file_changed_in_workdir(repo: &git2::Repository) -> anyhow::Result<bool> {
-    let diff = repo.diff_index_to_workdir(None, None)?;
+    let mut diff_options = git2::DiffOptions::new();
+    diff_options.include_untracked(true);
+
+    let diff = repo.diff_index_to_workdir(None, Some(&mut diff_options))?;
     let diff_stats = diff.stats()?;
     Ok(diff_stats.files_changed() > 0)
 }
