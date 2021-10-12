@@ -10,7 +10,12 @@
           </object>
         </child>
         <child>
-          <object class="GtkSeparator"/>
+          <object class="AdwLeafletPage">
+            <property name="navigatable">False</property>
+            <property name="child">
+              <object class="GtkSeparator"/>
+            </property>
+          </object>
         </child>
         <child>
           <object class="NwtyContent" id="content">
