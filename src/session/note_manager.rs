@@ -414,6 +414,7 @@ impl NoteManager {
         data_file_path
     }
 
+    // TODO handle this internally in'note' file
     fn generate_unique_file_name() -> String {
         // This is also the note's id
         chrono::Local::now()
