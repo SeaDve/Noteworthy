@@ -130,16 +130,16 @@ impl Repository {
         remote_name: String,
         author_name: String,
         author_email: String,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<Vec<PathBuf>> {
         let git2_repo = self.git2_repo();
 
-        Self::run_async(move || {
+        let changed_files = Self::run_async(move || {
             let repo = git2_repo.lock().unwrap();
             wrapper::pull(&repo, &remote_name, &author_name, &author_email)
         })
         .await?;
 
-        Ok(())
+        Ok(changed_files)
     }
 
     pub async fn commit(

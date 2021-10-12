@@ -1,6 +1,8 @@
 use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::{sync::Lazy, unsync::OnceCell};
 
+use std::path::PathBuf;
+
 use crate::repository::Repository;
 
 const DEFAULT_REMOTE_NAME: &str = "origin";
@@ -84,21 +86,21 @@ impl NoteRepository {
             .expect("Failed to create NoteRepository."))
     }
 
-    // TODO Should return a list of changed file to notify the UI
-    pub async fn update(&self) -> anyhow::Result<()> {
+    /// Returns the files that changed after the merge from origin
+    pub async fn update(&self) -> anyhow::Result<Vec<PathBuf>> {
         let repo = self.repository();
-        repo.pull(
-            DEFAULT_REMOTE_NAME.into(),
-            DEFAULT_AUTHOR_NAME.into(),
-            DEFAULT_AUTHOR_EMAIL.into(),
-        )
-        .await?;
-        Ok(())
+        let changed_files = repo
+            .pull(
+                DEFAULT_REMOTE_NAME.into(),
+                DEFAULT_AUTHOR_NAME.into(),
+                DEFAULT_AUTHOR_EMAIL.into(),
+            )
+            .await?;
+        Ok(changed_files)
     }
 
-    // TODO Should return a list of changed file to notify the UI
-    pub async fn sync(&self) -> anyhow::Result<()> {
-        self.update().await?;
+    pub async fn sync(&self) -> anyhow::Result<Vec<PathBuf>> {
+        let changed_files = self.update().await?;
 
         // TODO return when there is no changed files
         let repo = self.repository();
@@ -111,7 +113,7 @@ impl NoteRepository {
         .await?;
         repo.push(DEFAULT_REMOTE_NAME.into()).await?;
 
-        Ok(())
+        Ok(changed_files)
     }
 
     fn repository(&self) -> Repository {

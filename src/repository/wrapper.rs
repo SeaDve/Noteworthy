@@ -1,7 +1,7 @@
 use std::{
     fs::{self, File},
     io::Write,
-    path::Path,
+    path::{Path, PathBuf},
 };
 
 pub fn clone(git_base_path: &Path, remote_url: &str) -> anyhow::Result<git2::Repository> {
@@ -26,6 +26,25 @@ pub fn open(git_base_path: &Path) -> anyhow::Result<git2::Repository> {
     let repo = git2::Repository::open(git_base_path)?;
 
     Ok(repo)
+}
+
+pub fn diff_tree_to_tree(
+    repo: &git2::Repository,
+    old_tree: &git2::Tree,
+    new_tree: &git2::Tree,
+) -> anyhow::Result<Vec<PathBuf>> {
+    let diff = repo.diff_tree_to_tree(Some(old_tree), Some(new_tree), None)?;
+
+    let mut files = Vec::new();
+    for delta in diff.deltas() {
+        let old_file_path = delta.old_file().path();
+        let new_file_path = delta.new_file().path();
+        assert_eq!(old_file_path, new_file_path);
+
+        files.push(new_file_path.unwrap().to_path_buf());
+    }
+
+    Ok(files)
 }
 
 pub fn fetch(repo: &git2::Repository, remote_name: &str) -> anyhow::Result<()> {
@@ -225,10 +244,15 @@ pub fn pull(
     remote_name: &str,
     author_name: &str,
     author_email: &str,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<Vec<PathBuf>> {
     fetch(repo, remote_name)?;
 
+    let head = repo.find_reference("HEAD")?;
+    let old_tree = head.peel_to_tree()?;
+
     let fetch_head = repo.find_reference("FETCH_HEAD")?;
+    let new_tree = fetch_head.peel_to_tree()?;
+
     let fetch_commit = repo.reference_to_annotated_commit(&fetch_head)?;
 
     // TODO better way to get this?
@@ -246,7 +270,8 @@ pub fn pull(
         author_email,
     )?;
 
-    Ok(())
+    let changed_files = diff_tree_to_tree(repo, &old_tree, &new_tree)?;
+    Ok(changed_files)
 }
 
 fn credentials_cb(username_from_url: Option<&str>) -> Result<git2::Cred, git2::Error> {
