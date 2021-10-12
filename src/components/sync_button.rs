@@ -1,5 +1,3 @@
-// TODO remove this file, since it is not currently used
-
 use adw::subclass::prelude::*;
 use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 

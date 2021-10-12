@@ -112,17 +112,6 @@ impl NoteTagList {
         let imp = imp::NoteTagList::from_instance(self);
         imp.list.borrow().get_index_of(tag)
     }
-
-    // FIXME remove this
-    pub fn dbg(&self) {
-        let imp = imp::NoteTagList::from_instance(self);
-        dbg!(imp
-            .list
-            .borrow()
-            .iter()
-            .map(Tag::name)
-            .collect::<Vec<String>>());
-    }
 }
 
 // FIXME better ser & de
