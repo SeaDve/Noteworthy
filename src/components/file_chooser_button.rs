@@ -114,7 +114,6 @@ mod imp {
 }
 
 glib::wrapper! {
-    /// A Bin widget that adds a context menu.
     pub struct FileChooserButton(ObjectSubclass<imp::FileChooserButton>)
         @extends gtk::Widget, adw::Bin, @implements gtk::Accessible;
 }

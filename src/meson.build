@@ -22,6 +22,7 @@ rust_sources = files(
   'components/context_menu_bin.rs',
   'components/file_chooser_button.rs',
   'components/mod.rs',
+  'components/sync_button.rs',
   'repository/git2_repo.rs',
   'repository/mod.rs',
   'repository/wrapper.rs',

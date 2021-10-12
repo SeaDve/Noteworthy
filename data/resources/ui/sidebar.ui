@@ -58,9 +58,7 @@
               </object>
             </child>
             <child type="end">
-              <object class="GtkButton">
-                <!-- TODO implement syncing -->
-                <property name="icon-name">emblem-synchronizing-symbolic</property>
+              <object class="NwtySyncButton">
                 <property name="action-name">session.sync</property>
               </object>
             </child>

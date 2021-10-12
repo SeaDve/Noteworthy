@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="NwtySyncButton" parent="AdwBin">
+    <property name="child">
+      <object class="GtkButton" id="inner_button">
+        <property name="icon-name">emblem-synchronizing-symbolic</property>
+      </object>
+    </property>
+  </template>
+</interface>

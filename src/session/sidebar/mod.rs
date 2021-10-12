@@ -18,6 +18,7 @@ use self::{
     view_switcher::{ItemKind, ViewSwitcher},
 };
 use super::{tag_list::TagList, Note, NoteList};
+use crate::components::SyncButton;
 
 #[derive(Debug, Clone, Copy, PartialEq, GEnum)]
 #[genum(type_name = "SidebarSelectionMode")]
@@ -78,6 +79,7 @@ mod imp {
         fn class_init(klass: &mut Self::Class) {
             ViewSwitcher::static_type();
             NoteRow::static_type();
+            SyncButton::static_type();
             Self::bind_template(klass);
 
             klass.install_action(
