@@ -252,7 +252,7 @@ impl NoteManager {
         Ok(())
     }
 
-    pub fn save_all_notes(&self) -> anyhow::Result<()> {
+    pub fn save_all_notes_sync(&self) -> anyhow::Result<()> {
         for note in self.note_list().iter() {
             if note.is_saved() {
                 log::info!("Note already saved, skipping...");
@@ -281,7 +281,38 @@ impl NoteManager {
         Ok(())
     }
 
-    pub fn save_data_file(&self) -> anyhow::Result<()> {
+    pub async fn save_all_notes(&self) -> anyhow::Result<()> {
+        for note in self.note_list().iter() {
+            if note.is_saved() {
+                log::info!("Note already saved, skipping...");
+                continue;
+            }
+
+            let note_bytes = note.serialize()?;
+
+            let res = note
+                .file()
+                .replace_contents_async_future(note_bytes, None, false, gio::FileCreateFlags::NONE)
+                .await;
+
+            if let Err(err) = res {
+                anyhow::bail!("Fail saving note: {}", err.1);
+            }
+
+            note.set_is_saved(true);
+
+            log::info!(
+                "Saved noted with title of {} and path of {:?}",
+                note.metadata().title(),
+                note.file().path().unwrap().display()
+            );
+        }
+
+        Ok(())
+    }
+
+    // FIXME remove this, cuz it is redundant
+    pub fn save_data_file_sync(&self) -> anyhow::Result<()> {
         let data = Data {
             tag_list: self.tag_list(),
         };
@@ -295,6 +326,29 @@ impl NoteManager {
             gio::FileCreateFlags::NONE,
             None::<&gio::Cancellable>,
         )?;
+
+        log::info!("Sucessfully saved data file synchronously");
+
+        Ok(())
+    }
+
+    // FIXME remove this, cuz it is redundant
+    pub async fn save_data_file(&self) -> anyhow::Result<()> {
+        let data = Data {
+            tag_list: self.tag_list(),
+        };
+        let data_bytes = serde_yaml::to_vec(&data)?;
+
+        let data_file = gio::File::for_path(self.data_file_path());
+        let res = data_file
+            .replace_contents_async_future(data_bytes, None, false, gio::FileCreateFlags::NONE)
+            .await;
+
+        if let Err(err) = res {
+            anyhow::bail!("Fail saving data_file: {}", err.1);
+        }
+
+        log::info!("Sucessfully saved data file");
 
         Ok(())
     }
@@ -334,6 +388,9 @@ impl NoteManager {
     }
 
     pub async fn sync(&self) -> anyhow::Result<()> {
+        self.save_all_notes().await?;
+        self.save_data_file().await?;
+
         let repo = self.repository();
         let changed_files = repo.sync().await?;
 

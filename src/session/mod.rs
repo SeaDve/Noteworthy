@@ -60,6 +60,14 @@ mod imp {
             Content::static_type();
             Self::bind_template(klass);
 
+            klass.install_action("session.sync", None, move |obj, _, _| {
+                let note_manager = obj.note_manager();
+                let ctx = glib::MainContext::default();
+                ctx.spawn_local(clone!(@weak note_manager => async move {
+                    note_manager.sync().await.expect("Failed to sync");
+                }));
+            });
+
             klass.install_action("session.create-note", None, move |obj, _, _| {
                 let note_manager = obj.note_manager();
                 note_manager.create_note().expect("Failed to create note");
@@ -261,10 +269,10 @@ impl Session {
     pub fn save(&self) {
         let note_manager = self.note_manager();
         note_manager
-            .save_all_notes()
+            .save_all_notes_sync()
             .expect("Failed to save notes to file");
         note_manager
-            .save_data_file()
+            .save_data_file_sync()
             .expect("Failed to save data file");
 
         log::info!("Session saved");

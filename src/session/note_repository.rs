@@ -103,7 +103,7 @@ impl NoteRepository {
         if !repo.is_file_changed_in_workdir().await? {
             log::info!("Sync: There is no changed files in directory");
             log::info!("Sync: Skipping pushing and commit...");
-            return Ok(Vec::new());
+            return Ok(changed_files);
         }
 
         log::info!("Sync: Found changes, creating commit...");

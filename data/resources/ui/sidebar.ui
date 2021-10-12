@@ -61,6 +61,7 @@
               <object class="GtkButton">
                 <!-- TODO implement syncing -->
                 <property name="icon-name">emblem-synchronizing-symbolic</property>
+                <property name="action-name">session.sync</property>
               </object>
             </child>
           </object>
