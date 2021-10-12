@@ -22,6 +22,7 @@ pub fn clone(git_base_path: &Path, remote_url: &str) -> anyhow::Result<git2::Rep
 }
 
 pub fn open(git_base_path: &Path) -> anyhow::Result<git2::Repository> {
+    log::info!("Opening repo from {}", git_base_path.display());
     let repo = git2::Repository::open(git_base_path)?;
 
     Ok(repo)
