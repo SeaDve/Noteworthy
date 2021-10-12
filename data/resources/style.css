@@ -4,6 +4,22 @@
 }
 
 
+.spinning > image {
+  animation-name: spin;
+  animation-duration: 1s;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  } to {
+    transform: rotate(360deg);
+  }
+}
+
+
 .setup-button-box {
   min-width: 240px;
 }

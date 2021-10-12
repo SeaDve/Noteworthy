@@ -1,12 +1,9 @@
 // TODO remove this file, since it is not currently used
 
 use adw::subclass::prelude::*;
-use gtk::{
-    glib::{self, clone},
-    prelude::*,
-    subclass::prelude::*,
-    CompositeTemplate,
-};
+use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
+
+use std::cell::Cell;
 
 mod imp {
     use super::*;
@@ -16,6 +13,8 @@ mod imp {
     pub struct SyncButton {
         #[template_child]
         pub inner_button: TemplateChild<gtk::Button>,
+
+        pub is_spinning: Cell<bool>,
     }
 
     #[glib::object_subclass]
@@ -37,13 +36,22 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_string(
-                    "action-name",
-                    "Action Name",
-                    "The action to be called when clicked",
-                    None,
-                    glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT,
-                )]
+                vec![
+                    glib::ParamSpec::new_string(
+                        "action-name",
+                        "Action Name",
+                        "The action to be called when clicked",
+                        None,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT,
+                    ),
+                    glib::ParamSpec::new_boolean(
+                        "is-spinning",
+                        "Is Spinning",
+                        "The action to be called when clicked",
+                        false,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
+                    ),
+                ]
             });
 
             PROPERTIES.as_ref()
@@ -51,7 +59,7 @@ mod imp {
 
         fn set_property(
             &self,
-            _obj: &Self::Type,
+            obj: &Self::Type,
             _id: usize,
             value: &glib::Value,
             pspec: &glib::ParamSpec,
@@ -61,6 +69,10 @@ mod imp {
                     let action_name = value.get().unwrap();
                     self.inner_button.set_action_name(action_name);
                 }
+                "is-spinning" => {
+                    let is_spinning = value.get().unwrap();
+                    obj.set_is_spinning(is_spinning);
+                }
                 _ => unimplemented!(),
             }
         }
@@ -68,6 +80,7 @@ mod imp {
         fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
                 "action-name" => self.inner_button.action_name().to_value(),
+                "is-spinning" => self.is_spinning.get().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -89,5 +102,18 @@ glib::wrapper! {
 impl SyncButton {
     pub fn new() -> Self {
         glib::Object::new(&[]).expect("Failed to create SyncButton.")
+    }
+
+    pub fn set_is_spinning(&self, is_spinning: bool) {
+        let imp = imp::SyncButton::from_instance(self);
+
+        if is_spinning {
+            imp.inner_button.add_css_class("spinning");
+        } else {
+            imp.inner_button.remove_css_class("spinning");
+        }
+
+        imp.is_spinning.set(is_spinning);
+        self.notify("is-spinning");
     }
 }
