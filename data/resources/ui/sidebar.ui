@@ -57,6 +57,12 @@
                 <property name="primary">True</property>
               </object>
             </child>
+            <child type="end">
+              <object class="GtkButton">
+                <!-- TODO implement syncing -->
+                <property name="icon-name">emblem-synchronizing-symbolic</property>
+              </object>
+            </child>
           </object>
         </child>
         <child>
