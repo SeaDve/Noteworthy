@@ -65,6 +65,7 @@ mod imp {
         pub compact: Cell<bool>,
         pub selection_mode: Cell<SelectionMode>,
         pub selected_note: RefCell<Option<Note>>,
+        pub is_syncing: Cell<bool>,
 
         pub single_selection_model: RefCell<Option<Selection>>,
         pub multi_selection_model: RefCell<Option<gtk::MultiSelection>>,
@@ -148,6 +149,13 @@ mod imp {
                         Note::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
+                    glib::ParamSpec::new_boolean(
+                        "is-syncing",
+                        "Is Syncing",
+                        "Whether the session is currently syncing",
+                        false,
+                        glib::ParamFlags::READWRITE,
+                    ),
                 ]
             });
 
@@ -178,6 +186,10 @@ mod imp {
                     let selected_note = value.get().unwrap();
                     obj.set_selected_note(selected_note);
                 }
+                "is-syncing" => {
+                    let is_syncing = value.get().unwrap();
+                    self.is_syncing.set(is_syncing);
+                }
                 _ => unimplemented!(),
             }
         }
@@ -187,6 +199,7 @@ mod imp {
                 "compact" => self.compact.get().to_value(),
                 "selection-mode" => obj.selection_mode().to_value(),
                 "selected-note" => obj.selected_note().to_value(),
+                "is-syncing" => self.is_syncing.get().to_value(),
                 _ => unimplemented!(),
             }
         }

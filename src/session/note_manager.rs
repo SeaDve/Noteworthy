@@ -2,7 +2,10 @@ use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::unsync::OnceCell;
 use serde::{Deserialize, Serialize};
 
-use std::{cell::RefCell, path::PathBuf};
+use std::{
+    cell::{Cell, RefCell},
+    path::PathBuf,
+};
 
 use super::{note::Id, note_repository::NoteRepository, tag_list::TagList, Note, NoteList};
 
@@ -21,6 +24,7 @@ mod imp {
         pub repository: OnceCell<NoteRepository>,
         pub note_list: OnceCell<NoteList>,
         pub tag_list: RefCell<Option<TagList>>,
+        pub is_syncing: Cell<bool>,
     }
 
     #[glib::object_subclass]
@@ -67,6 +71,13 @@ mod imp {
                         TagList::static_type(),
                         glib::ParamFlags::READWRITE,
                     ),
+                    glib::ParamSpec::new_boolean(
+                        "is-syncing",
+                        "Is Syncing",
+                        "Whether the session is currently syncing",
+                        false,
+                        glib::ParamFlags::READWRITE,
+                    ),
                 ]
             });
 
@@ -97,6 +108,10 @@ mod imp {
                     let tag_list = value.get().unwrap();
                     self.tag_list.replace(Some(tag_list));
                 }
+                "is-syncing" => {
+                    let is_syncing = value.get().unwrap();
+                    self.is_syncing.set(is_syncing);
+                }
                 _ => unimplemented!(),
             }
         }
@@ -107,6 +122,7 @@ mod imp {
                 "repository" => obj.repository().to_value(),
                 "note-list" => obj.note_list().to_value(),
                 "tag-list" => obj.tag_list().to_value(),
+                "is-syncing" => self.is_syncing.get().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -388,6 +404,8 @@ impl NoteManager {
     }
 
     pub async fn sync(&self) -> anyhow::Result<()> {
+        self.set_is_syncing(true);
+
         self.save_all_notes().await?;
         self.save_data_file().await?;
 
@@ -404,8 +422,13 @@ impl NoteManager {
 
         self.load_data_file().await?;
         log::info!("Notes synced {}", chrono::Local::now().format("%H:%M:%S"));
+        self.set_is_syncing(false);
 
         Ok(())
+    }
+
+    fn set_is_syncing(&self, is_syncing: bool) {
+        self.set_property("is-syncing", is_syncing).unwrap();
     }
 
     fn data_file_path(&self) -> PathBuf {

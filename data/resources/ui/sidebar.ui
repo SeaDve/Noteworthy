@@ -60,6 +60,9 @@
             <child type="end">
               <object class="NwtySyncButton">
                 <property name="action-name">session.sync</property>
+                <binding name="is-spinning">
+                  <lookup name="is-syncing">NwtySidebar</lookup>
+                </binding>
               </object>
             </child>
           </object>

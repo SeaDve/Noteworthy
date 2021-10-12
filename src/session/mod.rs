@@ -18,7 +18,7 @@ use gtk::{
 };
 use once_cell::unsync::OnceCell;
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 
 use self::{
     content::Content,
@@ -47,6 +47,7 @@ mod imp {
 
         pub note_manager: OnceCell<NoteManager>,
         pub selected_note: RefCell<Option<Note>>,
+        pub is_syncing: Cell<bool>,
     }
 
     #[glib::object_subclass]
@@ -151,6 +152,11 @@ mod imp {
 
                 note_manager.sync().await.expect("Failed to update notes and data file");
             }));
+
+            obj.note_manager()
+                .bind_property("is-syncing", obj, "is-syncing")
+                .flags(glib::BindingFlags::SYNC_CREATE)
+                .build();
         }
 
         fn properties() -> &'static [glib::ParamSpec] {
@@ -170,6 +176,13 @@ mod imp {
                         "The selected note",
                         Note::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
+                    ),
+                    glib::ParamSpec::new_boolean(
+                        "is-syncing",
+                        "Is Syncing",
+                        "Whether the session is currently syncing",
+                        false,
+                        glib::ParamFlags::READWRITE,
                     ),
                 ]
             });
@@ -193,6 +206,10 @@ mod imp {
                     let selected_note = value.get().unwrap();
                     obj.set_selected_note(selected_note);
                 }
+                "is-syncing" => {
+                    let is_syncing = value.get().unwrap();
+                    self.is_syncing.set(is_syncing);
+                }
                 _ => unimplemented!(),
             }
         }
@@ -201,6 +218,7 @@ mod imp {
             match pspec.name() {
                 "note-manager" => obj.note_manager().to_value(),
                 "selected-note" => obj.selected_note().to_value(),
+                "is-syncing" => self.is_syncing.get().to_value(),
                 _ => unimplemented!(),
             }
         }
