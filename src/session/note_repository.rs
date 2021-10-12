@@ -86,6 +86,7 @@ impl NoteRepository {
             .expect("Failed to create NoteRepository."))
     }
 
+    // TODO Return when it is already syncing (maybe put a thread pool)
     /// Returns the files that changed after the merge from origin
     pub async fn sync(&self) -> anyhow::Result<Vec<PathBuf>> {
         let repo = self.repository();
