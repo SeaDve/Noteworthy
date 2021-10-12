@@ -87,8 +87,10 @@ impl NoteRepository {
     }
 
     /// Returns the files that changed after the merge from origin
-    pub async fn update(&self) -> anyhow::Result<Vec<PathBuf>> {
+    pub async fn sync(&self) -> anyhow::Result<Vec<PathBuf>> {
         let repo = self.repository();
+
+        log::info!("Sync: Repo pulling changes...");
         let changed_files = repo
             .pull(
                 DEFAULT_REMOTE_NAME.into(),
@@ -96,20 +98,15 @@ impl NoteRepository {
                 DEFAULT_AUTHOR_EMAIL.into(),
             )
             .await?;
-        Ok(changed_files)
-    }
+        log::info!("Sync: Repo pulled changes");
 
-    pub async fn sync(&self) -> anyhow::Result<Vec<PathBuf>> {
-        let changed_files = self.update().await?;
-
-        // TODO return when there is no changed files
-        let repo = self.repository();
         if !repo.is_file_changed_in_workdir().await? {
             log::info!("Sync: There is no changed files in directory");
             log::info!("Sync: Skipping pushing and commit...");
             return Ok(Vec::new());
         }
 
+        log::info!("Sync: Found changes, creating commit...");
         repo.add(vec![".".into()]).await?;
         repo.commit(
             "Sync commit".into(),
@@ -118,6 +115,7 @@ impl NoteRepository {
         )
         .await?;
         repo.push(DEFAULT_REMOTE_NAME.into()).await?;
+        log::info!("Sync: pushed commit");
 
         Ok(changed_files)
     }

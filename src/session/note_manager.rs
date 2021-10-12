@@ -333,27 +333,19 @@ impl NoteManager {
         Ok(())
     }
 
-    pub async fn update(&self) -> anyhow::Result<()> {
+    pub async fn sync(&self) -> anyhow::Result<()> {
         let repo = self.repository();
-        let changed_files = repo.update().await?;
+        let changed_files = repo.sync().await?;
 
         // TODO Handle new files and deleted files
         for path in changed_files {
             let note_id = Id::from_path(&path);
             let note = self.note_list().get(&note_id).unwrap();
+            log::info!("Found note new changes {}, updating...", path.display());
             note.update().await?;
         }
 
         self.load_data_file().await?;
-
-        Ok(())
-    }
-
-    async fn sync(&self) -> anyhow::Result<()> {
-        let repo = self.repository();
-
-        // TODO handle changed files
-        repo.sync().await?;
         log::info!("Notes synced {}", chrono::Local::now().format("%H:%M:%S"));
 
         Ok(())
