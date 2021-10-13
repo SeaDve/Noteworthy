@@ -19,8 +19,6 @@ run_command(
 )
 
 rust_sources = files(
-  'components/mod.rs',
-  'components/sync_button.rs',
   'repository/git2_repo.rs',
   'repository/mod.rs',
   'repository/wrapper.rs',
@@ -42,6 +40,7 @@ rust_sources = files(
   'session/sidebar/mod.rs',
   'session/sidebar/note_row.rs',
   'session/sidebar/selection.rs',
+  'session/sidebar/sync_button.rs',
   'session/tag_editor/mod.rs',
   'session/tag_editor/row.rs',
   'session/mod.rs',

@@ -1,5 +1,6 @@
 mod note_row;
 mod selection;
+mod sync_button;
 mod view_switcher;
 
 use gettextrs::gettext;
@@ -15,10 +16,10 @@ use std::cell::{Cell, RefCell};
 use self::{
     note_row::NoteRow,
     selection::Selection,
+    sync_button::SyncButton,
     view_switcher::{ItemKind, ViewSwitcher},
 };
 use super::{tag_list::TagList, Note, NoteList};
-use crate::components::SyncButton;
 
 #[derive(Debug, Clone, Copy, PartialEq, GEnum)]
 #[genum(type_name = "SidebarSelectionMode")]
