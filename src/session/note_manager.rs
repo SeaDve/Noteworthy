@@ -450,7 +450,7 @@ impl NoteManager {
                     note.update().await?;
                 }
                 other => {
-                    log::info!("Found other delta type: {:?}", other);
+                    log::warn!("Found other delta type: {:?}", other);
                 }
             }
         }

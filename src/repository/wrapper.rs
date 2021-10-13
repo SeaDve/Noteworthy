@@ -107,11 +107,11 @@ pub fn remove<P: AsRef<Path> + Clone + git2::IntoCString>(
     index.remove_all(
         paths,
         Some(&mut |path: &Path, _: &[u8]| {
-            let full_path = repo.path().join(path);
+            let full_path = repo.workdir().unwrap().join(path);
 
             log::info!("Removing file: {}", full_path.display());
             if let Err(err) = fs::remove_file(&full_path) {
-                log::info!("File {} could not be delted {}", full_path.display(), err);
+                log::error!("File {} could not be deleted {}", full_path.display(), err);
             }
 
             0
@@ -333,7 +333,10 @@ fn resolve_conflict(repo: &git2::Repository, our: &git2::IndexEntry) -> anyhow::
     let file_data = odb_object.data();
 
     let file_path = &our.path;
-    let file_full_path = repo.path().join(std::str::from_utf8(file_path).unwrap());
+    let file_full_path = repo
+        .workdir()
+        .unwrap()
+        .join(std::str::from_utf8(file_path).unwrap());
 
     let mut file = File::open(file_full_path)?;
     file.write_all(file_data)?;
