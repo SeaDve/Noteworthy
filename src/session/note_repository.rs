@@ -1,4 +1,9 @@
-use gtk::{gio, glib, prelude::*, subclass::prelude::*};
+use gtk::{
+    gio,
+    glib::{self, GEnum},
+    prelude::*,
+    subclass::prelude::*,
+};
 use once_cell::{sync::Lazy, unsync::OnceCell};
 
 use std::{cell::Cell, path::PathBuf};
@@ -9,7 +14,8 @@ const DEFAULT_REMOTE_NAME: &str = "origin";
 const DEFAULT_AUTHOR_NAME: &str = "NoteworthyApp";
 const DEFAULT_AUTHOR_EMAIL: &str = "app@noteworthy.io";
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, GEnum)]
+#[genum(type_name = "NwtyNoteRepositorySyncState")]
 pub enum SyncState {
     Idle,
     Pulling,
@@ -41,13 +47,23 @@ mod imp {
     impl ObjectImpl for NoteRepository {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_object(
-                    "repository",
-                    "Repository",
-                    "Repository handler",
-                    Repository::static_type(),
-                    glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
-                )]
+                vec![
+                    glib::ParamSpec::new_object(
+                        "repository",
+                        "Repository",
+                        "Repository handler",
+                        Repository::static_type(),
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
+                    ),
+                    glib::ParamSpec::new_enum(
+                        "sync-state",
+                        "Sync State",
+                        "Current sync state",
+                        SyncState::static_type(),
+                        SyncState::default() as i32,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
+                    ),
+                ]
             });
 
             PROPERTIES.as_ref()
@@ -55,7 +71,7 @@ mod imp {
 
         fn set_property(
             &self,
-            _obj: &Self::Type,
+            obj: &Self::Type,
             _id: usize,
             value: &glib::Value,
             pspec: &glib::ParamSpec,
@@ -65,13 +81,18 @@ mod imp {
                     let repository = value.get().unwrap();
                     self.repository.set(repository).unwrap();
                 }
+                "sync-state" => {
+                    let sync_state = value.get().unwrap();
+                    obj.set_sync_state(sync_state);
+                }
                 _ => unimplemented!(),
             }
         }
 
-        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+        fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
                 "repository" => self.repository.get().to_value(),
+                "sync-state" => obj.sync_state().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -158,5 +179,6 @@ impl NoteRepository {
     fn set_sync_state(&self, sync_state: SyncState) {
         let imp = imp::NoteRepository::from_instance(self);
         imp.sync_state.set(sync_state);
+        self.notify("sync-state");
     }
 }

@@ -7,7 +7,12 @@ use std::{
     path::PathBuf,
 };
 
-use super::{note::Id, note_repository::NoteRepository, tag_list::TagList, Note, NoteList};
+use super::{
+    note::Id,
+    note_repository::{NoteRepository, SyncState},
+    tag_list::TagList,
+    Note, NoteList,
+};
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(default)]
@@ -35,10 +40,6 @@ mod imp {
     }
 
     impl ObjectImpl for NoteManager {
-        fn constructed(&self, obj: &Self::Type) {
-            self.parent_constructed(obj);
-        }
-
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
@@ -125,6 +126,12 @@ mod imp {
                 "is-syncing" => self.is_syncing.get().to_value(),
                 _ => unimplemented!(),
             }
+        }
+
+        fn constructed(&self, obj: &Self::Type) {
+            self.parent_constructed(obj);
+
+            obj.setup_bindings();
         }
     }
 }
@@ -404,8 +411,6 @@ impl NoteManager {
     }
 
     pub async fn sync(&self) -> anyhow::Result<()> {
-        self.set_is_syncing(true);
-
         self.save_all_notes().await?;
         self.save_data_file().await?;
 
@@ -422,13 +427,8 @@ impl NoteManager {
 
         self.load_data_file().await?;
         log::info!("Notes synced {}", chrono::Local::now().format("%H:%M:%S"));
-        self.set_is_syncing(false);
 
         Ok(())
-    }
-
-    fn set_is_syncing(&self, is_syncing: bool) {
-        self.set_property("is-syncing", is_syncing).unwrap();
     }
 
     fn data_file_path(&self) -> PathBuf {
@@ -443,5 +443,18 @@ impl NoteManager {
         chrono::Local::now()
             .format("Noteworthy-%Y-%m-%d-%H-%M-%S-%f")
             .to_string()
+    }
+
+    fn setup_bindings(&self) {
+        self.repository()
+            .bind_property("sync-state", self, "is-syncing")
+            .transform_to(|_, value| {
+                let sync_state: SyncState = value.get().unwrap();
+                let is_syncing = sync_state != SyncState::Idle;
+
+                Some(is_syncing.to_value())
+            })
+            .flags(glib::BindingFlags::SYNC_CREATE)
+            .build();
     }
 }
