@@ -1,7 +1,7 @@
 use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::{sync::Lazy, unsync::OnceCell};
 
-use std::path::PathBuf;
+use std::{cell::Cell, path::PathBuf};
 
 use crate::repository::Repository;
 
@@ -9,18 +9,26 @@ const DEFAULT_REMOTE_NAME: &str = "origin";
 const DEFAULT_AUTHOR_NAME: &str = "NoteworthyApp";
 const DEFAULT_AUTHOR_EMAIL: &str = "app@noteworthy.io";
 
-enum SyncState {
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum SyncState {
+    Idle,
     Pulling,
     Pushing,
-    Idle,
+}
+
+impl Default for SyncState {
+    fn default() -> Self {
+        Self::Idle
+    }
 }
 
 mod imp {
     use super::*;
 
-    #[derive(Default)]
+    #[derive(Default, Debug)]
     pub struct NoteRepository {
         pub repository: OnceCell<Repository>,
+        pub sync_state: Cell<SyncState>,
     }
 
     #[glib::object_subclass]
@@ -97,7 +105,13 @@ impl NoteRepository {
     pub async fn sync(&self) -> anyhow::Result<Vec<PathBuf>> {
         let repo = self.repository();
 
+        if self.sync_state() == SyncState::Pulling {
+            log::info!("Currently pulling. Returning...");
+            return Ok(Vec::new());
+        }
+
         log::info!("Sync: Repo pulling changes...");
+        self.set_sync_state(SyncState::Pulling);
         let changed_files = repo
             .pull(
                 DEFAULT_REMOTE_NAME.into(),
@@ -108,14 +122,18 @@ impl NoteRepository {
         log::info!("Sync: Repo pulled changes");
 
         if repo.is_file_changed_in_workdir().await? {
-            log::info!("Sync: Found changes, creating commit...");
+            log::info!("Sync: Found changes, adding all...");
             repo.add(vec![".".into()]).await?;
+            log::info!("Sync: Creating commit...");
             repo.commit(
                 "Sync commit".into(),
                 DEFAULT_AUTHOR_NAME.into(),
                 DEFAULT_AUTHOR_EMAIL.into(),
             )
             .await?;
+
+            log::info!("Sync: Repo pushing changes...");
+            self.set_sync_state(SyncState::Pushing);
             repo.push(DEFAULT_REMOTE_NAME.into()).await?;
             log::info!("Sync: pushed commit");
         } else {
@@ -123,11 +141,22 @@ impl NoteRepository {
             log::info!("Sync: Skipping pushing and commit...");
         }
 
+        self.set_sync_state(SyncState::Idle);
         Ok(changed_files)
     }
 
     fn repository(&self) -> Repository {
         let imp = imp::NoteRepository::from_instance(self);
         Clone::clone(imp.repository.get().unwrap())
+    }
+
+    fn sync_state(&self) -> SyncState {
+        let imp = imp::NoteRepository::from_instance(self);
+        imp.sync_state.get()
+    }
+
+    fn set_sync_state(&self, sync_state: SyncState) {
+        let imp = imp::NoteRepository::from_instance(self);
+        imp.sync_state.set(sync_state);
     }
 }
