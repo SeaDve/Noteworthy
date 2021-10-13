@@ -148,7 +148,7 @@ impl NoteManager {
 
             if let Err(err) = res {
                 log::warn!("Failed to clone repo: {}", err);
-                log::warn!("Opening existing instead...");
+                log::info!("Opening existing instead...");
                 NoteRepository::open(directory).await.unwrap()
             } else {
                 res.unwrap()
