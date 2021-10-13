@@ -414,15 +414,33 @@ impl NoteManager {
         self.save_all_notes().await?;
         self.save_data_file().await?;
 
+        let note_list = self.note_list();
         let repo = self.repository();
         let changed_files = repo.sync().await?;
 
-        // TODO Handle new files and deleted files
-        for path in changed_files {
-            let note_id = Id::from_path(&path);
-            let note = self.note_list().get(&note_id).unwrap();
-            log::info!("Found note new changes {}, updating...", path.display());
-            note.update().await?;
+        for (path, delta) in changed_files {
+            match delta {
+                git2::Delta::Added => {
+                    log::info!("Sync: Found added files {}, appending...", path.display());
+                    let file = gio::File::for_path(&path);
+                    let added_note = Note::deserialize(&file).await?;
+                    note_list.append(added_note);
+                }
+                git2::Delta::Deleted => {
+                    log::info!("Sync: Found removed files {}, removing...", path.display());
+                    let note_id = Id::from_path(&path);
+                    note_list.remove(&note_id);
+                }
+                git2::Delta::Modified => {
+                    log::info!("Sync: Found modified files {}, updating...", path.display());
+                    let note_id = Id::from_path(&path);
+                    let note = note_list.get(&note_id).unwrap();
+                    note.update().await?;
+                }
+                other => {
+                    log::info!("Found other delta type: {:?}", other);
+                }
+            }
         }
 
         self.load_data_file().await?;

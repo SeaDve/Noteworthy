@@ -142,7 +142,7 @@ impl Repository {
         remote_name: String,
         author_name: String,
         author_email: String,
-    ) -> anyhow::Result<Vec<PathBuf>> {
+    ) -> anyhow::Result<Vec<(PathBuf, git2::Delta)>> {
         let git2_repo = self.git2_repo();
 
         let changed_files = Self::run_async(move || {

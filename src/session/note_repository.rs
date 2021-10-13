@@ -123,7 +123,7 @@ impl NoteRepository {
 
     // TODO Return when it is already syncing (maybe put a thread pool)
     /// Returns the files that changed after the merge from origin
-    pub async fn sync(&self) -> anyhow::Result<Vec<PathBuf>> {
+    pub async fn sync(&self) -> anyhow::Result<Vec<(PathBuf, git2::Delta)>> {
         let repo = self.repository();
 
         if self.sync_state() == SyncState::Pulling {

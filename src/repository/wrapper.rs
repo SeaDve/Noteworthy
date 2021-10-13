@@ -32,16 +32,23 @@ pub fn diff_tree_to_tree(
     repo: &git2::Repository,
     old_tree: &git2::Tree,
     new_tree: &git2::Tree,
-) -> anyhow::Result<Vec<PathBuf>> {
+) -> anyhow::Result<Vec<(PathBuf, git2::Delta)>> {
     let diff = repo.diff_tree_to_tree(Some(old_tree), Some(new_tree), None)?;
 
     let mut files = Vec::new();
     for diff_delta in diff.deltas() {
-        let old_file_path = diff_delta.old_file().path();
-        let new_file_path = diff_delta.new_file().path();
-        assert_eq!(old_file_path, new_file_path);
+        let old_file_path = diff_delta.old_file().path().unwrap();
+        let new_file_path = diff_delta.new_file().path().unwrap();
+        log::info!(
+            "Diff: Found file {} -> {}",
+            old_file_path.display(),
+            new_file_path.display()
+        );
 
-        files.push(new_file_path.unwrap().to_path_buf());
+        let file_path = repo.workdir().unwrap().join(new_file_path);
+        let status = diff_delta.status();
+
+        files.push((file_path, status));
     }
 
     Ok(files)
@@ -253,7 +260,7 @@ pub fn pull(
     remote_name: &str,
     author_name: &str,
     author_email: &str,
-) -> anyhow::Result<Vec<PathBuf>> {
+) -> anyhow::Result<Vec<(PathBuf, git2::Delta)>> {
     fetch(repo, remote_name)?;
 
     let head = repo.find_reference("HEAD")?;
