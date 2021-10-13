@@ -103,6 +103,7 @@
     </child>
     <child>
       <object class="GtkActionBar" id="action_bar">
+        <property name="revealed">False</property>
         <child type="end">
           <object class="GtkButton" id="tag_button">
             <property name="icon-name">tag-symbolic</property>
