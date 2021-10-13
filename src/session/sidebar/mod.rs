@@ -43,8 +43,6 @@ mod imp {
         #[template_child]
         pub list_view: TemplateChild<gtk::ListView>,
         #[template_child]
-        pub stack: TemplateChild<gtk::Stack>,
-        #[template_child]
         pub view_switcher: TemplateChild<ViewSwitcher>,
         #[template_child]
         pub header_bar_stack: TemplateChild<gtk::Stack>,
@@ -113,7 +111,6 @@ mod imp {
             self.parent_constructed(obj);
 
             obj.setup_list_view();
-            obj.setup_expressions();
             obj.setup_signals();
         }
 
@@ -446,30 +443,6 @@ impl Sidebar {
                     note.metadata().set_is_pinned(is_active);
                 }
             }));
-    }
-
-    fn setup_expressions(&self) {
-        let imp = imp::Sidebar::from_instance(self);
-
-        let list_view_expression = gtk::ConstantExpression::new(&imp.list_view.get());
-        let model_expression = gtk::PropertyExpression::new(
-            gtk::ListView::static_type(),
-            Some(&list_view_expression),
-            "model",
-        );
-        let model_is_some_expression = gtk::ClosureExpression::new(
-            |args| {
-                let model: Option<gtk::SelectionModel> = args[1].get().unwrap();
-
-                if model.is_some() {
-                    "filled-view"
-                } else {
-                    "empty-view"
-                }
-            },
-            &[model_expression.upcast()],
-        );
-        model_is_some_expression.bind(&imp.stack.get(), "visible-child-name", None::<&gtk::Widget>);
     }
 
     fn setup_list_view(&self) {

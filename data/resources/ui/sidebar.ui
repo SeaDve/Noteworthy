@@ -87,42 +87,18 @@
       </object>
     </child>
     <child>
-      <object class="GtkStack" id="stack">
-        <child>
-          <object class="GtkStackPage">
-            <property name="name">filled-view</property>
-            <property name="child">
-              <object class="GtkScrolledWindow">
-                <property name="vexpand">True</property>
-                <property name="hscrollbar-policy">never</property>
-                <property name="child">
-                  <object class="GtkListView" id="list_view">
-                    <property name="single-click-activate">True</property>
-                    <style>
-                      <class name="navigation-sidebar"/>
-                      <class name="sidebar-list-view"/>
-                    </style>
-                  </object>
-                </property>
-              </object>
-            </property>
+      <object class="GtkScrolledWindow">
+        <property name="vexpand">True</property>
+        <property name="hscrollbar-policy">never</property>
+        <property name="child">
+          <object class="GtkListView" id="list_view">
+            <property name="single-click-activate">True</property>
+            <style>
+              <class name="navigation-sidebar"/>
+              <class name="sidebar-list-view"/>
+            </style>
           </object>
-        </child>
-        <child>
-          <object class="GtkStackPage">
-            <property name="name">empty-view</property>
-            <property name="child">
-              <object class="GtkSpinner">
-                <property name="valign">center</property>
-                <property name="halign">center</property>
-                <property name="spinning">True</property>
-                <style>
-                  <class name="sidebar-spinner"/>
-                </style>
-              </object>
-            </property>
-          </object>
-        </child>
+        </property>
       </object>
     </child>
     <child>
