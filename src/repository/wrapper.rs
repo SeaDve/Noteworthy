@@ -36,9 +36,9 @@ pub fn diff_tree_to_tree(
     let diff = repo.diff_tree_to_tree(Some(old_tree), Some(new_tree), None)?;
 
     let mut files = Vec::new();
-    for delta in diff.deltas() {
-        let old_file_path = delta.old_file().path();
-        let new_file_path = delta.new_file().path();
+    for diff_delta in diff.deltas() {
+        let old_file_path = diff_delta.old_file().path();
+        let new_file_path = diff_delta.new_file().path();
         assert_eq!(old_file_path, new_file_path);
 
         files.push(new_file_path.unwrap().to_path_buf());
