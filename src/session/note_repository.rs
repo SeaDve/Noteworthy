@@ -9,6 +9,12 @@ const DEFAULT_REMOTE_NAME: &str = "origin";
 const DEFAULT_AUTHOR_NAME: &str = "NoteworthyApp";
 const DEFAULT_AUTHOR_EMAIL: &str = "app@noteworthy.io";
 
+enum SyncState {
+    Pulling,
+    Pushing,
+    Idle,
+}
+
 mod imp {
     use super::*;
 
@@ -101,22 +107,21 @@ impl NoteRepository {
             .await?;
         log::info!("Sync: Repo pulled changes");
 
-        if !repo.is_file_changed_in_workdir().await? {
+        if repo.is_file_changed_in_workdir().await? {
+            log::info!("Sync: Found changes, creating commit...");
+            repo.add(vec![".".into()]).await?;
+            repo.commit(
+                "Sync commit".into(),
+                DEFAULT_AUTHOR_NAME.into(),
+                DEFAULT_AUTHOR_EMAIL.into(),
+            )
+            .await?;
+            repo.push(DEFAULT_REMOTE_NAME.into()).await?;
+            log::info!("Sync: pushed commit");
+        } else {
             log::info!("Sync: There is no changed files in directory");
             log::info!("Sync: Skipping pushing and commit...");
-            return Ok(changed_files);
         }
-
-        log::info!("Sync: Found changes, creating commit...");
-        repo.add(vec![".".into()]).await?;
-        repo.commit(
-            "Sync commit".into(),
-            DEFAULT_AUTHOR_NAME.into(),
-            DEFAULT_AUTHOR_EMAIL.into(),
-        )
-        .await?;
-        repo.push(DEFAULT_REMOTE_NAME.into()).await?;
-        log::info!("Sync: pushed commit");
 
         Ok(changed_files)
     }
