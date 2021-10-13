@@ -414,9 +414,21 @@ impl NoteManager {
         self.save_all_notes().await?;
         self.save_data_file().await?;
 
-        let note_list = self.note_list();
         let repo = self.repository();
         let changed_files = repo.sync().await?;
+        self.handle_changed_files(&changed_files).await?;
+
+        self.load_data_file().await?;
+        log::info!("Notes synced {}", chrono::Local::now().format("%H:%M:%S"));
+
+        Ok(())
+    }
+
+    async fn handle_changed_files(
+        &self,
+        changed_files: &[(PathBuf, git2::Delta)],
+    ) -> anyhow::Result<()> {
+        let note_list = self.note_list();
 
         for (path, delta) in changed_files {
             match delta {
@@ -442,9 +454,6 @@ impl NoteManager {
                 }
             }
         }
-
-        self.load_data_file().await?;
-        log::info!("Notes synced {}", chrono::Local::now().format("%H:%M:%S"));
 
         Ok(())
     }
