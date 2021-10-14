@@ -25,7 +25,6 @@ mod imp {
         type ParentType = gtk::Popover;
 
         fn class_init(klass: &mut Self::Class) {
-            ItemRow::static_type();
             Self::bind_template(klass);
         }
 
