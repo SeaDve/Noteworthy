@@ -129,6 +129,7 @@ impl NoteRepository {
     }
 
     // TODO Better way to handle trying to sync multiple times (maybe refactor to use a thread pool)
+    // TODO handle conflicts gracefully
     /// Returns the files that changed after the merge from origin
     pub async fn sync(&self) -> anyhow::Result<Vec<(PathBuf, git2::Delta)>> {
         let repo = self.repository();
