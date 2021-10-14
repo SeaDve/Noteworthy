@@ -3,8 +3,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use std::cell::{Cell, RefCell};
 
-use super::note_tag_list::NoteTagList;
-use crate::date::Date;
+use crate::model::{Date, NoteTagList};
 
 mod imp {
     use super::*;

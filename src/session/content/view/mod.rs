@@ -6,8 +6,7 @@ use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 use std::cell::RefCell;
 
 use self::tag_list_view::TagListView;
-use super::Note;
-use crate::{date::Date, session::note::Metadata};
+use crate::model::{note::Metadata, Date, Note};
 
 mod imp {
     use super::*;

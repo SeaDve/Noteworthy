@@ -1,13 +1,7 @@
 mod content;
-mod note;
-mod note_list;
-mod note_manager;
-mod note_repository;
 mod note_tag_dialog;
 mod sidebar;
-mod tag;
 mod tag_editor;
-mod tag_list;
 
 use adw::subclass::prelude::*;
 use gtk::{
@@ -22,13 +16,11 @@ use std::cell::{Cell, RefCell};
 
 use self::{
     content::Content,
-    note::Note,
-    note_list::NoteList,
-    note_manager::NoteManager,
     note_tag_dialog::{NoteTagDialog, NoteTagLists},
     sidebar::Sidebar,
     tag_editor::TagEditor,
 };
+use crate::{core::NoteManager, model::Note};
 
 mod imp {
     use super::*;

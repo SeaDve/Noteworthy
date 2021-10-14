@@ -7,7 +7,8 @@ use gtk::{
 
 use std::cell::RefCell;
 
-use super::{Tag, TagEditor};
+use super::TagEditor;
+use crate::model::Tag;
 
 mod imp {
     use super::*;

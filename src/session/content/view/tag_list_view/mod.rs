@@ -4,7 +4,7 @@ use adw::{prelude::*, subclass::prelude::*};
 use gtk::{glib, subclass::prelude::*, CompositeTemplate};
 
 use self::row::Row;
-use crate::session::note::NoteTagList;
+use crate::model::NoteTagList;
 
 mod imp {
     use super::*;

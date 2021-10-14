@@ -9,7 +9,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use std::cell::RefCell;
 
-use super::tag::Tag;
+use super::Tag;
 
 mod imp {
     use super::*;

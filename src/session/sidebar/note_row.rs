@@ -10,7 +10,7 @@ use once_cell::unsync::OnceCell;
 use std::cell::{Cell, RefCell};
 
 use super::{Note, SelectionMode, Sidebar};
-use crate::{date::Date, session::note::Metadata};
+use crate::model::{note::Metadata, Date};
 
 const MAX_SUBTITLE_LEN: usize = 100;
 const MAX_SUBTITLE_LINE: u32 = 3;

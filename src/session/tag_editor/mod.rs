@@ -11,7 +11,7 @@ use gtk::{
 use once_cell::unsync::OnceCell;
 
 use self::row::Row;
-use super::{tag::Tag, tag_list::TagList, NoteList};
+use crate::model::{NoteList, Tag, TagList};
 
 mod imp {
     use super::*;

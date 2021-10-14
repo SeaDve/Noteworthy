@@ -12,7 +12,7 @@ use gtk::{
 use once_cell::unsync::OnceCell;
 
 use self::row::Row;
-use super::{note::NoteTagList, tag::Tag, tag_list::TagList};
+use crate::model::{NoteTagList, Tag, TagList};
 
 #[derive(Debug, Clone, GBoxed)]
 #[gboxed(type_name = "NwtyTagLists")]

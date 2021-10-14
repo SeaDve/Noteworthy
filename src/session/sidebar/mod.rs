@@ -19,7 +19,7 @@ use self::{
     sync_button::SyncButton,
     view_switcher::{ItemKind, ViewSwitcher},
 };
-use super::{tag_list::TagList, Note, NoteList};
+use crate::model::{Note, NoteList, TagList};
 
 #[derive(Debug, Clone, Copy, PartialEq, GEnum)]
 #[genum(type_name = "SidebarSelectionMode")]

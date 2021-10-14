@@ -8,7 +8,7 @@ use gtk::{
 
 use std::cell::RefCell;
 
-use crate::{repository::Repository, utils};
+use crate::{core::Repository, utils};
 
 mod imp {
     use super::*;

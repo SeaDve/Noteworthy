@@ -12,17 +12,18 @@
 
 mod application;
 mod config;
-mod date;
-mod repository;
+mod core;
+mod model;
 mod session;
 mod setup;
 mod utils;
 mod window;
 
-use application::Application;
-use config::{GETTEXT_PACKAGE, LOCALEDIR, RESOURCES_FILE};
 use gettextrs::{gettext, LocaleCategory};
 use gtk::{gio, glib};
+
+use self::application::Application;
+use self::config::{GETTEXT_PACKAGE, LOCALEDIR, RESOURCES_FILE};
 
 fn main() {
     pretty_env_logger::init();

@@ -8,7 +8,7 @@ use once_cell::{sync::Lazy, unsync::OnceCell};
 
 use std::{cell::Cell, path::PathBuf};
 
-use crate::repository::{Repository, DEFAULT_REMOTE_NAME};
+use super::{repository::DEFAULT_REMOTE_NAME, Repository};
 
 const DEFAULT_AUTHOR_NAME: &str = "NoteworthyApp";
 const DEFAULT_AUTHOR_EMAIL: &str = "app@noteworthy.io";

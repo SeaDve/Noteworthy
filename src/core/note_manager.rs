@@ -12,12 +12,8 @@ use std::{
     path::PathBuf,
 };
 
-use super::{
-    note::Id,
-    note_repository::{NoteRepository, SyncState},
-    tag_list::TagList,
-    Note, NoteList,
-};
+use super::note_repository::{NoteRepository, SyncState};
+use crate::model::{note::Id, Note, NoteList, TagList};
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(default)]
