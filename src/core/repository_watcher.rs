@@ -99,7 +99,6 @@ glib::wrapper! {
     pub struct RepositoryWatcher(ObjectSubclass<imp::RepositoryWatcher>);
 }
 
-// TODO do not allocate too much strings
 impl RepositoryWatcher {
     pub fn new(base_path: &gio::File, remote_name: &str) -> Self {
         glib::Object::new::<Self>(&[("base-path", &base_path), ("remote-name", &remote_name)])
