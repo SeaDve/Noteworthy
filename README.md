@@ -9,12 +9,12 @@
 * Filtering
 * Basic markdown
 * Batch notes selection and editing
-* Login page
+* Syncing
 
 
 ## What's not working yet?
+* Setup page
 * Git integration
-* Syncing
 * Attachments
 * WYSIWG Editing
 * Homepage (Includes reminders, recents, mini notepads etc.)
