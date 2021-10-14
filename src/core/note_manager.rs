@@ -379,16 +379,11 @@ impl NoteManager {
     }
 
     pub fn create_note(&self) -> anyhow::Result<()> {
-        let mut file_path = self.directory().path().unwrap();
-        file_path.push(Self::generate_unique_file_name());
-        file_path.set_extension("md");
-
-        let file = gio::File::for_path(&file_path);
-        let new_note = Note::create_default(&file);
-
+        let base_path = self.directory().path().unwrap();
+        let new_note = Note::create_default(&base_path);
         self.note_list().append(new_note);
 
-        log::info!("Created note {}", file_path.display());
+        log::info!("Created note {}", base_path.display());
 
         Ok(())
     }
@@ -464,14 +459,6 @@ impl NoteManager {
         let mut data_file_path = self.directory().path().unwrap();
         data_file_path.push("data.nwty");
         data_file_path
-    }
-
-    // TODO handle this internally in'note' file
-    fn generate_unique_file_name() -> String {
-        // This is also the note's id
-        chrono::Local::now()
-            .format("Noteworthy-%Y-%m-%d-%H-%M-%S-%f")
-            .to_string()
     }
 
     fn setup_bindings(&self) {

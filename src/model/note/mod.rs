@@ -10,7 +10,7 @@ use gtk::{
 };
 use once_cell::unsync::OnceCell;
 
-use std::cell::Cell;
+use std::{cell::Cell, path::Path};
 
 pub use self::{id::Id, metadata::Metadata};
 
@@ -156,9 +156,13 @@ impl Note {
             .expect("Failed to create Note.")
     }
 
-    pub fn create_default(file: &gio::File) -> Self {
+    pub fn create_default(base_path: &Path) -> Self {
+        let file_name = Self::generate_unique_file_name();
+        let mut file = base_path.join(file_name);
+        file.set_extension("md");
+
         Self::new(
-            file,
+            &gio::File::for_path(&file),
             &Metadata::default(),
             &sourceview::Buffer::builder()
                 .highlight_matching_brackets(false)
@@ -271,5 +275,12 @@ impl Note {
         bytes.append(&mut buffer_text.as_bytes().to_vec());
 
         Ok(bytes)
+    }
+
+    fn generate_unique_file_name() -> String {
+        // This is also the note's id
+        chrono::Local::now()
+            .format("Noteworthy-%Y-%m-%d-%H-%M-%S-%f")
+            .to_string()
     }
 }
