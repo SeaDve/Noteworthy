@@ -8,9 +8,8 @@ use once_cell::{sync::Lazy, unsync::OnceCell};
 
 use std::{cell::Cell, path::PathBuf};
 
-use crate::repository::Repository;
+use crate::repository::{Repository, DEFAULT_REMOTE_NAME};
 
-const DEFAULT_REMOTE_NAME: &str = "origin";
 const DEFAULT_AUTHOR_NAME: &str = "NoteworthyApp";
 const DEFAULT_AUTHOR_EMAIL: &str = "app@noteworthy.io";
 
@@ -96,10 +95,6 @@ mod imp {
                 _ => unimplemented!(),
             }
         }
-
-        fn constructed(&self, obj: &Self::Type) {
-            self.parent_constructed(obj);
-        }
     }
 }
 
@@ -164,6 +159,13 @@ impl NoteRepository {
 
         self.set_sync_state(SyncState::Idle);
         Ok(changed_files)
+    }
+
+    pub fn connect_remote_changed<F: Fn(&Repository) + 'static>(
+        &self,
+        f: F,
+    ) -> glib::SignalHandlerId {
+        self.repository().connect_remote_changed(f)
     }
 
     fn repository(&self) -> Repository {

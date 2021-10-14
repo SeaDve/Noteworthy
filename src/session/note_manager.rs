@@ -1,4 +1,9 @@
-use gtk::{gio, glib, prelude::*, subclass::prelude::*};
+use gtk::{
+    gio,
+    glib::{self, clone},
+    prelude::*,
+    subclass::prelude::*,
+};
 use once_cell::unsync::OnceCell;
 use serde::{Deserialize, Serialize};
 
@@ -132,6 +137,7 @@ mod imp {
             self.parent_constructed(obj);
 
             obj.setup_bindings();
+            obj.setup_signals();
         }
     }
 }
@@ -483,5 +489,18 @@ impl NoteManager {
             })
             .flags(glib::BindingFlags::SYNC_CREATE)
             .build();
+    }
+
+    fn setup_signals(&self) {
+        self.repository()
+            .connect_remote_changed(clone!(@weak self as obj => move |_| {
+                log::info!("New remote changes! Syncing...");
+                let ctx = glib::MainContext::default();
+                ctx.spawn_local(async move {
+                    if let Err(err) = obj.sync().await {
+                        log::error!("Failed to sync {}", err);
+                    }
+                })
+            }));
     }
 }
