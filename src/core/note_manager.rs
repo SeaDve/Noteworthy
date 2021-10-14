@@ -259,10 +259,15 @@ impl NoteManager {
 
         let note_bytes = note.serialize()?;
 
-        note.file()
+        // FIXME consider making backup on all replace_contents
+        let res = note
+            .file()
             .replace_contents_async_future(note_bytes, None, false, gio::FileCreateFlags::NONE)
-            .await
-            .unwrap();
+            .await;
+
+        if let Err(err) = res {
+            anyhow::bail!("Fail saving note: {}", err.1);
+        }
 
         note.set_is_saved(true);
 
