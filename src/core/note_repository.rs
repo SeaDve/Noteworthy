@@ -9,8 +9,9 @@ use regex::Regex;
 
 use std::{cell::Cell, path::PathBuf};
 
-use super::{repository::DEFAULT_REMOTE_NAME, Repository};
+use super::{repository::Repository, repository_watcher::RepositoryWatcher};
 
+const DEFAULT_REMOTE_NAME: &str = "origin";
 const DEFAULT_AUTHOR_NAME: &str = "NoteworthyApp";
 const DEFAULT_AUTHOR_EMAIL: &str = "app@noteworthy.io";
 
@@ -37,6 +38,7 @@ mod imp {
     #[derive(Default, Debug)]
     pub struct NoteRepository {
         pub repository: OnceCell<Repository>,
+        pub watcher: OnceCell<RepositoryWatcher>,
         pub sync_state: Cell<SyncState>,
     }
 
@@ -98,6 +100,12 @@ mod imp {
                 "sync-state" => obj.sync_state().to_value(),
                 _ => unimplemented!(),
             }
+        }
+
+        fn constructed(&self, obj: &Self::Type) {
+            let base_path = obj.repository().base_path();
+            let watcher = RepositoryWatcher::new(&base_path, &DEFAULT_REMOTE_NAME);
+            self.watcher.set(watcher).unwrap();
         }
     }
 }
@@ -174,16 +182,21 @@ impl NoteRepository {
         Ok(changed_files)
     }
 
-    pub fn connect_remote_changed<F: Fn(&Repository) + 'static>(
+    pub fn connect_remote_changed<F: Fn(&RepositoryWatcher) + 'static>(
         &self,
         f: F,
     ) -> glib::SignalHandlerId {
-        self.repository().connect_remote_changed(f)
+        self.watcher().connect_remote_changed(f)
     }
 
     fn repository(&self) -> Repository {
         let imp = imp::NoteRepository::from_instance(self);
         Clone::clone(imp.repository.get().unwrap())
+    }
+
+    fn watcher(&self) -> RepositoryWatcher {
+        let imp = imp::NoteRepository::from_instance(self);
+        imp.watcher.get().unwrap().clone()
     }
 
     fn sync_state(&self) -> SyncState {

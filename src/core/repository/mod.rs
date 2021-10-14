@@ -1,25 +1,16 @@
 mod git2_repo;
-mod wrapper;
+pub mod wrapper;
 
-use gtk::{
-    gio,
-    glib::{self, clone, subclass::Signal},
-    prelude::*,
-    subclass::prelude::*,
-};
+use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::{sync::Lazy, unsync::OnceCell};
 
 use std::{
     path::PathBuf,
     sync::{Arc, Mutex},
     thread,
-    time::Duration,
 };
 
 use self::git2_repo::Git2Repo;
-
-pub const DEFAULT_REMOTE_NAME: &str = "origin";
-const DEFAULT_SLEEP_TIME_SECS: u64 = 5;
 
 mod imp {
     use super::*;
@@ -38,13 +29,6 @@ mod imp {
     }
 
     impl ObjectImpl for Repository {
-        fn signals() -> &'static [Signal] {
-            static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
-                vec![Signal::builder("remote-changed", &[], <()>::static_type().into()).build()]
-            });
-            SIGNALS.as_ref()
-        }
-
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![glib::ParamSpec::new_object(
@@ -98,7 +82,6 @@ impl Repository {
         let imp = imp::Repository::from_instance(&obj);
         imp.git2_repo.set(Git2Repo::new(repo)).unwrap();
 
-        obj.setup_daemon();
         Ok(obj)
     }
 
@@ -111,7 +94,6 @@ impl Repository {
         let imp = imp::Repository::from_instance(&obj);
         imp.git2_repo.set(Git2Repo::new(repo)).unwrap();
 
-        obj.setup_daemon();
         Ok(obj)
     }
 
@@ -238,15 +220,6 @@ impl Repository {
         Ok(())
     }
 
-    pub fn connect_remote_changed<F: Fn(&Self) + 'static>(&self, f: F) -> glib::SignalHandlerId {
-        self.connect_local("remote-changed", true, move |values| {
-            let obj = values[0].get::<Self>().unwrap();
-            f(&obj);
-            None
-        })
-        .unwrap()
-    }
-
     async fn run_async<F, T>(f: F) -> anyhow::Result<T>
     where
         F: FnOnce() -> anyhow::Result<T> + Send + 'static,
@@ -267,54 +240,12 @@ impl Repository {
         Ok(res)
     }
 
-    fn setup_daemon(&self) {
-        let (sender, receiver) = glib::MainContext::channel(glib::PRIORITY_DEFAULT_IDLE);
-
-        let base_path = self.base_path().path().unwrap();
-        thread::spawn(move || match wrapper::open(&base_path) {
-            Ok(repo) => {
-                log::info!("Starting Daemon...");
-
-                loop {
-                    wrapper::fetch(&repo, DEFAULT_REMOTE_NAME).unwrap_or_else(|err| {
-                        log::error!("Daemon: Failed to fetch to origin: {}", err);
-                    });
-                    if let Ok(is_same) = wrapper::is_same(&repo, "HEAD", "FETCH_HEAD") {
-                        sender.send(is_same).unwrap_or_else(|err| {
-                            log::error!("Daemon: Failed to send message to channel: {}", err);
-                        });
-                    } else {
-                        log::error!("Daemon: Failed to compare HEAD from FETCH_HEAD");
-                    }
-                    thread::sleep(Duration::from_secs(DEFAULT_SLEEP_TIME_SECS));
-                }
-            }
-            Err(err) => {
-                log::error!(
-                    "Daemon: Failed to open repo with path {}: {}",
-                    base_path.display(),
-                    err
-                );
-            }
-        });
-
-        receiver.attach(
-            None,
-            clone!(@weak self as obj => @default-return glib::Continue(true), move |is_same| {
-                if !is_same {
-                    obj.emit_by_name("remote-changed", &[]).unwrap();
-                }
-                glib::Continue(true)
-            }),
-        );
+    pub fn base_path(&self) -> gio::File {
+        self.property("base-path").unwrap().get().unwrap()
     }
 
     fn git2_repo(&self) -> Arc<Mutex<git2::Repository>> {
         let imp = imp::Repository::from_instance(self);
         imp.git2_repo.get().unwrap().inner()
-    }
-
-    fn base_path(&self) -> gio::File {
-        self.property("base-path").unwrap().get().unwrap()
     }
 }
