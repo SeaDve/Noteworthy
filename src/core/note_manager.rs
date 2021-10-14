@@ -277,6 +277,7 @@ impl NoteManager {
         Ok(())
     }
 
+    // FIXME remove this, cuz it is redundant
     pub fn save_all_notes_sync(&self) -> anyhow::Result<()> {
         for note in self.note_list().iter() {
             if note.is_saved() {
@@ -357,7 +358,6 @@ impl NoteManager {
         Ok(())
     }
 
-    // FIXME remove this, cuz it is redundant
     pub async fn save_data_file(&self) -> anyhow::Result<()> {
         let data = Data {
             tag_list: self.tag_list(),
