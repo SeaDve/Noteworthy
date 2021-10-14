@@ -72,9 +72,14 @@ mod imp {
                 log::warn!("Failed to save window state, {}", &err);
             }
 
-            // TODO what if app crashed?
+            // TODO what if app crashed? so maybe implement autosave
             if let Some(session) = self.session.get() {
-                session.save();
+                let ctx = glib::MainContext::default();
+                ctx.block_on(async move {
+                    if let Err(err) = session.save().await {
+                        log::error!("Failed to save session: {}", err);
+                    }
+                });
             }
 
             self.parent_close_request(obj)

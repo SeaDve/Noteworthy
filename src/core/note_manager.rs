@@ -277,36 +277,6 @@ impl NoteManager {
         Ok(())
     }
 
-    // FIXME remove this, cuz it is redundant
-    pub fn save_all_notes_sync(&self) -> anyhow::Result<()> {
-        for note in self.note_list().iter() {
-            if note.is_saved() {
-                log::info!("Note already saved, skipping...");
-                continue;
-            }
-
-            let note_bytes = note.serialize()?;
-
-            note.file().replace_contents(
-                &note_bytes,
-                None,
-                false,
-                gio::FileCreateFlags::NONE,
-                None::<&gio::Cancellable>,
-            )?;
-
-            note.set_is_saved(true);
-
-            log::info!(
-                "Saved note synchronously with title of {} and path of {:?}",
-                note.metadata().title(),
-                note.file().path().unwrap().display()
-            );
-        }
-
-        Ok(())
-    }
-
     pub async fn save_all_notes(&self) -> anyhow::Result<()> {
         for note in self.note_list().iter() {
             if note.is_saved() {
@@ -333,27 +303,6 @@ impl NoteManager {
                 note.file().path().unwrap().display()
             );
         }
-
-        Ok(())
-    }
-
-    // FIXME remove this, cuz it is redundant
-    pub fn save_data_file_sync(&self) -> anyhow::Result<()> {
-        let data = Data {
-            tag_list: self.tag_list(),
-        };
-        let data_bytes = serde_yaml::to_vec(&data)?;
-
-        let data_file = gio::File::for_path(self.data_file_path());
-        data_file.replace_contents(
-            &data_bytes,
-            None,
-            false,
-            gio::FileCreateFlags::NONE,
-            None::<&gio::Cancellable>,
-        )?;
-
-        log::info!("Sucessfully saved data file synchronously");
 
         Ok(())
     }

@@ -277,15 +277,11 @@ impl Session {
         }
     }
 
-    pub fn save(&self) {
+    pub async fn save(&self) -> anyhow::Result<()> {
         let note_manager = self.note_manager();
-        note_manager
-            .save_all_notes_sync()
-            .expect("Failed to save notes to file");
-        note_manager
-            .save_data_file_sync()
-            .expect("Failed to save data file");
-
+        note_manager.sync().await?;
         log::info!("Session saved");
+
+        Ok(())
     }
 }
