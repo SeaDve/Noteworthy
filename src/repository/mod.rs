@@ -125,6 +125,18 @@ impl Repository {
         Ok(res)
     }
 
+    pub async fn is_same(&self, spec_a: String, spec_b: String) -> anyhow::Result<bool> {
+        let git2_repo = self.git2_repo();
+
+        let res = Self::run_async(move || {
+            let repo = git2_repo.lock().unwrap();
+            wrapper::is_same(&repo, &spec_a, &spec_b)
+        })
+        .await?;
+
+        Ok(res)
+    }
+
     pub async fn push(&self, remote_name: String) -> anyhow::Result<()> {
         let git2_repo = self.git2_repo();
 

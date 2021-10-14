@@ -150,7 +150,7 @@ mod imp {
                 // or maybe find other workarounds
                 imp.sidebar.set_tag_list(note_manager.tag_list());
 
-                note_manager.sync().await.expect("Failed to update notes and data file");
+                note_manager.sync().await.expect("Failed to sync notes and data file");
             }));
 
             obj.note_manager()
