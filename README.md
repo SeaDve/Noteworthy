@@ -18,3 +18,19 @@
 * Attachments
 * WYSIWG Editing
 * Homepage (Includes reminders, recents, mini notepads etc.)
+
+
+## Some screenshot (Design may vary in the future)
+
+<p align="center">
+  <img src="data/resources/screenshots/screenshot1.png" alt="Preview1"/>
+</p>
+
+<p align="center">
+  <img src="data/resources/screenshots/screenshot2.png" alt="Preview2"/>
+</p>
+
+<p align="center">
+  <img src="data/resources/screenshots/screenshot3.png" alt="Preview3"/>
+</p>
+
