@@ -104,7 +104,7 @@ mod imp {
 
         fn constructed(&self, obj: &Self::Type) {
             let base_path = obj.repository().base_path();
-            let watcher = RepositoryWatcher::new(&base_path, &DEFAULT_REMOTE_NAME);
+            let watcher = RepositoryWatcher::new(&base_path, DEFAULT_REMOTE_NAME);
             self.watcher.set(watcher).unwrap();
         }
     }
