@@ -8,7 +8,6 @@ use gtk::{
     subclass::prelude::*,
 };
 use once_cell::{sync::Lazy, unsync::OnceCell};
-use regex::Regex;
 
 use std::{
     path::PathBuf,
@@ -21,9 +20,6 @@ use self::git2_repo::Git2Repo;
 
 pub const DEFAULT_REMOTE_NAME: &str = "origin";
 const DEFAULT_SLEEP_TIME_SECS: u64 = 5;
-
-static RE_VALIDATE_URL: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"(git@[\w\.]+)(:(//)?)([\w\.@:/\-~]+)(\.git)(/)?").unwrap());
 
 mod imp {
     use super::*;
@@ -117,14 +113,6 @@ impl Repository {
 
         obj.setup_daemon();
         Ok(obj)
-    }
-
-    pub fn validate_remote_url(remote_url: &str) -> bool {
-        if remote_url.is_empty() {
-            return false;
-        }
-
-        RE_VALIDATE_URL.is_match(remote_url)
     }
 
     pub async fn is_file_changed_in_workdir(&self) -> anyhow::Result<bool> {

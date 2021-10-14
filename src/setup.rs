@@ -8,7 +8,7 @@ use gtk::{
 
 use std::cell::RefCell;
 
-use crate::{core::Repository, utils};
+use crate::{core::NoteRepository, utils};
 
 mod imp {
     use super::*;
@@ -137,7 +137,7 @@ mod imp {
                     let imp = imp::Setup::from_instance(&obj);
                     if imp.content.visible_child_name().unwrap().as_str() == "create-repo" {
                         let entry_text = entry.text();
-                        let is_valid = Repository::validate_remote_url(&entry_text);
+                        let is_valid = NoteRepository::validate_remote_url(&entry_text);
                         obj.action_set_enabled("setup.navigate-forward", is_valid);
                     }
                 }));
@@ -238,7 +238,7 @@ impl Setup {
         let clone_url = imp.clone_url_entry.text();
         config.clone_url = Some(clone_url.to_string());
 
-        dbg!(Repository::validate_remote_url(&clone_url));
+        dbg!(NoteRepository::validate_remote_url(&clone_url));
 
         dbg!(&config);
     }

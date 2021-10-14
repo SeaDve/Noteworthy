@@ -5,6 +5,7 @@ use gtk::{
     subclass::prelude::*,
 };
 use once_cell::{sync::Lazy, unsync::OnceCell};
+use regex::Regex;
 
 use std::{cell::Cell, path::PathBuf};
 
@@ -12,6 +13,9 @@ use super::{repository::DEFAULT_REMOTE_NAME, Repository};
 
 const DEFAULT_AUTHOR_NAME: &str = "NoteworthyApp";
 const DEFAULT_AUTHOR_EMAIL: &str = "app@noteworthy.io";
+
+static RE_VALIDATE_URL: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(git@[\w\.]+)(:(//)?)([\w\.@:/\-~]+)(\.git)(/)?").unwrap());
 
 #[derive(Clone, Copy, Debug, PartialEq, GEnum)]
 #[genum(type_name = "NwtyNoteRepositorySyncState")]
@@ -116,7 +120,15 @@ impl NoteRepository {
             .expect("Failed to create NoteRepository."))
     }
 
-    // TODO Return when it is already syncing (maybe put a thread pool)
+    pub fn validate_remote_url(remote_url: &str) -> bool {
+        if remote_url.is_empty() {
+            return false;
+        }
+
+        RE_VALIDATE_URL.is_match(remote_url)
+    }
+
+    // TODO Better way to handle trying to sync multiple times (maybe refactor to use a thread pool)
     /// Returns the files that changed after the merge from origin
     pub async fn sync(&self) -> anyhow::Result<Vec<(PathBuf, git2::Delta)>> {
         let repo = self.repository();
