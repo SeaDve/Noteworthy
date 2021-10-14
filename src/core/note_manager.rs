@@ -356,11 +356,18 @@ impl NoteManager {
         Ok(())
     }
 
+    // TODO Better way to handle trying to sync multiple times (maybe refactor to use a thread pool)
     pub async fn sync(&self) -> anyhow::Result<()> {
+        let repo = self.repository();
+
+        if repo.sync_state() == SyncState::Pulling {
+            log::info!("Currently pulling. Returning and skipping session sync...");
+            return Ok(());
+        }
+
         self.save_all_notes().await?;
         self.save_data_file().await?;
 
-        let repo = self.repository();
         let changed_files = repo.sync().await?;
         self.handle_changed_files(&changed_files).await?;
 

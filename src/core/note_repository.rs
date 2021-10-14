@@ -136,16 +136,15 @@ impl NoteRepository {
         RE_VALIDATE_URL.is_match(remote_url)
     }
 
-    // TODO Better way to handle trying to sync multiple times (maybe refactor to use a thread pool)
+    pub fn sync_state(&self) -> SyncState {
+        let imp = imp::NoteRepository::from_instance(self);
+        imp.sync_state.get()
+    }
+
     // TODO handle conflicts gracefully
     /// Returns the files that changed after the merge from origin
     pub async fn sync(&self) -> anyhow::Result<Vec<(PathBuf, git2::Delta)>> {
         let repo = self.repository();
-
-        if self.sync_state() == SyncState::Pulling {
-            log::info!("Currently pulling. Returning...");
-            return Ok(Vec::new());
-        }
 
         log::info!("Sync: Repo pulling changes...");
         self.set_sync_state(SyncState::Pulling);
@@ -197,11 +196,6 @@ impl NoteRepository {
     fn watcher(&self) -> RepositoryWatcher {
         let imp = imp::NoteRepository::from_instance(self);
         imp.watcher.get().unwrap().clone()
-    }
-
-    fn sync_state(&self) -> SyncState {
-        let imp = imp::NoteRepository::from_instance(self);
-        imp.sync_state.get()
     }
 
     fn set_sync_state(&self, sync_state: SyncState) {
