@@ -1,5 +1,6 @@
 mod git2_repo;
 pub mod wrapper;
+// TODO somehow make wrapper a private mod
 
 use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::{sync::Lazy, unsync::OnceCell};
