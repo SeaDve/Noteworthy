@@ -64,8 +64,8 @@ pub fn is_file_changed_in_workdir(repo: &git2::Repository) -> anyhow::Result<boo
 }
 
 pub fn is_same(repo: &git2::Repository, spec_a: &str, spec_b: &str) -> anyhow::Result<bool> {
-    let object_a_id = repo.revparse_single(&spec_a)?.id();
-    let object_b_id = repo.revparse_single(&spec_b)?.id();
+    let object_a_id = repo.revparse_single(spec_a)?.id();
+    let object_b_id = repo.revparse_single(spec_b)?.id();
 
     log::info!("Revparse spec_a: {} <-> {}", spec_a, object_a_id);
     log::info!("Revparse spec_a: {} <-> {}", spec_b, object_b_id);

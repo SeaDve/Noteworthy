@@ -277,14 +277,14 @@ impl Repository {
 
                 loop {
                     wrapper::fetch(&repo, DEFAULT_REMOTE_NAME).unwrap_or_else(|err| {
-                        log::error!("Daemon: Failed to fetch to origin: {}", err)
+                        log::error!("Daemon: Failed to fetch to origin: {}", err);
                     });
                     if let Ok(is_same) = wrapper::is_same(&repo, "HEAD", "FETCH_HEAD") {
                         sender.send(is_same).unwrap_or_else(|err| {
-                            log::error!("Daemon: Failed to send message to channel: {}", err)
+                            log::error!("Daemon: Failed to send message to channel: {}", err);
                         });
                     } else {
-                        log::error!("Daemon: Failed to compare HEAD from FETCH_HEAD")
+                        log::error!("Daemon: Failed to compare HEAD from FETCH_HEAD");
                     }
                     thread::sleep(Duration::from_secs(DEFAULT_SLEEP_TIME_SECS));
                 }

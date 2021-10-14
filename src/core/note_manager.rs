@@ -442,12 +442,12 @@ impl NoteManager {
                 }
                 git2::Delta::Deleted => {
                     log::info!("Sync: Found removed files {}, removing...", path.display());
-                    let note_id = Id::from_path(&path);
+                    let note_id = Id::from_path(path);
                     note_list.remove(&note_id);
                 }
                 git2::Delta::Modified => {
                     log::info!("Sync: Found modified files {}, updating...", path.display());
-                    let note_id = Id::from_path(&path);
+                    let note_id = Id::from_path(path);
                     let note = note_list.get(&note_id).unwrap();
                     note.update().await?;
                 }
@@ -496,7 +496,7 @@ impl NoteManager {
                     if let Err(err) = obj.sync().await {
                         log::error!("Failed to sync {}", err);
                     }
-                })
+                });
             }));
     }
 }
