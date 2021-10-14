@@ -88,7 +88,7 @@ mod imp {
                 tag_editor.present();
             });
 
-            klass.install_action("session.edit-note-tags", None, move |obj, _, _| {
+            klass.install_action("session.edit-selected-note-tags", None, move |obj, _, _| {
                 let imp = imp::Session::from_instance(obj);
                 let tag_list = imp.note_manager.get().unwrap().tag_list();
                 let selected_note_tag_list =
@@ -107,26 +107,30 @@ mod imp {
                 note_tag_dialog.present();
             });
 
-            klass.install_action("session.edit-multi-note-tags", None, move |obj, _, _| {
-                let imp = imp::Session::from_instance(obj);
-                let tag_list = imp.note_manager.get().unwrap().tag_list();
-                let other_tag_lists = imp
-                    .sidebar
-                    .selected_notes()
-                    .iter()
-                    .map(|note| note.metadata().tag_list())
-                    .collect::<Vec<_>>();
+            klass.install_action(
+                "session.edit-multi-selected-note-tags",
+                None,
+                move |obj, _, _| {
+                    let imp = imp::Session::from_instance(obj);
+                    let tag_list = imp.note_manager.get().unwrap().tag_list();
+                    let other_tag_lists = imp
+                        .sidebar
+                        .selected_notes()
+                        .iter()
+                        .map(|note| note.metadata().tag_list())
+                        .collect::<Vec<_>>();
 
-                let note_tag_dialog =
-                    NoteTagDialog::new(&tag_list, &NoteTagLists::from(other_tag_lists));
-                note_tag_dialog.set_modal(true);
-                note_tag_dialog.set_transient_for(
-                    obj.root()
-                        .map(|w| w.downcast::<gtk::Window>().unwrap())
-                        .as_ref(),
-                );
-                note_tag_dialog.present();
-            });
+                    let note_tag_dialog =
+                        NoteTagDialog::new(&tag_list, &NoteTagLists::from(other_tag_lists));
+                    note_tag_dialog.set_modal(true);
+                    note_tag_dialog.set_transient_for(
+                        obj.root()
+                            .map(|w| w.downcast::<gtk::Window>().unwrap())
+                            .as_ref(),
+                    );
+                    note_tag_dialog.present();
+                },
+            );
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
