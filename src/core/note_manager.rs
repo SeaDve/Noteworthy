@@ -415,8 +415,7 @@ impl NoteManager {
         let changed_files = repo.sync().await?;
         self.handle_changed_files(&changed_files).await?;
 
-        self.load_data_file().await?;
-        log::info!("Notes synced {}", chrono::Local::now().format("%H:%M:%S"));
+        log::info!("Session synced {}", chrono::Local::now().format("%H:%M:%S"));
 
         Ok(())
     }
@@ -426,8 +425,14 @@ impl NoteManager {
         changed_files: &[(PathBuf, git2::Delta)],
     ) -> anyhow::Result<()> {
         let note_list = self.note_list();
+        let data_file_path = self.data_file_path();
 
         for (path, delta) in changed_files {
+            if path == &data_file_path {
+                // FIXME handle changed data file too, especially the tag list
+                continue;
+            }
+
             match delta {
                 git2::Delta::Added => {
                     log::info!("Sync: Found added files {}, appending...", path.display());

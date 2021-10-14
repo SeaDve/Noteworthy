@@ -33,4 +33,3 @@
 <p align="center">
   <img src="data/resources/screenshots/screenshot3.png" alt="Preview3"/>
 </p>
-
