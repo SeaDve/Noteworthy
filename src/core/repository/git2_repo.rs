@@ -1,4 +1,6 @@
-use std::sync::{Arc, Mutex};
+use tokio::sync::Mutex;
+
+use std::sync::Arc;
 
 // Hack because git2::Repository doesn't do Debug
 pub struct Git2Repo(Arc<Mutex<git2::Repository>>);
