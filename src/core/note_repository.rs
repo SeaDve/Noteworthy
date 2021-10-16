@@ -122,7 +122,6 @@ glib::wrapper! {
     pub struct NoteRepository(ObjectSubclass<imp::NoteRepository>);
 }
 
-// TODO do not allocate too much strings
 impl NoteRepository {
     pub async fn clone(remote_url: String, base_path: &gio::File) -> anyhow::Result<Self> {
         let repository_path = base_path.path().unwrap();
