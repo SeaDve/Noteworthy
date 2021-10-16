@@ -360,26 +360,22 @@ impl Sidebar {
         imp.multi_selection_model.borrow().as_ref().cloned()
     }
 
-    // FIXME merge this with selected_notes()
-    pub fn selected_notes_bitset(&self) -> gtk::Bitset {
-        let model = self.multi_selection_model().unwrap();
-        model.selection()
-    }
-
-    // FIXME make this an iterator to not iterate twice
     pub fn selected_notes(&self) -> Vec<Note> {
         let model = self.multi_selection_model().unwrap();
-        let bitset = model.selection();
-        let mut note_vec = Vec::new();
 
-        if let Some((bitset_iter, index)) = gtk::BitsetIter::init_first(&bitset) {
-            note_vec.push(model.item(index).unwrap().downcast::<Note>().unwrap());
-            for index in bitset_iter {
-                note_vec.push(model.item(index).unwrap().downcast::<Note>().unwrap());
+        // Don't use model's selection because it does the same as this. Except, we store the notes
+        // right away so selected notes won't change when the model changes. Plus, won't have to
+        // loop again.
+        let mut selected_notes = Vec::new();
+
+        for position in 0..model.n_items() {
+            if model.is_selected(position) {
+                let note_at_position = model.item(position).unwrap().downcast::<Note>().unwrap();
+                selected_notes.push(note_at_position);
             }
         }
 
-        note_vec
+        selected_notes
     }
 
     fn update_action_bar_sensitivity(&self, n_selected_items: u64) {
@@ -408,12 +404,10 @@ impl Sidebar {
             // Just check the last selected note to short circuit faster
             // since the selection is always sorted pinned first. Therefore, for all selected notes
             // to be all pinned, the last one has to be pinned.
-            gtk::BitsetIter::init_last(&self.selected_notes_bitset())
-                .and_then(|(_, index)| model.item(index))
-                .map_or(false, |item| {
-                    let note = item.downcast::<Note>().unwrap();
-                    note.metadata().is_pinned()
-                })
+            let selected_notes = self.selected_notes();
+            selected_notes.last().map_or(false, |last_selected_note| {
+                last_selected_note.metadata().is_pinned()
+            })
         };
 
         imp.pin_button.set_active(is_all_pinned_in_selected_notes);
