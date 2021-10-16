@@ -6,10 +6,9 @@ use gtk::{
 };
 use once_cell::{sync::Lazy, unsync::OnceCell};
 
-use std::time::Duration;
+use std::{thread, time::Duration};
 
 use super::repository::wrapper;
-use crate::RUNTIME;
 
 const DEFAULT_SLEEP_TIME_SECS: u64 = 5;
 
@@ -129,32 +128,30 @@ impl RepositoryWatcher {
         let base_path = self.base_path().path().unwrap();
         let remote_name = self.remote_name();
 
-        RUNTIME.spawn(async move {
-            match wrapper::open(&base_path) {
-                Ok(repo) => {
-                    log::info!("Starting watcher thread...");
+        thread::spawn(move || match wrapper::open(&base_path) {
+            Ok(repo) => {
+                log::info!("Starting watcher thread...");
 
-                    loop {
-                        wrapper::fetch(&repo, &remote_name).unwrap_or_else(|err| {
-                            log::error!("Failed to fetch to origin: {}", err);
+                loop {
+                    wrapper::fetch(&repo, &remote_name).unwrap_or_else(|err| {
+                        log::error!("Failed to fetch to origin: {}", err);
+                    });
+                    if let Ok(is_same) = wrapper::is_same(&repo, "HEAD", "FETCH_HEAD") {
+                        sender.send(is_same).unwrap_or_else(|err| {
+                            log::error!("Failed to send message to channel: {}", err);
                         });
-                        if let Ok(is_same) = wrapper::is_same(&repo, "HEAD", "FETCH_HEAD") {
-                            sender.send(is_same).unwrap_or_else(|err| {
-                                log::error!("Failed to send message to channel: {}", err);
-                            });
-                        } else {
-                            log::error!("Failed to compare HEAD from FETCH_HEAD");
-                        }
-                        tokio::time::sleep(Duration::from_secs(DEFAULT_SLEEP_TIME_SECS)).await;
+                    } else {
+                        log::error!("Failed to compare HEAD from FETCH_HEAD");
                     }
+                    thread::sleep(Duration::from_secs(DEFAULT_SLEEP_TIME_SECS));
                 }
-                Err(err) => {
-                    log::error!(
-                        "Failed to open repo with path {}: {}",
-                        base_path.display(),
-                        err
-                    );
-                }
+            }
+            Err(err) => {
+                log::error!(
+                    "Failed to open repo with path {}: {}",
+                    base_path.display(),
+                    err
+                );
             }
         });
 
