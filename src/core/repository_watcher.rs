@@ -10,7 +10,7 @@ use std::{thread, time::Duration};
 
 use super::repository::wrapper;
 
-const DEFAULT_SLEEP_TIME_SECS: u64 = 5;
+const DEFAULT_SLEEP_TIME_SECS: u64 = 3;
 
 mod imp {
     use super::*;
