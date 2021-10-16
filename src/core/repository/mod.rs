@@ -4,12 +4,16 @@ pub mod wrapper;
 
 use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::{sync::Lazy, unsync::OnceCell};
-use tokio::sync::Mutex;
 
-use std::{path::PathBuf, sync::Arc};
+use std::{
+    path::PathBuf,
+    sync::{Arc, Mutex},
+};
 
 use self::git2_repo::Git2Repo;
-use crate::RUNTIME;
+
+pub static RUNTIME: Lazy<tokio::runtime::Runtime> =
+    Lazy::new(|| tokio::runtime::Runtime::new().unwrap());
 
 mod imp {
     use super::*;
@@ -77,7 +81,7 @@ impl Repository {
             .expect("Failed to create Repository.");
 
         let path = directory.path().unwrap();
-        let repo = Self::run_async(async move { wrapper::clone(&path, &remote_url) }).await?;
+        let repo = Self::run_async(move || wrapper::clone(&path, &remote_url)).await?;
         let imp = imp::Repository::from_instance(&obj);
         imp.git2_repo.set(Git2Repo::new(repo)).unwrap();
 
@@ -89,7 +93,7 @@ impl Repository {
             .expect("Failed to create Repository.");
 
         let path = directory.path().unwrap();
-        let repo = Self::run_async(async move { wrapper::open(&path) }).await?;
+        let repo = Self::run_async(move || wrapper::open(&path)).await?;
         let imp = imp::Repository::from_instance(&obj);
         imp.git2_repo.set(Git2Repo::new(repo)).unwrap();
 
@@ -99,8 +103,8 @@ impl Repository {
     pub async fn is_file_changed_in_workdir(&self) -> anyhow::Result<bool> {
         let git2_repo = self.git2_repo();
 
-        Self::run_async(async move {
-            let repo = git2_repo.lock().await;
+        Self::run_async(move || {
+            let repo = git2_repo.lock().unwrap();
             wrapper::is_file_changed_in_workdir(&repo)
         })
         .await
@@ -109,8 +113,8 @@ impl Repository {
     pub async fn is_same(&self, spec_a: String, spec_b: String) -> anyhow::Result<bool> {
         let git2_repo = self.git2_repo();
 
-        Self::run_async(async move {
-            let repo = git2_repo.lock().await;
+        Self::run_async(move || {
+            let repo = git2_repo.lock().unwrap();
             wrapper::is_same(&repo, &spec_a, &spec_b)
         })
         .await
@@ -119,8 +123,8 @@ impl Repository {
     pub async fn push(&self, remote_name: String) -> anyhow::Result<()> {
         let git2_repo = self.git2_repo();
 
-        Self::run_async(async move {
-            let repo = git2_repo.lock().await;
+        Self::run_async(move || {
+            let repo = git2_repo.lock().unwrap();
             wrapper::push(&repo, &remote_name)
         })
         .await
@@ -134,8 +138,8 @@ impl Repository {
     ) -> anyhow::Result<Vec<(PathBuf, git2::Delta)>> {
         let git2_repo = self.git2_repo();
 
-        Self::run_async(async move {
-            let repo = git2_repo.lock().await;
+        Self::run_async(move || {
+            let repo = git2_repo.lock().unwrap();
             wrapper::pull(&repo, &remote_name, &author_name, &author_email)
         })
         .await
@@ -149,8 +153,8 @@ impl Repository {
     ) -> anyhow::Result<()> {
         let git2_repo = self.git2_repo();
 
-        Self::run_async(async move {
-            let repo = git2_repo.lock().await;
+        Self::run_async(move || {
+            let repo = git2_repo.lock().unwrap();
             wrapper::commit(&repo, &message, &author_name, &author_email)
         })
         .await
@@ -159,8 +163,8 @@ impl Repository {
     pub async fn fetch(&self, remote_name: String) -> anyhow::Result<()> {
         let git2_repo = self.git2_repo();
 
-        Self::run_async(async move {
-            let repo = git2_repo.lock().await;
+        Self::run_async(move || {
+            let repo = git2_repo.lock().unwrap();
             wrapper::fetch(&repo, &remote_name)
         })
         .await
@@ -169,8 +173,8 @@ impl Repository {
     pub async fn add(&self, paths: Vec<PathBuf>) -> anyhow::Result<()> {
         let git2_repo = self.git2_repo();
 
-        Self::run_async(async move {
-            let repo = git2_repo.lock().await;
+        Self::run_async(move || {
+            let repo = git2_repo.lock().unwrap();
             wrapper::add(&repo, &paths)
         })
         .await
@@ -179,8 +183,8 @@ impl Repository {
     pub async fn remove(&self, paths: Vec<PathBuf>) -> anyhow::Result<()> {
         let git2_repo = self.git2_repo();
 
-        Self::run_async(async move {
-            let repo = git2_repo.lock().await;
+        Self::run_async(move || {
+            let repo = git2_repo.lock().unwrap();
             wrapper::remove(&repo, &paths)
         })
         .await
@@ -194,19 +198,19 @@ impl Repository {
     ) -> anyhow::Result<()> {
         let git2_repo = self.git2_repo();
 
-        Self::run_async(async move {
-            let repo = git2_repo.lock().await;
+        Self::run_async(move || {
+            let repo = git2_repo.lock().unwrap();
             wrapper::merge(&repo, &source_branch, None, &author_name, &author_email)
         })
         .await
     }
 
-    async fn run_async<F>(f: F) -> F::Output
+    async fn run_async<T, F>(f: F) -> T
     where
-        F: core::future::Future + Send + 'static,
-        F::Output: Send + 'static,
+        F: FnOnce() -> T + Send + 'static,
+        T: Send + 'static,
     {
-        RUNTIME.spawn(f).await.unwrap()
+        RUNTIME.spawn_blocking(f).await.unwrap()
     }
 
     pub fn base_path(&self) -> gio::File {
