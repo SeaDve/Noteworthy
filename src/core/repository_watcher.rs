@@ -8,7 +8,7 @@ use once_cell::{sync::Lazy, unsync::OnceCell};
 
 use std::{thread, time::Duration};
 
-use super::repository::wrapper;
+use super::repository::Repository;
 
 const DEFAULT_SLEEP_TIME_SECS: u64 = 3;
 
@@ -128,15 +128,15 @@ impl RepositoryWatcher {
         let base_path = self.base_path().path().unwrap();
         let remote_name = self.remote_name();
 
-        thread::spawn(move || match wrapper::open(&base_path) {
+        thread::spawn(move || match Repository::open(&base_path) {
             Ok(repo) => {
                 log::info!("Starting watcher thread...");
 
                 loop {
-                    wrapper::fetch(&repo, &remote_name).unwrap_or_else(|err| {
+                    repo.fetch(&remote_name).unwrap_or_else(|err| {
                         log::error!("Failed to fetch to origin: {}", err);
                     });
-                    if let Ok(is_same) = wrapper::is_same(&repo, "HEAD", "FETCH_HEAD") {
+                    if let Ok(is_same) = repo.is_same("HEAD", "FETCH_HEAD") {
                         sender.send(is_same).unwrap_or_else(|err| {
                             log::error!("Failed to send message to channel: {}", err);
                         });

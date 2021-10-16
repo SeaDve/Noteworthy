@@ -7,7 +7,11 @@ use gtk::{
 use once_cell::{sync::Lazy, unsync::OnceCell};
 use regex::Regex;
 
-use std::{cell::Cell, path::PathBuf};
+use std::{
+    cell::Cell,
+    path::PathBuf,
+    sync::{Arc, Mutex},
+};
 
 use super::{repository::Repository, repository_watcher::RepositoryWatcher};
 
@@ -17,6 +21,9 @@ const DEFAULT_AUTHOR_EMAIL: &str = "app@noteworthy.io";
 
 static RE_VALIDATE_URL: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"(git@[\w\.]+)(:(//)?)([\w\.@:/\-~]+)(\.git)(/)?").unwrap());
+
+static RUNTIME: Lazy<tokio::runtime::Runtime> =
+    Lazy::new(|| tokio::runtime::Runtime::new().unwrap());
 
 #[derive(Clone, Copy, Debug, PartialEq, GEnum)]
 #[genum(type_name = "NwtyNoteRepositorySyncState")]
@@ -37,9 +44,10 @@ mod imp {
 
     #[derive(Default, Debug)]
     pub struct NoteRepository {
-        pub repository: OnceCell<Repository>,
-        pub watcher: OnceCell<RepositoryWatcher>,
+        pub base_path: OnceCell<gio::File>,
         pub sync_state: Cell<SyncState>,
+        pub repository: OnceCell<Arc<Mutex<Repository>>>,
+        pub watcher: OnceCell<RepositoryWatcher>,
     }
 
     #[glib::object_subclass]
@@ -54,10 +62,10 @@ mod imp {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
                     glib::ParamSpec::new_object(
-                        "repository",
-                        "Repository",
-                        "Repository handler",
-                        Repository::static_type(),
+                        "base-path",
+                        "Base Path",
+                        "Where the repository is stored locally",
+                        gio::File::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
                     glib::ParamSpec::new_enum(
@@ -82,9 +90,9 @@ mod imp {
             pspec: &glib::ParamSpec,
         ) {
             match pspec.name() {
-                "repository" => {
-                    let repository = value.get().unwrap();
-                    self.repository.set(repository).unwrap();
+                "base-path" => {
+                    let base_path = value.get().unwrap();
+                    self.base_path.set(base_path).unwrap();
                 }
                 "sync-state" => {
                     let sync_state = value.get().unwrap();
@@ -96,14 +104,14 @@ mod imp {
 
         fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "repository" => self.repository.get().to_value(),
+                "base-path" => obj.base_path().to_value(),
                 "sync-state" => obj.sync_state().to_value(),
                 _ => unimplemented!(),
             }
         }
 
         fn constructed(&self, obj: &Self::Type) {
-            let base_path = obj.repository().base_path();
+            let base_path = obj.base_path();
             let watcher = RepositoryWatcher::new(&base_path, DEFAULT_REMOTE_NAME);
             self.watcher.set(watcher).unwrap();
         }
@@ -117,15 +125,24 @@ glib::wrapper! {
 // TODO do not allocate too much strings
 impl NoteRepository {
     pub async fn clone(remote_url: String, base_path: &gio::File) -> anyhow::Result<Self> {
-        let repository = Repository::clone(remote_url, base_path).await?;
-        Ok(glib::Object::new::<Self>(&[("repository", &repository)])
-            .expect("Failed to create NoteRepository."))
+        let repository_path = base_path.path().unwrap();
+        let repository =
+            Self::do_async(move || Repository::clone(&repository_path, &remote_url)).await?;
+        let obj = glib::Object::new::<Self>(&[("base-path", &base_path)])
+            .expect("Failed to create NoteRepository.");
+
+        obj.set_repository(repository);
+        Ok(obj)
     }
 
     pub async fn open(base_path: &gio::File) -> anyhow::Result<Self> {
-        let repository = Repository::open(base_path).await?;
-        Ok(glib::Object::new::<Self>(&[("repository", &repository)])
-            .expect("Failed to create NoteRepository."))
+        let repository_path = base_path.path().unwrap();
+        let repository = Self::do_async(move || Repository::open(&repository_path)).await?;
+        let obj = glib::Object::new::<Self>(&[("base-path", &base_path)])
+            .expect("Failed to create NoteRepository.");
+
+        obj.set_repository(repository);
+        Ok(obj)
     }
 
     pub fn validate_remote_url(remote_url: &str) -> bool {
@@ -141,61 +158,126 @@ impl NoteRepository {
         imp.sync_state.get()
     }
 
-    // TODO handle conflicts gracefully
-    /// Returns the files that changed after the merge from origin
-    pub async fn sync(&self) -> anyhow::Result<Vec<(PathBuf, git2::Delta)>> {
-        let repo = self.repository();
-
-        log::info!("Sync: Repo pulling changes...");
-        self.set_sync_state(SyncState::Pulling);
-        let changed_files = repo
-            .pull(
-                DEFAULT_REMOTE_NAME.into(),
-                DEFAULT_AUTHOR_NAME.into(),
-                DEFAULT_AUTHOR_EMAIL.into(),
-            )
-            .await?;
-        log::info!("Sync: Repo pulled changes");
-
-        if repo.is_file_changed_in_workdir().await? {
-            log::info!("Sync: Found changes, adding all...");
-            repo.add(vec![".".into()]).await?;
-            log::info!("Sync: Creating commit...");
-            repo.commit(
-                "Sync commit".into(),
-                DEFAULT_AUTHOR_NAME.into(),
-                DEFAULT_AUTHOR_EMAIL.into(),
-            )
-            .await?;
-
-            log::info!("Sync: Repo pushing changes...");
-            self.set_sync_state(SyncState::Pushing);
-            repo.push(DEFAULT_REMOTE_NAME.into()).await?;
-            log::info!("Sync: pushed commit");
-        } else {
-            log::info!("Sync: There is no changed files in directory");
-            log::info!("Sync: Skipping pushing and commit...");
-        }
-
-        self.set_sync_state(SyncState::Idle);
-        Ok(changed_files)
-    }
-
     pub fn connect_remote_changed<F: Fn(&RepositoryWatcher) + 'static>(
         &self,
         f: F,
     ) -> glib::SignalHandlerId {
-        self.watcher().connect_remote_changed(f)
+        let imp = imp::NoteRepository::from_instance(self);
+        imp.watcher.get().unwrap().connect_remote_changed(f)
     }
 
-    fn repository(&self) -> Repository {
-        let imp = imp::NoteRepository::from_instance(self);
-        Clone::clone(imp.repository.get().unwrap())
+    pub async fn sync(&self) -> anyhow::Result<Vec<(PathBuf, git2::Delta)>> {
+        log::info!("Sync: Repo pulling changes...");
+        self.set_sync_state(SyncState::Pulling);
+        let changed_files = self.pull().await?;
+        log::info!("Sync: Repo pulled changes");
+
+        if self.is_file_changed_in_workdir().await? {
+            log::info!("Sync: Found changes, adding all...");
+            self.add_all().await?;
+            log::info!("Sync: Added all files");
+
+            log::info!("Sync: Creating commit...");
+            self.commit().await?;
+            log::info!("Sync: Created commit");
+
+            log::info!("Sync: Repo pushing changes...");
+            self.set_sync_state(SyncState::Pushing);
+            self.push().await?;
+            log::info!("Sync: Pushed chanes to remote");
+        } else {
+            log::info!("Sync: There is no changed files in directory");
+            log::info!("Sync: Skipped pushing and commit");
+        }
+
+        self.set_sync_state(SyncState::Idle);
+
+        Ok(changed_files)
     }
 
-    fn watcher(&self) -> RepositoryWatcher {
+    // FIXME (CRITICAL) handle conflicts gracefully
+    async fn pull(&self) -> anyhow::Result<Vec<(PathBuf, git2::Delta)>> {
+        let repo = self.repository();
+
+        Self::do_async(move || {
+            let repo = repo.lock().unwrap();
+
+            repo.pull(
+                DEFAULT_REMOTE_NAME,
+                DEFAULT_AUTHOR_NAME,
+                DEFAULT_AUTHOR_EMAIL,
+            )
+        })
+        .await
+    }
+
+    async fn is_file_changed_in_workdir(&self) -> anyhow::Result<bool> {
+        let repo = self.repository();
+
+        Self::do_async(move || {
+            let repo = repo.lock().unwrap();
+
+            repo.is_file_changed_in_workdir()
+        })
+        .await
+    }
+
+    async fn add_all(&self) -> anyhow::Result<()> {
+        let repo = self.repository();
+
+        Self::do_async(move || {
+            let repo = repo.lock().unwrap();
+
+            repo.add(&["."])
+        })
+        .await
+    }
+
+    async fn commit(&self) -> anyhow::Result<()> {
+        let repo = self.repository();
+
+        Self::do_async(move || {
+            let repo = repo.lock().unwrap();
+
+            repo.commit("Sync commit", DEFAULT_AUTHOR_NAME, DEFAULT_AUTHOR_EMAIL)
+        })
+        .await
+    }
+
+    async fn push(&self) -> anyhow::Result<()> {
+        let repo = self.repository();
+
+        Self::do_async(move || {
+            let repo = repo.lock().unwrap();
+
+            repo.push(DEFAULT_REMOTE_NAME)
+        })
+        .await
+    }
+
+    async fn do_async<T, F>(f: F) -> T
+    where
+        F: FnOnce() -> T + Send + 'static,
+        T: Send + 'static,
+    {
+        RUNTIME.spawn_blocking(f).await.unwrap()
+    }
+
+    fn repository(&self) -> Arc<Mutex<Repository>> {
         let imp = imp::NoteRepository::from_instance(self);
-        imp.watcher.get().unwrap().clone()
+        Arc::clone(imp.repository.get().unwrap())
+    }
+
+    fn set_repository(&self, repository: Repository) {
+        let imp = imp::NoteRepository::from_instance(self);
+        imp.repository
+            .set(Arc::new(Mutex::new(repository)))
+            .unwrap();
+    }
+
+    fn base_path(&self) -> gio::File {
+        let imp = imp::NoteRepository::from_instance(self);
+        imp.base_path.get().unwrap().clone()
     }
 
     fn set_sync_state(&self, sync_state: SyncState) {

@@ -19,12 +19,10 @@ run_command(
 )
 
 rust_sources = files(
-  'core/repository/git2_repo.rs',
-  'core/repository/mod.rs',
-  'core/repository/wrapper.rs',
   'core/mod.rs',
   'core/note_manager.rs',
   'core/note_repository.rs',
+  'core/repository.rs',
   'core/repository_watcher.rs',
   'model/note/id.rs',
   'model/note/metadata.rs',
