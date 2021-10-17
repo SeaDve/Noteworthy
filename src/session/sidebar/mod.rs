@@ -328,6 +328,7 @@ impl Sidebar {
         let imp = imp::Sidebar::from_instance(self);
 
         // FIXME just use one model so scroll level will be saved
+        // Maybe handle this inside selection.rs and have an internal MultiSelection
         match selection_mode {
             SelectionMode::Single => {
                 imp.header_bar_stack
