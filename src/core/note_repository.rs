@@ -22,8 +22,8 @@ const DEFAULT_AUTHOR_EMAIL: &str = "app@noteworthy.io";
 static RE_VALIDATE_URL: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"(git@[\w\.]+)(:(//)?)([\w\.@:/\-~]+)(\.git)(/)?").unwrap());
 
-static RUNTIME: Lazy<tokio::runtime::Runtime> =
-    Lazy::new(|| tokio::runtime::Runtime::new().unwrap());
+static THREAD_POOL: Lazy<glib::ThreadPool> =
+    Lazy::new(|| glib::ThreadPool::new_shared(None).unwrap());
 
 #[derive(Clone, Copy, Debug, PartialEq, GEnum)]
 #[genum(type_name = "NwtyNoteRepositorySyncState")]
@@ -259,7 +259,7 @@ impl NoteRepository {
         F: FnOnce() -> T + Send + 'static,
         T: Send + 'static,
     {
-        RUNTIME.spawn_blocking(f).await.unwrap()
+        THREAD_POOL.push_future(f).unwrap().await
     }
 
     fn repository(&self) -> Arc<Mutex<Repository>> {
