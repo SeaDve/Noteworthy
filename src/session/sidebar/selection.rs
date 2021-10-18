@@ -1,10 +1,29 @@
-// Class from Fractal-next
+// Class taken from Fractal-next
 // See https://gitlab.gnome.org/GNOME/fractal/-/blob/fractal-next/src/session/sidebar/selection.rs
+// This file is modifed to change between selection modes: Single and Multiple.
 
-use gtk::{gio, glib, glib::clone, prelude::*, subclass::prelude::*};
-
+use gtk::{
+    gio,
+    glib::{self, clone, GEnum},
+    prelude::*,
+    subclass::prelude::*,
+};
 use once_cell::sync::Lazy;
+
 use std::cell::{Cell, RefCell};
+
+#[derive(Debug, Clone, Copy, PartialEq, GEnum)]
+#[genum(type_name = "SidebarSelectionMode")]
+pub enum SelectionMode {
+    Single,
+    Multi,
+}
+
+impl Default for SelectionMode {
+    fn default() -> Self {
+        Self::Single
+    }
+}
 
 mod imp {
     use super::*;
@@ -14,7 +33,12 @@ mod imp {
         pub model: RefCell<Option<gio::ListModel>>,
         pub selected: Cell<u32>,
         pub selected_item: RefCell<Option<glib::Object>>,
-        pub signal_handler: RefCell<Option<glib::SignalHandlerId>>,
+        pub selection_mode: Cell<SelectionMode>,
+
+        pub multi_selection_model: RefCell<Option<gtk::MultiSelection>>,
+        pub model_items_changed_id: RefCell<Option<glib::SignalHandlerId>>,
+        pub multi_model_items_changed_id: RefCell<Option<glib::SignalHandlerId>>,
+        pub multi_model_selection_changed_id: RefCell<Option<glib::SignalHandlerId>>,
     }
 
     #[glib::object_subclass]
@@ -63,6 +87,14 @@ mod imp {
                         glib::Object::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
+                    glib::ParamSpec::new_enum(
+                        "selection-mode",
+                        "Selection Mode",
+                        "Current selection mode",
+                        SelectionMode::static_type(),
+                        SelectionMode::default() as i32,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
+                    ),
                 ]
             });
 
@@ -89,6 +121,10 @@ mod imp {
                     let selected_item = value.get().unwrap();
                     obj.set_selected_item(selected_item);
                 }
+                "selection-mode" => {
+                    let selection_mode = value.get().unwrap();
+                    obj.set_selection_mode(selection_mode);
+                }
                 _ => unimplemented!(),
             }
         }
@@ -98,6 +134,7 @@ mod imp {
                 "model" => obj.model().to_value(),
                 "selected" => obj.selected().to_value(),
                 "selected-item" => obj.selected_item().to_value(),
+                "selection-mode" => obj.selection_mode().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -118,12 +155,13 @@ mod imp {
     }
 
     impl SelectionModelImpl for Selection {
-        fn selection_in_range(
-            &self,
-            _model: &Self::Type,
-            _position: u32,
-            _n_items: u32,
-        ) -> gtk::Bitset {
+        fn selection_in_range(&self, obj: &Self::Type, position: u32, n_items: u32) -> gtk::Bitset {
+            if obj.selection_mode() == SelectionMode::Multi {
+                return obj
+                    .multi_selection_model()
+                    .selection_in_range(position, n_items);
+            }
+
             let bitset = gtk::Bitset::new_empty();
             let selected = self.selected.get();
 
@@ -134,8 +172,25 @@ mod imp {
             bitset
         }
 
-        fn is_selected(&self, _model: &Self::Type, position: u32) -> bool {
+        fn is_selected(&self, obj: &Self::Type, position: u32) -> bool {
+            if obj.selection_mode() == SelectionMode::Multi {
+                return obj.multi_selection_model().is_selected(position);
+            }
+
             self.selected.get() == position
+        }
+
+        fn set_selection(
+            &self,
+            obj: &Self::Type,
+            selected: &gtk::Bitset,
+            mask: &gtk::Bitset,
+        ) -> bool {
+            if obj.selection_mode() == SelectionMode::Multi {
+                return obj.multi_selection_model().set_selection(selected, mask);
+            }
+
+            true
         }
     }
 }
@@ -166,6 +221,30 @@ impl Selection {
         imp.selected_item.borrow().clone()
     }
 
+    pub fn selection_mode(&self) -> SelectionMode {
+        let imp = imp::Selection::from_instance(self);
+        imp.selection_mode.get()
+    }
+
+    pub fn set_selection_mode(&self, selection_mode: SelectionMode) {
+        let imp = imp::Selection::from_instance(self);
+        imp.selection_mode.set(selection_mode);
+        self.notify("selection-mode");
+
+        let selected = self.selected();
+        if selected != gtk::INVALID_LIST_POSITION {
+            self.selection_changed(selected, 1);
+        }
+
+        let multi_selection = self.multi_selection_model().selection();
+        let min = multi_selection.minimum();
+        let max = multi_selection.maximum();
+
+        if min <= max {
+            self.selection_changed(min, max - min + 1);
+        }
+    }
+
     pub fn set_model<P: IsA<gio::ListModel>>(&self, model: Option<&P>) {
         let imp = imp::Selection::from_instance(self);
 
@@ -178,23 +257,60 @@ impl Selection {
             return;
         }
 
+        if let Some(id) = imp.multi_model_items_changed_id.take() {
+            let old_model = self.multi_selection_model();
+            old_model.disconnect(id);
+        }
+
+        if let Some(id) = imp.multi_model_selection_changed_id.take() {
+            let old_model = self.multi_selection_model();
+            old_model.disconnect(id);
+        }
+
         let n_items_before = old_model.map_or(0, |model| {
-            if let Some(id) = imp.signal_handler.take() {
+            if let Some(id) = imp.model_items_changed_id.take() {
                 model.disconnect(id);
             }
             model.n_items()
         });
 
         if let Some(model) = model {
-            imp.signal_handler.replace(Some(model.connect_items_changed(
-                clone!(@weak self as obj => move |m, p, r, a| {
+            let model_items_changed_id =
+                model.connect_items_changed(clone!(@weak self as obj => move |m, p, r, a| {
+                    if obj.selection_mode() == SelectionMode::Single {
                         obj.items_changed_cb(m, p, r, a);
+                    }
+                }));
+            imp.model_items_changed_id
+                .replace(Some(model_items_changed_id));
+
+            let multi_selection_model = gtk::MultiSelection::new(Some(&model));
+
+            let multi_model_items_changed_id = multi_selection_model.connect_items_changed(
+                clone!(@weak self as obj => move |_, p, r, a| {
+                    if obj.selection_mode() == SelectionMode::Multi {
+                        obj.items_changed(p, r, a);
+                    }
                 }),
-            )));
+            );
+            imp.multi_model_items_changed_id
+                .replace(Some(multi_model_items_changed_id));
+
+            let multi_model_selection_changed_id = multi_selection_model.connect_selection_changed(
+                clone!(@weak self as obj => move |_, position, n_items| {
+                    if obj.selection_mode() == SelectionMode::Multi {
+                        obj.selection_changed(position, n_items);
+                    }
+                }),
+            );
+            imp.multi_model_selection_changed_id
+                .replace(Some(multi_model_selection_changed_id));
 
             self.items_changed_cb(&model, 0, n_items_before, model.n_items());
 
             imp.model.replace(Some(model));
+            imp.multi_selection_model
+                .replace(Some(multi_selection_model));
         } else {
             imp.model.replace(None);
 
@@ -248,6 +364,15 @@ impl Selection {
 
         self.notify("selected");
         self.notify("selected-item");
+    }
+
+    fn multi_selection_model(&self) -> gtk::MultiSelection {
+        let imp = imp::Selection::from_instance(self);
+        imp.multi_selection_model
+            .borrow()
+            .as_ref()
+            .expect("Multi selection model not set")
+            .clone()
     }
 
     fn set_selected_item(&self, item: Option<glib::Object>) {

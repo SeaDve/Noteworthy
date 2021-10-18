@@ -5,7 +5,7 @@ mod view_switcher;
 
 use gettextrs::gettext;
 use gtk::{
-    glib::{self, clone, GEnum},
+    glib::{self, clone},
     prelude::*,
     subclass::prelude::*,
     CompositeTemplate,
@@ -15,24 +15,11 @@ use std::cell::{Cell, RefCell};
 
 use self::{
     note_row::NoteRow,
-    selection::Selection,
+    selection::{Selection, SelectionMode},
     sync_button::SyncButton,
     view_switcher::{ItemKind, ViewSwitcher},
 };
 use crate::model::{Note, NoteList, TagList};
-
-#[derive(Debug, Clone, Copy, PartialEq, GEnum)]
-#[genum(type_name = "SidebarSelectionMode")]
-pub enum SelectionMode {
-    Single,
-    Multi,
-}
-
-impl Default for SelectionMode {
-    fn default() -> Self {
-        Self::Single
-    }
-}
 
 mod imp {
     use super::*;
@@ -65,9 +52,6 @@ mod imp {
         pub selection_mode: Cell<SelectionMode>,
         pub selected_note: RefCell<Option<Note>>,
         pub is_syncing: Cell<bool>,
-
-        pub single_selection_model: RefCell<Option<Selection>>,
-        pub multi_selection_model: RefCell<Option<gtk::MultiSelection>>,
     }
 
     #[glib::object_subclass]
@@ -91,12 +75,12 @@ mod imp {
             );
 
             klass.install_action("sidebar.select-all", None, move |obj, _, _| {
-                let model = obj.multi_selection_model().unwrap();
+                let model = obj.selection_model();
                 model.select_all();
             });
 
             klass.install_action("sidebar.select-none", None, move |obj, _, _| {
-                let model = obj.multi_selection_model().unwrap();
+                let model = obj.selection_model();
                 model.unselect_all();
             });
         }
@@ -265,36 +249,35 @@ impl Sidebar {
             filter.changed(gtk::FilterChange::Different);
         });
 
-        let single_selection_model = Selection::new(Some(&filter_model));
-        self.bind_property("selected-note", &single_selection_model, "selected-item")
+        let selection_model = Selection::new(Some(&filter_model));
+        self.bind_property("selected-note", &selection_model, "selected-item")
             .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
             .build();
-        imp.single_selection_model
-            .replace(Some(single_selection_model));
+        self.bind_property("selection-mode", &selection_model, "selection-mode")
+            .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
+            .build();
 
-        let multi_selection_model = gtk::MultiSelection::new(Some(&filter_model));
-        multi_selection_model.connect_selection_changed(
-            clone!(@weak self as obj => move |model,_,_| {
-                let selection_size = model.selection().size();
+        selection_model.connect_selection_changed(clone!(@weak self as obj => move |model,position,n_items| {
+            let selection_size = model.selection().size();
+            if obj.selection_mode() == SelectionMode::Multi {
                 obj.update_selection_menu_button_label(selection_size);
                 obj.update_action_bar_sensitivity(selection_size);
-                obj.update_action_bar(model);
-                log::info!("Selection changed, n_items: {}", selection_size);
-            }),
-        );
-        multi_selection_model.connect_items_changed(
+                obj.update_action_bar(selection_size);
+            }
+            log::info!("Selection changed, n_selected: {}, position: {}, n_items: {}", selection_size, position, n_items);
+        }));
+        selection_model.connect_items_changed(
             clone!(@weak self as obj => move |model,pos,removed,added| {
                 if obj.selection_mode() == SelectionMode::Multi {
                     let selection_size = model.selection().size();
                     obj.update_selection_menu_button_label(selection_size);
                     obj.update_action_bar_sensitivity(selection_size);
-                    obj.update_action_bar(model);
-                    log::info!("Selection items changed at {}; {} removed, {} added", pos, removed, added);
+                    obj.update_action_bar(selection_size);
                 }
+                log::info!("Selection items changed at {}; {} removed, {} added", pos, removed, added);
             }),
         );
-        imp.multi_selection_model
-            .replace(Some(multi_selection_model));
+        imp.list_view.set_model(Some(&selection_model));
 
         self.set_selection_mode(SelectionMode::Single);
     }
@@ -327,16 +310,12 @@ impl Sidebar {
     pub fn set_selection_mode(&self, selection_mode: SelectionMode) {
         let imp = imp::Sidebar::from_instance(self);
 
-        // FIXME just use one model so scroll level will be saved
-        // Maybe handle this inside selection.rs and have an internal MultiSelection
         match selection_mode {
             SelectionMode::Single => {
                 imp.header_bar_stack
                     .set_visible_child(&imp.main_header_bar.get());
                 imp.action_bar.set_revealed(false);
 
-                let model = imp.single_selection_model.borrow();
-                imp.list_view.set_model(Some(model.as_ref().unwrap()));
                 imp.list_view.set_single_click_activate(true);
                 imp.list_view
                     .remove_css_class("sidebar-list-view-multi-selection-mode");
@@ -346,8 +325,6 @@ impl Sidebar {
                     .set_visible_child(&imp.selection_header_bar.get());
                 imp.action_bar.set_revealed(true);
 
-                let model = imp.multi_selection_model.borrow();
-                imp.list_view.set_model(Some(model.as_ref().unwrap()));
                 imp.list_view.set_single_click_activate(false);
                 imp.list_view
                     .add_css_class("sidebar-list-view-multi-selection-mode");
@@ -358,13 +335,17 @@ impl Sidebar {
         self.notify("selection-mode");
     }
 
-    pub fn multi_selection_model(&self) -> Option<gtk::MultiSelection> {
+    pub fn selection_model(&self) -> Selection {
         let imp = imp::Sidebar::from_instance(self);
-        imp.multi_selection_model.borrow().as_ref().cloned()
+        imp.list_view
+            .model()
+            .expect("List view model not set")
+            .downcast()
+            .unwrap()
     }
 
     pub fn selected_notes(&self) -> Vec<Note> {
-        let model = self.multi_selection_model().unwrap();
+        let model = self.selection_model();
 
         // Don't use model's selection because it does the same as this. Except, we store the notes
         // right away so selected notes won't change when the model changes. Plus, won't have to
@@ -400,7 +381,7 @@ impl Sidebar {
         imp.selection_menu_button.set_label(&label);
     }
 
-    fn update_action_bar(&self, model: &gtk::MultiSelection) {
+    fn update_action_bar(&self, n_selected_items: u64) {
         let imp = imp::Sidebar::from_instance(self);
 
         let is_all_pinned_in_selected_notes = {
@@ -417,7 +398,7 @@ impl Sidebar {
 
         // It is only possible for trash button to be active when we are on trash page
         let is_on_trash_page = imp.view_switcher.selected_type() == ItemKind::Trash;
-        let is_selection_empty = model.selection().size() == 0;
+        let is_selection_empty = n_selected_items == 0;
         imp.trash_button
             .set_active(is_on_trash_page && !is_selection_empty);
     }

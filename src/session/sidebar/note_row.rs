@@ -300,7 +300,7 @@ impl NoteRow {
         imp.check_button
             .connect_active_notify(clone!(@weak self as obj => move |check_button| {
                 let is_active = check_button.is_active();
-                let model = obj.sidebar().multi_selection_model().unwrap();
+                let model = obj.sidebar().selection_model();
 
                 if obj.selection_mode() != SelectionMode::Multi {
                     return;
@@ -316,9 +316,9 @@ impl NoteRow {
         let gesture_click = gtk::GestureClick::new();
         gesture_click.set_button(3);
         gesture_click.connect_pressed(clone!(@weak self as obj => move |_,_,_,_| {
-            let model = obj.sidebar().multi_selection_model().unwrap();
+            let model = obj.sidebar().selection_model();
+            model.set_selection_mode(SelectionMode::Multi);
             model.select_item(obj.position(), true);
-            obj.sidebar().set_selection_mode(SelectionMode::Multi);
         }));
         self.add_controller(&gesture_click);
     }
