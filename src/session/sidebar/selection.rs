@@ -1,6 +1,6 @@
 // Class taken from Fractal-next
 // See https://gitlab.gnome.org/GNOME/fractal/-/blob/fractal-next/src/session/sidebar/selection.rs
-// This file is modifed to change between selection modes: Single and Multiple.
+// This file is modifed to support multiple selection modes.
 
 use gtk::{
     gio,
