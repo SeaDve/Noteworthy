@@ -76,7 +76,7 @@
                 <property name="has-frame">False</property>
               </object>
             </property>
-            <child type="end">
+            <child>
               <object class="GtkButton">
                 <property name="label" translatable="yes">Done</property>
                 <property name="action-name">sidebar.multi-selection-mode-done</property>
