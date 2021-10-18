@@ -38,7 +38,7 @@
   padding: 9px;
 }
 
-.sidebar-list-view-multi-selection-mode row:selected {
+.sidebar-list-view-multi-selection-mode row:selected:not(:hover) {
   background: none;
 }
 
