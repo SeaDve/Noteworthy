@@ -374,9 +374,9 @@ impl Sidebar {
     fn update_selection_menu_button_label(&self, n_selected_items: u64) {
         let imp = imp::Sidebar::from_instance(self);
         let label = if n_selected_items == 0 {
-            gettext("No selected")
+            gettext("No Selected")
         } else {
-            gettext!("{} selected", n_selected_items)
+            gettext!("{} Selected", n_selected_items)
         };
         imp.selection_menu_button.set_label(&label);
     }
