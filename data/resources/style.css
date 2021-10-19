@@ -47,16 +47,16 @@
   min-height: 32px;
 }
 
-.sidebar-view-switcher-popover row {
+.sidebar-view-switcher-list-view row {
   min-height: 6px;
   min-width: 120px;
 }
 
-.sidebar-view-switcher-popover row:selected {
+.sidebar-view-switcher-list-view row:selected {
   background: none;
 }
 
-.sidebar-view-switcher-popover row:hover {
+.sidebar-view-switcher-list-view row:hover {
   background: none;
 }
 

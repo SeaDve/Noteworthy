@@ -5,7 +5,15 @@
       <object class="GtkMenuButton" id="menu_button">
         <property name="has-frame">False</property>
         <property name="popover">
-          <object class="NwtySidebarViewSwitcherPopover" id="popover"/>
+          <object class="GtkPopover">
+            <property name="child">
+              <object class="GtkListView" id="list_view">
+                <style>
+                  <class name="sidebar-view-switcher-list-view"/>
+                </style>
+              </object>
+            </property>
+          </object>
         </property>
       </object>
     </property>

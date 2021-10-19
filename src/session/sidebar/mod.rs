@@ -231,10 +231,7 @@ impl Sidebar {
                         note.tag_list().contains(tag) && !note.is_trashed()
                     }
                     ItemKind::Separator | ItemKind::Category | ItemKind::EditTags => {
-                        // FIXME handle this inside view_switcher
-                        log::warn!("Trying to select an unselectable row");
-                        imp.view_switcher.set_selected_item_to_default();
-                        true
+                        panic!("ItemKind of type Separator, Category, or EditTags cannot be selected.");
                     }
                 }
             }),

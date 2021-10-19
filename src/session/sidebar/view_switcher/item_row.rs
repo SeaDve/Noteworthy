@@ -168,7 +168,7 @@ impl ItemRow {
 
         if let Some(item) = self.item() {
             if let Some(item) = item.downcast_ref::<Item>() {
-                match item.item_kind() {
+                match item.kind() {
                     ItemKind::AllNotes | ItemKind::Trash => {
                         imp.label_child.set_label(&item.display_name().unwrap());
                         imp.bin.set_child(Some(&imp.label_child.get()));

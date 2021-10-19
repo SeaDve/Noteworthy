@@ -1,15 +1,14 @@
 mod item;
 mod item_list;
 mod item_row;
-mod popover;
 
 use adw::subclass::prelude::*;
-use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
+use gtk::{gio, glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::RefCell;
 
 pub use self::item::ItemKind;
-use self::{item::Item, item_row::ItemRow, popover::Popover};
+use self::{item::Item, item_list::ItemList, item_row::ItemRow};
 use crate::model::{Tag, TagList};
 
 mod imp {
@@ -21,9 +20,9 @@ mod imp {
         #[template_child]
         pub menu_button: TemplateChild<gtk::MenuButton>,
         #[template_child]
-        pub popover: TemplateChild<Popover>,
+        pub list_view: TemplateChild<gtk::ListView>,
 
-        pub selected_type: RefCell<ItemKind>,
+        pub selected_item: RefCell<Option<Item>>,
     }
 
     #[glib::object_subclass]
@@ -34,7 +33,6 @@ mod imp {
 
         fn class_init(klass: &mut Self::Class) {
             ItemRow::static_type();
-            Popover::static_type();
             Self::bind_template(klass);
         }
 
@@ -47,13 +45,29 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_boxed(
-                    "selected-type",
-                    "Selected-type",
-                    "The selected type in the switcher",
-                    ItemKind::static_type(),
-                    glib::ParamFlags::READWRITE,
-                )]
+                vec![
+                    glib::ParamSpec::new_object(
+                        "selected-item",
+                        "Selected-item",
+                        "The selected item in popover",
+                        Item::static_type(),
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
+                    ),
+                    glib::ParamSpec::new_boxed(
+                        "selected-type",
+                        "Selected-type",
+                        "The selected type in the switcher",
+                        ItemKind::static_type(),
+                        glib::ParamFlags::READABLE | glib::ParamFlags::EXPLICIT_NOTIFY,
+                    ),
+                    glib::ParamSpec::new_object(
+                        "tag-list",
+                        "Tag List",
+                        "The tag list in the view switcher",
+                        TagList::static_type(),
+                        glib::ParamFlags::WRITABLE | glib::ParamFlags::EXPLICIT_NOTIFY,
+                    ),
+                ]
             });
 
             PROPERTIES.as_ref()
@@ -61,23 +75,28 @@ mod imp {
 
         fn set_property(
             &self,
-            _obj: &Self::Type,
+            obj: &Self::Type,
             _id: usize,
             value: &glib::Value,
             pspec: &glib::ParamSpec,
         ) {
             match pspec.name() {
-                "selected-type" => {
-                    let selected_type = value.get().unwrap();
-                    self.selected_type.replace(selected_type);
+                "selected-item" => {
+                    let selected_item = value.get().unwrap();
+                    obj.set_selected_item(selected_item);
+                }
+                "tag-list" => {
+                    let tag_list = value.get().unwrap();
+                    obj.set_tag_list(tag_list);
                 }
                 _ => unimplemented!(),
             }
         }
 
-        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+        fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "selected-type" => self.selected_type.borrow().to_value(),
+                "selected-item" => obj.selected_item().to_value(),
+                "selected-type" => obj.selected_type().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -85,25 +104,8 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
-            let popover_expression = gtk::ConstantExpression::new(&self.popover.get());
-            let selected_item_expression = gtk::PropertyExpression::new(
-                Popover::static_type(),
-                Some(&popover_expression),
-                "selected-item",
-            );
-            let label_expression = gtk::PropertyExpression::new(
-                Item::static_type(),
-                Some(&selected_item_expression),
-                "display-name",
-            );
-            label_expression.bind(&self.menu_button.get(), "label", None::<&gtk::Widget>);
-
-            let selected_type_expression = gtk::PropertyExpression::new(
-                Item::static_type(),
-                Some(&selected_item_expression),
-                "item-kind",
-            );
-            selected_type_expression.bind(obj, "selected-type", None::<&gtk::Widget>);
+            obj.setup_list_view();
+            obj.setup_expressions();
         }
     }
 
@@ -122,13 +124,42 @@ impl ViewSwitcher {
         glib::Object::new(&[]).expect("Failed to create ViewSwitcher.")
     }
 
-    pub fn selected_type(&self) -> ItemKind {
-        self.property("selected-type").unwrap().get().unwrap()
-    }
-
-    pub fn set_selected_item_to_default(&self) {
+    pub fn set_tag_list(&self, tag_list: TagList) {
         let imp = imp::ViewSwitcher::from_instance(self);
-        imp.popover.select_item(0);
+
+        let item_list = ItemList::new(&tag_list);
+        let tree_model = gtk::TreeListModel::new(&item_list, false, true, |item| {
+            item.clone().downcast::<gio::ListModel>().ok()
+        });
+
+        let selection_model = gtk::SingleSelection::new(Some(&tree_model));
+        selection_model
+            .bind_property("selected-item", self, "selected-item")
+            .transform_to(|_, value| {
+                value
+                    .get::<Option<glib::Object>>()
+                    .unwrap()
+                    .map(|o| o.downcast::<gtk::TreeListRow>().unwrap().item().unwrap())
+                    .map(|i| {
+                        if let Some(item) = i.downcast_ref::<Item>() {
+                            item.clone()
+                        } else if let Some(tag) = i.downcast_ref::<Tag>() {
+                            let item = Item::new(ItemKind::Tag(tag.clone()), None, None);
+                            tag.bind_property("name", &item, "display-name")
+                                .flags(glib::BindingFlags::SYNC_CREATE)
+                                .build();
+                            item
+                        } else {
+                            panic!("Invalid item: {:?}", i);
+                        }
+                    })
+                    .map(|i| i.to_value())
+            })
+            .flags(glib::BindingFlags::SYNC_CREATE)
+            .build();
+
+        imp.list_view.set_model(Some(&selection_model));
+        self.notify("tag-list");
     }
 
     pub fn connect_selected_type_notify<F: Fn(&Self, &glib::ParamSpec) + 'static>(
@@ -138,8 +169,98 @@ impl ViewSwitcher {
         self.connect_notify_local(Some("selected-type"), f)
     }
 
-    pub fn set_tag_list(&self, tag_list: TagList) {
+    pub fn selected_type(&self) -> ItemKind {
+        self.selected_item()
+            .map_or(ItemKind::AllNotes, |i| match i.kind() {
+                ItemKind::Separator | ItemKind::Category | ItemKind::EditTags => {
+                    let imp = imp::ViewSwitcher::from_instance(self);
+                    let model: gtk::SingleSelection =
+                        imp.list_view.model().unwrap().downcast().unwrap();
+                    // These three get selected when trying to delete an item that is selected.
+                    // Therefore, select the first item, AllNotes, instead. Maybe a GTK bug?
+                    model.set_selected(0);
+                    ItemKind::AllNotes
+                }
+                other_kind => other_kind,
+            })
+    }
+
+    fn set_selected_item(&self, selected_item: Option<Item>) {
         let imp = imp::ViewSwitcher::from_instance(self);
-        imp.popover.set_tag_list(tag_list);
+        imp.selected_item.replace(selected_item);
+        self.notify("selected-item");
+        self.notify("selected-type");
+    }
+
+    fn selected_item(&self) -> Option<Item> {
+        let imp = imp::ViewSwitcher::from_instance(self);
+        imp.selected_item.borrow().clone()
+    }
+
+    fn setup_expressions(&self) {
+        let imp = imp::ViewSwitcher::from_instance(self);
+
+        let self_expression = gtk::ConstantExpression::new(self);
+        let selected_item_expression = gtk::PropertyExpression::new(
+            Self::static_type(),
+            Some(&self_expression),
+            "selected-item",
+        );
+        let display_name_expression = gtk::PropertyExpression::new(
+            Item::static_type(),
+            Some(&selected_item_expression),
+            "display-name",
+        );
+        display_name_expression.bind(&imp.menu_button.get(), "label", None::<&gtk::Widget>);
+    }
+
+    fn setup_list_view(&self) {
+        let imp = imp::ViewSwitcher::from_instance(self);
+
+        let factory = gtk::SignalListItemFactory::new();
+        factory.connect_setup(|_, list_item| {
+            let item_row = ItemRow::new();
+
+            let list_item_expression = gtk::ConstantExpression::new(list_item);
+
+            let tree_list_row_expression = gtk::PropertyExpression::new(
+                gtk::ListItem::static_type(),
+                Some(&list_item_expression),
+                "item",
+            );
+            tree_list_row_expression.bind(&item_row, "list-row", None::<&gtk::Widget>);
+
+            let selected_expression = gtk::PropertyExpression::new(
+                gtk::ListItem::static_type(),
+                Some(&list_item_expression),
+                "selected",
+            );
+            selected_expression.bind(&item_row, "selected", None::<&gtk::Widget>);
+
+            list_item.set_child(Some(&item_row));
+        });
+
+        factory.connect_bind(|_, list_item| {
+            let item: Option<Item> = list_item
+                .item()
+                .unwrap()
+                .downcast::<gtk::TreeListRow>()
+                .unwrap()
+                .item()
+                .and_then(|o| o.downcast().ok());
+
+            if let Some(item) = item {
+                match item.kind() {
+                    ItemKind::Separator | ItemKind::Category | ItemKind::EditTags => {
+                        list_item.set_selectable(false);
+                    }
+                    _ => (),
+                }
+            }
+        });
+
+        imp.list_view.set_factory(Some(&factory));
+
+        // FIXME popdown this popover when something is clicked
     }
 }

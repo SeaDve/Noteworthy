@@ -43,7 +43,6 @@ rust_sources = files(
   'session/sidebar/view_switcher/item_list.rs',
   'session/sidebar/view_switcher/item_row.rs',
   'session/sidebar/view_switcher/mod.rs',
-  'session/sidebar/view_switcher/popover.rs',
   'session/sidebar/mod.rs',
   'session/sidebar/note_row.rs',
   'session/sidebar/selection.rs',

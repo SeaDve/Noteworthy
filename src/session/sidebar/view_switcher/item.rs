@@ -31,7 +31,7 @@ mod imp {
 
     #[derive(Debug, Default)]
     pub struct Item {
-        item_kind: RefCell<ItemKind>,
+        kind: RefCell<ItemKind>,
         display_name: RefCell<Option<String>>,
         model: RefCell<Option<gio::ListModel>>,
     }
@@ -60,8 +60,8 @@ mod imp {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
                     glib::ParamSpec::new_boxed(
-                        "item-kind",
-                        "Item Kind",
+                        "kind",
+                        "Kind",
                         "Kind of this item",
                         ItemKind::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
@@ -94,9 +94,9 @@ mod imp {
             pspec: &glib::ParamSpec,
         ) {
             match pspec.name() {
-                "item-kind" => {
-                    let item_kind = value.get().unwrap();
-                    self.item_kind.replace(item_kind);
+                "kind" => {
+                    let kind = value.get().unwrap();
+                    self.kind.replace(kind);
                 }
                 "display-name" => {
                     let display_name = value.get().unwrap();
@@ -112,7 +112,7 @@ mod imp {
 
         fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "item-kind" => self.item_kind.borrow().to_value(),
+                "kind" => self.kind.borrow().to_value(),
                 "display-name" => self.display_name.borrow().to_value(),
                 "model" => self.model.borrow().to_value(),
                 _ => unimplemented!(),
@@ -141,17 +141,17 @@ glib::wrapper! {
 }
 
 impl Item {
-    pub fn new(item_kind: ItemKind, display_name: Option<String>, model: Option<TagList>) -> Self {
+    pub fn new(kind: ItemKind, display_name: Option<String>, model: Option<TagList>) -> Self {
         glib::Object::new(&[
-            ("item-kind", &item_kind),
+            ("kind", &kind),
             ("display-name", &display_name),
             ("model", &model),
         ])
         .expect("Failed to create Item.")
     }
 
-    pub fn item_kind(&self) -> ItemKind {
-        self.property("item-kind").unwrap().get().unwrap()
+    pub fn kind(&self) -> ItemKind {
+        self.property("kind").unwrap().get().unwrap()
     }
 
     pub fn display_name(&self) -> Option<String> {
