@@ -1,46 +1,19 @@
+mod note_tag_lists;
 mod row;
 
 use adw::subclass::prelude::*;
 use gettextrs::gettext;
 use gtk::{
     gio,
-    glib::{self, clone, GBoxed},
+    glib::{self, clone},
     prelude::*,
     subclass::prelude::*,
     CompositeTemplate,
 };
 use once_cell::unsync::OnceCell;
 
-use self::row::Row;
+use self::{note_tag_lists::NoteTagLists, row::Row};
 use crate::model::{NoteTagList, Tag, TagList};
-
-#[derive(Debug, Clone, GBoxed)]
-#[gboxed(type_name = "NwtyTagLists")]
-pub struct NoteTagLists(Vec<NoteTagList>);
-
-impl NoteTagLists {
-    fn iter(&self) -> std::slice::Iter<NoteTagList> {
-        self.0.iter()
-    }
-}
-
-impl From<Vec<NoteTagList>> for NoteTagLists {
-    fn from(vec: Vec<NoteTagList>) -> Self {
-        Self(vec)
-    }
-}
-
-impl Default for NoteTagLists {
-    fn default() -> Self {
-        Self(Vec::new())
-    }
-}
-
-impl NoteTagLists {
-    pub fn is_empty(&self) -> bool {
-        self.0.is_empty()
-    }
-}
 
 mod imp {
     use super::*;
@@ -189,10 +162,10 @@ glib::wrapper! {
 }
 
 impl NoteTagDialog {
-    pub fn new(tag_list: &TagList, other_tag_lists: &NoteTagLists) -> Self {
+    pub fn new(tag_list: &TagList, other_tag_lists: Vec<NoteTagList>) -> Self {
         glib::Object::new(&[
             ("tag-list", tag_list),
-            ("other-tag-lists", &other_tag_lists),
+            ("other-tag-lists", &NoteTagLists::from(other_tag_lists)),
         ])
         .expect("Failed to create NoteTagDialog.")
     }

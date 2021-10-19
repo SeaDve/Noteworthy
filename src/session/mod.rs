@@ -15,10 +15,7 @@ use once_cell::unsync::OnceCell;
 use std::cell::{Cell, RefCell};
 
 use self::{
-    content::Content,
-    note_tag_dialog::{NoteTagDialog, NoteTagLists},
-    sidebar::Sidebar,
-    tag_editor::TagEditor,
+    content::Content, note_tag_dialog::NoteTagDialog, sidebar::Sidebar, tag_editor::TagEditor,
 };
 use crate::{core::NoteManager, model::Note};
 
@@ -86,10 +83,7 @@ mod imp {
                 let selected_note_tag_list =
                     imp.sidebar.selected_note().unwrap().metadata().tag_list();
 
-                let note_tag_dialog = NoteTagDialog::new(
-                    &tag_list,
-                    &NoteTagLists::from(vec![selected_note_tag_list]),
-                );
+                let note_tag_dialog = NoteTagDialog::new(&tag_list, vec![selected_note_tag_list]);
                 note_tag_dialog.set_modal(true);
                 note_tag_dialog.set_transient_for(
                     obj.root()
@@ -112,8 +106,7 @@ mod imp {
                         .map(|note| note.metadata().tag_list())
                         .collect::<Vec<_>>();
 
-                    let note_tag_dialog =
-                        NoteTagDialog::new(&tag_list, &NoteTagLists::from(other_tag_lists));
+                    let note_tag_dialog = NoteTagDialog::new(&tag_list, other_tag_lists);
                     note_tag_dialog.set_modal(true);
                     note_tag_dialog.set_transient_for(
                         obj.root()
