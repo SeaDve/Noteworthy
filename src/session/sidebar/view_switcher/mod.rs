@@ -176,7 +176,7 @@ impl ViewSwitcher {
                     let imp = imp::ViewSwitcher::from_instance(self);
                     let model: gtk::SingleSelection =
                         imp.list_view.model().unwrap().downcast().unwrap();
-                    // These three get selected when trying to delete an item that is selected.
+                    // These three get selected when trying to delete an item that was selected.
                     // Therefore, select the first item, AllNotes, instead. Maybe a GTK bug?
                     model.set_selected(0);
                     ItemKind::AllNotes
