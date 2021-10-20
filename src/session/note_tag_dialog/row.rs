@@ -123,38 +123,7 @@ impl Row {
         let imp = imp::Row::from_instance(self);
 
         if let Some(ref tag) = tag {
-            let other_tag_lists = self.other_tag_lists();
-
-            let mut is_all_contain_tag = true;
-            let mut is_all_not_contain_tag = true;
-
-            for tag_list in other_tag_lists.iter() {
-                if !is_all_contain_tag && !is_all_not_contain_tag {
-                    break;
-                }
-
-                if tag_list.contains(tag) {
-                    is_all_not_contain_tag = false;
-                } else {
-                    is_all_contain_tag = false;
-                }
-            }
-
-            // Basically impossible to get empty other_tag_lists from the ui, but just to be sure.
-            if other_tag_lists.is_empty() {
-                log::error!("Other tag lists found to be empty");
-                is_all_contain_tag = false;
-                is_all_not_contain_tag = true;
-            }
-
-            if is_all_contain_tag {
-                imp.check_button.set_active(true);
-            } else if is_all_not_contain_tag {
-                imp.check_button.set_active(false);
-            } else {
-                // Some tag list contain but not all or vice versa
-                imp.check_button.set_inconsistent(true);
-            }
+            self.update_check_button_state(tag);
         }
 
         imp.tag.replace(tag);
@@ -163,6 +132,30 @@ impl Row {
 
     fn other_tag_lists(&self) -> NoteTagLists {
         self.property("other-tag-lists").unwrap().get().unwrap()
+    }
+
+    fn update_check_button_state(&self, tag: &Tag) {
+        let imp = imp::Row::from_instance(self);
+
+        let other_tag_lists = self.other_tag_lists();
+
+        if other_tag_lists.is_empty() {
+            // Basically impossible to get empty other_tag_lists from the ui, but just to be sure.
+            log::error!("Other tag lists found to be empty");
+            imp.check_button.set_active(false);
+            return;
+        }
+
+        let is_first_contains_tag = other_tag_lists.first().unwrap().contains(tag);
+        let is_all_equal = other_tag_lists
+            .iter()
+            .all(|other| is_first_contains_tag == other.contains(tag));
+
+        if is_all_equal {
+            imp.check_button.set_active(is_first_contains_tag);
+        } else {
+            imp.check_button.set_inconsistent(true);
+        }
     }
 
     fn setup_signals(&self) {
