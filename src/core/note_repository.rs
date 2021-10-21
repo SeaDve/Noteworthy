@@ -14,6 +14,7 @@ use std::{
 };
 
 use super::{repository::Repository, repository_watcher::RepositoryWatcher};
+use crate::utils;
 
 const DEFAULT_REMOTE_NAME: &str = "origin";
 const DEFAULT_AUTHOR_NAME: &str = "NoteworthyApp";
@@ -21,9 +22,6 @@ const DEFAULT_AUTHOR_EMAIL: &str = "app@noteworthy.io";
 
 static RE_VALIDATE_URL: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"(git@[\w\.]+)(:(//)?)([\w\.@:/\-~]+)(\.git)(/)?").unwrap());
-
-static THREAD_POOL: Lazy<glib::ThreadPool> =
-    Lazy::new(|| glib::ThreadPool::new_shared(None).unwrap());
 
 #[derive(Clone, Copy, Debug, PartialEq, GEnum)]
 #[genum(type_name = "NwtyNoteRepositorySyncState")]
@@ -126,7 +124,7 @@ impl NoteRepository {
     pub async fn clone(remote_url: String, base_path: &gio::File) -> anyhow::Result<Self> {
         let repository_path = base_path.path().unwrap();
         let repository =
-            Self::do_async(move || Repository::clone(&repository_path, &remote_url)).await?;
+            utils::do_async(move || Repository::clone(&repository_path, &remote_url)).await?;
         let obj = glib::Object::new::<Self>(&[("base-path", &base_path)])
             .expect("Failed to create NoteRepository.");
 
@@ -136,7 +134,7 @@ impl NoteRepository {
 
     pub async fn open(base_path: &gio::File) -> anyhow::Result<Self> {
         let repository_path = base_path.path().unwrap();
-        let repository = Self::do_async(move || Repository::open(&repository_path)).await?;
+        let repository = utils::do_async(move || Repository::open(&repository_path)).await?;
         let obj = glib::Object::new::<Self>(&[("base-path", &base_path)])
             .expect("Failed to create NoteRepository.");
 
@@ -198,7 +196,7 @@ impl NoteRepository {
     async fn pull(&self) -> anyhow::Result<Vec<(PathBuf, git2::Delta)>> {
         let repo = self.repository();
 
-        Self::do_async(move || {
+        utils::do_async(move || {
             let repo = repo.lock().unwrap();
 
             repo.pull(
@@ -213,7 +211,7 @@ impl NoteRepository {
     async fn is_file_changed_in_workdir(&self) -> anyhow::Result<bool> {
         let repo = self.repository();
 
-        Self::do_async(move || {
+        utils::do_async(move || {
             let repo = repo.lock().unwrap();
 
             repo.is_file_changed_in_workdir()
@@ -224,7 +222,7 @@ impl NoteRepository {
     async fn add_all(&self) -> anyhow::Result<()> {
         let repo = self.repository();
 
-        Self::do_async(move || {
+        utils::do_async(move || {
             let repo = repo.lock().unwrap();
 
             repo.add(&["."])
@@ -235,7 +233,7 @@ impl NoteRepository {
     async fn commit(&self) -> anyhow::Result<()> {
         let repo = self.repository();
 
-        Self::do_async(move || {
+        utils::do_async(move || {
             let repo = repo.lock().unwrap();
 
             repo.commit("Sync commit", DEFAULT_AUTHOR_NAME, DEFAULT_AUTHOR_EMAIL)
@@ -246,20 +244,12 @@ impl NoteRepository {
     async fn push(&self) -> anyhow::Result<()> {
         let repo = self.repository();
 
-        Self::do_async(move || {
+        utils::do_async(move || {
             let repo = repo.lock().unwrap();
 
             repo.push(DEFAULT_REMOTE_NAME)
         })
         .await
-    }
-
-    async fn do_async<T, F>(f: F) -> T
-    where
-        F: FnOnce() -> T + Send + 'static,
-        T: Send + 'static,
-    {
-        THREAD_POOL.push_future(f).unwrap().await
     }
 
     fn repository(&self) -> Arc<Mutex<Repository>> {
