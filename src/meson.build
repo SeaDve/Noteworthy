@@ -24,6 +24,7 @@ rust_sources = files(
   'core/note_repository.rs',
   'core/repository.rs',
   'core/repository_watcher.rs',
+  'core/ssh_key.rs',
   'model/note/id.rs',
   'model/note/metadata.rs',
   'model/note/mod.rs',
