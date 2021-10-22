@@ -131,7 +131,7 @@ impl Metadata {
         glib::Object::new::<Self>(&[]).expect("Failed to create Metadata.")
     }
 
-    pub fn set_title(&self, title: String) {
+    pub fn set_title(&self, title: &str) {
         self.set_property("title", title).unwrap();
     }
 
@@ -172,7 +172,7 @@ impl Metadata {
     }
 
     pub fn update(&self, other: &Metadata) {
-        self.set_title(other.title());
+        self.set_title(&other.title());
         self.set_tag_list(other.tag_list());
         self.update_last_modified();
         self.set_is_pinned(other.is_pinned());
@@ -207,5 +207,55 @@ impl<'de> Deserialize<'de> for Metadata {
 impl Default for Metadata {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::model::Tag;
+
+    #[test]
+    fn title() {
+        let metadata = Metadata::new();
+        assert_eq!(metadata.title(), "");
+        metadata.set_title("A Title");
+        assert_eq!(metadata.title(), "A Title");
+    }
+
+    #[test]
+    fn tag_list() {
+        let metadata = Metadata::new();
+        assert_eq!(metadata.tag_list(), NoteTagList::default());
+
+        let new_tag_list = NoteTagList::new();
+        new_tag_list.append(Tag::new("A Tag")).unwrap();
+
+        metadata.set_tag_list(new_tag_list.clone());
+        assert_eq!(metadata.tag_list(), new_tag_list);
+    }
+
+    #[test]
+    fn last_modified() {
+        let metadata = Metadata::new();
+        assert_eq!(metadata.title(), "");
+        metadata.set_title("A Title");
+        assert_eq!(metadata.title(), "A Title");
+    }
+
+    #[test]
+    fn is_pinned() {
+        let metadata = Metadata::new();
+        assert!(!metadata.is_pinned());
+        metadata.set_is_pinned(true);
+        assert!(metadata.is_pinned());
+    }
+
+    #[test]
+    fn is_trashed() {
+        let metadata = Metadata::new();
+        assert!(!metadata.is_trashed());
+        metadata.set_is_trashed(true);
+        assert!(metadata.is_trashed());
     }
 }
