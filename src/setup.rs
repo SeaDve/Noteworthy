@@ -243,3 +243,26 @@ impl Setup {
         dbg!(&config);
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn git_host() {
+        use imp::GitHost;
+
+        assert_eq!(GitHost::Github, GitHost::from_int(0));
+        assert_eq!(GitHost::Gitlab, GitHost::from_int(1));
+        assert_eq!(GitHost::Custom, GitHost::from_int(2));
+    }
+
+    #[test]
+    #[should_panic]
+    fn git_host_not_found() {
+        use imp::GitHost;
+
+        GitHost::from_int(3);
+        GitHost::from_int(u8::MAX);
+    }
+}
