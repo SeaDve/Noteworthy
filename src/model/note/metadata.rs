@@ -90,9 +90,12 @@ mod imp {
             match pspec.name() {
                 "title" => {
                     let title = value.get().unwrap();
-                    self.inner.borrow_mut().title = title;
 
-                    obj.update_last_modified();
+                    if title != obj.title() {
+                        obj.update_last_modified();
+                    }
+
+                    self.inner.borrow_mut().title = title;
                 }
                 "tag-list" => {
                     let tag_list = value.get().unwrap();
@@ -225,6 +228,26 @@ mod test {
         assert_eq!(metadata.title(), "");
         metadata.set_title("A Title");
         assert_eq!(metadata.title(), "A Title");
+    }
+
+    #[test]
+    fn title_did_not_changed() {
+        let metadata = Metadata::new();
+        metadata.set_title("Title");
+        let old_last_modified = metadata.last_modified();
+        metadata.set_title("Title");
+        let new_last_modified = metadata.last_modified();
+        assert_eq!(old_last_modified, new_last_modified);
+    }
+
+    #[test]
+    fn title_did_changed() {
+        let metadata = Metadata::new();
+        metadata.set_title("Title");
+        let old_last_modified = metadata.last_modified();
+        metadata.set_title("New Title");
+        let new_last_modified = metadata.last_modified();
+        assert!(old_last_modified < new_last_modified);
     }
 
     #[test]
