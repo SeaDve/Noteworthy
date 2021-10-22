@@ -44,7 +44,7 @@ mod imp {
                         "Title",
                         "Title of the note",
                         None,
-                        glib::ParamFlags::READWRITE,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
                     glib::ParamSpec::new_object(
                         "tag-list",
@@ -91,11 +91,13 @@ mod imp {
                 "title" => {
                     let title = value.get().unwrap();
 
-                    if title != obj.title() {
-                        obj.update_last_modified();
+                    if title == obj.title() {
+                        return;
                     }
 
+                    obj.update_last_modified();
                     self.inner.borrow_mut().title = title;
+                    obj.notify("title");
                 }
                 "tag-list" => {
                     let tag_list = value.get().unwrap();
@@ -155,10 +157,6 @@ impl Metadata {
         self.property("tag-list").unwrap().get().unwrap()
     }
 
-    pub fn update_last_modified(&self) {
-        self.set_last_modified(&Date::now());
-    }
-
     pub fn set_last_modified(&self, date: &Date) {
         self.set_property("last-modified", date).unwrap();
     }
@@ -181,6 +179,10 @@ impl Metadata {
 
     pub fn is_trashed(&self) -> bool {
         self.property("is-trashed").unwrap().get().unwrap()
+    }
+
+    pub fn update_last_modified(&self) {
+        self.set_last_modified(&Date::now());
     }
 
     pub fn update(&self, other: &Metadata) {
