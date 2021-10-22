@@ -108,6 +108,11 @@ impl NoteTagList {
         imp.list.borrow().contains(tag)
     }
 
+    pub fn is_empty(&self) -> bool {
+        let imp = imp::NoteTagList::from_instance(self);
+        imp.list.borrow().is_empty()
+    }
+
     fn get_index_of(&self, tag: &Tag) -> Option<usize> {
         let imp = imp::NoteTagList::from_instance(self);
         imp.list.borrow().get_index_of(tag)

@@ -230,12 +230,13 @@ mod test {
     #[test]
     fn tag_list() {
         let metadata = Metadata::new();
-        assert_eq!(metadata.tag_list(), NoteTagList::default());
+        assert!(metadata.tag_list().is_empty());
 
         let new_tag_list = NoteTagList::new();
         new_tag_list.append(Tag::new("A Tag")).unwrap();
 
         metadata.set_tag_list(new_tag_list.clone());
+        assert!(!metadata.tag_list().is_empty());
         assert_eq!(metadata.tag_list(), new_tag_list);
     }
 
@@ -275,7 +276,7 @@ mod test {
     fn update() {
         let metadata = Metadata::new();
         assert_eq!(metadata.title(), "");
-        assert_eq!(metadata.tag_list(), NoteTagList::default());
+        assert!(metadata.tag_list().is_empty());
         assert!(!metadata.is_pinned());
         assert!(!metadata.is_trashed());
 
@@ -292,6 +293,7 @@ mod test {
 
         metadata.update(&other_metadata);
         assert_eq!(metadata.title(), other_metadata.title());
+        assert!(!metadata.tag_list().is_empty());
         assert_eq!(metadata.tag_list(), other_metadata.tag_list());
         assert_eq!(metadata.last_modified(), other_metadata.last_modified());
         assert_eq!(metadata.is_pinned(), other_metadata.is_pinned());
