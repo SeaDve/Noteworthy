@@ -5,8 +5,9 @@ use gtk::{
     subclass::prelude::*,
     CompositeTemplate,
 };
+use num_enum::TryFromPrimitive;
 
-use std::cell::RefCell;
+use std::{cell::RefCell, convert::TryFrom};
 
 use crate::{core::NoteRepository, utils};
 
@@ -14,7 +15,7 @@ mod imp {
     use super::*;
 
     #[repr(u8)]
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, PartialEq, TryFromPrimitive)]
     pub enum GitHost {
         Github = 0,
         Gitlab = 1,
@@ -22,8 +23,14 @@ mod imp {
     }
 
     impl GitHost {
-        pub fn from_int(int: u8) -> Self {
-            unsafe { std::mem::transmute(int) }
+        pub fn from_u8(int: u8) -> Self {
+            match Self::try_from(int) {
+                Ok(this) => this,
+                Err(err) => panic!(
+                    "Failed to convert u8 with value {} to GitHost: {}",
+                    int, err
+                ),
+            }
         }
     }
 
@@ -225,7 +232,7 @@ impl Setup {
         let is_automatic = imp.is_automatic_switch.state();
         config.is_automatic = Some(is_automatic);
 
-        let provider = imp::GitHost::from_int(imp.git_host_provider_row.selected() as u8);
+        let provider = imp::GitHost::from_u8(imp.git_host_provider_row.selected() as u8);
         config.provider = Some(provider);
 
         dbg!(&config);
@@ -252,9 +259,9 @@ mod test {
     fn git_host() {
         use imp::GitHost;
 
-        assert_eq!(GitHost::Github, GitHost::from_int(0));
-        assert_eq!(GitHost::Gitlab, GitHost::from_int(1));
-        assert_eq!(GitHost::Custom, GitHost::from_int(2));
+        assert_eq!(GitHost::Github, GitHost::from_u8(0));
+        assert_eq!(GitHost::Gitlab, GitHost::from_u8(1));
+        assert_eq!(GitHost::Custom, GitHost::from_u8(2));
     }
 
     #[test]
@@ -262,7 +269,14 @@ mod test {
     fn git_host_not_found() {
         use imp::GitHost;
 
-        GitHost::from_int(3);
-        GitHost::from_int(u8::MAX);
+        GitHost::from_u8(3);
+    }
+
+    #[test]
+    #[should_panic]
+    fn git_host_not_found_2() {
+        use imp::GitHost;
+
+        GitHost::from_u8(u8::MAX);
     }
 }
