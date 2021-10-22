@@ -1,7 +1,7 @@
 use gtk::{glib, prelude::*, subclass::prelude::*};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-use std::cell::{Cell, RefCell};
+use std::cell::RefCell;
 
 use crate::model::{Date, NoteTagList};
 
@@ -10,12 +10,17 @@ mod imp {
 
     #[derive(Debug, Default, Serialize, Deserialize)]
     #[serde(default)]
+    pub struct MetadataInner {
+        pub title: String,
+        pub tag_list: NoteTagList,
+        pub last_modified: Date,
+        pub is_pinned: bool,
+        pub is_trashed: bool,
+    }
+
+    #[derive(Debug, Default)]
     pub struct Metadata {
-        pub title: RefCell<String>,
-        pub tag_list: RefCell<NoteTagList>,
-        pub last_modified: RefCell<Date>,
-        pub is_pinned: Cell<bool>,
-        pub is_trashed: Cell<bool>,
+        pub inner: RefCell<MetadataInner>,
     }
 
     #[glib::object_subclass]
@@ -85,25 +90,25 @@ mod imp {
             match pspec.name() {
                 "title" => {
                     let title = value.get().unwrap();
-                    self.title.replace(title);
+                    self.inner.borrow_mut().title = title;
 
                     obj.update_last_modified();
                 }
                 "tag-list" => {
                     let tag_list = value.get().unwrap();
-                    self.tag_list.replace(tag_list);
+                    self.inner.borrow_mut().tag_list = tag_list;
                 }
                 "last-modified" => {
                     let last_modified = value.get().unwrap();
-                    self.last_modified.replace(last_modified);
+                    self.inner.borrow_mut().last_modified = last_modified;
                 }
                 "is-pinned" => {
                     let is_pinned = value.get().unwrap();
-                    self.is_pinned.set(is_pinned);
+                    self.inner.borrow_mut().is_pinned = is_pinned;
                 }
                 "is-trashed" => {
                     let is_trashed = value.get().unwrap();
-                    self.is_trashed.set(is_trashed);
+                    self.inner.borrow_mut().is_trashed = is_trashed;
                 }
                 _ => unimplemented!(),
             }
@@ -111,11 +116,11 @@ mod imp {
 
         fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "title" => self.title.borrow().to_value(),
-                "tag-list" => self.tag_list.borrow().to_value(),
-                "last-modified" => self.last_modified.borrow().to_value(),
-                "is-pinned" => self.is_pinned.get().to_value(),
-                "is-trashed" => self.is_trashed.get().to_value(),
+                "title" => self.inner.borrow().title.to_value(),
+                "tag-list" => self.inner.borrow().tag_list.to_value(),
+                "last-modified" => self.inner.borrow().last_modified.to_value(),
+                "is-pinned" => self.inner.borrow().is_pinned.to_value(),
+                "is-trashed" => self.inner.borrow().is_trashed.to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -148,7 +153,11 @@ impl Metadata {
     }
 
     pub fn update_last_modified(&self) {
-        self.set_property("last-modified", Date::now()).unwrap();
+        self.set_last_modified(&Date::now());
+    }
+
+    pub fn set_last_modified(&self, date: &Date) {
+        self.set_property("last-modified", date).unwrap();
     }
 
     pub fn last_modified(&self) -> Date {
@@ -174,7 +183,7 @@ impl Metadata {
     pub fn update(&self, other: &Metadata) {
         self.set_title(&other.title());
         self.set_tag_list(other.tag_list());
-        self.update_last_modified();
+        self.set_last_modified(&other.last_modified());
         self.set_is_pinned(other.is_pinned());
         self.set_is_trashed(other.is_trashed());
     }
@@ -183,22 +192,17 @@ impl Metadata {
 impl Serialize for Metadata {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let imp = imp::Metadata::from_instance(self);
-        imp.serialize(serializer)
+        imp.inner.serialize(serializer)
     }
 }
 
 impl<'de> Deserialize<'de> for Metadata {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let imp = imp::Metadata::deserialize(deserializer)?;
+        let inner = imp::MetadataInner::deserialize(deserializer)?;
 
-        let metadata = glib::Object::new::<Self>(&[
-            ("title", &*imp.title.borrow()),
-            ("tag-list", &*imp.tag_list.borrow()),
-            ("last-modified", &*imp.last_modified.borrow()),
-            ("is-pinned", &imp.is_pinned.get()),
-            ("is-trashed", &imp.is_trashed.get()),
-        ])
-        .expect("Failed to create Metadata.");
+        let metadata = Self::new();
+        let imp = imp::Metadata::from_instance(&metadata);
+        imp.inner.replace(inner);
 
         Ok(metadata)
     }
@@ -244,6 +248,14 @@ mod test {
     }
 
     #[test]
+    fn update_last_modified() {
+        let metadata = Metadata::new();
+        let old_last_modified = metadata.last_modified();
+        metadata.update_last_modified();
+        assert!(old_last_modified < metadata.last_modified());
+    }
+
+    #[test]
     fn is_pinned() {
         let metadata = Metadata::new();
         assert!(!metadata.is_pinned());
@@ -257,5 +269,32 @@ mod test {
         assert!(!metadata.is_trashed());
         metadata.set_is_trashed(true);
         assert!(metadata.is_trashed());
+    }
+
+    #[test]
+    fn update() {
+        let metadata = Metadata::new();
+        assert_eq!(metadata.title(), "");
+        assert_eq!(metadata.tag_list(), NoteTagList::default());
+        assert!(!metadata.is_pinned());
+        assert!(!metadata.is_trashed());
+
+        let other_metadata = Metadata::new();
+        other_metadata.set_title("Title");
+
+        let tag_list = NoteTagList::new();
+        tag_list.append(Tag::new("A Tag")).unwrap();
+
+        other_metadata.set_tag_list(tag_list);
+        other_metadata.set_last_modified(&Date::now());
+        other_metadata.set_is_pinned(true);
+        other_metadata.set_is_trashed(true);
+
+        metadata.update(&other_metadata);
+        assert_eq!(metadata.title(), other_metadata.title());
+        assert_eq!(metadata.tag_list(), other_metadata.tag_list());
+        assert_eq!(metadata.last_modified(), other_metadata.last_modified());
+        assert_eq!(metadata.is_pinned(), other_metadata.is_pinned());
+        assert_eq!(metadata.is_trashed(), other_metadata.is_trashed());
     }
 }
