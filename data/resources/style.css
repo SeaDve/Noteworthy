@@ -1,9 +1,3 @@
-.pill-button {
-  border-radius: 9999px;
-  padding: 12px 40px;
-}
-
-
 .spinning > image {
   animation-name: spin;
   animation-duration: 1s;

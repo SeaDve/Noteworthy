@@ -53,7 +53,7 @@
                             <property name="label" translatable="yes">Setup Git Host</property>
                             <property name="action-name">setup.setup-git-host</property>
                             <style>
-                              <class name="pill-button"/>
+                              <class name="pill"/>
                               <class name="suggested-action"/>
                             </style>
                           </object>
@@ -63,7 +63,7 @@
                             <property name="label" translatable="yes">Local Storage</property>
                             <property name="action-name">setup.setup-offline-mode</property>
                             <style>
-                              <class name="pill-button"/>
+                              <class name="pill"/>
                             </style>
                           </object>
                         </child>
