@@ -9,7 +9,7 @@ use num_enum::TryFromPrimitive;
 
 use std::{cell::RefCell, convert::TryFrom};
 
-use crate::{core::NoteRepository, utils};
+use crate::{core::NoteRepository, session::Session, utils};
 
 mod imp {
     use super::*;
@@ -81,15 +81,15 @@ mod imp {
                 obj.navigate_forward();
             });
 
-            // TODO consider changing these action names
-            klass.install_action("setup.setup-session", None, move |obj, _, _| {
+            klass.install_action("setup.setup-offline-mode", None, move |obj, _, _| {
                 let ctx = glib::MainContext::default();
                 ctx.spawn_local(clone!(@weak obj => async move {
-                    obj.setup_session().await;
-                    obj.emit_by_name("session-setup-done", &[]).unwrap();
+                    let new_session = obj.setup_offline_session().await;
+                    obj.emit_by_name("session-setup-done", &[&new_session]).unwrap();
                 }));
             });
 
+            // TODO consider changing these action names
             klass.install_action("setup.setup-git-host", None, move |obj, _, _| {
                 let imp = imp::Setup::from_instance(obj);
                 imp.content.set_visible_child_name("select-provider");
@@ -125,7 +125,12 @@ mod imp {
         fn signals() -> &'static [Signal] {
             use once_cell::sync::Lazy;
             static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
-                vec![Signal::builder("session-setup-done", &[], <()>::static_type().into()).build()]
+                vec![Signal::builder(
+                    "session-setup-done",
+                    &[Session::static_type().into()],
+                    <()>::static_type().into(),
+                )
+                .build()]
             });
             SIGNALS.as_ref()
         }
@@ -165,19 +170,20 @@ impl Setup {
         glib::Object::new(&[]).expect("Failed to create Setup.")
     }
 
-    pub fn connect_session_setup_done<F: Fn(&Self) + 'static>(
+    pub fn connect_session_setup_done<F: Fn(&Self, Session) + 'static>(
         &self,
         f: F,
     ) -> glib::SignalHandlerId {
         self.connect_local("session-setup-done", true, move |values| {
             let obj = values[0].get::<Self>().unwrap();
-            f(&obj);
+            let session = values[1].get::<Session>().unwrap();
+            f(&obj, session);
             None
         })
         .unwrap()
     }
 
-    async fn setup_session(&self) {
+    async fn setup_offline_session(&self) -> Session {
         let notes_folder = gio::File::for_path(&utils::default_notes_dir());
         if let Err(err) = notes_folder
             .make_directory_async_future(glib::PRIORITY_HIGH_IDLE)
@@ -186,6 +192,8 @@ impl Setup {
             // TODO add user facing error dialog
             log::error!("Failed to create note folder, {:?}", err);
         }
+
+        Session::new_offline(&notes_folder).await
     }
 
     fn navigate_forward(&self) {

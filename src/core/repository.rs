@@ -18,6 +18,18 @@ impl std::fmt::Debug for Repository {
 }
 
 impl Repository {
+    pub fn init(base_path: &Path) -> anyhow::Result<Self> {
+        let mut init_options = git2::RepositoryInitOptions::new();
+        init_options.no_reinit(true);
+
+        let repo = git2::Repository::init_opts(base_path, &init_options)?;
+
+        Ok(Self {
+            inner: repo,
+            base_path: base_path.to_owned(),
+        })
+    }
+
     pub fn clone(base_path: &Path, remote_url: &str) -> anyhow::Result<Self> {
         let mut callbacks = git2::RemoteCallbacks::new();
         callbacks.credentials(|_, username_from_url, _| Self::credentials_cb(username_from_url));
@@ -50,6 +62,18 @@ impl Repository {
 
     pub fn base_path(&self) -> &Path {
         self.base_path.as_path()
+    }
+
+    pub fn remotes(&self) -> anyhow::Result<Vec<String>> {
+        let repo = self.inner();
+        let remotes = repo.remotes()?;
+
+        // TODO find ways to not allocate a Vec
+        Ok(remotes
+            .iter()
+            .flatten()
+            .map(std::string::ToString::to_string)
+            .collect())
     }
 
     pub fn diff_tree_to_tree(
