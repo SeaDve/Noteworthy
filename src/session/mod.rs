@@ -221,7 +221,12 @@ glib::wrapper! {
 
 impl Session {
     pub async fn new(directory: &gio::File) -> Self {
-        let note_manager = NoteManager::for_directory(directory).await;
+        let note_manager = NoteManager::for_directory(directory, false).await;
+        glib::Object::new(&[("note-manager", &note_manager)]).expect("Failed to create Session.")
+    }
+
+    pub async fn new_offline(directory: &gio::File) -> Self {
+        let note_manager = NoteManager::for_directory(directory, true).await;
         glib::Object::new(&[("note-manager", &note_manager)]).expect("Failed to create Session.")
     }
 

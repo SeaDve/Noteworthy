@@ -53,12 +53,19 @@ mod imp {
             }
 
             self.setup
-                .connect_session_setup_done(clone!(@weak obj => move |_| {
-                    obj.load_session();
+                .connect_session_setup_done(clone!(@weak obj => move |_, session| {
+                    obj.load_session(session);
                 }));
 
+            // If already setup
             if utils::default_notes_dir().exists() {
-                obj.load_session();
+                let notes_folder = gio::File::for_path(&utils::default_notes_dir());
+                let ctx = glib::MainContext::default();
+                ctx.spawn_local(clone!(@weak obj => async move {
+                    // FIXME detect if it is offline mode or online
+                    let existing_session = Session::new_offline(&notes_folder).await;
+                    obj.load_session(existing_session);
+                }));
             }
 
             obj.load_window_size();
@@ -106,18 +113,11 @@ impl Window {
         imp.session.get().expect("Call load_session first").clone()
     }
 
-    fn load_session(&self) {
-        let notes_folder = gio::File::for_path(&utils::default_notes_dir());
-
-        let ctx = glib::MainContext::default();
-        ctx.spawn_local(clone!(@weak self as obj => async move {
-            let session = Session::new(&notes_folder).await;
-
-            let imp = imp::Window::from_instance(&obj);
-            imp.main_stack.add_child(&session);
-            imp.session.set(session).unwrap();
-            obj.switch_to_session_page();
-        }));
+    fn load_session(&self, session: Session) {
+        let imp = imp::Window::from_instance(self);
+        imp.main_stack.add_child(&session);
+        imp.session.set(session).unwrap();
+        self.switch_to_session_page();
     }
 
     fn switch_to_session_page(&self) {

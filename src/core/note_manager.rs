@@ -31,6 +31,7 @@ mod imp {
         pub note_list: OnceCell<NoteList>,
         pub tag_list: RefCell<Option<TagList>>,
         pub is_syncing: Cell<bool>,
+        pub is_offline_mode: Cell<bool>,
     }
 
     #[glib::object_subclass]
@@ -80,6 +81,13 @@ mod imp {
                         false,
                         glib::ParamFlags::READWRITE,
                     ),
+                    glib::ParamSpec::new_boolean(
+                        "is-offline-mode",
+                        "Is Offline Mode",
+                        "Whether the repo syncs to a remote repo",
+                        false,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT,
+                    ),
                 ]
             });
 
@@ -114,6 +122,10 @@ mod imp {
                     let is_syncing = value.get().unwrap();
                     self.is_syncing.set(is_syncing);
                 }
+                "is-offline-mode" => {
+                    let is_offline_mode = value.get().unwrap();
+                    self.is_offline_mode.set(is_offline_mode);
+                }
                 _ => unimplemented!(),
             }
         }
@@ -125,6 +137,7 @@ mod imp {
                 "note-list" => obj.note_list().to_value(),
                 "tag-list" => obj.tag_list().to_value(),
                 "is-syncing" => self.is_syncing.get().to_value(),
+                "is-offline-mode" => self.is_offline_mode.get().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -143,13 +156,17 @@ glib::wrapper! {
 }
 
 impl NoteManager {
-    pub async fn for_directory(directory: &gio::File) -> Self {
+    // TODO add ways to convert offline mode to online mode
+    pub async fn for_directory(directory: &gio::File, is_offline_mode: bool) -> Self {
         let repository = {
-            let res =
-                NoteRepository::clone("git@github.com:SeaDve/test.git".into(), directory).await;
+            let res = if is_offline_mode {
+                NoteRepository::init(directory).await
+            } else {
+                NoteRepository::clone("git@github.com:SeaDve/test.git".into(), directory).await
+            };
 
             if let Err(err) = res {
-                log::warn!("Failed to clone repo: {}", err);
+                log::warn!("Failed to clone or init repo: {}", err);
                 log::info!("Opening existing instead...");
                 NoteRepository::open(directory).await.unwrap()
             } else {
@@ -157,8 +174,12 @@ impl NoteManager {
             }
         };
 
-        glib::Object::new::<Self>(&[("directory", directory), ("repository", &repository)])
-            .expect("Failed to create NoteManager.")
+        glib::Object::new::<Self>(&[
+            ("directory", directory),
+            ("repository", &repository),
+            ("is-offline-mode", &is_offline_mode),
+        ])
+        .expect("Failed to create NoteManager.")
     }
 
     pub fn directory(&self) -> gio::File {
@@ -185,6 +206,10 @@ impl NoteManager {
             .borrow()
             .clone()
             .expect("Please call `load_data_file` first")
+    }
+
+    pub fn is_offline_mode(&self) -> bool {
+        self.property("is-offline-mode").unwrap().get().unwrap()
     }
 
     async fn load_notes(&self) -> anyhow::Result<()> {
@@ -373,10 +398,19 @@ impl NoteManager {
         self.save_all_notes().await?;
         self.save_data_file().await?;
 
-        let changed_files = repo.sync().await?;
-        self.handle_changed_files(&changed_files).await?;
+        let is_offline_mode = self.is_offline_mode();
+        if is_offline_mode {
+            repo.sync_offline().await?;
+        } else {
+            let changed_files = repo.sync().await?;
+            self.handle_changed_files(&changed_files).await?;
+        }
 
-        log::info!("Session synced {}", chrono::Local::now().format("%H:%M:%S"));
+        log::info!(
+            "Session synced {}, is_offline_mode: {}",
+            chrono::Local::now().format("%H:%M:%S"),
+            is_offline_mode
+        );
 
         Ok(())
     }
@@ -441,15 +475,17 @@ impl NoteManager {
     }
 
     fn setup_signals(&self) {
-        self.repository()
-            .connect_remote_changed(clone!(@weak self as obj => move |_| {
-                log::info!("New remote changes! Syncing...");
-                let ctx = glib::MainContext::default();
-                ctx.spawn_local(async move {
-                    if let Err(err) = obj.sync().await {
-                        log::error!("Failed to sync {}", err);
-                    }
-                });
-            }));
+        if !self.is_offline_mode() {
+            self.repository()
+                .connect_remote_changed(clone!(@weak self as obj => move |_| {
+                    log::info!("New remote changes! Syncing...");
+                    let ctx = glib::MainContext::default();
+                    ctx.spawn_local(async move {
+                        if let Err(err) = obj.sync().await {
+                            log::error!("Failed to sync {}", err);
+                        }
+                    });
+                }));
+        }
     }
 }
