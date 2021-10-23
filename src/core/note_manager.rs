@@ -277,7 +277,9 @@ impl NoteManager {
     }
 
     pub async fn save_all_notes(&self) -> anyhow::Result<()> {
-        for note in self.note_list().iter() {
+        let unsaved_notes = self.note_list().take_unsaved_notes();
+
+        for note in unsaved_notes.iter() {
             note.serialize().await?;
         }
 

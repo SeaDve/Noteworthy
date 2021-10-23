@@ -190,16 +190,16 @@ impl Note {
         imp.buffer.get().unwrap().clone()
     }
 
+    pub fn id(&self) -> Id {
+        Id::from_path(&self.file().path().unwrap())
+    }
+
     pub fn is_saved(&self) -> bool {
         let imp = imp::Note::from_instance(self);
         imp.is_saved.get()
     }
 
-    pub fn id(&self) -> Id {
-        Id::from_path(&self.file().path().unwrap())
-    }
-
-    pub fn set_is_saved(&self, is_saved: bool) {
+    fn set_is_saved(&self, is_saved: bool) {
         self.set_property("is-saved", is_saved).unwrap();
     }
 
@@ -215,6 +215,13 @@ impl Note {
             None
         })
         .unwrap()
+    }
+
+    pub fn connect_is_saved_notify<F: Fn(&Self, &glib::ParamSpec) + 'static>(
+        &self,
+        f: F,
+    ) -> glib::SignalHandlerId {
+        self.connect_notify_local(Some("is-saved"), f)
     }
 
     pub async fn update(&self) -> anyhow::Result<()> {

@@ -6,7 +6,10 @@ use gtk::{
 };
 use indexmap::IndexMap;
 
-use std::cell::{Cell, RefCell};
+use std::{
+    cell::{Cell, RefCell},
+    collections::HashSet,
+};
 
 use super::{note::Id, Note};
 
@@ -16,6 +19,7 @@ mod imp {
     #[derive(Debug, Default)]
     pub struct NoteList {
         pub list: RefCell<IndexMap<Id, Note>>,
+        pub unsaved_notes: RefCell<HashSet<Note>>,
     }
 
     #[glib::object_subclass]
@@ -62,11 +66,24 @@ impl NoteList {
     }
 
     pub fn append(&self, note: Note) {
-        let imp = &imp::NoteList::from_instance(self);
+        let imp = imp::NoteList::from_instance(self);
 
         note.connect_metadata_changed(clone!(@weak self as obj => move |note| {
             if let Some(position) = obj.get_index_of(&note.id()) {
                 obj.items_changed(position as u32, 1, 1);
+            }
+        }));
+
+        note.connect_is_saved_notify(clone!(@weak self as obj => move |note, _| {
+            let imp = imp::NoteList::from_instance(&obj);
+            let mut unsaved_notes = imp.unsaved_notes.borrow_mut();
+
+            if !note.is_saved() {
+                let res = unsaved_notes.insert(note.clone());
+                log::info!("Inserted unsaved note with ret: {}", res);
+            } else {
+                let res = unsaved_notes.remove(note);
+                log::info!("Removed unsaved note with ret: {}", res);
             }
         }));
 
@@ -79,7 +96,7 @@ impl NoteList {
     }
 
     pub fn remove(&self, note_id: &Id) {
-        let imp = &imp::NoteList::from_instance(self);
+        let imp = imp::NoteList::from_instance(self);
 
         let removed = {
             let mut list = imp.list.borrow_mut();
@@ -92,13 +109,18 @@ impl NoteList {
     }
 
     pub fn get(&self, note_id: &Id) -> Option<Note> {
-        let imp = &imp::NoteList::from_instance(self);
+        let imp = imp::NoteList::from_instance(self);
         imp.list.borrow().get(note_id).cloned()
     }
 
     pub fn get_index_of(&self, note_id: &Id) -> Option<usize> {
         let imp = imp::NoteList::from_instance(self);
         imp.list.borrow().get_index_of(note_id)
+    }
+
+    pub fn take_unsaved_notes(&self) -> HashSet<Note> {
+        let imp = imp::NoteList::from_instance(self);
+        imp.unsaved_notes.take()
     }
 
     pub fn iter(&self) -> Iter {
