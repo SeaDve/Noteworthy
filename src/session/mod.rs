@@ -240,8 +240,13 @@ impl Session {
             return;
         }
 
-        // Save previous note before switching to other notes
-        self.save_active_note();
+        // Save all notes note before switching to other notes
+        let ctx = glib::MainContext::default();
+        ctx.spawn_local(clone!(@weak self as obj => async move {
+            if let Err(err) = obj.save().await {
+                log::error!("Failed to save session: {}", err);
+            }
+        }));
 
         let imp = imp::Session::from_instance(self);
 
@@ -266,15 +271,6 @@ impl Session {
     }
 
     // TODO Add autosave
-    pub fn save_active_note(&self) {
-        if let Some(note) = self.selected_note() {
-            let ctx = glib::MainContext::default();
-            ctx.spawn_local(clone!(@weak self as obj => async move {
-                obj.note_manager().save_note(note).await.unwrap();
-            }));
-        }
-    }
-
     pub async fn save(&self) -> anyhow::Result<()> {
         let note_manager = self.note_manager();
         note_manager.sync().await?;

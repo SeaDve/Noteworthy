@@ -276,62 +276,9 @@ impl NoteManager {
         Ok(())
     }
 
-    pub async fn save_note(&self, note: Note) -> anyhow::Result<()> {
-        if note.is_saved() {
-            log::info!("Note is already saved returning");
-            return Ok(());
-        }
-
-        let note_bytes = note.serialize()?;
-
-        // FIXME consider making backup on all replace_contents
-        let res = note
-            .file()
-            .replace_contents_async_future(note_bytes, None, false, gio::FileCreateFlags::NONE)
-            .await;
-
-        if let Err(err) = res {
-            anyhow::bail!("Fail saving note: {}", err.1);
-        }
-
-        note.set_is_saved(true);
-
-        log::info!(
-            "Saved note with title of {} and path of {:?}",
-            note.metadata().title(),
-            note.file().path().unwrap().display()
-        );
-
-        self.sync().await?;
-
-        Ok(())
-    }
-
     pub async fn save_all_notes(&self) -> anyhow::Result<()> {
         for note in self.note_list().iter() {
-            if note.is_saved() {
-                log::info!("Note already saved, skipping...");
-                continue;
-            }
-
-            let note_bytes = note.serialize()?;
-
-            let res = note
-                .file()
-                .replace_contents_async_future(note_bytes, None, false, gio::FileCreateFlags::NONE)
-                .await;
-
-            if let Err(err) = res {
-                anyhow::bail!("Fail saving note: {}", err.1);
-            }
-
-            note.set_is_saved(true);
-
-            log::info!(
-                "Saved noted with title of {} and path of {:?}",
-                note.metadata().title(),
-                note.file().path().unwrap().display()
-            );
+            note.serialize().await?;
         }
 
         Ok(())
@@ -344,6 +291,7 @@ impl NoteManager {
         let data_bytes = serde_yaml::to_vec(&data)?;
 
         let data_file = gio::File::for_path(self.data_file_path());
+        // FIXME consider making backup on all replace_contents
         let res = data_file
             .replace_contents_async_future(data_bytes, None, false, gio::FileCreateFlags::NONE)
             .await;

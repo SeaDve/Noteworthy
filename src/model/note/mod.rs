@@ -263,7 +263,34 @@ impl Note {
         Ok(Self::new(file, &metadata, &buffer))
     }
 
-    pub fn serialize(&self) -> anyhow::Result<Vec<u8>> {
+    pub async fn serialize(&self) -> anyhow::Result<()> {
+        if self.is_saved() {
+            log::info!("Note already saved, skipping...");
+            return Ok(());
+        }
+
+        let bytes = self.serialize_to_bytes()?;
+        let res = self
+            .file()
+            .replace_contents_async_future(bytes, None, false, gio::FileCreateFlags::NONE)
+            .await;
+
+        if let Err(err) = res {
+            anyhow::bail!("Fail saving note: {}", err.1);
+        }
+
+        self.set_is_saved(true);
+
+        log::info!(
+            "Saved noted with title of {} and path of {:?}",
+            self.metadata().title(),
+            self.file().path().unwrap().display()
+        );
+
+        Ok(())
+    }
+
+    fn serialize_to_bytes(&self) -> anyhow::Result<Vec<u8>> {
         // FIXME replace with not hacky implementation
         let mut bytes = serde_yaml::to_vec(&self.metadata())?;
         bytes.append(&mut "---\n".as_bytes().to_vec());
