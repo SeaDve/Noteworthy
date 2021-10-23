@@ -272,7 +272,8 @@ impl Note {
 
     pub async fn serialize(&self) -> anyhow::Result<()> {
         if self.is_saved() {
-            log::info!("Note already saved, skipping...");
+            // TODO consider removing this
+            log::error!("Note is already saved, trying to save again");
             return Ok(());
         }
 
