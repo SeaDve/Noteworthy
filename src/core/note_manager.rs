@@ -279,6 +279,10 @@ impl NoteManager {
     pub async fn save_all_notes(&self) -> anyhow::Result<()> {
         let unsaved_notes = self.note_list().take_unsaved_notes();
 
+        if unsaved_notes.is_empty() {
+            log::info!("No unsaved notes, skipping...");
+        }
+
         for note in unsaved_notes.iter() {
             note.serialize().await?;
         }
