@@ -17,8 +17,8 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use self::repository::Repository;
-pub use self::{repository_watcher::RepositoryWatcher, sync_state::SyncState};
+pub use self::sync_state::SyncState;
+use self::{repository::Repository, repository_watcher::RepositoryWatcher};
 use crate::utils;
 
 const DEFAULT_REMOTE_NAME: &str = "origin";
