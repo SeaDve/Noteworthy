@@ -1,6 +1,10 @@
+mod repository;
+mod repository_watcher;
+mod sync_state;
+
 use gtk::{
     gio,
-    glib::{self, clone, GEnum},
+    glib::{self, clone},
     prelude::*,
     subclass::prelude::*,
 };
@@ -13,7 +17,8 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use super::{repository::Repository, repository_watcher::RepositoryWatcher};
+use self::repository::Repository;
+pub use self::{repository_watcher::RepositoryWatcher, sync_state::SyncState};
 use crate::utils;
 
 const DEFAULT_REMOTE_NAME: &str = "origin";
@@ -26,21 +31,6 @@ static RE_VALIDATE_URL: Lazy<Regex> =
 struct SyncOptions {
     is_skip_pull: bool,
     is_skip_push: bool,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, GEnum)]
-#[genum(type_name = "NwtyNoteRepositorySyncState")]
-pub enum SyncState {
-    Syncing,
-    Pulling,
-    Pushing,
-    Idle,
-}
-
-impl Default for SyncState {
-    fn default() -> Self {
-        Self::Idle
-    }
 }
 
 mod imp {

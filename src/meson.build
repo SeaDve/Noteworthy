@@ -19,11 +19,12 @@ run_command(
 )
 
 rust_sources = files(
+  'core/note_repository/mod.rs',
+  'core/note_repository/repository.rs',
+  'core/note_repository/repository_watcher.rs',
+  'core/note_repository/sync_state.rs',
   'core/mod.rs',
   'core/note_manager.rs',
-  'core/note_repository.rs',
-  'core/repository.rs',
-  'core/repository_watcher.rs',
   'core/ssh_key.rs',
   'model/note/id.rs',
   'model/note/metadata.rs',
