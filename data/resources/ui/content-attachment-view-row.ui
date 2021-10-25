@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="NwtyContentAttachmentViewRow" parent="AdwBin">
+    <property name="child">
+      <object class="GtkLabel" id="label">
+      </object>
+    </property>
+  </template>
+</interface>

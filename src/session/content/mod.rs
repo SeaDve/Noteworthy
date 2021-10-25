@@ -1,10 +1,11 @@
+mod attachment_view;
 mod view;
 
 use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::{Cell, RefCell};
 
-use self::view::View;
+use self::{attachment_view::AttachmentView, view::View};
 use crate::model::Note;
 
 mod imp {
@@ -16,7 +17,9 @@ mod imp {
         #[template_child]
         pub stack: TemplateChild<gtk::Stack>,
         #[template_child]
-        pub view: TemplateChild<View>,
+        pub view_flap: TemplateChild<adw::Flap>,
+        #[template_child]
+        pub attachment_view: TemplateChild<AttachmentView>,
         #[template_child]
         pub no_selected_view: TemplateChild<adw::StatusPage>,
         #[template_child]
@@ -25,6 +28,8 @@ mod imp {
         pub is_pinned_button: TemplateChild<gtk::ToggleButton>,
         #[template_child]
         pub is_trashed_button: TemplateChild<gtk::ToggleButton>,
+        #[template_child]
+        pub view_flap_button: TemplateChild<gtk::ToggleButton>,
 
         pub bindings: RefCell<Vec<glib::Binding>>,
 
@@ -40,6 +45,7 @@ mod imp {
 
         fn class_init(klass: &mut Self::Class) {
             View::static_type();
+            AttachmentView::static_type();
             Self::bind_template(klass);
 
             klass.install_action("content.go-back", None, move |obj, _, _| {
@@ -81,6 +87,11 @@ mod imp {
             );
             is_some_note_expression.bind(
                 &self.edit_tags_button.get(),
+                "visible",
+                None::<&gtk::Widget>,
+            );
+            is_some_note_expression.bind(
+                &self.view_flap_button.get(),
                 "visible",
                 None::<&gtk::Widget>,
             );
@@ -187,7 +198,7 @@ impl Content {
                 .unwrap();
             bindings.push(is_trashed);
 
-            imp.stack.set_visible_child(&imp.view.get());
+            imp.stack.set_visible_child(&imp.view_flap.get());
         } else {
             imp.stack.set_visible_child(&imp.no_selected_view.get());
         }

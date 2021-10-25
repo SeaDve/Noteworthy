@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="NwtyContentAttachmentView" parent="AdwBin">
+    <property name="child">
+      <object class="GtkListView" id="list_view">
+        <property name="model">
+          <object class="GtkNoSelection" id="selection"/>
+        </property>
+        <property name="factory">
+          <object class="GtkBuilderListItemFactory">
+            <property name="bytes"><![CDATA[
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="GtkListItem">
+    <property name="child">
+      <object class="NwtyContentAttachmentViewRow">
+        <binding name="attachment">
+          <lookup name="item">GtkListItem</lookup>
+        </binding>
+      </object>
+    </property>
+  </template>
+</interface>
+         ]]></property>
+          </object>
+        </property>
+      </object>
+    </property>
+  </template>
+</interface>

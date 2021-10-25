@@ -13,6 +13,12 @@
           </object>
         </child>
         <child type="end">
+          <object class="GtkToggleButton" id="view_flap_button">
+            <property name="icon-name">sidebar-toggle-right-symbolic</property>
+            <property name="active" bind-source="view_flap" bind-property="reveal-flap" bind-flags="bidirectional"/>
+          </object>
+        </child>
+        <child type="end">
           <object class="GtkToggleButton" id="is_trashed_button">
             <property name="icon-name">user-trash-symbolic</property>
           </object>
@@ -40,8 +46,20 @@
           </object>
         </child>
         <child>
-          <object class="NwtyContentView" id="view">
-            <property name="note" bind-source="NwtyContent" bind-property="note" bind-flags="sync-create"/>
+          <object class="AdwFlap" id="view_flap">
+            <property name="flap-position">end</property>
+            <property name="fold-policy">always</property>
+            <property name="separator">
+              <object class="GtkSeparator"/>
+            </property>
+            <property name="content">
+              <object class="NwtyContentView" id="view">
+                <property name="note" bind-source="NwtyContent" bind-property="note" bind-flags="sync-create"/>
+              </object>
+            </property>
+            <property name="flap">
+              <object class="NwtyContentAttachmentView" id="attachment_view"/>
+            </property>
           </object>
         </child>
       </object>
