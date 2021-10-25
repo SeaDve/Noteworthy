@@ -3,7 +3,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use std::cell::RefCell;
 
-use crate::model::{Date, NoteTagList};
+use crate::model::{AttachmentList, Date, NoteTagList};
 
 mod imp {
     use super::*;
@@ -13,6 +13,7 @@ mod imp {
     pub struct MetadataInner {
         pub title: String,
         pub tag_list: NoteTagList,
+        pub attachment_list: AttachmentList,
         pub last_modified: Date,
         pub is_pinned: bool,
         pub is_trashed: bool,
@@ -51,6 +52,13 @@ mod imp {
                         "Tag List",
                         "List containing the tags of the note",
                         NoteTagList::static_type(),
+                        glib::ParamFlags::READWRITE,
+                    ),
+                    glib::ParamSpec::new_object(
+                        "attachment-list",
+                        "Attachment List",
+                        "List containing the attachments of the note",
+                        AttachmentList::static_type(),
                         glib::ParamFlags::READWRITE,
                     ),
                     glib::ParamSpec::new_boxed(
@@ -103,6 +111,10 @@ mod imp {
                     let tag_list = value.get().unwrap();
                     self.inner.borrow_mut().tag_list = tag_list;
                 }
+                "attachment-list" => {
+                    let attachment_list = value.get().unwrap();
+                    self.inner.borrow_mut().attachment_list = attachment_list;
+                }
                 "last-modified" => {
                     let last_modified = value.get().unwrap();
                     self.inner.borrow_mut().last_modified = last_modified;
@@ -123,6 +135,7 @@ mod imp {
             match pspec.name() {
                 "title" => self.inner.borrow().title.to_value(),
                 "tag-list" => self.inner.borrow().tag_list.to_value(),
+                "attachment-list" => self.inner.borrow().attachment_list.to_value(),
                 "last-modified" => self.inner.borrow().last_modified.to_value(),
                 "is-pinned" => self.inner.borrow().is_pinned.to_value(),
                 "is-trashed" => self.inner.borrow().is_trashed.to_value(),
@@ -157,6 +170,15 @@ impl Metadata {
         self.property("tag-list").unwrap().get().unwrap()
     }
 
+    pub fn set_attachment_list(&self, attachment_list: AttachmentList) {
+        self.set_property("attachment-list", attachment_list)
+            .unwrap();
+    }
+
+    pub fn attachment_list(&self) -> AttachmentList {
+        self.property("attachment-list").unwrap().get().unwrap()
+    }
+
     pub fn set_last_modified(&self, date: &Date) {
         self.set_property("last-modified", date).unwrap();
     }
@@ -188,6 +210,7 @@ impl Metadata {
     pub fn update(&self, other: &Metadata) {
         self.set_title(&other.title());
         self.set_tag_list(other.tag_list());
+        self.set_attachment_list(other.attachment_list());
         self.set_last_modified(&other.last_modified());
         self.set_is_pinned(other.is_pinned());
         self.set_is_trashed(other.is_trashed());
@@ -222,7 +245,8 @@ impl Default for Metadata {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::model::Tag;
+    use crate::model::{Attachment, Tag};
+    use gtk::gio;
 
     #[test]
     fn title() {
@@ -266,6 +290,21 @@ mod test {
     }
 
     #[test]
+    fn attachment_list() {
+        let metadata = Metadata::new();
+        assert!(metadata.attachment_list().is_empty());
+
+        let new_attachment_list = AttachmentList::new();
+        new_attachment_list
+            .append(Attachment::new(&gio::File::for_path("/home/test/t.png")))
+            .unwrap();
+
+        metadata.set_attachment_list(new_attachment_list.clone());
+        assert!(!metadata.attachment_list().is_empty());
+        assert_eq!(metadata.attachment_list(), new_attachment_list);
+    }
+
+    #[test]
     fn last_modified() {
         let metadata = Metadata::new();
         assert_eq!(metadata.title(), "");
@@ -302,6 +341,7 @@ mod test {
         let metadata = Metadata::new();
         assert_eq!(metadata.title(), "");
         assert!(metadata.tag_list().is_empty());
+        assert!(metadata.attachment_list().is_empty());
         assert!(!metadata.is_pinned());
         assert!(!metadata.is_trashed());
 
@@ -310,8 +350,14 @@ mod test {
 
         let tag_list = NoteTagList::new();
         tag_list.append(Tag::new("A Tag")).unwrap();
-
         other_metadata.set_tag_list(tag_list);
+
+        let attachment_list = AttachmentList::new();
+        attachment_list
+            .append(Attachment::new(&gio::File::for_path("/home/test/t.png")))
+            .unwrap();
+        other_metadata.set_attachment_list(attachment_list);
+
         other_metadata.set_last_modified(&Date::now());
         other_metadata.set_is_pinned(true);
         other_metadata.set_is_trashed(true);
@@ -319,7 +365,9 @@ mod test {
         metadata.update(&other_metadata);
         assert_eq!(metadata.title(), other_metadata.title());
         assert!(!metadata.tag_list().is_empty());
+        assert!(!metadata.attachment_list().is_empty());
         assert_eq!(metadata.tag_list(), other_metadata.tag_list());
+        assert_eq!(metadata.attachment_list(), other_metadata.attachment_list());
         assert_eq!(metadata.last_modified(), other_metadata.last_modified());
         assert_eq!(metadata.is_pinned(), other_metadata.is_pinned());
         assert_eq!(metadata.is_trashed(), other_metadata.is_trashed());

@@ -1,5 +1,7 @@
 use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use once_cell::unsync::OnceCell;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::path::PathBuf;
 
 mod imp {
     use super::*;
@@ -73,5 +75,20 @@ impl Attachment {
     pub fn file(&self) -> &gio::File {
         let imp = imp::Attachment::from_instance(self);
         imp.file.get().unwrap()
+    }
+}
+
+impl Serialize for Attachment {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        self.file().path().unwrap().serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for Attachment {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let path = PathBuf::deserialize(deserializer)?;
+        let file = gio::File::for_path(path);
+
+        Ok(Self::new(&file))
     }
 }

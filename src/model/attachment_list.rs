@@ -1,6 +1,7 @@
 use adw::subclass::prelude::*;
 use gtk::{gio, glib, prelude::*};
 use indexmap::IndexSet;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use std::cell::RefCell;
 
@@ -89,5 +90,35 @@ impl AttachmentList {
         }
 
         Ok(())
+    }
+
+    pub fn is_empty(&self) -> bool {
+        let imp = imp::AttachmentList::from_instance(self);
+        imp.list.borrow().is_empty()
+    }
+}
+
+impl Serialize for AttachmentList {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let imp = imp::AttachmentList::from_instance(self);
+        imp.list.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for AttachmentList {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let list: IndexSet<Attachment> = IndexSet::deserialize(deserializer)?;
+
+        let new_attachment_list = Self::new();
+        let imp = imp::AttachmentList::from_instance(&new_attachment_list);
+        imp.list.replace(list);
+
+        Ok(new_attachment_list)
+    }
+}
+
+impl Default for AttachmentList {
+    fn default() -> Self {
+        Self::new()
     }
 }
