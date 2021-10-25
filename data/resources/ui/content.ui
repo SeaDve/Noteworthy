@@ -58,7 +58,15 @@
               </object>
             </property>
             <property name="flap">
-              <object class="NwtyContentAttachmentView" id="attachment_view"/>
+              <object class="NwtyContentAttachmentView" id="attachment_view">
+                <binding name="attachment-list">
+                  <lookup name="attachment-list">
+                    <lookup name="metadata">
+                      <lookup name="note">NwtyContent</lookup>
+                    </lookup>
+                  </lookup>
+                </binding>
+              </object>
             </property>
           </object>
         </child>
