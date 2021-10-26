@@ -9,7 +9,7 @@ pub struct DateTime(chrono::DateTime<Local>);
 
 impl std::fmt::Display for DateTime {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.0.format("%B %d %Y %H:%M:%S").to_string())
+        self.0.format("%B %d %Y %H:%M:%S").fmt(f)
     }
 }
 
