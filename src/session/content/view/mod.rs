@@ -1,6 +1,7 @@
 mod tag_list_view;
 
 use adw::subclass::prelude::*;
+use gettextrs::gettext;
 use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::RefCell;
@@ -67,8 +68,7 @@ mod imp {
             let last_modified_str_expr = gtk::ClosureExpression::new(
                 |args| {
                     let last_modified: DateTime = args[1].get().unwrap();
-                    // TODO use fuzzy here
-                    format!("Last edited {}", last_modified)
+                    gettext!("Last edited {}", last_modified.fuzzy_display())
                 },
                 &[last_modified_expression.upcast()],
             );
