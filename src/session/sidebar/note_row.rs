@@ -10,7 +10,7 @@ use once_cell::unsync::OnceCell;
 use std::cell::{Cell, RefCell};
 
 use super::{Note, SelectionMode, Sidebar};
-use crate::model::{note::Metadata, Date};
+use crate::model::{note::Metadata, DateTime};
 
 const MAX_SUBTITLE_LEN: usize = 100;
 const MAX_SUBTITLE_LINE: u32 = 3;
@@ -277,7 +277,7 @@ impl NoteRow {
         );
         subtitle_expression.bind(&imp.subtitle_label.get(), "label", None::<&gtk::Widget>);
 
-        // Expression describing how to get time label of self from date of note
+        // Expression describing how to get time label of self from last_modifed of note
         let metadata_expression =
             gtk::PropertyExpression::new(Note::static_type(), Some(&note_expression), "metadata");
         let last_modified_expression = gtk::PropertyExpression::new(
@@ -287,7 +287,7 @@ impl NoteRow {
         );
         let time_expression = gtk::ClosureExpression::new(
             |args| {
-                let last_modified: Date = args[1].get().unwrap();
+                let last_modified: DateTime = args[1].get().unwrap();
                 last_modified.fuzzy_display()
             },
             &[last_modified_expression.upcast()],

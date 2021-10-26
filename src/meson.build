@@ -31,7 +31,7 @@ rust_sources = files(
   'model/note/mod.rs',
   'model/attachment.rs',
   'model/attachment_list.rs',
-  'model/date.rs',
+  'model/date_time.rs',
   'model/mod.rs',
   'model/note_list.rs',
   'model/note_tag_list.rs',

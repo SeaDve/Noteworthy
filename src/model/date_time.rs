@@ -1,25 +1,25 @@
-use chrono::{DateTime, Local};
+use chrono::Local;
 use gtk::glib::{self, GBoxed};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, GBoxed, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-#[gboxed(type_name = "NwtyDate")]
+#[gboxed(type_name = "NwtyDateTime")]
 #[serde(transparent)]
-pub struct Date(DateTime<Local>);
+pub struct DateTime(chrono::DateTime<Local>);
 
-impl Default for Date {
-    fn default() -> Self {
-        Self::now()
-    }
-}
-
-impl std::fmt::Display for Date {
+impl std::fmt::Display for DateTime {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&self.0.format("%B %d %Y %H:%M:%S").to_string())
     }
 }
 
-impl Date {
+impl Default for DateTime {
+    fn default() -> Self {
+        Self::now()
+    }
+}
+
+impl DateTime {
     pub fn now() -> Self {
         Self(Local::now())
     }

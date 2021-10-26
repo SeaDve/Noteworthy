@@ -3,7 +3,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use std::cell::RefCell;
 
-use crate::model::{AttachmentList, Date, NoteTagList};
+use crate::model::{AttachmentList, DateTime, NoteTagList};
 
 mod imp {
     use super::*;
@@ -14,7 +14,7 @@ mod imp {
         pub title: String,
         pub tag_list: NoteTagList,
         pub attachment_list: AttachmentList,
-        pub last_modified: Date,
+        pub last_modified: DateTime,
         pub is_pinned: bool,
         pub is_trashed: bool,
     }
@@ -64,8 +64,8 @@ mod imp {
                     glib::ParamSpec::new_boxed(
                         "last-modified",
                         "Last Modified",
-                        "Last modified date of the note",
-                        Date::static_type(),
+                        "Last modified datetime of the note",
+                        DateTime::static_type(),
                         glib::ParamFlags::READWRITE,
                     ),
                     glib::ParamSpec::new_boolean(
@@ -179,11 +179,11 @@ impl Metadata {
         self.property("attachment-list").unwrap().get().unwrap()
     }
 
-    pub fn set_last_modified(&self, date: &Date) {
-        self.set_property("last-modified", date).unwrap();
+    pub fn set_last_modified(&self, last_modified: &DateTime) {
+        self.set_property("last-modified", last_modified).unwrap();
     }
 
-    pub fn last_modified(&self) -> Date {
+    pub fn last_modified(&self) -> DateTime {
         self.property("last-modified").unwrap().get().unwrap()
     }
 
@@ -204,7 +204,7 @@ impl Metadata {
     }
 
     pub fn update_last_modified(&self) {
-        self.set_last_modified(&Date::now());
+        self.set_last_modified(&DateTime::now());
     }
 
     pub fn update(&self, other: &Metadata) {
@@ -358,7 +358,7 @@ mod test {
             .unwrap();
         other_metadata.set_attachment_list(attachment_list);
 
-        other_metadata.set_last_modified(&Date::now());
+        other_metadata.set_last_modified(&DateTime::now());
         other_metadata.set_is_pinned(true);
         other_metadata.set_is_trashed(true);
 

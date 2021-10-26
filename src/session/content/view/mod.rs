@@ -6,7 +6,7 @@ use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 use std::cell::RefCell;
 
 use self::tag_list_view::TagListView;
-use crate::model::{note::Metadata, Date, Note};
+use crate::model::{note::Metadata, DateTime, Note};
 
 mod imp {
     use super::*;
@@ -66,9 +66,9 @@ mod imp {
             );
             let last_modified_str_expr = gtk::ClosureExpression::new(
                 |args| {
-                    let date: Date = args[1].get().unwrap();
+                    let last_modified: DateTime = args[1].get().unwrap();
                     // TODO use fuzzy here
-                    format!("Last edited {}", date)
+                    format!("Last edited {}", last_modified)
                 },
                 &[last_modified_expression.upcast()],
             );
