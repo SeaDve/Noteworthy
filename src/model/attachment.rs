@@ -10,10 +10,8 @@ mod imp {
     #[derive(Debug, Serialize, Deserialize)]
     #[serde(default)]
     pub struct AttachmentInner {
-        #[serde(
-            serialize_with = "serialize_file",
-            deserialize_with = "deserialize_file"
-        )]
+        #[serde(serialize_with = "serialize_file")]
+        #[serde(deserialize_with = "deserialize_file")]
         pub file: gio::File,
         pub created: DateTime,
         pub title: String,
