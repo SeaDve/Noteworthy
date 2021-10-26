@@ -1,5 +1,9 @@
 use adw::subclass::prelude::*;
-use gtk::{gio, glib, prelude::*};
+use gtk::{
+    gio,
+    glib::{self, clone},
+    prelude::*,
+};
 use indexmap::IndexSet;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -61,6 +65,12 @@ impl AttachmentList {
     pub fn append(&self, attachment: Attachment) -> anyhow::Result<()> {
         let imp = imp::AttachmentList::from_instance(self);
 
+        attachment.connect_title_notify(clone!(@weak self as obj => move |tag, _| {
+            if let Some(position) = obj.get_index_of(tag) {
+                obj.items_changed(position as u32, 1, 1);
+            }
+        }));
+
         let is_list_appended = {
             let mut list = imp.list.borrow_mut();
             list.insert(attachment)
@@ -95,6 +105,11 @@ impl AttachmentList {
     pub fn is_empty(&self) -> bool {
         let imp = imp::AttachmentList::from_instance(self);
         imp.list.borrow().is_empty()
+    }
+
+    fn get_index_of(&self, note_id: &Attachment) -> Option<usize> {
+        let imp = imp::AttachmentList::from_instance(self);
+        imp.list.borrow().get_index_of(note_id)
     }
 }
 

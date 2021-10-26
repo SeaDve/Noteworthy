@@ -131,6 +131,13 @@ impl Attachment {
     pub fn set_title(&self, title: &str) {
         self.set_property("title", title).unwrap();
     }
+
+    pub fn connect_title_notify<F: Fn(&Self, &glib::ParamSpec) + 'static>(
+        &self,
+        f: F,
+    ) -> glib::SignalHandlerId {
+        self.connect_notify_local(Some("title"), f)
+    }
 }
 
 impl Serialize for Attachment {

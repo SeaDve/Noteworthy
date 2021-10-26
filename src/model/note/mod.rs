@@ -38,13 +38,15 @@ mod imp {
 
             obj.set_is_saved(true);
 
+            let metadata = obj.metadata();
+
             obj.buffer().connect_changed(clone!(@weak obj => move |_| {
                 obj.metadata().update_last_modified();
                 obj.notify("buffer"); // For some reason the subtitle doesn't get updated when the filter model is not incremental
                 obj.set_is_saved(false);
             }));
 
-            obj.metadata().connect_notify_local(
+            metadata.connect_notify_local(
                 None,
                 clone!(@weak obj => move |_, _| {
                     obj.emit_by_name("metadata-changed", &[]).unwrap();
@@ -52,9 +54,17 @@ mod imp {
                 }),
             );
 
-            // FIXME do this too with attachment_list
-            obj.metadata()
+            // TODO not sure if we need to notify metadata-changed here (same with attachment_list)
+            // Unless we want to show the tags in the sidebar
+            metadata
                 .tag_list()
+                .connect_items_changed(clone!(@weak obj => move |_,_,_,_| {
+                    obj.emit_by_name("metadata-changed", &[]).unwrap();
+                    obj.set_is_saved(false);
+                }));
+
+            metadata
+                .attachment_list()
                 .connect_items_changed(clone!(@weak obj => move |_,_,_,_| {
                     obj.emit_by_name("metadata-changed", &[]).unwrap();
                     obj.set_is_saved(false);
