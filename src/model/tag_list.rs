@@ -561,7 +561,7 @@ mod test {
 
     #[test]
     fn deserialize() {
-        let tag_list: TagList = serde_yaml::from_str(" - A\n - B\n - C\n").unwrap();
+        let tag_list: TagList = serde_yaml::from_str("- A\n- B\n- C\n").unwrap();
         assert!(tag_list.contains_with_name("A"));
         assert!(tag_list.contains_with_name("B"));
         assert!(tag_list.contains_with_name("C"));
