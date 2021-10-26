@@ -296,7 +296,10 @@ mod test {
 
         let new_attachment_list = AttachmentList::new();
         new_attachment_list
-            .append(Attachment::new(&gio::File::for_path("/home/test/t.png")))
+            .append(Attachment::new(
+                &gio::File::for_path("/home/test/t.png"),
+                &DateTime::default(),
+            ))
             .unwrap();
 
         metadata.set_attachment_list(new_attachment_list.clone());
@@ -354,7 +357,10 @@ mod test {
 
         let attachment_list = AttachmentList::new();
         attachment_list
-            .append(Attachment::new(&gio::File::for_path("/home/test/t.png")))
+            .append(Attachment::new(
+                &gio::File::for_path("/home/test/t.png"),
+                &DateTime::default(),
+            ))
             .unwrap();
         other_metadata.set_attachment_list(attachment_list);
 

@@ -1,14 +1,37 @@
 use gtk::{gio, glib, prelude::*, subclass::prelude::*};
-use once_cell::unsync::OnceCell;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::path::PathBuf;
+use std::{cell::RefCell, path::PathBuf};
+
+use crate::model::DateTime;
 
 mod imp {
     use super::*;
 
+    #[derive(Debug, Serialize, Deserialize)]
+    #[serde(default)]
+    pub struct AttachmentInner {
+        #[serde(
+            serialize_with = "serialize_file",
+            deserialize_with = "deserialize_file"
+        )]
+        pub file: gio::File,
+        pub created: DateTime,
+        pub title: String,
+    }
+
+    impl Default for AttachmentInner {
+        fn default() -> Self {
+            Self {
+                file: gio::File::for_path(glib::tmp_dir()),
+                created: DateTime::default(),
+                title: String::default(),
+            }
+        }
+    }
+
     #[derive(Debug, Default)]
     pub struct Attachment {
-        pub file: OnceCell<gio::File>,
+        pub inner: RefCell<AttachmentInner>,
     }
 
     #[glib::object_subclass]
@@ -22,13 +45,29 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_object(
-                    "file",
-                    "File",
-                    "File representing where the attachment is stored",
-                    gio::File::static_type(),
-                    glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
-                )]
+                vec![
+                    glib::ParamSpec::new_object(
+                        "file",
+                        "File",
+                        "File representing where the attachment is stored",
+                        gio::File::static_type(),
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
+                    ),
+                    glib::ParamSpec::new_boxed(
+                        "created",
+                        "Created",
+                        "The date when the attachment is created",
+                        DateTime::static_type(),
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
+                    ),
+                    glib::ParamSpec::new_string(
+                        "title",
+                        "Title",
+                        "Title of the attachment",
+                        None,
+                        glib::ParamFlags::READWRITE,
+                    ),
+                ]
             });
 
             PROPERTIES.as_ref()
@@ -44,21 +83,27 @@ mod imp {
             match pspec.name() {
                 "file" => {
                     let file = value.get().unwrap();
-                    self.file.set(file).unwrap();
+                    self.inner.borrow_mut().file = file;
+                }
+                "created" => {
+                    let created = value.get().unwrap();
+                    self.inner.borrow_mut().created = created;
+                }
+                "title" => {
+                    let title = value.get().unwrap();
+                    self.inner.borrow_mut().title = title;
                 }
                 _ => unimplemented!(),
             }
         }
 
-        fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "file" => obj.file().to_value(),
+                "file" => self.inner.borrow().file.to_value(),
+                "created" => self.inner.borrow().created.to_value(),
+                "title" => self.inner.borrow().title.to_value(),
                 _ => unimplemented!(),
             }
-        }
-
-        fn constructed(&self, obj: &Self::Type) {
-            self.parent_constructed(obj);
         }
     }
 }
@@ -68,27 +113,58 @@ glib::wrapper! {
 }
 
 impl Attachment {
-    pub fn new(file: &gio::File) -> Self {
-        glib::Object::new::<Self>(&[("file", file)]).expect("Failed to create Attachment.")
+    pub fn new(file: &gio::File, created: &DateTime) -> Self {
+        glib::Object::new::<Self>(&[("file", file), ("created", created)])
+            .expect("Failed to create Attachment.")
     }
 
-    pub fn file(&self) -> &gio::File {
-        let imp = imp::Attachment::from_instance(self);
-        imp.file.get().unwrap()
+    pub fn file(&self) -> gio::File {
+        self.property("file").unwrap().get().unwrap()
+    }
+
+    pub fn created(&self) -> DateTime {
+        self.property("created").unwrap().get().unwrap()
+    }
+
+    pub fn title(&self) -> String {
+        self.property("title").unwrap().get().unwrap()
+    }
+
+    pub fn set_title(&self, title: &str) {
+        self.set_property("title", title).unwrap();
     }
 }
 
 impl Serialize for Attachment {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        self.file().path().unwrap().serialize(serializer)
+        let imp = imp::Attachment::from_instance(self);
+        imp.inner.serialize(serializer)
     }
 }
 
 impl<'de> Deserialize<'de> for Attachment {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let path = PathBuf::deserialize(deserializer)?;
-        let file = gio::File::for_path(path);
+        let inner = imp::AttachmentInner::deserialize(deserializer)?;
 
-        Ok(Self::new(&file))
+        let attachment = Self::new(&inner.file, &inner.created);
+        attachment.set_title(&inner.title);
+
+        Ok(attachment)
     }
+}
+
+pub fn serialize_file<S>(file: &gio::File, s: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    file.path().unwrap().serialize(s)
+}
+
+pub fn deserialize_file<'de, D>(deserializer: D) -> Result<gio::File, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let path = PathBuf::deserialize(deserializer)?;
+
+    Ok(gio::File::for_path(path))
 }
