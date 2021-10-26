@@ -547,4 +547,24 @@ mod test {
         assert!(tag_list.is_valid_name("A"));
         assert!(!tag_list.is_valid_name(""));
     }
+
+    #[test]
+    fn serialize() {
+        let tag_list = TagList::new();
+        tag_list.append(Tag::new("A")).unwrap();
+        tag_list.append(Tag::new("B")).unwrap();
+        tag_list.append(Tag::new("C")).unwrap();
+
+        let string = serde_yaml::to_string(&tag_list).unwrap();
+        assert_eq!(string, "---\n- A\n- B\n- C\n");
+    }
+
+    #[test]
+    fn deserialize() {
+        let tag_list: TagList = serde_yaml::from_str(" - A\n - B\n - C\n").unwrap();
+        assert!(tag_list.contains_with_name("A"));
+        assert!(tag_list.contains_with_name("B"));
+        assert!(tag_list.contains_with_name("C"));
+        assert_eq!(tag_list.n_items(), 3);
+    }
 }
