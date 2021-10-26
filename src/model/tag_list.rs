@@ -174,7 +174,20 @@ impl TagList {
     }
 }
 
-// FIXME better ser & de
+impl std::iter::FromIterator<Tag> for TagList {
+    fn from_iter<I: IntoIterator<Item = Tag>>(iter: I) -> Self {
+        let tag_list = Self::new();
+
+        for tag in iter {
+            if let Err(err) = tag_list.append(tag) {
+                log::warn!("Error appending a tag, skipping: {}", err);
+            }
+        }
+
+        tag_list
+    }
+}
+
 impl Serialize for TagList {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let imp = imp::TagList::from_instance(self);
@@ -184,15 +197,9 @@ impl Serialize for TagList {
 
 impl<'de> Deserialize<'de> for TagList {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let name_set: Vec<String> = Vec::deserialize(deserializer)?;
+        let tags: Vec<Tag> = Vec::deserialize(deserializer)?;
 
-        let tag_list = Self::new();
-        for name in name_set.iter() {
-            let tag = Tag::new(name);
-            if let Err(err) = tag_list.append(tag) {
-                log::warn!("Error appending a tag, skipping: {}", err);
-            }
-        }
+        let tag_list = tags.into_iter().collect::<TagList>();
 
         Ok(tag_list)
     }
