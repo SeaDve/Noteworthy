@@ -12,7 +12,9 @@ mod imp {
     #[template(resource = "/io/github/seadve/Noteworthy/ui/content-attachment-view-row.ui")]
     pub struct Row {
         #[template_child]
-        pub label: TemplateChild<gtk::Label>,
+        pub path_label: TemplateChild<gtk::Label>,
+        #[template_child]
+        pub created_label: TemplateChild<gtk::Label>,
 
         pub attachment: RefCell<Option<Attachment>>,
     }
@@ -95,10 +97,13 @@ impl Row {
         let imp = imp::Row::from_instance(self);
 
         if let Some(ref attachment) = attachment {
-            imp.label
+            imp.path_label
                 .set_label(attachment.file().path().unwrap().to_str().unwrap());
+            imp.created_label
+                .set_label(&attachment.created().fuzzy_display());
         } else {
-            imp.label.set_label("This row has no attachment");
+            imp.path_label.set_label("This row has no attachment");
+            imp.created_label.set_label("This row has no attachment");
         }
 
         imp.attachment.replace(attachment);

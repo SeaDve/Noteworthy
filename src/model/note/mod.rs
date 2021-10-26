@@ -52,6 +52,7 @@ mod imp {
                 }),
             );
 
+            // FIXME do this to with attachment_list
             obj.metadata()
                 .tag_list()
                 .connect_items_changed(clone!(@weak obj => move |_,_,_,_| {
