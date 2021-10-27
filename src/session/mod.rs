@@ -17,7 +17,7 @@ use std::cell::{Cell, RefCell};
 use self::{
     content::Content, note_tag_dialog::NoteTagDialog, sidebar::Sidebar, tag_editor::TagEditor,
 };
-use crate::{core::NoteManager, model::Note};
+use crate::{core::NoteManager, model::Note, utils};
 
 mod imp {
     use super::*;
@@ -52,8 +52,7 @@ mod imp {
 
             klass.install_action("session.sync", None, move |obj, _, _| {
                 let note_manager = obj.note_manager();
-                let ctx = glib::MainContext::default();
-                ctx.spawn_local(clone!(@weak note_manager => async move {
+                utils::spawn(clone!(@weak note_manager => async move {
                     note_manager.sync().await.expect("Failed to sync");
                 }));
             });
@@ -127,8 +126,7 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
-            let ctx = glib::MainContext::default();
-            ctx.spawn_local(clone!(@weak obj => async move {
+            utils::spawn(clone!(@weak obj => async move {
                 let note_manager = obj.note_manager();
                 note_manager.load().await.expect("Failed to load notes and data file");
 
@@ -241,8 +239,7 @@ impl Session {
         }
 
         // Save all notes note before switching to other notes
-        let ctx = glib::MainContext::default();
-        ctx.spawn_local(clone!(@weak self as obj => async move {
+        utils::spawn(clone!(@weak self as obj => async move {
             if let Err(err) = obj.save().await {
                 log::error!("Failed to save session: {}", err);
             }

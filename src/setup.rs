@@ -82,8 +82,7 @@ mod imp {
             });
 
             klass.install_action("setup.setup-offline-mode", None, move |obj, _, _| {
-                let ctx = glib::MainContext::default();
-                ctx.spawn_local(clone!(@weak obj => async move {
+                utils::spawn(clone!(@weak obj => async move {
                     let new_session = obj.setup_offline_session().await;
                     obj.emit_by_name("session-setup-done", &[&new_session]).unwrap();
                 }));
@@ -100,8 +99,7 @@ mod imp {
             //     let repo_url = imp.repo_url_entry.text();
             //     let passphrase = imp.passphrase_entry.text();
 
-            //     let ctx = glib::MainContext::default();
-            //     ctx.spawn_local(async move {
+            //     utils::spawn(async move {
             //         let repo_path = gio::File::for_path(&glib::user_data_dir());
             //         let repo = Repository::new(&repo_path);
             //         if let Err(err) = repo

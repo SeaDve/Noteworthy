@@ -105,8 +105,7 @@ mod imp {
         }
 
         fn constructed(&self, obj: &Self::Type) {
-            let ctx = glib::MainContext::default();
-            ctx.spawn_local(clone!(@weak obj => async move {
+            utils::spawn(clone!(@weak obj => async move {
                 if !obj.is_offline_mode().await {
                     let base_path = obj.base_path();
                     let watcher = RepositoryWatcher::new(&base_path, DEFAULT_REMOTE_NAME);
@@ -126,20 +125,20 @@ glib::wrapper! {
 impl NoteRepository {
     pub async fn init(base_path: &gio::File) -> anyhow::Result<Self> {
         let repository_path = base_path.path().unwrap();
-        let repository = utils::do_async(move || Repository::init(&repository_path)).await?;
+        let repository = utils::spawn_blocking(move || Repository::init(&repository_path)).await?;
         Ok(Self::new(base_path, repository))
     }
 
     pub async fn clone(remote_url: String, base_path: &gio::File) -> anyhow::Result<Self> {
         let repository_path = base_path.path().unwrap();
         let repository =
-            utils::do_async(move || Repository::clone(&repository_path, &remote_url)).await?;
+            utils::spawn_blocking(move || Repository::clone(&repository_path, &remote_url)).await?;
         Ok(Self::new(base_path, repository))
     }
 
     pub async fn open(base_path: &gio::File) -> anyhow::Result<Self> {
         let repository_path = base_path.path().unwrap();
-        let repository = utils::do_async(move || Repository::open(&repository_path)).await?;
+        let repository = utils::spawn_blocking(move || Repository::open(&repository_path)).await?;
         Ok(Self::new(base_path, repository))
     }
 
@@ -241,7 +240,7 @@ impl NoteRepository {
     async fn pull(&self) -> anyhow::Result<Vec<(PathBuf, git2::Delta)>> {
         let repo = self.repository();
 
-        utils::do_async(move || {
+        utils::spawn_blocking(move || {
             let repo = repo.lock().unwrap();
 
             repo.pull(
@@ -256,7 +255,7 @@ impl NoteRepository {
     async fn remotes(&self) -> anyhow::Result<Vec<String>> {
         let repo = self.repository();
 
-        utils::do_async(move || {
+        utils::spawn_blocking(move || {
             let repo = repo.lock().unwrap();
 
             repo.remotes()
@@ -271,7 +270,7 @@ impl NoteRepository {
     async fn is_file_changed_in_workdir(&self) -> anyhow::Result<bool> {
         let repo = self.repository();
 
-        utils::do_async(move || {
+        utils::spawn_blocking(move || {
             let repo = repo.lock().unwrap();
 
             repo.is_file_changed_in_workdir()
@@ -282,7 +281,7 @@ impl NoteRepository {
     async fn add_all(&self) -> anyhow::Result<()> {
         let repo = self.repository();
 
-        utils::do_async(move || {
+        utils::spawn_blocking(move || {
             let repo = repo.lock().unwrap();
 
             repo.add(&["."])
@@ -293,7 +292,7 @@ impl NoteRepository {
     async fn commit(&self) -> anyhow::Result<()> {
         let repo = self.repository();
 
-        utils::do_async(move || {
+        utils::spawn_blocking(move || {
             let repo = repo.lock().unwrap();
 
             repo.commit("Sync commit", DEFAULT_AUTHOR_NAME, DEFAULT_AUTHOR_EMAIL)
@@ -304,7 +303,7 @@ impl NoteRepository {
     async fn push(&self) -> anyhow::Result<()> {
         let repo = self.repository();
 
-        utils::do_async(move || {
+        utils::spawn_blocking(move || {
             let repo = repo.lock().unwrap();
 
             repo.push(DEFAULT_REMOTE_NAME)

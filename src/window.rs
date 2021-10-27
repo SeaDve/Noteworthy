@@ -60,8 +60,7 @@ mod imp {
             // If already setup
             if utils::default_notes_dir().exists() {
                 let notes_folder = gio::File::for_path(&utils::default_notes_dir());
-                let ctx = glib::MainContext::default();
-                ctx.spawn_local(clone!(@weak obj => async move {
+                utils::spawn(clone!(@weak obj => async move {
                     // FIXME detect if it is offline mode or online
                     let existing_session = Session::new_offline(&notes_folder).await;
                     obj.load_session(existing_session);
