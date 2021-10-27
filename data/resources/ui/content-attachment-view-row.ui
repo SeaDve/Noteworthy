@@ -9,12 +9,7 @@
           </object>
         </child>
         <child>
-          <object class="GtkLabel">
-            <binding name="label">
-              <lookup name="title">
-                <lookup name="attachment">NwtyContentAttachmentViewRow</lookup>
-              </lookup>
-            </binding>
+          <object class="GtkEntry" id="title_entry">
           </object>
         </child>
         <child>

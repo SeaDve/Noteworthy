@@ -65,8 +65,8 @@ impl AttachmentList {
     pub fn append(&self, attachment: Attachment) -> anyhow::Result<()> {
         let imp = imp::AttachmentList::from_instance(self);
 
-        attachment.connect_title_notify(clone!(@weak self as obj => move |tag, _| {
-            if let Some(position) = obj.get_index_of(tag) {
+        attachment.connect_title_notify(clone!(@weak self as obj => move |attachment, _| {
+            if let Some(position) = obj.get_index_of(attachment) {
                 obj.items_changed(position as u32, 1, 1);
             }
         }));
@@ -107,9 +107,23 @@ impl AttachmentList {
         imp.list.borrow().is_empty()
     }
 
-    fn get_index_of(&self, note_id: &Attachment) -> Option<usize> {
+    fn get_index_of(&self, attachment: &Attachment) -> Option<usize> {
         let imp = imp::AttachmentList::from_instance(self);
-        imp.list.borrow().get_index_of(note_id)
+        imp.list.borrow().get_index_of(attachment)
+    }
+}
+
+impl std::iter::FromIterator<Attachment> for AttachmentList {
+    fn from_iter<I: IntoIterator<Item = Attachment>>(iter: I) -> Self {
+        let attachment_list = Self::new();
+
+        for attachment in iter {
+            if let Err(err) = attachment_list.append(attachment) {
+                log::warn!("Error appending an attachment, skipping: {}", err);
+            }
+        }
+
+        attachment_list
     }
 }
 
@@ -122,13 +136,11 @@ impl Serialize for AttachmentList {
 
 impl<'de> Deserialize<'de> for AttachmentList {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let list: IndexSet<Attachment> = IndexSet::deserialize(deserializer)?;
+        let attachments: Vec<Attachment> = Vec::deserialize(deserializer)?;
 
-        let new_attachment_list = Self::new();
-        let imp = imp::AttachmentList::from_instance(&new_attachment_list);
-        imp.list.replace(list);
+        let attachment_list = attachments.into_iter().collect::<AttachmentList>();
 
-        Ok(new_attachment_list)
+        Ok(attachment_list)
     }
 }
 
