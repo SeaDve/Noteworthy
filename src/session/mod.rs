@@ -239,11 +239,14 @@ impl Session {
         }
 
         // Save all notes note before switching to other notes
-        utils::spawn(clone!(@weak self as obj => async move {
-            if let Err(err) = obj.save().await {
-                log::error!("Failed to save session: {}", err);
-            }
-        }));
+        utils::spawn_with_priority(
+            glib::PRIORITY_DEFAULT_IDLE,
+            clone!(@weak self as obj => async move {
+                if let Err(err) = obj.save().await {
+                    log::error!("Failed to save session: {}", err);
+                }
+            }),
+        );
 
         let imp = imp::Session::from_instance(self);
 
