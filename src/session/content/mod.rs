@@ -6,7 +6,10 @@ use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 use std::cell::{Cell, RefCell};
 
 use self::{attachment_view::AttachmentView, view::View};
-use crate::{model::Note, utils::PropExpr};
+use crate::{
+    model::Note,
+    utils::{LookupExpr, PropExpr},
+};
 
 mod imp {
     use super::*;
@@ -62,14 +65,11 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
-            let note_expression = obj.property_expression("note");
-            let is_some_note_expression = gtk::ClosureExpression::new(
-                |args| {
-                    let note: Option<Note> = args[1].get().unwrap();
-                    note.is_some()
-                },
-                &[note_expression],
-            );
+            let is_some_note_expression = obj.property_expression("note").lookup_closure(|args| {
+                let note: Option<Note> = args[1].get().unwrap();
+                note.is_some()
+            });
+
             is_some_note_expression.bind(
                 &self.is_pinned_button.get(),
                 "visible",

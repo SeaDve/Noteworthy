@@ -11,8 +11,8 @@ use std::cell::{Cell, RefCell};
 
 use super::{Note, SelectionMode, Sidebar};
 use crate::{
-    model::{note::Metadata, DateTime},
-    utils::PropExpr,
+    model::DateTime,
+    utils::{LookupExpr, PropExpr},
 };
 
 const MAX_SUBTITLE_LEN: usize = 100;
@@ -242,10 +242,10 @@ impl NoteRow {
 
         // Expression describing how to get subtitle label of self from buffer of note
         let note_expression = self.property_expression("note");
-        let buffer_expression =
-            gtk::PropertyExpression::new(Note::static_type(), Some(&note_expression), "buffer");
-        let subtitle_expression = gtk::ClosureExpression::new(
-            |args| {
+
+        note_expression
+            .lookup_property("buffer")
+            .lookup_closure(|args| {
                 let buffer: sourceview::Buffer = args[1].get().unwrap();
                 let mut iter = buffer.start_iter();
                 let mut subtitle = String::from(iter.char());
@@ -273,27 +273,18 @@ impl NoteRow {
 
                 subtitle.truncate(last_non_empty_char_index + 1);
                 subtitle
-            },
-            &[buffer_expression.upcast()],
-        );
-        subtitle_expression.bind(&imp.subtitle_label.get(), "label", None::<&gtk::Widget>);
+            })
+            .bind(&imp.subtitle_label.get(), "label", None::<&gtk::Widget>);
 
         // Expression describing how to get time label of self from last_modifed of note
-        let metadata_expression =
-            gtk::PropertyExpression::new(Note::static_type(), Some(&note_expression), "metadata");
-        let last_modified_expression = gtk::PropertyExpression::new(
-            Metadata::static_type(),
-            Some(&metadata_expression),
-            "last-modified",
-        );
-        let time_expression = gtk::ClosureExpression::new(
-            |args| {
+        note_expression
+            .lookup_property("metadata")
+            .lookup_property("last-modified")
+            .lookup_closure(|args| {
                 let last_modified: DateTime = args[1].get().unwrap();
                 last_modified.fuzzy_display()
-            },
-            &[last_modified_expression.upcast()],
-        );
-        time_expression.bind(&imp.time_label.get(), "label", None::<&gtk::Widget>);
+            })
+            .bind(&imp.time_label.get(), "label", None::<&gtk::Widget>);
     }
 
     fn setup_signals(&self) {

@@ -11,7 +11,7 @@ pub use self::item::ItemKind;
 use self::{item::Item, item_list::ItemList, item_row::ItemRow};
 use crate::{
     model::{Tag, TagList},
-    utils::PropExpr,
+    utils::{LookupExpr, PropExpr},
 };
 
 mod imp {
@@ -203,13 +203,9 @@ impl ViewSwitcher {
     fn setup_expressions(&self) {
         let imp = imp::ViewSwitcher::from_instance(self);
 
-        let selected_item_expression = self.property_expression("selected-item");
-        let display_name_expression = gtk::PropertyExpression::new(
-            Item::static_type(),
-            Some(&selected_item_expression),
-            "display-name",
-        );
-        display_name_expression.bind(&imp.menu_button.get(), "label", None::<&gtk::Widget>);
+        self.property_expression("selected-item")
+            .lookup_property("display-name")
+            .bind(&imp.menu_button.get(), "label", None::<&gtk::Widget>);
     }
 
     fn setup_list_view(&self) {

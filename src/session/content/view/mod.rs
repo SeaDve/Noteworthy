@@ -8,8 +8,8 @@ use std::cell::RefCell;
 
 use self::tag_list_view::TagListView;
 use crate::{
-    model::{note::Metadata, DateTime, Note},
-    utils::PropExpr,
+    model::{DateTime, Note},
+    utils::{LookupExpr, PropExpr},
 };
 
 mod imp {
@@ -52,29 +52,18 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
-            let note_expression = obj.property_expression("note");
-            let metadata_expression = gtk::PropertyExpression::new(
-                Note::static_type(),
-                Some(&note_expression),
-                "metadata",
-            );
-            let last_modified_expression = gtk::PropertyExpression::new(
-                Metadata::static_type(),
-                Some(&metadata_expression),
-                "last-modified",
-            );
-            let last_modified_str_expr = gtk::ClosureExpression::new(
-                |args| {
+            obj.property_expression("note")
+                .lookup_property("metadata")
+                .lookup_property("last-modified")
+                .lookup_closure(|args| {
                     let last_modified: DateTime = args[1].get().unwrap();
                     gettext!("Last edited {}", last_modified.fuzzy_display())
-                },
-                &[last_modified_expression.upcast()],
-            );
-            last_modified_str_expr.bind(
-                &self.last_modified_label.get(),
-                "label",
-                None::<&gtk::Widget>,
-            );
+                })
+                .bind(
+                    &self.last_modified_label.get(),
+                    "label",
+                    None::<&gtk::Widget>,
+                );
         }
 
         fn properties() -> &'static [glib::ParamSpec] {
