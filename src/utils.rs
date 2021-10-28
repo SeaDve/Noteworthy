@@ -1,34 +1,30 @@
 use gtk::glib;
 
-use std::{future::Future, path::PathBuf};
+use std::path::PathBuf;
 
-use crate::THREAD_POOL;
+// Taken from fractal-next GPLv3
+// See https://gitlab.gnome.org/GNOME/fractal/-/blob/fractal-next/src/utils.rs
+#[macro_export]
+macro_rules! spawn {
+    ($future:expr) => {
+        let ctx = glib::MainContext::default();
+        ctx.spawn_local($future);
+    };
+    ($priority:expr, $future:expr) => {
+        let ctx = glib::MainContext::default();
+        ctx.spawn_local_with_priority($priority, $future);
+    };
+}
+
+#[macro_export]
+macro_rules! spawn_blocking {
+    ($future:expr) => {
+        crate::THREAD_POOL.push_future($future).unwrap()
+    };
+}
 
 pub fn default_notes_dir() -> PathBuf {
     let mut data_dir = glib::user_data_dir();
     data_dir.push("Notes");
     data_dir
-}
-
-pub async fn spawn_blocking<T, F>(f: F) -> T
-where
-    F: FnOnce() -> T + Send + 'static,
-    T: Send + 'static,
-{
-    THREAD_POOL.push_future(f).unwrap().await
-}
-
-pub fn spawn<F>(f: F)
-where
-    F: Future<Output = ()> + 'static,
-{
-    spawn_with_priority(glib::PRIORITY_DEFAULT, f);
-}
-
-pub fn spawn_with_priority<F>(priority: glib::Priority, f: F)
-where
-    F: Future<Output = ()> + 'static,
-{
-    let ctx = glib::MainContext::default();
-    ctx.spawn_local_with_priority(priority, f);
 }

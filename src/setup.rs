@@ -82,7 +82,7 @@ mod imp {
             });
 
             klass.install_action("setup.setup-offline-mode", None, move |obj, _, _| {
-                utils::spawn(clone!(@weak obj => async move {
+                crate::spawn!(clone!(@weak obj => async move {
                     let new_session = obj.setup_offline_session().await;
                     obj.emit_by_name("session-setup-done", &[&new_session]).unwrap();
                 }));
