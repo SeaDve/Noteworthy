@@ -50,7 +50,7 @@ pub trait ChainExpr {
 
 impl ChainExpr for gtk::Expression {
     fn property_expression(&self, prop_name: &str) -> gtk::Expression {
-        gtk::PropertyExpression::new(self.as_ref().value_type(), Some(self), prop_name).upcast()
+        gtk::PropertyExpression::new(self.value_type(), Some(self), prop_name).upcast()
     }
 
     fn closure_expression<F, T>(self, f: F) -> gtk::Expression
