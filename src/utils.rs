@@ -1,4 +1,4 @@
-use gtk::glib;
+use gtk::{glib, prelude::*};
 
 use std::path::PathBuf;
 
@@ -27,4 +27,16 @@ pub fn default_notes_dir() -> PathBuf {
     let mut data_dir = glib::user_data_dir();
     data_dir.push("Notes");
     data_dir
+}
+
+pub trait PropExpr {
+    /// Create an expression looking up an object's property
+    fn property_expression(&self, prop: &str) -> gtk::Expression;
+}
+
+impl<T: IsA<glib::Object>> PropExpr for T {
+    fn property_expression(&self, prop: &str) -> gtk::Expression {
+        let obj_expr = gtk::ConstantExpression::new(self).upcast();
+        gtk::PropertyExpression::new(T::static_type(), Some(&obj_expr), prop).upcast()
+    }
 }

@@ -9,7 +9,10 @@ use std::cell::RefCell;
 
 pub use self::item::ItemKind;
 use self::{item::Item, item_list::ItemList, item_row::ItemRow};
-use crate::model::{Tag, TagList};
+use crate::{
+    model::{Tag, TagList},
+    utils::PropExpr,
+};
 
 mod imp {
     use super::*;
@@ -200,12 +203,7 @@ impl ViewSwitcher {
     fn setup_expressions(&self) {
         let imp = imp::ViewSwitcher::from_instance(self);
 
-        let self_expression = gtk::ConstantExpression::new(self);
-        let selected_item_expression = gtk::PropertyExpression::new(
-            Self::static_type(),
-            Some(&self_expression),
-            "selected-item",
-        );
+        let selected_item_expression = self.property_expression("selected-item");
         let display_name_expression = gtk::PropertyExpression::new(
             Item::static_type(),
             Some(&selected_item_expression),
@@ -221,20 +219,10 @@ impl ViewSwitcher {
         factory.connect_setup(|_, list_item| {
             let item_row = ItemRow::new();
 
-            let list_item_expression = gtk::ConstantExpression::new(list_item);
-
-            let tree_list_row_expression = gtk::PropertyExpression::new(
-                gtk::ListItem::static_type(),
-                Some(&list_item_expression),
-                "item",
-            );
+            let tree_list_row_expression = list_item.property_expression("item");
             tree_list_row_expression.bind(&item_row, "list-row", None::<&gtk::Widget>);
 
-            let selected_expression = gtk::PropertyExpression::new(
-                gtk::ListItem::static_type(),
-                Some(&list_item_expression),
-                "selected",
-            );
+            let selected_expression = list_item.property_expression("selected");
             selected_expression.bind(&item_row, "selected", None::<&gtk::Widget>);
 
             list_item.set_child(Some(&item_row));

@@ -13,7 +13,10 @@ use gtk::{
 use once_cell::unsync::OnceCell;
 
 use self::{note_tag_lists::NoteTagLists, row::Row};
-use crate::model::{NoteTagList, Tag, TagList};
+use crate::{
+    model::{NoteTagList, Tag, TagList},
+    utils::PropExpr,
+};
 
 mod imp {
     use super::*;
@@ -125,12 +128,7 @@ mod imp {
             factory.connect_setup(clone!(@weak obj => move |_, list_item| {
                 let tag_row = Row::new(&obj.other_tag_lists());
 
-                let list_item_expression = gtk::ConstantExpression::new(list_item);
-                let item_expression = gtk::PropertyExpression::new(
-                    gtk::ListItem::static_type(),
-                    Some(&list_item_expression),
-                    "item",
-                );
+                let item_expression = list_item.property_expression("item");
                 item_expression.bind(&tag_row, "tag", None::<&gtk::Widget>);
 
                 list_item.set_child(Some(&tag_row));

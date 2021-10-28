@@ -10,7 +10,10 @@ use once_cell::unsync::OnceCell;
 use std::cell::{Cell, RefCell};
 
 use super::{Note, SelectionMode, Sidebar};
-use crate::model::{note::Metadata, DateTime};
+use crate::{
+    model::{note::Metadata, DateTime},
+    utils::PropExpr,
+};
 
 const MAX_SUBTITLE_LEN: usize = 100;
 const MAX_SUBTITLE_LINE: u32 = 3;
@@ -238,9 +241,7 @@ impl NoteRow {
         let imp = imp::NoteRow::from_instance(self);
 
         // Expression describing how to get subtitle label of self from buffer of note
-        let self_expression = gtk::ConstantExpression::new(self);
-        let note_expression =
-            gtk::PropertyExpression::new(Self::static_type(), Some(&self_expression), "note");
+        let note_expression = self.property_expression("note");
         let buffer_expression =
             gtk::PropertyExpression::new(Note::static_type(), Some(&note_expression), "buffer");
         let subtitle_expression = gtk::ClosureExpression::new(

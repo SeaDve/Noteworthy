@@ -7,7 +7,10 @@ use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 use std::cell::RefCell;
 
 use self::tag_list_view::TagListView;
-use crate::model::{note::Metadata, DateTime, Note};
+use crate::{
+    model::{note::Metadata, DateTime, Note},
+    utils::PropExpr,
+};
 
 mod imp {
     use super::*;
@@ -49,12 +52,7 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
-            let self_expression = gtk::ConstantExpression::new(&obj);
-            let note_expression = gtk::PropertyExpression::new(
-                Self::Type::static_type(),
-                Some(&self_expression),
-                "note",
-            );
+            let note_expression = obj.property_expression("note");
             let metadata_expression = gtk::PropertyExpression::new(
                 Note::static_type(),
                 Some(&note_expression),

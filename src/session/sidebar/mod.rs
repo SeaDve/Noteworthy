@@ -19,7 +19,10 @@ use self::{
     sync_button::SyncButton,
     view_switcher::{ItemKind, ViewSwitcher},
 };
-use crate::model::{Note, NoteList, TagList};
+use crate::{
+    model::{Note, NoteList, TagList},
+    utils::PropExpr,
+};
 
 mod imp {
     use super::*;
@@ -428,27 +431,13 @@ impl Sidebar {
             let note_row = NoteRow::new(&obj);
             obj.bind_property("selection-mode", &note_row, "selection-mode").flags(glib::BindingFlags::SYNC_CREATE).build();
 
-            let list_item_expression = gtk::ConstantExpression::new(list_item);
-
-            let note_expression = gtk::PropertyExpression::new(
-                gtk::ListItem::static_type(),
-                Some(&list_item_expression),
-                "item",
-            );
+            let note_expression = list_item.property_expression("item");
             note_expression.bind(&note_row, "note", None::<&gtk::Widget>);
 
-            let selected_expression = gtk::PropertyExpression::new(
-                gtk::ListItem::static_type(),
-                Some(&list_item_expression),
-                "selected",
-            );
+            let selected_expression = list_item.property_expression("selected");
             selected_expression.bind(&note_row, "is-checked", None::<&gtk::Widget>);
 
-            let position_expression = gtk::PropertyExpression::new(
-                gtk::ListItem::static_type(),
-                Some(&list_item_expression),
-                "position"
-            );
+            let position_expression = list_item.property_expression("position");
             position_expression.bind(&note_row, "position", None::<&gtk::Widget>);
 
             list_item.set_child(Some(&note_row));
