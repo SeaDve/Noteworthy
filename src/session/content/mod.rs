@@ -8,7 +8,7 @@ use std::cell::{Cell, RefCell};
 use self::{attachment_view::AttachmentView, view::View};
 use crate::{
     model::Note,
-    utils::{LookupExpr, PropExpr},
+    utils::{ChainExpr, PropExpr},
 };
 
 mod imp {
@@ -65,10 +65,11 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
-            let is_some_note_expression = obj.property_expression("note").lookup_closure(|args| {
-                let note: Option<Note> = args[1].get().unwrap();
-                note.is_some()
-            });
+            let is_some_note_expression =
+                obj.property_expression("note").closure_expression(|args| {
+                    let note: Option<Note> = args[1].get().unwrap();
+                    note.is_some()
+                });
 
             is_some_note_expression.bind(
                 &self.is_pinned_button.get(),

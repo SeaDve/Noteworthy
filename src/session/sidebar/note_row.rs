@@ -12,7 +12,7 @@ use std::cell::{Cell, RefCell};
 use super::{Note, SelectionMode, Sidebar};
 use crate::{
     model::DateTime,
-    utils::{LookupExpr, PropExpr},
+    utils::{ChainExpr, PropExpr},
 };
 
 const MAX_SUBTITLE_LEN: usize = 100;
@@ -244,8 +244,8 @@ impl NoteRow {
         let note_expression = self.property_expression("note");
 
         note_expression
-            .lookup_property("buffer")
-            .lookup_closure(|args| {
+            .property_expression("buffer")
+            .closure_expression(|args| {
                 let buffer: sourceview::Buffer = args[1].get().unwrap();
                 let mut iter = buffer.start_iter();
                 let mut subtitle = String::from(iter.char());
@@ -278,9 +278,9 @@ impl NoteRow {
 
         // Expression describing how to get time label of self from last_modifed of note
         note_expression
-            .lookup_property("metadata")
-            .lookup_property("last-modified")
-            .lookup_closure(|args| {
+            .property_expression("metadata")
+            .property_expression("last-modified")
+            .closure_expression(|args| {
                 let last_modified: DateTime = args[1].get().unwrap();
                 last_modified.fuzzy_display()
             })

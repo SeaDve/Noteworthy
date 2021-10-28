@@ -4,6 +4,7 @@ use std::path::PathBuf;
 
 // Taken from fractal-next GPLv3
 // See https://gitlab.gnome.org/GNOME/fractal/-/blob/fractal-next/src/utils.rs
+/// Spawns a future in the main context
 #[macro_export]
 macro_rules! spawn {
     ($future:expr) => {
@@ -16,44 +17,48 @@ macro_rules! spawn {
     };
 }
 
+/// Pushes a function to be executed in the main thread pool
 #[macro_export]
 macro_rules! spawn_blocking {
-    ($future:expr) => {
-        crate::THREAD_POOL.push_future($future).unwrap()
+    ($function:expr) => {
+        crate::THREAD_POOL.push_future($function).unwrap()
     };
 }
 
 pub trait PropExpr {
     /// Create an expression looking up an object's property
-    fn property_expression(&self, prop: &str) -> gtk::Expression;
+    fn property_expression(&self, prop_name: &str) -> gtk::Expression;
 }
 
 impl<T: IsA<glib::Object>> PropExpr for T {
-    fn property_expression(&self, prop: &str) -> gtk::Expression {
+    fn property_expression(&self, prop_name: &str) -> gtk::Expression {
         let obj_expr = gtk::ConstantExpression::new(self).upcast();
-        gtk::PropertyExpression::new(T::static_type(), Some(&obj_expr), prop).upcast()
+        gtk::PropertyExpression::new(T::static_type(), Some(&obj_expr), prop_name).upcast()
     }
 }
 
-pub trait LookupExpr {
-    fn lookup_property(&self, prop: &str) -> gtk::Expression;
+pub trait ChainExpr {
+    /// Create an expression with prop_name chained from self
+    fn property_expression(&self, prop_name: &str) -> gtk::Expression;
 
-    fn lookup_closure<F: Fn(&[glib::Value]) -> R + 'static, R: glib::value::ValueType>(
-        &self,
-        f: F,
-    ) -> gtk::Expression;
+    /// Create a closure expression chained from self
+    fn closure_expression<F, T>(self, f: F) -> gtk::Expression
+    where
+        F: Fn(&[glib::Value]) -> T + 'static,
+        T: glib::value::ValueType;
 }
 
-impl<T: AsRef<gtk::Expression> + glib::value::ValueType> LookupExpr for T {
-    fn lookup_property(&self, prop: &str) -> gtk::Expression {
-        gtk::PropertyExpression::new(self.as_ref().value_type(), Some(self.as_ref()), prop).upcast()
+impl ChainExpr for gtk::Expression {
+    fn property_expression(&self, prop_name: &str) -> gtk::Expression {
+        gtk::PropertyExpression::new(self.as_ref().value_type(), Some(self), prop_name).upcast()
     }
 
-    fn lookup_closure<F: Fn(&[glib::Value]) -> R + 'static, R: glib::value::ValueType>(
-        &self,
-        f: F,
-    ) -> gtk::Expression {
-        gtk::ClosureExpression::new(f, &[self.as_ref().clone()]).upcast()
+    fn closure_expression<F, T>(self, f: F) -> gtk::Expression
+    where
+        F: Fn(&[glib::Value]) -> T + 'static,
+        T: glib::value::ValueType,
+    {
+        gtk::ClosureExpression::new(f, &[self]).upcast()
     }
 }
 

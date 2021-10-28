@@ -9,7 +9,7 @@ use std::cell::RefCell;
 use self::tag_list_view::TagListView;
 use crate::{
     model::{DateTime, Note},
-    utils::{LookupExpr, PropExpr},
+    utils::{ChainExpr, PropExpr},
 };
 
 mod imp {
@@ -53,9 +53,9 @@ mod imp {
             self.parent_constructed(obj);
 
             obj.property_expression("note")
-                .lookup_property("metadata")
-                .lookup_property("last-modified")
-                .lookup_closure(|args| {
+                .property_expression("metadata")
+                .property_expression("last-modified")
+                .closure_expression(|args| {
                     let last_modified: DateTime = args[1].get().unwrap();
                     gettext!("Last edited {}", last_modified.fuzzy_display())
                 })

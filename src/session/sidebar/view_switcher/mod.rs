@@ -11,7 +11,7 @@ pub use self::item::ItemKind;
 use self::{item::Item, item_list::ItemList, item_row::ItemRow};
 use crate::{
     model::{Tag, TagList},
-    utils::{LookupExpr, PropExpr},
+    utils::{ChainExpr, PropExpr},
 };
 
 mod imp {
@@ -204,7 +204,7 @@ impl ViewSwitcher {
         let imp = imp::ViewSwitcher::from_instance(self);
 
         self.property_expression("selected-item")
-            .lookup_property("display-name")
+            .property_expression("display-name")
             .bind(&imp.menu_button.get(), "label", None::<&gtk::Widget>);
     }
 
