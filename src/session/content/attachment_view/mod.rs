@@ -130,7 +130,7 @@ impl AttachmentView {
         factory.connect_bind(clone!(@weak self as obj => move |_, list_item| {
             let attachment_row: Row = list_item.child().unwrap().downcast().unwrap();
 
-            if let Some(audio_row) = attachment_row.child().unwrap().downcast_ref::<AudioRow>() {
+            if let Some(ref audio_row) = attachment_row.inner_row::<AudioRow>() {
                 let imp = imp::AttachmentView::from_instance(&obj);
                 let audio_player = obj.audio_player();
 

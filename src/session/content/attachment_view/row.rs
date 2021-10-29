@@ -12,6 +12,9 @@ mod imp {
     #[derive(Debug, Default, CompositeTemplate)]
     #[template(resource = "/io/github/seadve/Noteworthy/ui/content-attachment-view-row.ui")]
     pub struct Row {
+        #[template_child]
+        pub content: TemplateChild<adw::Bin>,
+
         pub attachment: RefCell<Option<Attachment>>,
     }
 
@@ -115,14 +118,16 @@ impl Row {
         &self,
         f: F,
     ) -> glib::SignalHandlerId {
-        assert!(
-            self.child()
-                .map_or(false, |w| w.downcast_ref::<AudioRow>().is_some()),
-            "cannot connect to is_playing notify if the child is not an AudioRow"
-        );
+        if let Some(audio_row) = self.inner_row::<AudioRow>() {
+            audio_row.connect_playback_toggled(f)
+        } else {
+            panic!("cannot connect to is_playing notify if the child is not an AudioRow");
+        }
+    }
 
-        let audio_row: AudioRow = self.child().unwrap().downcast().unwrap();
-        audio_row.connect_playback_toggled(f)
+    pub fn inner_row<T: IsA<gtk::Widget>>(&self) -> Option<T> {
+        let imp = imp::Row::from_instance(self);
+        imp.content.child().and_then(|w| w.downcast::<T>().ok())
     }
 
     fn replace_child(&self, attachment: &Attachment) {
@@ -131,10 +136,12 @@ impl Row {
             AttachmentKind::Other => OtherRow::new(attachment).upcast(),
         };
 
-        self.set_child(Some(&child));
+        let imp = imp::Row::from_instance(self);
+        imp.content.set_child(Some(&child));
     }
 
     fn remove_child(&self) {
-        self.set_child(None::<&gtk::Widget>);
+        let imp = imp::Row::from_instance(self);
+        imp.content.set_child(None::<&gtk::Widget>);
     }
 }

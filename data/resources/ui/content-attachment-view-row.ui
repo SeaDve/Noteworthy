@@ -1,6 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <template class="NwtyContentAttachmentViewRow" parent="AdwBin">
+    <property name="child">
+      <object class="GtkBox">
+        <child>
+          <object class="AdwBin" id="content">
+            <property name="hexpand">True</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkButton">
+            <property name="margin-end">6</property>
+            <property name="valign">center</property>
+            <property name="icon-name">edit-delete-symbolic</property>
+            <style>
+              <class name="flat"/>
+            </style>
+          </object>
+        </child>
+      </object>
+    </property>
     <style>
       <class name="card"/>
     </style>

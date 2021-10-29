@@ -104,6 +104,7 @@
 .content-attachment-view-audio-row {
   min-width: 240px;
   padding: 6px;
+  padding-right: 0;
 }
 
 .content-attachment-view-audio-row-title {
@@ -116,6 +117,7 @@
 
 .content-attachment-view-other-row {
   padding: 6px;
+  padding-right: 0;
   padding-left: 12px;
 }
 
