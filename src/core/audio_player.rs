@@ -183,8 +183,8 @@ impl AudioPlayer {
     }
 
     pub fn position(&self) -> i32 {
-        let clock_time: gst::ClockTime = self.player().query_position().unwrap();
-        clock_time.seconds() as i32
+        let clock_time: Option<gst::ClockTime> = self.player().query_position();
+        clock_time.map_or(0, |ct| ct.seconds() as i32)
     }
 
     pub fn set_duration(&self, duration: i32) {
