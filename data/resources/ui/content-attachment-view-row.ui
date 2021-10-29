@@ -3,7 +3,6 @@
   <template class="NwtyContentAttachmentViewRow" parent="AdwBin">
     <style>
       <class name="card"/>
-      <class name="content-attachment-view-row"/>
     </style>
   </template>
 </interface>

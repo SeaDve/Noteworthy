@@ -124,6 +124,7 @@ impl AttachmentView {
                 .bind(&attachment_row, "attachment", None::<&gtk::Widget>);
 
             list_item.set_child(Some(&attachment_row));
+            list_item.set_activatable(false);
         }));
 
         factory.connect_bind(clone!(@weak self as obj => move |_, list_item| {
@@ -155,6 +156,7 @@ impl AttachmentView {
                 is_equal_expression.bind(audio_row, "is-playing", None::<&gtk::Widget>);
             }
         }));
+
         factory.connect_unbind(clone!(@weak self as obj => move |_, list_item| {
             let attachment_row: Row = list_item.child().unwrap().downcast().unwrap();
 

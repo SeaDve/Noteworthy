@@ -3,23 +3,60 @@
   <template class="NwtyContentAttachmentViewAudioRow" parent="AdwBin">
     <property name="child">
       <object class="GtkBox">
+        <property name="orientation">vertical</property>
         <child>
-          <object class="GtkLabel">
-            <property name="xalign">0</property>
-            <property name="hexpand">True</property>
-            <binding name="label">
-              <lookup name="title">
-                <lookup name="attachment">NwtyContentAttachmentViewAudioRow</lookup>
-              </lookup>
-            </binding>
+          <object class="GtkBox">
+            <property name="spacing">6</property>
+            <child>
+              <object class="GtkButton" id="playback_button">
+                <property name="action-name">audio-row.toggle-playback</property>
+                <property name="valign">center</property>
+                <style>
+                  <class name="flat"/>
+                </style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="xalign">0</property>
+                <property name="hexpand">True</property>
+                <property name="halign">end</property>
+                <binding name="label">
+                  <lookup name="title">
+                    <lookup name="attachment">NwtyContentAttachmentViewAudioRow</lookup>
+                  </lookup>
+                </binding>
+                <style>
+                  <class name="content-attachment-view-audio-row-title"/>
+                </style>
+              </object>
+            </child>
           </object>
         </child>
         <child>
-          <object class="GtkButton" id="playback_button">
-            <property name="action-name">audio-row.toggle-playback</property>
-            <style>
-              <class name="flat"/>
-            </style>
+          <object class="GtkBox">
+            <child>
+              <object class="GtkScale">
+                <property name="hexpand">True</property>
+                <property name="adjustment">
+                  <object class="GtkAdjustment">
+                    <property name="upper">4</property>
+                    <property name="value">0</property>
+                    <property name="step-increment">0.1</property>
+                    <property name="page-increment">1</property>
+                  </object>
+                </property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="label">00:00</property>
+                <style>
+                  <class name="content-attachment-view-audio-row-position"/>
+                  <class name="caption"/>
+                </style>
+              </object>
+            </child>
           </object>
         </child>
       </object>

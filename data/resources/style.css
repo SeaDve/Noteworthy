@@ -97,18 +97,26 @@
 
 .content-attachment-view-list-view row {
   padding: 6px;
-}
-
-.content-attachment-view-row {
-  padding: 6px;
+  padding-top: 3px;
+  padding-bottom: 3px;
 }
 
 .content-attachment-view-audio-row {
-  padding-left: 6px;
+  min-width: 240px;
+  padding: 6px;
+}
+
+.content-attachment-view-audio-row-title {
+  padding-right: 6px;
+}
+
+.content-attachment-view-audio-row-position {
+  padding-right: 3px;
 }
 
 .content-attachment-view-other-row {
-  padding-left: 6px;
+  padding: 6px;
+  padding-left: 12px;
 }
 
 
