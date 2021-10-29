@@ -12,6 +12,7 @@ gettext-rs = { version = "0.7", features = ["gettext-system"] }
 once_cell = "1.5"
 sourceview = { package = "sourceview5", version = "0.3.0" }
 gtk = { package = "gtk4", version = "0.3" }
+gst = { package = "gstreamer", version = "0.17" }
 adw = { package = "libadwaita", version = "0.1.0-alpha-3" }
 
 anyhow = "1.0.44"

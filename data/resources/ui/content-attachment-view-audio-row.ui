@@ -15,8 +15,8 @@
           </object>
         </child>
         <child>
-          <object class="GtkButton">
-            <property name="icon-name">media-playback-start-symbolic</property>
+          <object class="GtkButton" id="playback_button">
+            <property name="action-name">audio-row.toggle-playback</property>
             <style>
               <class name="flat"/>
             </style>

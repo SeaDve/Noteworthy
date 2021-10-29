@@ -39,6 +39,7 @@ fn main() {
     glib::set_application_name(&gettext("Noteworthy"));
 
     gtk::init().expect("Unable to start GTK4");
+    gst::init().expect("Unable to start GStreamer");
 
     let res = gio::Resource::load(RESOURCES_FILE).expect("Could not load gresource file");
     gio::resources_register(&res);

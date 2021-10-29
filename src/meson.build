@@ -23,6 +23,7 @@ rust_sources = files(
   'core/note_repository/repository.rs',
   'core/note_repository/repository_watcher.rs',
   'core/note_repository/sync_state.rs',
+  'core/audio_player.rs',
   'core/mod.rs',
   'core/note_manager.rs',
   'core/ssh_key.rs',

@@ -1,6 +1,6 @@
 use gtk::{gio, prelude::*};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum AttachmentKind {
     Ogg,
     Other,

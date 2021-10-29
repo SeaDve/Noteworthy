@@ -24,6 +24,9 @@ dependency(
   fallback: ['gtksourceview', 'gtksource_dep'],
   default_options: ['gtk_doc=false', 'sysprof=false', 'gir=false', 'vapi=false', 'install_tests=false']
 )
+dependency('gstreamer-1.0', version: '>= 1.18')
+dependency('gstreamer-base-1.0', version: '>= 1.18')
+dependency('gstreamer-plugins-base-1.0', version: '>= 1.18')
 
 glib_compile_resources = find_program('glib-compile-resources', required: true)
 glib_compile_schemas = find_program('glib-compile-schemas', required: true)

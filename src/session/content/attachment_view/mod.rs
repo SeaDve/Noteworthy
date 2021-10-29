@@ -2,13 +2,21 @@ mod audio_row;
 mod other_row;
 mod row;
 
-use adw::subclass::prelude::*;
-use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
+use adw::{prelude::*, subclass::prelude::*};
+use gtk::{
+    glib::{self, clone},
+    subclass::prelude::*,
+    CompositeTemplate,
+};
 
 use std::cell::RefCell;
 
 use self::{audio_row::AudioRow, other_row::OtherRow, row::Row};
-use crate::model::AttachmentList;
+use crate::{
+    core::AudioPlayer,
+    model::{Attachment, AttachmentList},
+    utils::PropExpr,
+};
 
 mod imp {
     use super::*;
@@ -21,7 +29,8 @@ mod imp {
         #[template_child]
         pub selection: TemplateChild<gtk::NoSelection>,
 
-        pub attachment_list: RefCell<Option<AttachmentList>>,
+        pub audio_player: AudioPlayer,
+        pub is_playing_handler_id: RefCell<Option<glib::SignalHandlerId>>,
     }
 
     #[glib::object_subclass]
@@ -72,15 +81,10 @@ mod imp {
             }
         }
 
-        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
-            match pspec.name() {
-                "attachment-list" => self.attachment_list.borrow().to_value(),
-                _ => unimplemented!(),
-            }
-        }
-
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
+
+            obj.setup_list_view();
         }
     }
 
@@ -100,10 +104,67 @@ impl AttachmentView {
 
     pub fn set_attachment_list(&self, attachment_list: Option<AttachmentList>) {
         let imp = imp::AttachmentView::from_instance(self);
-
         imp.selection.set_model(attachment_list.as_ref());
-
-        imp.attachment_list.replace(attachment_list);
         self.notify("attachment-list");
+    }
+
+    fn audio_player(&self) -> AudioPlayer {
+        let imp = imp::AttachmentView::from_instance(self);
+        imp.audio_player.clone()
+    }
+
+    fn setup_list_view(&self) {
+        let factory = gtk::SignalListItemFactory::new();
+
+        factory.connect_setup(clone!(@weak self as obj => move |_, list_item| {
+            let attachment_row = Row::new();
+
+            list_item
+                .property_expression("item")
+                .bind(&attachment_row, "attachment", None::<&gtk::Widget>);
+
+            list_item.set_child(Some(&attachment_row));
+        }));
+
+        factory.connect_bind(clone!(@weak self as obj => move |_, list_item| {
+            let attachment_row: Row = list_item.child().unwrap().downcast().unwrap();
+
+            if let Some(audio_row) = attachment_row.child().unwrap().downcast_ref::<AudioRow>() {
+                let imp = imp::AttachmentView::from_instance(&obj);
+                let audio_player = obj.audio_player();
+
+                let is_playing_handler_id = attachment_row.connect_playback_toggled(clone!(@weak audio_player => move |audio_row, is_active| {
+                    if is_active {
+                        audio_player.load_and_play(&audio_row.uri());
+                    } else {
+                        audio_player.stop();
+                    }
+                }));
+                imp.is_playing_handler_id.replace(Some(is_playing_handler_id));
+
+                let audio_player_uri_expression = audio_player.property_expression("uri");
+                let audio_row_file_expression = audio_row.weak_property_expression("attachment");
+
+                let is_equal_expression = gtk::ClosureExpression::new(|args| {
+                    let audio_player_uri: String = args[1].get().unwrap();
+                    let audio_row_file: Attachment = args[2].get().unwrap();
+
+                    audio_player_uri == audio_row_file.file().uri()
+                }, &[audio_player_uri_expression, audio_row_file_expression]);
+
+                is_equal_expression.bind(audio_row, "is-playing", None::<&gtk::Widget>);
+            }
+        }));
+        factory.connect_unbind(clone!(@weak self as obj => move |_, list_item| {
+            let attachment_row: Row = list_item.child().unwrap().downcast().unwrap();
+
+            let imp = imp::AttachmentView::from_instance(&obj);
+            if let Some(handler_id) = imp.is_playing_handler_id.take() {
+                attachment_row.disconnect(handler_id);
+            }
+        }));
+
+        let imp = imp::AttachmentView::from_instance(self);
+        imp.list_view.set_factory(Some(&factory));
     }
 }

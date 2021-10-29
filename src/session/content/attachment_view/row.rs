@@ -111,6 +111,20 @@ impl Row {
         self.notify("attachment");
     }
 
+    pub fn connect_playback_toggled<F: Fn(&AudioRow, bool) + 'static>(
+        &self,
+        f: F,
+    ) -> glib::SignalHandlerId {
+        assert!(
+            self.child()
+                .map_or(false, |w| w.downcast_ref::<AudioRow>().is_some()),
+            "cannot connect to is_playing notify if the child is not an AudioRow"
+        );
+
+        let audio_row: AudioRow = self.child().unwrap().downcast().unwrap();
+        audio_row.connect_playback_toggled(f)
+    }
+
     fn replace_child(&self, attachment: &Attachment) {
         let child: gtk::Widget = match attachment.kind() {
             AttachmentKind::Ogg => AudioRow::new(attachment).upcast(),

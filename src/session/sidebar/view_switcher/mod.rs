@@ -218,8 +218,11 @@ impl ViewSwitcher {
             let tree_list_row_expression = list_item.property_expression("item");
             tree_list_row_expression.bind(&item_row, "list-row", None::<&gtk::Widget>);
 
-            let selected_expression = list_item.property_expression("selected");
-            selected_expression.bind(&item_row, "selected", None::<&gtk::Widget>);
+            list_item.property_expression("selected").bind(
+                &item_row,
+                "selected",
+                None::<&gtk::Widget>,
+            );
 
             list_item.set_child(Some(&item_row));
         });

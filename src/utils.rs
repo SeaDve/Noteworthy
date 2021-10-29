@@ -26,13 +26,21 @@ macro_rules! spawn_blocking {
 }
 
 pub trait PropExpr {
-    /// Create an expression looking up an object's property
+    /// Create a constant expression looking up an object's property
     fn property_expression(&self, prop_name: &str) -> gtk::Expression;
+
+    /// Create a non-constant expression looking up an object's property
+    fn weak_property_expression(&self, prop_name: &str) -> gtk::Expression;
 }
 
 impl<T: IsA<glib::Object>> PropExpr for T {
     fn property_expression(&self, prop_name: &str) -> gtk::Expression {
         let obj_expr = gtk::ConstantExpression::new(self).upcast();
+        gtk::PropertyExpression::new(T::static_type(), Some(&obj_expr), prop_name).upcast()
+    }
+
+    fn weak_property_expression(&self, prop_name: &str) -> gtk::Expression {
+        let obj_expr = gtk::ObjectExpression::new(self).upcast();
         gtk::PropertyExpression::new(T::static_type(), Some(&obj_expr), prop_name).upcast()
     }
 }
