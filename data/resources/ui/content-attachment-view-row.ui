@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <template class="NwtyContentAttachmentViewRow" parent="AdwBin">
+    <style>
+      <class name="card"/>
+      <class name="content-attachment-view-row"/>
+    </style>
   </template>
 </interface>

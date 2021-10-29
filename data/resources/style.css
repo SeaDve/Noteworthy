@@ -99,9 +99,12 @@
   padding: 6px;
 }
 
-.content-attachment-view-other-row {
+.content-attachment-view-row {
   padding: 6px;
-  padding-left: 12px;
+}
+
+.content-attachment-view-other-row {
+  padding-left: 6px;
 }
 
 

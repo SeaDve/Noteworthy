@@ -25,7 +25,6 @@
       </object>
     </property>
     <style>
-      <class name="card"/>
       <class name="content-attachment-view-other-row"/>
     </style>
   </template>
