@@ -95,6 +95,11 @@
   color: @accent_fg_color;
 }
 
+.content-attachment-view-list-view {
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+
 .content-attachment-view-list-view row {
   padding: 6px;
   padding-top: 3px;
