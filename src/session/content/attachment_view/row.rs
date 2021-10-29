@@ -113,7 +113,7 @@ impl Row {
 
     fn replace_child(&self, attachment: &Attachment) {
         let child: gtk::Widget = match attachment.kind() {
-            AttachmentKind::Ogg => AudioRow::new().upcast(),
+            AttachmentKind::Ogg => AudioRow::new(attachment).upcast(),
             AttachmentKind::Other => OtherRow::new(attachment).upcast(),
         };
 

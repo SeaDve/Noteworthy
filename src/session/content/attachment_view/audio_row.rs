@@ -11,14 +11,7 @@ mod imp {
     #[derive(Debug, Default, CompositeTemplate)]
     #[template(resource = "/io/github/seadve/Noteworthy/ui/content-attachment-view-audio-row.ui")]
     pub struct AudioRow {
-        // #[template_child]
-        // pub path_label: TemplateChild<gtk::Label>,
-        // #[template_child]
-        // pub title_entry: TemplateChild<gtk::Entry>,
-        // #[template_child]
-        // pub created_label: TemplateChild<gtk::Label>,
-        pub attachment: RefCell<Option<Attachment>>,
-        // pub title_binding: RefCell<Option<glib::Binding>>,
+        pub attachment: RefCell<Attachment>,
     }
 
     #[glib::object_subclass]
@@ -54,7 +47,7 @@ mod imp {
 
         fn set_property(
             &self,
-            obj: &Self::Type,
+            _obj: &Self::Type,
             _id: usize,
             value: &glib::Value,
             pspec: &glib::ParamSpec,
@@ -62,7 +55,7 @@ mod imp {
             match pspec.name() {
                 "attachment" => {
                     let attachment = value.get().unwrap();
-                    obj.set_attachment(attachment);
+                    self.attachment.replace(attachment);
                 }
                 _ => unimplemented!(),
             }
@@ -91,34 +84,7 @@ glib::wrapper! {
 }
 
 impl AudioRow {
-    pub fn new() -> Self {
-        glib::Object::new(&[]).expect("Failed to create AudioRow")
-    }
-
-    pub fn set_attachment(&self, attachment: Option<Attachment>) {
-        //     let imp = imp::AudioRow::from_instance(self);
-
-        //     if let Some(binding) = imp.title_binding.take() {
-        //         binding.unbind();
-        //     }
-
-        //     if let Some(ref attachment) = attachment {
-        //         imp.path_label
-        //             .set_label(attachment.file().path().unwrap().to_str().unwrap());
-        //         imp.created_label
-        //             .set_label(&attachment.created().fuzzy_display());
-
-        //         let binding = attachment
-        //             .bind_property("title", &imp.title_entry.get(), "text")
-        //             .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
-        //             .build();
-        //         imp.title_binding.replace(binding);
-        //     } else {
-        //         imp.path_label.set_label("This row has no attachment");
-        //         imp.created_label.set_label("This row has no attachment");
-        //     }
-
-        //     imp.attachment.replace(attachment);
-        //     self.notify("attachment");
+    pub fn new(attachment: &Attachment) -> Self {
+        glib::Object::new(&[("attachment", attachment)]).expect("Failed to create AudioRow")
     }
 }

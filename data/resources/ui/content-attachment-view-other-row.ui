@@ -6,6 +6,8 @@
         <property name="spacing">12</property>
         <child>
           <object class="GtkLabel">
+            <property name="xalign">0</property>
+            <property name="hexpand">True</property>
             <binding name="label">
               <lookup name="title">
                 <lookup name="attachment">NwtyContentAttachmentViewOtherRow</lookup>
