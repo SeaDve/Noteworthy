@@ -3,7 +3,8 @@ use gtk::{glib, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::RefCell;
 
-use crate::model::Attachment;
+use super::{AudioRow, OtherRow};
+use crate::model::{Attachment, AttachmentKind};
 
 mod imp {
     use super::*;
@@ -11,15 +12,7 @@ mod imp {
     #[derive(Debug, Default, CompositeTemplate)]
     #[template(resource = "/io/github/seadve/Noteworthy/ui/content-attachment-view-row.ui")]
     pub struct Row {
-        #[template_child]
-        pub path_label: TemplateChild<gtk::Label>,
-        #[template_child]
-        pub title_entry: TemplateChild<gtk::Entry>,
-        #[template_child]
-        pub created_label: TemplateChild<gtk::Label>,
-
         pub attachment: RefCell<Option<Attachment>>,
-        pub title_binding: RefCell<Option<glib::Binding>>,
     }
 
     #[glib::object_subclass]
@@ -69,9 +62,9 @@ mod imp {
             }
         }
 
-        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+        fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "attachment" => self.attachment.borrow().to_value(),
+                "attachment" => obj.attachment().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -96,30 +89,38 @@ impl Row {
         glib::Object::new(&[]).expect("Failed to create Row")
     }
 
-    pub fn set_attachment(&self, attachment: Option<Attachment>) {
+    pub fn attachment(&self) -> Option<Attachment> {
         let imp = imp::Row::from_instance(self);
+        imp.attachment.borrow().clone()
+    }
 
-        if let Some(binding) = imp.title_binding.take() {
-            binding.unbind();
+    pub fn set_attachment(&self, attachment: Option<Attachment>) {
+        if attachment == self.attachment() {
+            return;
         }
 
-        if let Some(ref attachment) = attachment {
-            imp.path_label
-                .set_label(attachment.file().path().unwrap().to_str().unwrap());
-            imp.created_label
-                .set_label(&attachment.created().fuzzy_display());
+        let imp = imp::Row::from_instance(self);
 
-            let binding = attachment
-                .bind_property("title", &imp.title_entry.get(), "text")
-                .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
-                .build();
-            imp.title_binding.replace(binding);
+        if let Some(ref attachment) = attachment {
+            self.replace_child(attachment);
         } else {
-            imp.path_label.set_label("This row has no attachment");
-            imp.created_label.set_label("This row has no attachment");
+            self.remove_child();
         }
 
         imp.attachment.replace(attachment);
         self.notify("attachment");
+    }
+
+    fn replace_child(&self, attachment: &Attachment) {
+        let child: gtk::Widget = match attachment.kind() {
+            AttachmentKind::Ogg => AudioRow::new().upcast(),
+            AttachmentKind::Other => OtherRow::new(attachment).upcast(),
+        };
+
+        self.set_child(Some(&child));
+    }
+
+    fn remove_child(&self) {
+        self.set_child(None::<&gtk::Widget>);
     }
 }

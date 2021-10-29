@@ -1,3 +1,5 @@
+mod audio_row;
+mod other_row;
 mod row;
 
 use adw::subclass::prelude::*;
@@ -5,7 +7,7 @@ use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::RefCell;
 
-use self::row::Row;
+use self::{audio_row::AudioRow, other_row::OtherRow, row::Row};
 use crate::model::AttachmentList;
 
 mod imp {

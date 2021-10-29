@@ -24,6 +24,9 @@
          ]]></property>
           </object>
         </property>
+        <style>
+          <class name="content-attachment-view-list-view"/>
+        </style>
       </object>
     </property>
   </template>

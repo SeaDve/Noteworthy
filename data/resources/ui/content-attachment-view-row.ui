@@ -1,22 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <template class="NwtyContentAttachmentViewRow" parent="AdwBin">
-    <property name="child">
-      <object class="GtkBox">
-        <property name="orientation">vertical</property>
-        <child>
-          <object class="GtkLabel" id="path_label">
-          </object>
-        </child>
-        <child>
-          <object class="GtkEntry" id="title_entry">
-          </object>
-        </child>
-        <child>
-          <object class="GtkLabel" id="created_label">
-          </object>
-        </child>
-      </object>
-    </property>
   </template>
 </interface>

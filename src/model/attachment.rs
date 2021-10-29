@@ -2,6 +2,7 @@ use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::{cell::RefCell, path::PathBuf};
 
+use super::attachment_kind::AttachmentKind;
 use crate::model::DateTime;
 
 mod imp {
@@ -116,6 +117,10 @@ impl Attachment {
             .expect("Failed to create Attachment.")
     }
 
+    pub fn kind(&self) -> AttachmentKind {
+        AttachmentKind::for_file(&self.file())
+    }
+
     pub fn file(&self) -> gio::File {
         self.property("file").unwrap().get().unwrap()
     }
@@ -137,6 +142,12 @@ impl Attachment {
         f: F,
     ) -> glib::SignalHandlerId {
         self.connect_notify_local(Some("title"), f)
+    }
+}
+
+impl Default for Attachment {
+    fn default() -> Self {
+        Self::new(&gio::File::for_path(glib::tmp_dir()), &DateTime::default())
     }
 }
 

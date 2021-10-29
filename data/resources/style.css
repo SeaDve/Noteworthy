@@ -95,6 +95,15 @@
   color: @accent_fg_color;
 }
 
+.content-attachment-view-list-view row {
+  padding: 6px;
+}
+
+.content-attachment-view-other-row {
+  padding: 6px;
+  padding-left: 12px;
+}
+
 
 .note-tag-dialog-list-view row {
   padding: 12px;
