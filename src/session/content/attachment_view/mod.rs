@@ -9,8 +9,6 @@ use gtk::{
     CompositeTemplate,
 };
 
-use std::cell::RefCell;
-
 use self::{audio_row::AudioRow, other_row::OtherRow, row::Row};
 use crate::{
     core::AudioPlayer,
@@ -30,7 +28,6 @@ mod imp {
         pub selection: TemplateChild<gtk::NoSelection>,
 
         pub audio_player: AudioPlayer,
-        pub is_playing_handler_id: RefCell<Option<glib::SignalHandlerId>>,
     }
 
     #[glib::object_subclass]
@@ -131,17 +128,15 @@ impl AttachmentView {
             let attachment_row: Row = list_item.child().unwrap().downcast().unwrap();
 
             if let Some(ref audio_row) = attachment_row.inner_row::<AudioRow>() {
-                let imp = imp::AttachmentView::from_instance(&obj);
                 let audio_player = obj.audio_player();
 
-                let is_playing_handler_id = attachment_row.connect_playback_toggled(clone!(@weak audio_player => move |audio_row, is_active| {
+                audio_row.connect_playback_toggled(clone!(@weak audio_player => move |audio_row, is_active| {
                     if is_active {
                         audio_player.load_and_play(&audio_row.uri());
                     } else {
                         audio_player.stop();
                     }
                 }));
-                imp.is_playing_handler_id.replace(Some(is_playing_handler_id));
 
                 let audio_player_uri_expression = audio_player.property_expression("uri");
                 let audio_row_file_expression = audio_row.weak_property_expression("attachment");
@@ -154,15 +149,6 @@ impl AttachmentView {
                 }, &[audio_player_uri_expression, audio_row_file_expression]);
 
                 is_equal_expression.bind(audio_row, "is-playing", None::<&gtk::Widget>);
-            }
-        }));
-
-        factory.connect_unbind(clone!(@weak self as obj => move |_, list_item| {
-            let attachment_row: Row = list_item.child().unwrap().downcast().unwrap();
-
-            let imp = imp::AttachmentView::from_instance(&obj);
-            if let Some(handler_id) = imp.is_playing_handler_id.take() {
-                attachment_row.disconnect(handler_id);
             }
         }));
 

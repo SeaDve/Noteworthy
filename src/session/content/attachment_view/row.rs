@@ -114,17 +114,6 @@ impl Row {
         self.notify("attachment");
     }
 
-    pub fn connect_playback_toggled<F: Fn(&AudioRow, bool) + 'static>(
-        &self,
-        f: F,
-    ) -> glib::SignalHandlerId {
-        if let Some(audio_row) = self.inner_row::<AudioRow>() {
-            audio_row.connect_playback_toggled(f)
-        } else {
-            panic!("cannot connect to is_playing notify if the child is not an AudioRow");
-        }
-    }
-
     pub fn inner_row<T: IsA<gtk::Widget>>(&self) -> Option<T> {
         let imp = imp::Row::from_instance(self);
         imp.content.child().and_then(|w| w.downcast::<T>().ok())
