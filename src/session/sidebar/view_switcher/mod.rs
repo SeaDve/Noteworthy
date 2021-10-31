@@ -215,8 +215,9 @@ impl ViewSwitcher {
         factory.connect_setup(|_, list_item| {
             let item_row = ItemRow::new();
 
-            let tree_list_row_expression = list_item.property_expression("item");
-            tree_list_row_expression.bind(&item_row, "list-row", None::<&gtk::Widget>);
+            list_item
+                .property_expression("item")
+                .bind(&item_row, "list-row", None::<&gtk::Widget>);
 
             list_item.property_expression("selected").bind(
                 &item_row,

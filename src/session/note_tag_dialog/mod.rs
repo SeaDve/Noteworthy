@@ -128,8 +128,9 @@ mod imp {
             factory.connect_setup(clone!(@weak obj => move |_, list_item| {
                 let tag_row = Row::new(&obj.other_tag_lists());
 
-                let item_expression = list_item.property_expression("item");
-                item_expression.bind(&tag_row, "tag", None::<&gtk::Widget>);
+                list_item
+                    .property_expression("item")
+                    .bind(&tag_row, "tag", None::<&gtk::Widget>);
 
                 list_item.set_child(Some(&tag_row));
             }));
