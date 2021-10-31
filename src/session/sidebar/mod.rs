@@ -429,16 +429,22 @@ impl Sidebar {
         let factory = gtk::SignalListItemFactory::new();
         factory.connect_setup(clone!(@weak self as obj => move |_, list_item| {
             let note_row = NoteRow::new(&obj);
-            obj.bind_property("selection-mode", &note_row, "selection-mode").flags(glib::BindingFlags::SYNC_CREATE).build();
 
-            let note_expression = list_item.property_expression("item");
-            note_expression.bind(&note_row, "note", None::<&gtk::Widget>);
+            obj.bind_property("selection-mode", &note_row, "selection-mode")
+                .flags(glib::BindingFlags::SYNC_CREATE)
+                .build();
 
-            let selected_expression = list_item.property_expression("selected");
-            selected_expression.bind(&note_row, "is-checked", None::<&gtk::Widget>);
+            list_item
+                .property_expression("item")
+                .bind(&note_row, "note", None::<&gtk::Widget>);
 
-            let position_expression = list_item.property_expression("position");
-            position_expression.bind(&note_row, "position", None::<&gtk::Widget>);
+            list_item
+                .property_expression("selected")
+                .bind(&note_row, "is-checked", None::<&gtk::Widget>);
+
+            list_item
+                .property_expression("position")
+                .bind(&note_row, "position", None::<&gtk::Widget>);
 
             list_item.set_child(Some(&note_row));
         }));
