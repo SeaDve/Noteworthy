@@ -63,12 +63,12 @@ mod imp {
                         None,
                         glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
-                    glib::ParamSpec::new_int(
+                    glib::ParamSpec::new_uint64(
                         "position",
                         "Position",
                         "Current position in the player",
                         0,
-                        i32::MAX,
+                        u64::MAX,
                         0,
                         glib::ParamFlags::READABLE,
                     ),
@@ -182,17 +182,17 @@ impl AudioPlayer {
             .unwrap_or_default()
     }
 
-    pub fn seek(&self, position: i32) {
+    pub fn seek(&self, position: u64) {
         let flags = gst::SeekFlags::FLUSH | gst::SeekFlags::KEY_UNIT;
-        let clock_time_position = gst::ClockTime::from_seconds(position as u64);
+        let clock_time_position = gst::ClockTime::from_seconds(position);
         if let Err(err) = self.player().seek_simple(flags, clock_time_position) {
             log::error!("Failed to seek at pos {}: {}", position, err);
         }
     }
 
-    pub fn position(&self) -> i32 {
+    pub fn position(&self) -> u64 {
         let clock_time: Option<gst::ClockTime> = self.player().query_position();
-        clock_time.map_or(0, |ct| ct.seconds() as i32)
+        clock_time.map_or(0, gst::ClockTime::seconds)
     }
 
     pub fn set_duration(&self, duration: i32) {
