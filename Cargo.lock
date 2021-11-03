@@ -511,6 +511,62 @@ dependencies = [
 ]
 
 [[package]]
+name = "gstreamer-audio-sys"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d066ddfd05f63836f35ac4a5830d5bb2f7f3d6c33c870e9b15c667d20f65d7f6"
+dependencies = [
+ "glib-sys",
+ "gobject-sys",
+ "gstreamer-base-sys",
+ "gstreamer-sys",
+ "libc",
+ "system-deps 3.2.0",
+]
+
+[[package]]
+name = "gstreamer-base-sys"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "28169a7b58edb93ad8ac766f0fa12dcd36a2af4257a97ee10194c7103baf3e27"
+dependencies = [
+ "glib-sys",
+ "gobject-sys",
+ "gstreamer-sys",
+ "libc",
+ "system-deps 3.2.0",
+]
+
+[[package]]
+name = "gstreamer-pbutils"
+version = "0.17.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "04cce8a8d8fb28bd5ea00433e8ea2e45a09a68e8b8b9ebe3d6552b33cb49c1b0"
+dependencies = [
+ "bitflags",
+ "glib",
+ "gstreamer",
+ "gstreamer-pbutils-sys",
+ "libc",
+ "thiserror",
+]
+
+[[package]]
+name = "gstreamer-pbutils-sys"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b6b7507a2c0294755b530e41a402884f326b9dbdc322039aeabac9759c149d65"
+dependencies = [
+ "glib-sys",
+ "gobject-sys",
+ "gstreamer-audio-sys",
+ "gstreamer-sys",
+ "gstreamer-video-sys",
+ "libc",
+ "system-deps 3.2.0",
+]
+
+[[package]]
 name = "gstreamer-sys"
 version = "0.17.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -518,6 +574,20 @@ checksum = "a81704feeb3e8599913bdd1e738455c2991a01ff4a1780cb62200993e454cc3e"
 dependencies = [
  "glib-sys",
  "gobject-sys",
+ "libc",
+ "system-deps 3.2.0",
+]
+
+[[package]]
+name = "gstreamer-video-sys"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b81608f4182bdddd5bd33aaaa341d5544eda12b067a3dab75b1b7d2de01a3ba7"
+dependencies = [
+ "glib-sys",
+ "gobject-sys",
+ "gstreamer-base-sys",
+ "gstreamer-sys",
  "libc",
  "system-deps 3.2.0",
 ]
@@ -825,6 +895,7 @@ dependencies = [
  "git2",
  "gray_matter",
  "gstreamer",
+ "gstreamer-pbutils",
  "gtk4",
  "indexmap",
  "libadwaita",

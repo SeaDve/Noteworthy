@@ -11,6 +11,8 @@ use once_cell::{sync::Lazy, unsync::OnceCell};
 
 use std::cell::{Cell, RefCell};
 
+use crate::spawn_blocking;
+
 #[derive(Debug, PartialEq, Clone, Copy, GEnum)]
 #[genum(type_name = "AudioPlayerPlaybackState")]
 pub enum PlaybackState {
@@ -187,11 +189,17 @@ impl AudioPlayer {
         }
     }
 
-    pub fn query_duration(&self) -> anyhow::Result<u64> {
-        match self.player().query_duration::<gst::ClockTime>() {
-            Some(clock_time) => Ok(clock_time.seconds()),
-            None => anyhow::bail!("Failed to query duration"),
-        }
+    pub async fn duration(&self) -> anyhow::Result<u64> {
+        let uri = self.uri();
+
+        let discover_info = spawn_blocking!(move || {
+            let timeout = gst::ClockTime::from_seconds(10);
+            let discoverer = gst_pbutils::Discoverer::new(timeout).unwrap();
+            discoverer.discover_uri(&uri)
+        })
+        .await?;
+
+        Ok(discover_info.duration().map_or(0, gst::ClockTime::seconds))
     }
 
     pub fn play(&self) {

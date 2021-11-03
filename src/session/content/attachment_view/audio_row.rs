@@ -11,6 +11,7 @@ use std::{cell::RefCell, time::Duration};
 use crate::{
     core::{AudioPlayer, PlaybackState},
     model::Attachment,
+    spawn,
 };
 
 mod imp {
@@ -22,7 +23,7 @@ mod imp {
         #[template_child]
         pub playback_button: TemplateChild<gtk::Button>,
         #[template_child]
-        pub playback_position_label: TemplateChild<gtk::Label>,
+        pub playback_duration_label: TemplateChild<gtk::Label>,
         #[template_child]
         pub playback_position_scale: TemplateChild<gtk::Scale>,
 
@@ -124,6 +125,13 @@ impl AudioRow {
         let audio_file_uri = attachment.file().uri();
         self.audio_player().set_uri(&audio_file_uri);
 
+        spawn!(
+            glib::PRIORITY_DEFAULT_IDLE,
+            clone!(@weak self as obj => async move {
+                obj.update_playback_duration_label().await;
+            })
+        );
+
         let imp = imp::AudioRow::from_instance(self);
         imp.attachment.replace(attachment);
         self.notify("attachment");
@@ -139,30 +147,37 @@ impl AudioRow {
         &imp.audio_player
     }
 
-    fn update_playback_display(&self) {
+    async fn update_playback_duration_label(&self) {
+        let audio_player = self.audio_player();
+
+        let imp = imp::AudioRow::from_instance(self);
+
+        if let Ok(duration) = audio_player.duration().await {
+            imp.playback_position_scale.set_range(0.0, duration as f64);
+
+            let seconds = duration % 60;
+            let minutes = (duration / 60) % 60;
+            let formatted_time = format!("{:02}∶{:02}", minutes, seconds);
+            imp.playback_duration_label.set_label(&formatted_time);
+        } else {
+            log::warn!("Error querying duration");
+        }
+    }
+
+    fn update_playback_position_scale(&self) {
+        let audio_player = self.audio_player();
+
         if self.audio_player().state() != PlaybackState::Playing {
             return;
         }
 
         let imp = imp::AudioRow::from_instance(self);
-        let audio_player = self.audio_player();
-
-        if let Ok(duration) = audio_player.query_duration() {
-            imp.playback_position_scale.set_range(0.0, duration as f64);
-        } else {
-            log::warn!("Error querying duration");
-        }
 
         if let Ok(position) = audio_player.query_position() {
             let scale_handler_id = imp.scale_handler_id.get().unwrap();
             imp.playback_position_scale.block_signal(scale_handler_id);
             imp.playback_position_scale.set_value(position as f64);
             imp.playback_position_scale.unblock_signal(scale_handler_id);
-
-            let seconds = position % 60;
-            let minutes = (position / 60) % 60;
-            let formatted_time = format!("{:02}∶{:02}", minutes, seconds);
-            imp.playback_position_label.set_label(&formatted_time);
         } else {
             log::warn!("Error querying position");
         }
@@ -170,7 +185,6 @@ impl AudioRow {
 
     fn clean_playback_display(&self) {
         let imp = imp::AudioRow::from_instance(self);
-        imp.playback_position_label.set_label("00∶00");
 
         let scale_handler_id = imp.scale_handler_id.get().unwrap();
         imp.playback_position_scale.block_signal(scale_handler_id);
@@ -220,8 +234,8 @@ impl AudioRow {
     fn setup_timer(&self) {
         glib::timeout_add_local(
             Duration::from_millis(500),
-            clone!(@weak self as obj => @default-panic, move || {
-                obj.update_playback_display();
+            clone!(@weak self as obj => @default-return glib::Continue(false), move || {
+                obj.update_playback_position_scale();
                 glib::Continue(true)
             }),
         );
