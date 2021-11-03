@@ -148,19 +148,20 @@ impl AudioRow {
     }
 
     async fn update_playback_duration_label(&self) {
-        let audio_player = self.audio_player();
+        match self.audio_player().duration().await {
+            Ok(duration) => {
+                let imp = imp::AudioRow::from_instance(self);
 
-        let imp = imp::AudioRow::from_instance(self);
+                imp.playback_position_scale.set_range(0.0, duration as f64);
 
-        if let Ok(duration) = audio_player.duration().await {
-            imp.playback_position_scale.set_range(0.0, duration as f64);
-
-            let seconds = duration % 60;
-            let minutes = (duration / 60) % 60;
-            let formatted_time = format!("{:02}∶{:02}", minutes, seconds);
-            imp.playback_duration_label.set_label(&formatted_time);
-        } else {
-            log::warn!("Error querying duration");
+                let seconds = duration % 60;
+                let minutes = (duration / 60) % 60;
+                let formatted_time = format!("{:02}∶{:02}", minutes, seconds);
+                imp.playback_duration_label.set_label(&formatted_time);
+            }
+            Err(err) => {
+                log::warn!("Error getting duration: {}", err);
+            }
         }
     }
 
@@ -179,10 +180,13 @@ impl AudioRow {
             return;
         }
 
-        if let Ok(position) = audio_player.query_position() {
-            self.set_playback_position_scale_value_blocking(position as f64);
-        } else {
-            log::warn!("Error querying position");
+        match audio_player.query_position() {
+            Ok(position) => {
+                self.set_playback_position_scale_value_blocking(position as f64);
+            }
+            Err(err) => {
+                log::warn!("Error querying position: {}", err);
+            }
         }
     }
 
