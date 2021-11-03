@@ -102,6 +102,16 @@ mod imp {
             obj.setup_player();
         }
     }
+
+    impl Drop for AudioPlayer {
+        fn drop(&mut self) {
+            self.player
+                .get()
+                .unwrap()
+                .set_state(gst::State::Null)
+                .unwrap();
+        }
+    }
 }
 
 glib::wrapper! {
