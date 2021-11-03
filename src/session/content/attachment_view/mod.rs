@@ -10,11 +10,7 @@ use gtk::{
 };
 
 use self::{audio_row::AudioRow, other_row::OtherRow, row::Row};
-use crate::{
-    core::AudioPlayer,
-    model::{Attachment, AttachmentList},
-    utils::PropExpr,
-};
+use crate::{core::AudioPlayerHandler, model::AttachmentList, utils::PropExpr};
 
 mod imp {
     use super::*;
@@ -27,7 +23,7 @@ mod imp {
         #[template_child]
         pub selection: TemplateChild<gtk::NoSelection>,
 
-        pub audio_player: AudioPlayer,
+        pub audio_player_handler: AudioPlayerHandler,
     }
 
     #[glib::object_subclass]
@@ -37,7 +33,6 @@ mod imp {
         type ParentType = adw::Bin;
 
         fn class_init(klass: &mut Self::Class) {
-            Row::static_type();
             Self::bind_template(klass);
         }
 
@@ -105,11 +100,6 @@ impl AttachmentView {
         self.notify("attachment-list");
     }
 
-    fn audio_player(&self) -> AudioPlayer {
-        let imp = imp::AttachmentView::from_instance(self);
-        imp.audio_player.clone()
-    }
-
     fn setup_list_view(&self) {
         let factory = gtk::SignalListItemFactory::new();
 
@@ -128,27 +118,17 @@ impl AttachmentView {
             let attachment_row: Row = list_item.child().unwrap().downcast().unwrap();
 
             if let Some(ref audio_row) = attachment_row.inner_row::<AudioRow>() {
-                let audio_player = obj.audio_player();
+                let imp = imp::AttachmentView::from_instance(&obj);
+                imp.audio_player_handler.append(audio_row.audio_player().clone());
+            }
+        }));
 
-                audio_row.connect_playback_toggled(clone!(@weak audio_player => move |audio_row, is_active| {
-                    if is_active {
-                        audio_player.load_and_play(&audio_row.uri());
-                    } else {
-                        audio_player.stop();
-                    }
-                }));
+        factory.connect_unbind(clone!(@weak self as obj => move |_, list_item| {
+            let attachment_row: Row = list_item.child().unwrap().downcast().unwrap();
 
-                let audio_player_uri_expression = audio_player.property_expression("uri");
-                let audio_row_file_expression = audio_row.weak_property_expression("attachment");
-
-                let is_equal_expression = gtk::ClosureExpression::new(|args| {
-                    let audio_player_uri: String = args[1].get().unwrap();
-                    let audio_row_file: Attachment = args[2].get().unwrap();
-
-                    audio_player_uri == audio_row_file.file().uri()
-                }, &[audio_player_uri_expression, audio_row_file_expression]);
-
-                is_equal_expression.bind(audio_row, "is-playing", None::<&gtk::Widget>);
+            if let Some(ref audio_row) = attachment_row.inner_row::<AudioRow>() {
+                let imp = imp::AttachmentView::from_instance(&obj);
+                imp.audio_player_handler.remove(audio_row.audio_player());
             }
         }));
 

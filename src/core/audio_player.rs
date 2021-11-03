@@ -9,7 +9,7 @@ use gtk::{
 };
 use once_cell::{sync::Lazy, unsync::OnceCell};
 
-use std::{cell::Cell, time::Duration};
+use std::cell::{Cell, RefCell};
 
 #[derive(Debug, PartialEq, Clone, Copy, GEnum)]
 #[genum(type_name = "AudioPlayerPlaybackState")]
@@ -34,7 +34,7 @@ mod imp {
         pub player: OnceCell<gst::Pipeline>,
 
         pub state: Cell<PlaybackState>,
-        pub duration: Cell<i32>,
+        pub uri: RefCell<String>,
     }
 
     #[glib::object_subclass]
@@ -63,24 +63,6 @@ mod imp {
                         None,
                         glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
-                    glib::ParamSpec::new_uint64(
-                        "position",
-                        "Position",
-                        "Current position in the player",
-                        0,
-                        u64::MAX,
-                        0,
-                        glib::ParamFlags::READABLE,
-                    ),
-                    glib::ParamSpec::new_int(
-                        "duration",
-                        "Duration",
-                        "Duration of what is playing in the player",
-                        -1,
-                        i32::MAX,
-                        0,
-                        glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
-                    ),
                 ]
             });
 
@@ -103,10 +85,6 @@ mod imp {
                     let uri = value.get().unwrap();
                     obj.set_uri(uri);
                 }
-                "duration" => {
-                    let duration = value.get().unwrap();
-                    obj.set_duration(duration);
-                }
                 _ => unimplemented!(),
             }
         }
@@ -115,8 +93,6 @@ mod imp {
             match pspec.name() {
                 "state" => obj.state().to_value(),
                 "uri" => obj.uri().to_value(),
-                "position" => obj.position().to_value(),
-                "duration" => obj.duration().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -136,6 +112,13 @@ glib::wrapper! {
 impl AudioPlayer {
     pub fn new() -> Self {
         glib::Object::new::<Self>(&[]).expect("Failed to create AudioPlayer.")
+    }
+
+    pub fn connect_state_notify<F>(&self, f: F) -> glib::SignalHandlerId
+    where
+        F: Fn(&Self, &glib::ParamSpec) + 'static,
+    {
+        self.connect_notify_local(Some("state"), f)
     }
 
     pub fn set_state(&self, state: PlaybackState) {
@@ -171,15 +154,16 @@ impl AudioPlayer {
 
     pub fn set_uri(&self, uri: &str) {
         self.player().set_property("uri", uri).unwrap();
+
+        let imp = imp::AudioPlayer::from_instance(self);
+        imp.uri.replace(uri.to_owned());
+
         self.notify("uri");
     }
 
     pub fn uri(&self) -> String {
-        self.player()
-            .property("uri")
-            .unwrap()
-            .get()
-            .unwrap_or_default()
+        let imp = imp::AudioPlayer::from_instance(self);
+        imp.uri.borrow().clone()
     }
 
     pub fn seek(&self, position: u64) {
@@ -190,38 +174,26 @@ impl AudioPlayer {
         }
     }
 
-    pub fn position(&self) -> u64 {
-        let clock_time: Option<gst::ClockTime> = self.player().query_position();
-        clock_time.map_or(0, gst::ClockTime::seconds)
-    }
-
-    pub fn set_duration(&self, duration: i32) {
-        let imp = imp::AudioPlayer::from_instance(self);
-        imp.duration.replace(duration);
-        self.notify("duration");
-    }
-
-    pub fn duration(&self) -> i32 {
-        if self.state() == PlaybackState::Stopped {
-            return -1;
+    pub fn query_position(&self) -> anyhow::Result<u64> {
+        match self.player().query_position::<gst::ClockTime>() {
+            Some(clock_time) => Ok(clock_time.seconds()),
+            None => anyhow::bail!("Failed to query position"),
         }
-
-        let imp = imp::AudioPlayer::from_instance(self);
-        imp.duration.get()
     }
 
-    pub fn load(&self, uri: &str) {
-        self.set_state(PlaybackState::Loading);
-        self.set_uri(uri);
+    pub fn query_duration(&self) -> anyhow::Result<u64> {
+        match self.player().query_duration::<gst::ClockTime>() {
+            Some(clock_time) => Ok(clock_time.seconds()),
+            None => anyhow::bail!("Failed to query duration"),
+        }
     }
 
     pub fn play(&self) {
         self.set_state(PlaybackState::Playing);
     }
 
-    pub fn load_and_play(&self, uri: &str) {
-        self.load(uri);
-        self.play();
+    pub fn pause(&self) {
+        self.set_state(PlaybackState::Paused);
     }
 
     pub fn stop(&self) {
@@ -258,19 +230,10 @@ impl AudioPlayer {
             Error(message) => self.on_bus_error(message),
             Eos(_) => self.on_bus_eos(),
             StateChanged(message) => self.on_state_changed(message),
-            StreamStart(_) => self.on_bus_stream_start(),
             _ => (),
         }
 
         glib::Continue(true)
-    }
-
-    fn query_duration(&self) {
-        let duration = self
-            .player()
-            .query_duration::<gst::ClockTime>()
-            .map_or(-1, |d| d.seconds() as i32);
-        self.set_duration(duration);
     }
 
     fn on_bus_error(&self, message: gst::message::Error) {
@@ -317,17 +280,6 @@ impl AudioPlayer {
         let imp = imp::AudioPlayer::from_instance(self);
         imp.state.set(state);
         self.notify("state");
-    }
-
-    fn on_bus_stream_start(&self) {
-        // Delay the signalling slightly or the new duration will not
-        // have been set yet.
-        glib::timeout_add_local_once(
-            Duration::from_millis(1),
-            clone!(@weak self as obj => move || {
-                obj.query_duration();
-            }),
-        );
     }
 }
 

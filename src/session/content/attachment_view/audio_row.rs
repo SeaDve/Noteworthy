@@ -1,13 +1,18 @@
 use adw::{prelude::*, subclass::prelude::*};
 use gtk::{
-    glib::{self, subclass::Signal},
+    glib::{self, clone, subclass::Signal},
     subclass::prelude::*,
     CompositeTemplate,
 };
+use once_cell::unsync::OnceCell;
 
-use std::cell::{Cell, RefCell};
+use std::{
+    cell::{Cell, RefCell},
+    time::Duration,
+};
 
 use crate::{
+    core::{AudioPlayer, PlaybackState},
     model::Attachment,
     utils::{ChainExpr, PropExpr},
 };
@@ -20,9 +25,16 @@ mod imp {
     pub struct AudioRow {
         #[template_child]
         pub playback_button: TemplateChild<gtk::Button>,
+        #[template_child]
+        pub playback_position_label: TemplateChild<gtk::Label>,
+        #[template_child]
+        pub playback_position_scale: TemplateChild<gtk::Scale>,
 
         pub attachment: RefCell<Attachment>,
         pub is_playing: Cell<bool>,
+
+        pub scale_handler_id: OnceCell<glib::SignalHandlerId>,
+        pub audio_player: AudioPlayer,
     }
 
     #[glib::object_subclass]
@@ -77,7 +89,7 @@ mod imp {
                         "Is Playing",
                         "Whether the audio file is currently playing",
                         false,
-                        glib::ParamFlags::READWRITE,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
                 ]
             });
@@ -87,7 +99,7 @@ mod imp {
 
         fn set_property(
             &self,
-            _obj: &Self::Type,
+            obj: &Self::Type,
             _id: usize,
             value: &glib::Value,
             pspec: &glib::ParamSpec,
@@ -95,20 +107,20 @@ mod imp {
             match pspec.name() {
                 "attachment" => {
                     let attachment = value.get().unwrap();
-                    self.attachment.replace(attachment);
+                    obj.set_attachment(attachment);
                 }
                 "is-playing" => {
                     let is_playing = value.get().unwrap();
-                    self.is_playing.set(is_playing);
+                    obj.set_is_playing(is_playing);
                 }
                 _ => unimplemented!(),
             }
         }
 
-        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+        fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "attachment" => self.attachment.borrow().to_value(),
-                "is-playing" => self.is_playing.get().to_value(),
+                "attachment" => obj.attachment().to_value(),
+                "is-playing" => obj.is_playing().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -116,7 +128,9 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
+            obj.setup_signals();
             obj.setup_expressions();
+            obj.setup_timer();
         }
     }
 
@@ -135,36 +149,89 @@ impl AudioRow {
         glib::Object::new(&[("attachment", attachment)]).expect("Failed to create AudioRow")
     }
 
-    pub fn connect_playback_toggled<F: Fn(&Self, bool) + 'static>(
-        &self,
-        f: F,
-    ) -> glib::SignalHandlerId {
-        self.connect_local("playback-toggled", true, move |values| {
-            let obj = values[0].get::<Self>().unwrap();
-            let is_active = values[1].get::<bool>().unwrap();
-            f(&obj, is_active);
-            None
-        })
-        .unwrap()
+    pub fn set_attachment(&self, attachment: Attachment) {
+        let audio_file_uri = attachment.file().uri();
+        self.audio_player().set_uri(&audio_file_uri);
+
+        let imp = imp::AudioRow::from_instance(self);
+        imp.attachment.replace(attachment);
+        self.notify("attachment");
     }
 
-    pub fn uri(&self) -> String {
-        let attachment: Attachment = self.property("attachment").unwrap().get().unwrap();
-        attachment.file().uri().into()
+    pub fn attachment(&self) -> Attachment {
+        let imp = imp::AudioRow::from_instance(self);
+        imp.attachment.borrow().clone()
     }
 
     pub fn set_is_playing(&self, is_playing: bool) {
-        self.set_property("is-playing", is_playing).unwrap();
+        if is_playing {
+            self.audio_player().play();
+        } else {
+            self.audio_player().stop();
+        }
     }
 
-    fn is_playing(&self) -> bool {
-        self.property("is-playing").unwrap().get().unwrap()
+    pub fn is_playing(&self) -> bool {
+        let imp = imp::AudioRow::from_instance(self);
+        imp.is_playing.get()
+    }
+
+    pub fn audio_player(&self) -> &AudioPlayer {
+        let imp = imp::AudioRow::from_instance(self);
+        &imp.audio_player
+    }
+
+    fn update_playback_display(&self) {
+        if !self.is_playing() {
+            return;
+        }
+
+        let imp = imp::AudioRow::from_instance(self);
+        let audio_player = self.audio_player();
+
+        if let Ok(duration) = audio_player.query_duration() {
+            imp.playback_position_scale.set_range(0.0, duration as f64);
+        } else {
+            log::warn!("Error querying duration");
+        }
+
+        if let Ok(position) = audio_player.query_position() {
+            let scale_handler_id = imp.scale_handler_id.get().unwrap();
+            imp.playback_position_scale.block_signal(scale_handler_id);
+            imp.playback_position_scale.set_value(position as f64);
+            imp.playback_position_scale.unblock_signal(scale_handler_id);
+
+            let seconds = position % 60;
+            let minutes = (position / 60) % 60;
+            let formatted_time = format!("{:02}∶{:02}", minutes, seconds);
+            imp.playback_position_label.set_label(&formatted_time);
+        } else {
+            log::warn!("Error querying position");
+        }
+    }
+
+    fn clean_playback_display(&self) {
+        let imp = imp::AudioRow::from_instance(self);
+        imp.playback_position_label.set_label("00∶00");
+
+        let scale_handler_id = imp.scale_handler_id.get().unwrap();
+        imp.playback_position_scale.block_signal(scale_handler_id);
+        imp.playback_position_scale.set_value(0.0);
+        imp.playback_position_scale.unblock_signal(scale_handler_id);
     }
 
     fn setup_expressions(&self) {
         let imp = imp::AudioRow::from_instance(self);
 
-        self.property_expression("is-playing")
+        let is_playing_expression = self.property_expression("is-playing");
+
+        is_playing_expression.bind(
+            &imp.playback_position_scale.get(),
+            "sensitive",
+            None::<&glib::Object>,
+        );
+
+        is_playing_expression
             .closure_expression(|args| {
                 let is_playing = args[1].get().unwrap();
                 if is_playing {
@@ -178,5 +245,40 @@ impl AudioRow {
                 "icon-name",
                 None::<&glib::Object>,
             );
+    }
+
+    fn setup_signals(&self) {
+        let imp = imp::AudioRow::from_instance(self);
+        let scale_handler_id = imp.playback_position_scale.connect_value_changed(
+            clone!(@weak self as obj => move |scale| {
+                let value = scale.value();
+                obj.audio_player().seek(value as u64);
+            }),
+        );
+        imp.scale_handler_id.set(scale_handler_id).unwrap();
+
+        imp.audio_player
+            .connect_state_notify(clone!(@weak self as obj => move |audio_player,_| {
+                let imp = imp::AudioRow::from_instance(&obj);
+
+                let is_stopped = matches!(audio_player.state(), PlaybackState::Stopped);
+                imp.is_playing.set(!is_stopped);
+
+                if is_stopped {
+                    obj.clean_playback_display();
+                }
+
+                obj.notify("is-playing");
+            }));
+    }
+
+    fn setup_timer(&self) {
+        glib::timeout_add_local(
+            Duration::from_millis(500),
+            clone!(@weak self as obj => @default-panic, move || {
+                obj.update_playback_display();
+                glib::Continue(true)
+            }),
+        );
     }
 }
