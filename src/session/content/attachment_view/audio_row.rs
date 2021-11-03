@@ -192,13 +192,12 @@ impl AudioRow {
         imp.playback_position_scale
             .set_sensitive(state != PlaybackState::Stopped);
 
+        if state == PlaybackState::Stopped {
+            self.set_playback_position_scale_value_blocking(0.0);
+        }
+
         match state {
-            PlaybackState::Stopped => {
-                self.set_playback_position_scale_value_blocking(0.0);
-                imp.playback_button
-                    .set_icon_name("media-playback-start-symbolic");
-            }
-            PlaybackState::Paused => {
+            PlaybackState::Stopped | PlaybackState::Paused => {
                 imp.playback_button
                     .set_icon_name("media-playback-start-symbolic");
             }
