@@ -1,20 +1,16 @@
 use adw::{prelude::*, subclass::prelude::*};
 use gtk::{
-    glib::{self, clone, subclass::Signal},
+    glib::{self, clone},
     subclass::prelude::*,
     CompositeTemplate,
 };
 use once_cell::unsync::OnceCell;
 
-use std::{
-    cell::{Cell, RefCell},
-    time::Duration,
-};
+use std::{cell::RefCell, time::Duration};
 
 use crate::{
     core::{AudioPlayer, PlaybackState},
     model::Attachment,
-    utils::{ChainExpr, PropExpr},
 };
 
 mod imp {
@@ -31,7 +27,6 @@ mod imp {
         pub playback_position_scale: TemplateChild<gtk::Scale>,
 
         pub attachment: RefCell<Attachment>,
-        pub is_playing: Cell<bool>,
 
         pub scale_handler_id: OnceCell<glib::SignalHandlerId>,
         pub audio_player: AudioPlayer,
@@ -47,10 +42,13 @@ mod imp {
             Self::bind_template(klass);
 
             klass.install_action("audio-row.toggle-playback", None, move |obj, _, _| {
-                let is_currently_playing = obj.is_playing();
-                obj.emit_by_name("playback-toggled", &[&!is_currently_playing])
-                    .unwrap();
-                obj.set_is_playing(!is_currently_playing);
+                let audio_player = obj.audio_player();
+
+                if audio_player.state() == PlaybackState::Playing {
+                    audio_player.set_state(PlaybackState::Paused);
+                } else {
+                    audio_player.set_state(PlaybackState::Playing);
+                }
             });
         }
 
@@ -60,38 +58,16 @@ mod imp {
     }
 
     impl ObjectImpl for AudioRow {
-        fn signals() -> &'static [Signal] {
-            use once_cell::sync::Lazy;
-            static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
-                vec![Signal::builder(
-                    "playback-toggled",
-                    &[bool::static_type().into()],
-                    <()>::static_type().into(),
-                )
-                .build()]
-            });
-            SIGNALS.as_ref()
-        }
-
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![
-                    glib::ParamSpec::new_object(
-                        "attachment",
-                        "attachment",
-                        "The attachment represented by this row",
-                        Attachment::static_type(),
-                        glib::ParamFlags::READWRITE,
-                    ),
-                    glib::ParamSpec::new_boolean(
-                        "is-playing",
-                        "Is Playing",
-                        "Whether the audio file is currently playing",
-                        false,
-                        glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
-                    ),
-                ]
+                vec![glib::ParamSpec::new_object(
+                    "attachment",
+                    "attachment",
+                    "The attachment represented by this row",
+                    Attachment::static_type(),
+                    glib::ParamFlags::READWRITE,
+                )]
             });
 
             PROPERTIES.as_ref()
@@ -109,10 +85,6 @@ mod imp {
                     let attachment = value.get().unwrap();
                     obj.set_attachment(attachment);
                 }
-                "is-playing" => {
-                    let is_playing = value.get().unwrap();
-                    obj.set_is_playing(is_playing);
-                }
                 _ => unimplemented!(),
             }
         }
@@ -120,7 +92,6 @@ mod imp {
         fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
                 "attachment" => obj.attachment().to_value(),
-                "is-playing" => obj.is_playing().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -129,8 +100,8 @@ mod imp {
             self.parent_constructed(obj);
 
             obj.setup_signals();
-            obj.setup_expressions();
             obj.setup_timer();
+            obj.on_audio_player_state_changed(PlaybackState::default());
         }
     }
 
@@ -163,26 +134,13 @@ impl AudioRow {
         imp.attachment.borrow().clone()
     }
 
-    pub fn set_is_playing(&self, is_playing: bool) {
-        if is_playing {
-            self.audio_player().play();
-        } else {
-            self.audio_player().stop();
-        }
-    }
-
-    pub fn is_playing(&self) -> bool {
-        let imp = imp::AudioRow::from_instance(self);
-        imp.is_playing.get()
-    }
-
     pub fn audio_player(&self) -> &AudioPlayer {
         let imp = imp::AudioRow::from_instance(self);
         &imp.audio_player
     }
 
     fn update_playback_display(&self) {
-        if !self.is_playing() {
+        if self.audio_player().state() != PlaybackState::Playing {
             return;
         }
 
@@ -220,31 +178,27 @@ impl AudioRow {
         imp.playback_position_scale.unblock_signal(scale_handler_id);
     }
 
-    fn setup_expressions(&self) {
+    fn on_audio_player_state_changed(&self, state: PlaybackState) {
         let imp = imp::AudioRow::from_instance(self);
 
-        let is_playing_expression = self.property_expression("is-playing");
+        imp.playback_position_scale
+            .set_sensitive(state != PlaybackState::Stopped);
 
-        is_playing_expression.bind(
-            &imp.playback_position_scale.get(),
-            "sensitive",
-            None::<&glib::Object>,
-        );
-
-        is_playing_expression
-            .closure_expression(|args| {
-                let is_playing = args[1].get().unwrap();
-                if is_playing {
-                    "media-playback-pause-symbolic"
-                } else {
-                    "media-playback-start-symbolic"
-                }
-            })
-            .bind(
-                &imp.playback_button.get(),
-                "icon-name",
-                None::<&glib::Object>,
-            );
+        match state {
+            PlaybackState::Stopped => {
+                self.clean_playback_display();
+                imp.playback_button
+                    .set_icon_name("media-playback-start-symbolic");
+            }
+            PlaybackState::Paused => {
+                imp.playback_button
+                    .set_icon_name("media-playback-start-symbolic");
+            }
+            PlaybackState::Playing => {
+                imp.playback_button
+                    .set_icon_name("media-playback-pause-symbolic");
+            }
+        }
     }
 
     fn setup_signals(&self) {
@@ -258,17 +212,8 @@ impl AudioRow {
         imp.scale_handler_id.set(scale_handler_id).unwrap();
 
         imp.audio_player
-            .connect_state_notify(clone!(@weak self as obj => move |audio_player,_| {
-                let imp = imp::AudioRow::from_instance(&obj);
-
-                let is_stopped = matches!(audio_player.state(), PlaybackState::Stopped);
-                imp.is_playing.set(!is_stopped);
-
-                if is_stopped {
-                    obj.clean_playback_display();
-                }
-
-                obj.notify("is-playing");
+            .connect_state_notify(clone!(@weak self as obj => move |audio_player, _| {
+                obj.on_audio_player_state_changed(audio_player.state());
             }));
     }
 

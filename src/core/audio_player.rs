@@ -15,7 +15,6 @@ use std::cell::{Cell, RefCell};
 #[genum(type_name = "AudioPlayerPlaybackState")]
 pub enum PlaybackState {
     Stopped,
-    Loading,
     Paused,
     Playing,
 }
@@ -134,9 +133,6 @@ impl AudioPlayer {
                 let imp = imp::AudioPlayer::from_instance(self);
                 imp.state.set(state);
                 self.notify("state");
-            }
-            PlaybackState::Loading => {
-                player.set_state(gst::State::Ready).unwrap();
             }
             PlaybackState::Paused => {
                 player.set_state(gst::State::Paused).unwrap();
@@ -271,7 +267,6 @@ impl AudioPlayer {
 
         let state = match new_state {
             gst::State::Null => PlaybackState::Stopped,
-            gst::State::Ready => PlaybackState::Loading,
             gst::State::Paused => PlaybackState::Paused,
             gst::State::Playing => PlaybackState::Playing,
             _ => return,
