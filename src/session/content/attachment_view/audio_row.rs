@@ -164,6 +164,14 @@ impl AudioRow {
         }
     }
 
+    fn set_playback_position_scale_value_blocking(&self, value: f64) {
+        let imp = imp::AudioRow::from_instance(self);
+        let scale_handler_id = imp.scale_handler_id.get().unwrap();
+        imp.playback_position_scale.block_signal(scale_handler_id);
+        imp.playback_position_scale.set_value(value);
+        imp.playback_position_scale.unblock_signal(scale_handler_id);
+    }
+
     fn update_playback_position_scale(&self) {
         let audio_player = self.audio_player();
 
@@ -171,25 +179,11 @@ impl AudioRow {
             return;
         }
 
-        let imp = imp::AudioRow::from_instance(self);
-
         if let Ok(position) = audio_player.query_position() {
-            let scale_handler_id = imp.scale_handler_id.get().unwrap();
-            imp.playback_position_scale.block_signal(scale_handler_id);
-            imp.playback_position_scale.set_value(position as f64);
-            imp.playback_position_scale.unblock_signal(scale_handler_id);
+            self.set_playback_position_scale_value_blocking(position as f64);
         } else {
             log::warn!("Error querying position");
         }
-    }
-
-    fn clean_playback_display(&self) {
-        let imp = imp::AudioRow::from_instance(self);
-
-        let scale_handler_id = imp.scale_handler_id.get().unwrap();
-        imp.playback_position_scale.block_signal(scale_handler_id);
-        imp.playback_position_scale.set_value(0.0);
-        imp.playback_position_scale.unblock_signal(scale_handler_id);
     }
 
     fn on_audio_player_state_changed(&self, state: PlaybackState) {
@@ -200,7 +194,7 @@ impl AudioRow {
 
         match state {
             PlaybackState::Stopped => {
-                self.clean_playback_display();
+                self.set_playback_position_scale_value_blocking(0.0);
                 imp.playback_button
                     .set_icon_name("media-playback-start-symbolic");
             }
