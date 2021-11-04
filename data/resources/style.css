@@ -95,6 +95,10 @@
   color: @accent_fg_color;
 }
 
+.content-attachment-view {
+  min-width: 240px;
+}
+
 .content-attachment-view-list-view {
   padding-top: 3px;
   padding-bottom: 3px;
@@ -107,7 +111,6 @@
 }
 
 .content-attachment-view-audio-row {
-  min-width: 240px;
   padding: 6px;
   padding-right: 0;
 }

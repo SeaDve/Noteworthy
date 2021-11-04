@@ -2,14 +2,32 @@
 <interface>
   <template class="NwtyContentAttachmentView" parent="AdwBin">
     <property name="child">
-      <object class="GtkListView" id="list_view">
-        <property name="model">
-          <object class="GtkNoSelection" id="selection"/>
-        </property>
-        <style>
-          <class name="content-attachment-view-list-view"/>
-        </style>
+      <object class="GtkBox">
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkListView" id="list_view">
+            <property name="vexpand">True</property>
+            <property name="model">
+              <object class="GtkNoSelection" id="selection"/>
+            </property>
+            <style>
+              <class name="content-attachment-view-list-view"/>
+            </style>
+          </object>
+        </child>
+        <child>
+          <object class="GtkActionBar">
+            <child>
+              <object class="GtkButton">
+                <property name="icon-name">audio-input-microphone-symbolic</property>
+              </object>
+            </child>
+          </object>
+        </child>
       </object>
     </property>
+    <style>
+      <class name="content-attachment-view"/>
+    </style>
   </template>
 </interface>
