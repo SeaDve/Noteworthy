@@ -41,6 +41,7 @@ rust_sources = files(
   'model/note_tag_list.rs',
   'model/tag.rs',
   'model/tag_list.rs',
+  'session/content/attachment_view/audio_recorder_button.rs',
   'session/content/attachment_view/audio_row.rs',
   'session/content/attachment_view/mod.rs',
   'session/content/attachment_view/other_row.rs',

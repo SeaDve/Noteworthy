@@ -2,9 +2,12 @@ use gst_pbutils::prelude::*;
 use gtk::{
     gio,
     glib::{self, clone, subclass::Signal, GBoxed},
+    prelude::*,
     subclass::prelude::*,
 };
 use once_cell::{sync::Lazy, unsync::OnceCell};
+
+use std::cell::Cell;
 
 #[derive(Debug, Clone, GBoxed)]
 #[gboxed(type_name = "NwtyAudioRecordingResult")]
@@ -19,6 +22,8 @@ mod imp {
     #[derive(Debug, Default)]
     pub struct AudioRecording {
         pub file: OnceCell<gio::File>,
+        pub peak: Cell<f64>,
+
         pub pipeline: OnceCell<gst::Pipeline>,
         pub bus: OnceCell<gst::Bus>,
     }
@@ -45,13 +50,24 @@ mod imp {
 
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_object(
-                    "file",
-                    "file",
-                    "File where the recording is saved",
-                    gio::File::static_type(),
-                    glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
-                )]
+                vec![
+                    glib::ParamSpec::new_object(
+                        "file",
+                        "File",
+                        "File where the recording is saved",
+                        gio::File::static_type(),
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
+                    ),
+                    glib::ParamSpec::new_double(
+                        "peak",
+                        "Peak",
+                        "Current volume peak while recording",
+                        f64::MIN,
+                        f64::MAX,
+                        0.0,
+                        glib::ParamFlags::READWRITE,
+                    ),
+                ]
             });
 
             PROPERTIES.as_ref()
@@ -69,6 +85,10 @@ mod imp {
                     let file = value.get().unwrap();
                     self.file.set(file).unwrap();
                 }
+                "peak" => {
+                    let peak = value.get().unwrap();
+                    self.peak.set(peak);
+                }
                 _ => unimplemented!(),
             }
         }
@@ -76,6 +96,7 @@ mod imp {
         fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
                 "file" => self.file.get().unwrap().to_value(),
+                "peak" => self.peak.get().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -110,7 +131,22 @@ impl AudioRecording {
         .unwrap()
     }
 
-    pub fn start(&self) {
+    pub fn connect_peak_notify<F>(&self, f: F) -> glib::SignalHandlerId
+    where
+        F: Fn(&Self, &glib::ParamSpec) + 'static,
+    {
+        self.connect_notify_local(Some("peak"), f)
+    }
+
+    pub async fn delete(&self) -> anyhow::Result<()> {
+        self.file()
+            .delete_async_future(glib::PRIORITY_DEFAULT_IDLE)
+            .await?;
+
+        Ok(())
+    }
+
+    pub fn start(&self) -> Result<(), gst::StateChangeError> {
         let pipeline = self.pipeline();
 
         let bus = pipeline.bus().unwrap();
@@ -124,7 +160,9 @@ impl AudioRecording {
         let imp = imp::AudioRecording::from_instance(self);
         imp.bus.set(bus).unwrap();
 
-        pipeline.set_state(gst::State::Playing).unwrap();
+        pipeline.set_state(gst::State::Playing)?;
+
+        Ok(())
     }
 
     pub fn pause(&self) {
@@ -138,6 +176,15 @@ impl AudioRecording {
     pub fn stop(&self) {
         log::info!("Sending EOS event to pipeline");
         self.pipeline().send_event(gst::event::Eos::new());
+    }
+
+    pub fn state(&self) -> gst::State {
+        let (_ret, current, _pending) = self.pipeline().state(None);
+        current
+    }
+
+    pub fn peak(&self) -> f64 {
+        self.property("peak").unwrap().get().unwrap()
     }
 
     fn file(&self) -> gio::File {
@@ -202,7 +249,10 @@ impl AudioRecording {
             .unwrap();
 
         let filesink = gst::ElementFactory::make("filesink", None).unwrap();
-        filesink.set_property("location", &self.file()).unwrap();
+        let file_path = self.file().path().unwrap();
+        filesink
+            .set_property("location", file_path.to_str().unwrap())
+            .unwrap();
 
         pipeline
             .add_many(&[&src, &audioconvert, &level, &encodebin, &filesink])
@@ -229,6 +279,20 @@ impl AudioRecording {
 
     fn handle_bus_message(&self, message: &gst::Message) -> glib::Continue {
         match message.view() {
+            gst::MessageView::Element(_) => {
+                let peak = message
+                    .structure()
+                    .unwrap()
+                    .value("peak")
+                    .unwrap()
+                    .get::<glib::ValueArray>()
+                    .unwrap()
+                    .nth(0)
+                    .unwrap();
+                self.set_property_from_value("peak", &peak).unwrap();
+
+                glib::Continue(true)
+            }
             gst::MessageView::Eos(_) => {
                 log::info!("Eos signal received from record bus");
                 self.dispose_pipeline();

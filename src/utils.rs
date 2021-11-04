@@ -75,3 +75,8 @@ pub fn default_notes_dir() -> PathBuf {
     data_dir.push("Notes");
     data_dir
 }
+
+pub fn generate_unique_file_name(prefix: &str) -> String {
+    let formatted_time = chrono::Local::now().format("%Y-%m-%d-%H-%M-%S-%f");
+    format!("{}-{}", prefix, formatted_time)
+}

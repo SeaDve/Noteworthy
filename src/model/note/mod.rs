@@ -13,6 +13,7 @@ use once_cell::unsync::OnceCell;
 use std::{cell::Cell, path::Path};
 
 pub use self::{id::Id, metadata::Metadata};
+use crate::utils;
 
 mod imp {
     use super::*;
@@ -168,7 +169,8 @@ impl Note {
     }
 
     pub fn create_default(base_path: &Path) -> Self {
-        let file_name = Self::generate_unique_file_name();
+        // The file_name is also the note's id
+        let file_name = utils::generate_unique_file_name("Note");
         let mut file = base_path.join(file_name);
         file.set_extension("md");
 
@@ -321,12 +323,5 @@ impl Note {
         bytes.append(&mut buffer_text.as_bytes().to_vec());
 
         Ok(bytes)
-    }
-
-    fn generate_unique_file_name() -> String {
-        // This is also the note's id
-        chrono::Local::now()
-            .format("Noteworthy-%Y-%m-%d-%H-%M-%S-%f")
-            .to_string()
     }
 }

@@ -1,3 +1,4 @@
+mod audio_recorder_button;
 mod audio_row;
 mod other_row;
 mod row;
@@ -9,7 +10,9 @@ use gtk::{
     CompositeTemplate,
 };
 
-use self::{audio_row::AudioRow, other_row::OtherRow, row::Row};
+use self::{
+    audio_recorder_button::AudioRecorderButton, audio_row::AudioRow, other_row::OtherRow, row::Row,
+};
 use crate::{core::AudioPlayerHandler, model::AttachmentList, utils::PropExpr};
 
 mod imp {
@@ -33,6 +36,7 @@ mod imp {
         type ParentType = adw::Bin;
 
         fn class_init(klass: &mut Self::Class) {
+            AudioRecorderButton::static_type();
             Self::bind_template(klass);
         }
 
