@@ -27,3 +27,5 @@ openssl = "0.10.36"
 git2 = "0.13"
 regex = "1.5.4"
 num_enum = "0.5.4"
+
+pulsectl-rs = "0.3.1"
