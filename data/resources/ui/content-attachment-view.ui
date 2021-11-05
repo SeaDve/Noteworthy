@@ -18,7 +18,7 @@
         <child>
           <object class="GtkActionBar">
             <child>
-              <object class="NwtyContentAttachmentViewAudioRecorderButton"/>
+              <object class="NwtyContentAttachmentViewAudioRecorderButton" id="audio_recorder_button"/>
             </child>
           </object>
         </child>

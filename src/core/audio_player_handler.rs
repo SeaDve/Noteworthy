@@ -60,6 +60,14 @@ impl AudioPlayerHandler {
         audio_player.disconnect(handler_id);
     }
 
+    pub fn stop_all(&self) {
+        let imp = imp::AudioPlayerHandler::from_instance(self);
+
+        for audio_player in imp.list.borrow().keys() {
+            audio_player.stop();
+        }
+    }
+
     fn stop_all_except(&self, exception: &AudioPlayer) {
         let imp = imp::AudioPlayerHandler::from_instance(self);
 

@@ -25,6 +25,8 @@ mod imp {
         pub list_view: TemplateChild<gtk::ListView>,
         #[template_child]
         pub selection: TemplateChild<gtk::NoSelection>,
+        #[template_child]
+        pub audio_recorder_button: TemplateChild<AudioRecorderButton>,
 
         pub audio_player_handler: AudioPlayerHandler,
     }
@@ -81,6 +83,7 @@ mod imp {
             self.parent_constructed(obj);
 
             obj.setup_list_view();
+            obj.setup_signals();
         }
     }
 
@@ -138,5 +141,15 @@ impl AttachmentView {
 
         let imp = imp::AttachmentView::from_instance(self);
         imp.list_view.set_factory(Some(&factory));
+    }
+
+    fn setup_signals(&self) {
+        let imp = imp::AttachmentView::from_instance(self);
+
+        imp.audio_recorder_button
+            .connect_on_record(clone!(@weak self as obj => move |_| {
+                let imp = imp::AttachmentView::from_instance(&obj);
+                imp.audio_player_handler.stop_all();
+            }));
     }
 }

@@ -3,11 +3,11 @@ mod visualizer;
 use adw::{prelude::*, subclass::prelude::*};
 use gtk::{
     gio,
-    glib::{self, clone},
+    glib::{self, clone, subclass::Signal},
     subclass::prelude::*,
     CompositeTemplate,
 };
-use once_cell::unsync::OnceCell;
+use once_cell::{sync::Lazy, unsync::OnceCell};
 
 use std::cell::RefCell;
 
@@ -62,6 +62,13 @@ mod imp {
     }
 
     impl ObjectImpl for AudioRecorderButton {
+        fn signals() -> &'static [Signal] {
+            static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
+                vec![Signal::builder("on-record", &[], <()>::static_type().into()).build()]
+            });
+            SIGNALS.as_ref()
+        }
+
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
@@ -82,6 +89,18 @@ glib::wrapper! {
 impl AudioRecorderButton {
     pub fn new() -> Self {
         glib::Object::new(&[]).expect("Failed to create AudioRecorderButton")
+    }
+
+    pub fn connect_on_record<F>(&self, f: F) -> glib::SignalHandlerId
+    where
+        F: Fn(&Self) + 'static,
+    {
+        self.connect_local("on-record", true, move |values| {
+            let obj = values[0].get::<Self>().unwrap();
+            f(&obj);
+            None
+        })
+        .unwrap()
     }
 
     fn recording(&self) -> AudioRecording {
@@ -105,6 +124,8 @@ impl AudioRecorderButton {
             log::error!("Failed to start recording: {}", err);
             return;
         }
+
+        self.emit_by_name("on-record", &[]).unwrap();
 
         let imp = imp::AudioRecorderButton::from_instance(self);
 
