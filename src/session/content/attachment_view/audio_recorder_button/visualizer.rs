@@ -82,9 +82,8 @@ impl Visualizer {
         let v_center = max_height / 2.0;
         let h_center = self.allocated_width() as f32 / 2.0;
 
-        // 2.5 is to avoid overlapping lines at the middle
-        let mut pointer_a = h_center + 2.5;
-        let mut pointer_b = h_center - 2.5;
+        let mut pointer_a = h_center;
+        let mut pointer_b = h_center;
 
         let peaks = self.peaks();
         let peaks_len = peaks.len();
