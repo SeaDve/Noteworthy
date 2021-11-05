@@ -8,7 +8,7 @@ use std::cell::RefCell;
 
 use std::collections::VecDeque;
 
-const GUTTER: i32 = 6;
+const GUTTER: f32 = 6.0;
 const WIDTH: f32 = 2.0;
 const COLOR: gdk::RGBA = gdk::RGBA {
     red: 0.1,
@@ -22,7 +22,7 @@ mod imp {
 
     #[derive(Debug, Default)]
     pub struct Visualizer {
-        pub peaks: RefCell<VecDeque<f64>>,
+        pub peaks: RefCell<VecDeque<f32>>,
     }
 
     #[glib::object_subclass]
@@ -51,16 +51,14 @@ impl Visualizer {
         glib::Object::new(&[]).expect("Failed to create Visualizer")
     }
 
-    pub fn push_peak(&self, peak: f64) {
-        let imp = imp::Visualizer::from_instance(self);
+    pub fn push_peak(&self, peak: f32) {
+        let peaks_len = self.peaks().len() as i32;
 
-        let peaks_len = imp.peaks.borrow().len() as i32;
-
-        if peaks_len > self.allocated_width() / (2 * GUTTER) {
-            imp.peaks.borrow_mut().pop_front();
+        if peaks_len > self.allocated_width() / (2 * GUTTER as i32) {
+            self.peaks_mut().pop_front();
         }
 
-        imp.peaks.borrow_mut().push_back(peak);
+        self.peaks_mut().push_back(peak);
 
         self.queue_draw();
     }
@@ -72,9 +70,14 @@ impl Visualizer {
         self.queue_draw();
     }
 
-    fn peaks(&self) -> std::cell::Ref<VecDeque<f64>> {
+    fn peaks(&self) -> std::cell::Ref<VecDeque<f32>> {
         let imp = imp::Visualizer::from_instance(self);
         imp.peaks.borrow()
+    }
+
+    fn peaks_mut(&self) -> std::cell::RefMut<VecDeque<f32>> {
+        let imp = imp::Visualizer::from_instance(self);
+        imp.peaks.borrow_mut()
     }
 
     fn on_snapshot(&self, snapshot: &gtk::Snapshot) {
@@ -88,7 +91,7 @@ impl Visualizer {
         let peaks = self.peaks();
         let peaks_len = peaks.len();
 
-        for (index, peak) in peaks.iter().rev().map(|peak| *peak as f32).enumerate() {
+        for (index, peak) in peaks.iter().rev().enumerate() {
             // This reates a logarithmic decrease.
             // Starts at index 2 because log0 is undefined and log1 is 0.
             // Multiply by 6.0 to compensate on log.
@@ -107,8 +110,8 @@ impl Visualizer {
             snapshot.append_color(&color, &rect_a);
             snapshot.append_color(&color, &rect_b);
 
-            pointer_a += GUTTER as f32;
-            pointer_b -= GUTTER as f32;
+            pointer_a += GUTTER;
+            pointer_b -= GUTTER;
         }
     }
 }

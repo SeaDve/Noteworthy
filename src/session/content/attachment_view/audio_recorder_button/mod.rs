@@ -148,7 +148,7 @@ impl AudioRecorderButton {
                 let peak = 10_f64.powf(recording.peak() / 20.0);
 
                 let imp = imp::AudioRecorderButton::from_instance(&obj);
-                imp.visualizer.push_peak(peak);
+                imp.visualizer.push_peak(peak as f32);
             }));
         imp.peak_notify_handler_id
             .replace(Some(peak_notify_handler_id));
