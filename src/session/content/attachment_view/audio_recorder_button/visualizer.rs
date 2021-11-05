@@ -92,7 +92,7 @@ impl Visualizer {
         let peaks_len = peaks.len();
 
         for (index, peak) in peaks.iter().rev().enumerate() {
-            // This reates a logarithmic decrease.
+            // This makes both sides decrease logarithmically.
             // Starts at index 2 because log0 is undefined and log1 is 0.
             // Multiply by 6.0 to compensate on log.
             let peak_max_height = max_height.log(index as f32 + 2.0) * peak * 6.0;
