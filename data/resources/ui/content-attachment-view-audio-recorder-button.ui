@@ -12,8 +12,8 @@
                 <property name="spacing">6</property>
                 <child>
                   <object class="NwtyContentAttachmentViewAudioRecorderButtonVisualizer" id="visualizer">
-                    <property name="width-request">200</property>
-                    <property name="height-request">50</property>
+                    <property name="width-request">180</property>
+                    <property name="height-request">48</property>
                   </object>
                 </child>
                 <child>
