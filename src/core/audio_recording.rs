@@ -162,6 +162,17 @@ impl AudioRecording {
 
         pipeline.set_state(gst::State::Playing)?;
 
+        log::info!(
+            "Started audio recording with device name: {}",
+            pipeline
+                .by_name("pulsesrc")
+                .unwrap()
+                .property("device")
+                .unwrap()
+                .get::<String>()
+                .unwrap()
+        );
+
         Ok(())
     }
 
@@ -236,7 +247,7 @@ impl AudioRecording {
     fn setup_pipeline(&self) {
         let pipeline = gst::Pipeline::new(None);
 
-        let src = gst::ElementFactory::make("pulsesrc", None).unwrap();
+        let src = gst::ElementFactory::make("pulsesrc", Some("pulsesrc")).unwrap();
         src.set_property("device", &self.default_audio_source_name())
             .unwrap();
 
