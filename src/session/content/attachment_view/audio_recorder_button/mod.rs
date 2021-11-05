@@ -1,3 +1,5 @@
+mod visualizer;
+
 use adw::{prelude::*, subclass::prelude::*};
 use gtk::{
     gio,
@@ -9,6 +11,7 @@ use once_cell::unsync::OnceCell;
 
 use std::cell::RefCell;
 
+use self::visualizer::Visualizer;
 use crate::{core::AudioRecording, spawn, utils};
 
 mod imp {
@@ -23,6 +26,8 @@ mod imp {
         pub menu_button: TemplateChild<gtk::MenuButton>,
         #[template_child]
         pub popover: TemplateChild<gtk::Popover>,
+        #[template_child]
+        pub visualizer: TemplateChild<Visualizer>,
 
         pub recording: RefCell<Option<AudioRecording>>,
         pub record_done_handler_id: RefCell<Option<glib::SignalHandlerId>>,
@@ -37,6 +42,7 @@ mod imp {
         type ParentType = adw::Bin;
 
         fn class_init(klass: &mut Self::Class) {
+            Visualizer::static_type();
             Self::bind_template(klass);
 
             klass.install_action("audio-recorder-button.record-ok", None, move |obj, _, _| {
@@ -105,7 +111,11 @@ impl AudioRecorderButton {
         let record_done_handler_id =
             recording.connect_record_done(clone!(@weak self as obj => move |_, res| {
                 obj.dispose_recording();
-                // TODO add successful recording to attachments
+
+                let imp = imp::AudioRecorderButton::from_instance(&obj);
+                imp.visualizer.clear_peaks();
+
+                // TODO append successful recording to attachments
 
                 log::error!("{:?}", res);
             }));
@@ -114,10 +124,10 @@ impl AudioRecorderButton {
 
         let peak_notify_handler_id =
             recording.connect_peak_notify(clone!(@weak self as obj => move |recording,_| {
-                let peak = recording.peak();
-                // TODO show peak changes
+                let peak = 10_f64.powf(recording.peak() / 20.0);
 
-                log::error!("{}", peak);
+                let imp = imp::AudioRecorderButton::from_instance(&obj);
+                imp.visualizer.push_peak(peak);
             }));
         imp.peak_notify_handler_id
             .replace(Some(peak_notify_handler_id));
