@@ -71,6 +71,8 @@ impl Visualizer {
     pub fn clear_peaks(&self) {
         let imp = imp::Visualizer::from_instance(self);
         imp.peaks.borrow_mut().clear();
+
+        imp.drawing_area.queue_draw();
     }
 
     fn peaks(&self) -> std::cell::Ref<VecDeque<f64>> {
