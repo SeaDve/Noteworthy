@@ -82,17 +82,17 @@ impl Visualizer {
         let imp = imp::Visualizer::from_instance(self);
 
         imp.drawing_area
-            .set_draw_func(clone!(@weak self as obj => move |da,ctx,_,_| {
-                obj.drawing_area_draw(da, ctx);
+            .set_draw_func(clone!(@weak self as obj => move |_,ctx,w,h| {
+                obj.drawing_area_draw(ctx, w, h);
             }));
 
         self.set_child(Some(&imp.drawing_area));
     }
 
-    fn drawing_area_draw(&self, da: &gtk::DrawingArea, ctx: &cairo::Context) {
-        let max_height = da.allocated_height() as f64;
+    fn drawing_area_draw(&self, ctx: &cairo::Context, width: i32, height: i32) {
+        let max_height = height as f64;
         let v_center = max_height / 2.0;
-        let h_center = da.allocated_width() as f64 / 2.0;
+        let h_center = width as f64 / 2.0;
 
         // 2.5 is to avoid overlapping lines at the middle
         let mut pointer_a = h_center + 2.5;
