@@ -98,11 +98,17 @@ impl Visualizer {
         let mut pointer_a = h_center + 2.5;
         let mut pointer_b = h_center - 2.5;
 
+        let peaks = self.peaks();
+        let peaks_len = peaks.len();
+
         ctx.set_line_cap(cairo::LineCap::Round);
         ctx.set_line_width(2.0);
-        ctx.set_source_rgb(0.1, 0.45, 0.8);
 
-        for (index, peak) in self.peaks().iter().rev().enumerate() {
+        for (index, peak) in peaks.iter().rev().enumerate() {
+            // Add feathering on both sides
+            let alpha = 1.0 - (index as f64 / peaks_len as f64);
+            ctx.set_source_rgba(0.1, 0.45, 0.8, alpha);
+
             // Creates a logarithmic decrease
             // Starts at index 2 because log0 is undefined and log1 is 0
             let this_max_height = max_height.log(index as f64 + 2.0) * 10.0;
