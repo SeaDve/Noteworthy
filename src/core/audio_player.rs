@@ -238,7 +238,7 @@ impl AudioPlayer {
         imp.player.set(player).unwrap();
     }
 
-    fn handle_bus_message(&self, message: &gst::Message) -> glib::Continue {
+    fn handle_bus_message(&self, message: &gst::Message) -> Continue {
         use gst::MessageView::*;
         match message.view() {
             Error(message) => self.on_bus_error(message),
@@ -247,7 +247,7 @@ impl AudioPlayer {
             _ => (),
         }
 
-        glib::Continue(true)
+        Continue(true)
     }
 
     fn on_bus_error(&self, message: gst::message::Error) {

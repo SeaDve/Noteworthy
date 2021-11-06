@@ -157,11 +157,11 @@ impl RepositoryWatcher {
 
         receiver.attach(
             None,
-            clone!(@weak self as obj => @default-return glib::Continue(true), move |is_same| {
+            clone!(@weak self as obj => @default-return Continue(true), move |is_same| {
                 if !is_same {
                     obj.emit_by_name("remote-changed", &[]).unwrap();
                 }
-                glib::Continue(true)
+                Continue(true)
             }),
         );
     }

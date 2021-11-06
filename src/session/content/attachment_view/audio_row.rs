@@ -231,9 +231,9 @@ impl AudioRow {
     fn setup_timer(&self) {
         glib::timeout_add_local(
             Duration::from_millis(500),
-            clone!(@weak self as obj => @default-return glib::Continue(false), move || {
+            clone!(@weak self as obj => @default-return Continue(false), move || {
                 obj.update_playback_position_scale();
-                glib::Continue(true)
+                Continue(true)
             }),
         );
     }

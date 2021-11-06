@@ -98,7 +98,7 @@ impl AudioRecorder {
 
         let bus = pipeline.bus().unwrap();
         bus.add_watch_local(
-            clone!(@weak self as obj => @default-return glib::Continue(false), move |_,message| {
+            clone!(@weak self as obj => @default-return Continue(false), move |_,message| {
                 obj.handle_bus_message(message)
             }),
         )
@@ -260,7 +260,7 @@ impl AudioRecorder {
         imp.recording.take()
     }
 
-    fn handle_bus_message(&self, message: &gst::Message) -> glib::Continue {
+    fn handle_bus_message(&self, message: &gst::Message) -> Continue {
         match message.view() {
             gst::MessageView::Element(_) => {
                 let peak = message
@@ -274,7 +274,7 @@ impl AudioRecorder {
                     .unwrap();
                 self.set_property_from_value("peak", &peak).unwrap();
 
-                glib::Continue(true)
+                Continue(true)
             }
             gst::MessageView::Eos(_) => {
                 log::info!("Eos signal received from record bus");
