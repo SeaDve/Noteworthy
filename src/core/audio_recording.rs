@@ -189,6 +189,10 @@ impl AudioRecording {
         self.pipeline().send_event(gst::event::Eos::new());
     }
 
+    pub fn cancel(&self) {
+        self.dispose_pipeline();
+    }
+
     pub fn state(&self) -> gst::State {
         let (_ret, current, _pending) = self.pipeline().state(None);
         current

@@ -13,7 +13,11 @@ use gtk::{
 use self::{
     audio_recorder_button::AudioRecorderButton, audio_row::AudioRow, other_row::OtherRow, row::Row,
 };
-use crate::{core::AudioPlayerHandler, model::AttachmentList, utils::PropExpr};
+use crate::{
+    core::AudioPlayerHandler,
+    model::{Attachment, AttachmentList, DateTime},
+    utils::PropExpr,
+};
 
 mod imp {
     use super::*;
@@ -107,6 +111,11 @@ impl AttachmentView {
         self.notify("attachment-list");
     }
 
+    fn attachment_list(&self) -> Option<AttachmentList> {
+        let imp = imp::AttachmentView::from_instance(self);
+        imp.selection.model().map(|model| model.downcast().unwrap())
+    }
+
     fn setup_list_view(&self) {
         let factory = gtk::SignalListItemFactory::new();
 
@@ -150,6 +159,12 @@ impl AttachmentView {
             .connect_on_record(clone!(@weak self as obj => move |_| {
                 let imp = imp::AttachmentView::from_instance(&obj);
                 imp.audio_player_handler.stop_all();
+            }));
+
+        imp.audio_recorder_button.connect_record_done(clone!(@weak self as obj => move |_, file| {
+                let new_attachment = Attachment::new(file, &DateTime::now());
+                let attachment_list = obj.attachment_list().expect("No current attachment list on attachment view");
+                attachment_list.append(new_attachment).unwrap();
             }));
     }
 }

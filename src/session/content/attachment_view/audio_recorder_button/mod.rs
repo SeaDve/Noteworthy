@@ -12,7 +12,10 @@ use once_cell::{sync::Lazy, unsync::OnceCell};
 use std::cell::RefCell;
 
 use self::visualizer::Visualizer;
-use crate::{core::AudioRecording, spawn, utils};
+use crate::{
+    core::{AudioRecording, AudioRecordingResult},
+    spawn, utils,
+};
 
 mod imp {
     use super::*;
@@ -64,7 +67,15 @@ mod imp {
     impl ObjectImpl for AudioRecorderButton {
         fn signals() -> &'static [Signal] {
             static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
-                vec![Signal::builder("on-record", &[], <()>::static_type().into()).build()]
+                vec![
+                    Signal::builder("on-record", &[], <()>::static_type().into()).build(),
+                    Signal::builder(
+                        "record-done",
+                        &[gio::File::static_type().into()],
+                        <()>::static_type().into(),
+                    )
+                    .build(),
+                ]
             });
             SIGNALS.as_ref()
         }
@@ -103,6 +114,19 @@ impl AudioRecorderButton {
         .unwrap()
     }
 
+    pub fn connect_record_done<F>(&self, f: F) -> glib::SignalHandlerId
+    where
+        F: Fn(&Self, &gio::File) + 'static,
+    {
+        self.connect_local("record-done", true, move |values| {
+            let obj = values[0].get::<Self>().unwrap();
+            let file = values[1].get::<gio::File>().unwrap();
+            f(&obj, &file);
+            None
+        })
+        .unwrap()
+    }
+
     fn recording(&self) -> AudioRecording {
         let imp = imp::AudioRecorderButton::from_instance(self);
         imp.recording
@@ -136,9 +160,14 @@ impl AudioRecorderButton {
                 let imp = imp::AudioRecorderButton::from_instance(&obj);
                 imp.visualizer.clear_peaks();
 
-                // TODO append successful recording to attachments
-
-                log::error!("{:?}", res);
+                match res {
+                    AudioRecordingResult::Ok(ref file) => {
+                        obj.emit_by_name("record-done", &[file]).unwrap();
+                    }
+                    AudioRecordingResult::Err(err) => {
+                        log::error!("Failed to record: {}", err);
+                    }
+                };
             }));
         imp.record_done_handler_id
             .replace(Some(record_done_handler_id));
@@ -161,7 +190,7 @@ impl AudioRecorderButton {
     fn cancel_recording(&self) {
         let recording = self.recording();
 
-        recording.stop();
+        recording.cancel();
 
         spawn!(async move {
             if let Err(err) = recording.delete().await {

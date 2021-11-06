@@ -8,7 +8,7 @@ mod ssh_key;
 pub use self::{
     audio_player::{AudioPlayer, PlaybackState},
     audio_player_handler::AudioPlayerHandler,
-    audio_recording::AudioRecording,
+    audio_recording::{AudioRecording, AudioRecordingResult},
     note_manager::NoteManager,
     note_repository::NoteRepository,
     ssh_key::SshKey,
