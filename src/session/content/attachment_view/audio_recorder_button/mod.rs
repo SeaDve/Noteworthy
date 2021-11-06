@@ -9,13 +9,8 @@ use gtk::{
 };
 use once_cell::{sync::Lazy, unsync::OnceCell};
 
-use std::cell::RefCell;
-
 use self::visualizer::Visualizer;
-use crate::{
-    core::{AudioRecording, AudioRecordingResult},
-    spawn, utils,
-};
+use crate::{core::AudioRecorder, spawn, utils};
 
 mod imp {
     use super::*;
@@ -32,9 +27,7 @@ mod imp {
         #[template_child]
         pub visualizer: TemplateChild<Visualizer>,
 
-        pub recording: RefCell<Option<AudioRecording>>,
-        pub record_done_handler_id: RefCell<Option<glib::SignalHandlerId>>,
-        pub peak_notify_handler_id: RefCell<Option<glib::SignalHandlerId>>,
+        pub recorder: AudioRecorder,
         pub popover_closed_handler_id: OnceCell<glib::SignalHandlerId>,
     }
 
@@ -127,97 +120,63 @@ impl AudioRecorderButton {
         .unwrap()
     }
 
-    fn recording(&self) -> AudioRecording {
+    fn visualizer(&self) -> &Visualizer {
         let imp = imp::AudioRecorderButton::from_instance(self);
-        imp.recording
-            .borrow()
-            .clone()
-            .expect("Recording not setup or already disposed")
+        &imp.visualizer
+    }
+
+    fn recorder(&self) -> &AudioRecorder {
+        let imp = imp::AudioRecorderButton::from_instance(self);
+        &imp.recorder
     }
 
     fn start_recording(&self) {
-        let file = {
-            let mut file_path = utils::default_notes_dir();
-            file_path.push(utils::generate_unique_file_name("AudioRecording"));
-            file_path.set_extension("ogg");
-            gio::File::for_path(&file_path)
-        };
-        let recording = AudioRecording::new(&file);
+        let recording_base_path = utils::default_notes_dir();
 
-        if let Err(err) = recording.start() {
+        if let Err(err) = self.recorder().start(&recording_base_path) {
             log::error!("Failed to start recording: {}", err);
             return;
         }
 
         self.emit_by_name("on-record", &[]).unwrap();
 
-        let imp = imp::AudioRecorderButton::from_instance(self);
-
-        let record_done_handler_id =
-            recording.connect_record_done(clone!(@weak self as obj => move |_, res| {
-                obj.dispose_recording();
-
-                match res {
-                    AudioRecordingResult::Ok(ref file) => {
-                        obj.emit_by_name("record-done", &[file]).unwrap();
-                    }
-                    AudioRecordingResult::Err(err) => {
-                        log::error!("Failed to record: {}", err);
-                    }
-                };
-            }));
-        imp.record_done_handler_id
-            .replace(Some(record_done_handler_id));
-
-        let peak_notify_handler_id =
-            recording.connect_peak_notify(clone!(@weak self as obj => move |recording,_| {
-                let peak = 10_f64.powf(recording.peak() / 20.0);
-
-                let imp = imp::AudioRecorderButton::from_instance(&obj);
-                imp.visualizer.push_peak(peak as f32);
-            }));
-        imp.peak_notify_handler_id
-            .replace(Some(peak_notify_handler_id));
-
-        imp.recording.replace(Some(recording));
-
         log::info!("Started recording");
     }
 
     fn cancel_recording(&self) {
-        let recording = self.recording();
+        self.recorder().cancel();
 
-        recording.cancel();
-
-        self.dispose_recording();
-
-        spawn!(async move {
-            if let Err(err) = recording.delete().await {
-                log::warn!("Failed to delete recording: {}", err);
-            }
-        });
+        self.visualizer().clear_peaks();
 
         log::info!("Cancelled recording");
     }
 
     fn stop_recording(&self) {
-        self.recording().stop();
+        spawn!(clone!(@weak self as obj => async move {
+            match obj.recorder().stop().await {
+                Ok(ref recording) => {
+                    obj.emit_by_name("record-done", &[&recording.file()]).unwrap();
+                }
+                Err(err) => {
+                    log::error!("Failed to record: {}", err);
+                }
+            }
+        }));
+
+        self.visualizer().clear_peaks();
 
         log::info!("Stopped recording");
     }
 
-    fn dispose_recording(&self) {
-        let imp = imp::AudioRecorderButton::from_instance(self);
-
-        let recording = imp.recording.take().unwrap();
-        recording.disconnect(imp.record_done_handler_id.take().unwrap());
-        recording.disconnect(imp.peak_notify_handler_id.take().unwrap());
-
-        imp.visualizer.clear_peaks();
-    }
-
     fn setup_signals(&self) {
         let imp = imp::AudioRecorderButton::from_instance(self);
+
+        imp.recorder
+            .connect_peak_notify(clone!(@weak self as obj => move |recording,_| {
+                let peak = 10_f64.powf(recording.peak() / 20.0);
+
+                obj.visualizer().push_peak(peak as f32);
+            }));
 
         imp.popover
             .connect_show(clone!(@weak self as obj => move |_| {

@@ -25,6 +25,7 @@ rust_sources = files(
   'core/note_repository/sync_state.rs',
   'core/audio_player.rs',
   'core/audio_player_handler.rs',
+  'core/audio_recorder.rs',
   'core/audio_recording.rs',
   'core/mod.rs',
   'core/note_manager.rs',
