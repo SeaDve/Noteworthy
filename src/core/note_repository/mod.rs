@@ -19,7 +19,7 @@ use std::{
 
 pub use self::sync_state::SyncState;
 use self::{repository::Repository, repository_watcher::RepositoryWatcher};
-use crate::spawn_blocking;
+use crate::{spawn, spawn_blocking};
 
 const DEFAULT_REMOTE_NAME: &str = "origin";
 const DEFAULT_AUTHOR_NAME: &str = "NoteworthyApp";
@@ -103,18 +103,6 @@ mod imp {
                 _ => unimplemented!(),
             }
         }
-
-        fn constructed(&self, obj: &Self::Type) {
-            crate::spawn!(clone!(@weak obj => async move {
-                if !obj.is_offline_mode().await {
-                    let base_path = obj.base_path();
-                    let watcher = RepositoryWatcher::new(&base_path, DEFAULT_REMOTE_NAME);
-
-                    let imp = imp::NoteRepository::from_instance(&obj);
-                    imp.watcher.set(watcher).unwrap();
-                }
-            }));
-        }
     }
 }
 
@@ -166,11 +154,19 @@ impl NoteRepository {
         &self,
         f: F,
     ) -> glib::SignalHandlerId {
+        spawn!(clone!(@weak self as obj => async move {
+            assert!(!obj.is_offline_mode().await, "Trying to connect remote change even it is offline mode");
+        }));
+
+        let base_path = self.base_path();
+        let watcher = RepositoryWatcher::new(&base_path, DEFAULT_REMOTE_NAME);
+        let handler_id = watcher.connect_remote_changed(f);
+
+        // Store a strong reference
         let imp = imp::NoteRepository::from_instance(self);
-        imp.watcher
-            .get()
-            .expect("Watcher not initialized, maybe there's no remotes")
-            .connect_remote_changed(f)
+        imp.watcher.set(watcher).unwrap();
+
+        handler_id
     }
 
     pub async fn sync(&self) -> anyhow::Result<Vec<(PathBuf, git2::Delta)>> {
