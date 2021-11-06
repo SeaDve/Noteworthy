@@ -157,9 +157,6 @@ impl AudioRecorderButton {
             recording.connect_record_done(clone!(@weak self as obj => move |_, res| {
                 obj.dispose_recording();
 
-                let imp = imp::AudioRecorderButton::from_instance(&obj);
-                imp.visualizer.clear_peaks();
-
                 match res {
                     AudioRecordingResult::Ok(ref file) => {
                         obj.emit_by_name("record-done", &[file]).unwrap();
@@ -192,6 +189,8 @@ impl AudioRecorderButton {
 
         recording.cancel();
 
+        self.dispose_recording();
+
         spawn!(async move {
             if let Err(err) = recording.delete().await {
                 log::warn!("Failed to delete recording: {}", err);
@@ -213,6 +212,8 @@ impl AudioRecorderButton {
         let recording = imp.recording.take().unwrap();
         recording.disconnect(imp.record_done_handler_id.take().unwrap());
         recording.disconnect(imp.peak_notify_handler_id.take().unwrap());
+
+        imp.visualizer.clear_peaks();
     }
 
     fn setup_signals(&self) {
