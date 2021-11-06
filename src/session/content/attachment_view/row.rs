@@ -1,5 +1,10 @@
 use adw::{prelude::*, subclass::prelude::*};
-use gtk::{glib, subclass::prelude::*, CompositeTemplate};
+use gtk::{
+    glib::{self, subclass::Signal},
+    subclass::prelude::*,
+    CompositeTemplate,
+};
+use once_cell::sync::Lazy;
 
 use std::cell::RefCell;
 
@@ -26,6 +31,10 @@ mod imp {
 
         fn class_init(klass: &mut Self::Class) {
             Self::bind_template(klass);
+
+            klass.install_action("row.delete-attachment", None, move |obj, _, _| {
+                obj.emit_by_name("on-delete", &[]).unwrap();
+            });
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
@@ -34,8 +43,14 @@ mod imp {
     }
 
     impl ObjectImpl for Row {
+        fn signals() -> &'static [Signal] {
+            static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
+                vec![Signal::builder("on-delete", &[], <()>::static_type().into()).build()]
+            });
+            SIGNALS.as_ref()
+        }
+
         fn properties() -> &'static [glib::ParamSpec] {
-            use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![glib::ParamSpec::new_object(
                     "attachment",
@@ -117,6 +132,18 @@ impl Row {
     pub fn inner_row<T: IsA<gtk::Widget>>(&self) -> Option<T> {
         let imp = imp::Row::from_instance(self);
         imp.content.child().and_then(|w| w.downcast::<T>().ok())
+    }
+
+    pub fn connect_on_delete<F>(&self, f: F) -> glib::SignalHandlerId
+    where
+        F: Fn(&Self) + 'static,
+    {
+        self.connect_local("on-delete", true, move |values| {
+            let obj = values[0].get::<Self>().unwrap();
+            f(&obj);
+            None
+        })
+        .unwrap()
     }
 
     fn replace_child(&self, attachment: &Attachment) {

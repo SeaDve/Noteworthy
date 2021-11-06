@@ -16,6 +16,7 @@ use self::{
 use crate::{
     core::AudioPlayerHandler,
     model::{Attachment, AttachmentList, DateTime},
+    spawn,
     utils::PropExpr,
 };
 
@@ -121,6 +122,17 @@ impl AttachmentView {
 
         factory.connect_setup(clone!(@weak self as obj => move |_, list_item| {
             let attachment_row = Row::new();
+
+            attachment_row.connect_on_delete(move |attachment_row| {
+                let attachment = attachment_row.attachment().unwrap();
+
+                let attachment_list = obj.attachment_list().expect("No current attachment list on attachment view");
+                attachment_list.remove(&attachment).unwrap();
+
+                spawn!(async move {
+                    attachment.delete().await;
+                });
+            });
 
             list_item
                 .property_expression("item")

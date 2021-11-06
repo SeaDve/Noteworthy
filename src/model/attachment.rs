@@ -143,6 +143,16 @@ impl Attachment {
     ) -> glib::SignalHandlerId {
         self.connect_notify_local(Some("title"), f)
     }
+
+    pub async fn delete(&self) {
+        if let Err(err) = self
+            .file()
+            .delete_async_future(glib::PRIORITY_DEFAULT_IDLE)
+            .await
+        {
+            log::error!("Failed to delete attachment: {}", err);
+        }
+    }
 }
 
 impl Default for Attachment {
