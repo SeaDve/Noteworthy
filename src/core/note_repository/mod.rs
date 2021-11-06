@@ -158,15 +158,12 @@ impl NoteRepository {
             assert!(!obj.is_offline_mode().await, "Trying to connect remote change even it is offline mode");
         }));
 
-        let base_path = self.base_path();
-        let watcher = RepositoryWatcher::new(&base_path, DEFAULT_REMOTE_NAME);
-        let handler_id = watcher.connect_remote_changed(f);
-
-        // Store a strong reference
         let imp = imp::NoteRepository::from_instance(self);
-        imp.watcher.set(watcher).unwrap();
+        let watcher = imp
+            .watcher
+            .get_or_init(|| RepositoryWatcher::new(&self.base_path(), DEFAULT_REMOTE_NAME));
 
-        handler_id
+        watcher.connect_remote_changed(f)
     }
 
     pub async fn sync(&self) -> anyhow::Result<Vec<(PathBuf, git2::Delta)>> {
