@@ -229,7 +229,7 @@ impl AudioPlayer {
 
         let bus = player.bus().unwrap();
         bus.add_watch_local(
-            clone!(@weak self as obj => @default-return Continue(true), move |_, message| {
+            clone!(@weak self as obj => @default-return Continue(false), move |_, message| {
                 obj.handle_bus_message(message)
             }),
         )

@@ -157,7 +157,7 @@ impl RepositoryWatcher {
 
         receiver.attach(
             None,
-            clone!(@weak self as obj => @default-return Continue(true), move |is_same| {
+            clone!(@weak self as obj => @default-return Continue(false), move |is_same| {
                 if !is_same {
                     obj.emit_by_name("remote-changed", &[]).unwrap();
                 }
