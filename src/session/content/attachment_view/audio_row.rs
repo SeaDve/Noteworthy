@@ -184,7 +184,8 @@ impl AudioRow {
 
         match audio_player.query_position() {
             Ok(position) => {
-                self.set_playback_position_scale_value_blocking(position.seconds() as f64);
+                let seconds = microseconds_to_seconds(position.mseconds());
+                self.set_playback_position_scale_value_blocking(seconds);
             }
             Err(err) => {
                 log::warn!("Error querying position: {}", err);
@@ -218,8 +219,9 @@ impl AudioRow {
         let imp = imp::AudioRow::from_instance(self);
         let scale_handler_id = imp.playback_position_scale.connect_value_changed(
             clone!(@weak self as obj => move |scale| {
-                let value = scale.value();
-                obj.audio_player().seek(gst::ClockTime::from_seconds(value as u64));
+                let value_in_msecs = seconds_to_microseconds(scale.value());
+                let clock_time = gst::ClockTime::from_mseconds(value_in_msecs as u64);
+                obj.audio_player().seek(clock_time);
             }),
         );
         imp.scale_handler_id.set(scale_handler_id).unwrap();
@@ -239,4 +241,12 @@ impl AudioRow {
             }),
         );
     }
+}
+
+fn seconds_to_microseconds(seconds: f64) -> u64 {
+    (seconds * 1000.0) as u64
+}
+
+fn microseconds_to_seconds(microseconds: u64) -> f64 {
+    microseconds as f64 / 1000.0
 }
