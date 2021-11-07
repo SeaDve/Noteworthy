@@ -9,7 +9,10 @@ use gtk::{
 };
 use once_cell::{sync::Lazy, unsync::OnceCell};
 
-use std::cell::{Cell, RefCell};
+use std::{
+    cell::{Cell, RefCell},
+    time::Duration,
+};
 
 use crate::spawn_blocking;
 
@@ -174,20 +177,27 @@ impl AudioPlayer {
         imp.uri.borrow().clone()
     }
 
-    pub fn seek(&self, position: gst::ClockTime) {
+    pub fn seek(&self, position: Duration) {
+        use std::convert::TryInto;
+
+        let position: gst::ClockTime = position
+            .try_into()
+            .expect("Position in nanos cannot be above std::u64::MAX");
+
         let flags = gst::SeekFlags::FLUSH | gst::SeekFlags::KEY_UNIT;
         if let Err(err) = self.player().seek_simple(flags, position) {
             log::error!("Failed to seek at pos {}: {}", position, err);
         }
     }
 
-    pub fn query_position(&self) -> anyhow::Result<gst::ClockTime> {
-        self.player()
-            .query_position::<gst::ClockTime>()
-            .ok_or_else(|| anyhow::anyhow!("Failed to query position"))
+    pub fn query_position(&self) -> anyhow::Result<Duration> {
+        match self.player().query_position::<gst::ClockTime>() {
+            Some(clock_time) => Ok(clock_time.into()),
+            None => Err(anyhow::anyhow!("Failed to query position")),
+        }
     }
 
-    pub async fn duration(&self) -> anyhow::Result<gst::ClockTime> {
+    pub async fn duration(&self) -> anyhow::Result<Duration> {
         let uri = self.uri();
 
         let discover_info = spawn_blocking!(move || {
@@ -197,7 +207,9 @@ impl AudioPlayer {
         })
         .await?;
 
-        Ok(discover_info.duration().unwrap_or(gst::ClockTime::ZERO))
+        Ok(discover_info
+            .duration()
+            .map_or(Duration::ZERO, |ct| ct.into()))
     }
 
     pub fn play(&self) {

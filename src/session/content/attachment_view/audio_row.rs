@@ -152,12 +152,12 @@ impl AudioRow {
             Ok(duration) => {
                 let imp = imp::AudioRow::from_instance(self);
 
-                let seconds = duration.seconds();
+                let seconds = duration.as_secs_f64();
+                imp.playback_position_scale.set_range(0.0, seconds);
 
-                imp.playback_position_scale.set_range(0.0, seconds as f64);
-
-                let seconds_display = seconds % 60;
-                let minutes_display = seconds / 60;
+                let rounded_seconds = seconds.round() as i32;
+                let seconds_display = rounded_seconds % 60;
+                let minutes_display = rounded_seconds / 60;
                 let formatted_time = format!("{:02}∶{:02}", minutes_display, seconds_display);
                 imp.playback_duration_label.set_label(&formatted_time);
             }
@@ -178,8 +178,7 @@ impl AudioRow {
     fn update_playback_position_scale(&self) {
         match self.audio_player().query_position() {
             Ok(position) => {
-                let seconds = microseconds_to_seconds(position.mseconds());
-                self.set_playback_position_scale_value_blocking(seconds);
+                self.set_playback_position_scale_value_blocking(position.as_secs_f64());
             }
             Err(err) => {
                 log::warn!("Error querying position: {}", err);
@@ -213,9 +212,8 @@ impl AudioRow {
         let imp = imp::AudioRow::from_instance(self);
         let scale_handler_id = imp.playback_position_scale.connect_value_changed(
             clone!(@weak self as obj => move |scale| {
-                let value_in_msecs = seconds_to_microseconds(scale.value());
-                let clock_time = gst::ClockTime::from_mseconds(value_in_msecs as u64);
-                obj.audio_player().seek(clock_time);
+                let value = scale.value();
+                obj.audio_player().seek(Duration::from_secs_f64(value));
             }),
         );
         imp.scale_handler_id.set(scale_handler_id).unwrap();
@@ -238,12 +236,4 @@ impl AudioRow {
             }),
         );
     }
-}
-
-fn seconds_to_microseconds(seconds: f64) -> u64 {
-    (seconds * 1000.0) as u64
-}
-
-fn microseconds_to_seconds(microseconds: u64) -> f64 {
-    microseconds as f64 / 1000.0
 }
