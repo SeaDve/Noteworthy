@@ -152,11 +152,13 @@ impl AudioRow {
             Ok(duration) => {
                 let imp = imp::AudioRow::from_instance(self);
 
-                imp.playback_position_scale.set_range(0.0, duration as f64);
+                let seconds = duration.seconds();
 
-                let seconds = duration % 60;
-                let minutes = (duration / 60) % 60;
-                let formatted_time = format!("{:02}∶{:02}", minutes, seconds);
+                imp.playback_position_scale.set_range(0.0, seconds as f64);
+
+                let seconds_display = seconds % 60;
+                let minutes_display = seconds / 60;
+                let formatted_time = format!("{:02}∶{:02}", minutes_display, seconds_display);
                 imp.playback_duration_label.set_label(&formatted_time);
             }
             Err(err) => {
@@ -182,7 +184,7 @@ impl AudioRow {
 
         match audio_player.query_position() {
             Ok(position) => {
-                self.set_playback_position_scale_value_blocking(position as f64);
+                self.set_playback_position_scale_value_blocking(position.seconds() as f64);
             }
             Err(err) => {
                 log::warn!("Error querying position: {}", err);
@@ -217,7 +219,7 @@ impl AudioRow {
         let scale_handler_id = imp.playback_position_scale.connect_value_changed(
             clone!(@weak self as obj => move |scale| {
                 let value = scale.value();
-                obj.audio_player().seek(value as u64);
+                obj.audio_player().seek(gst::ClockTime::from_seconds(value as u64));
             }),
         );
         imp.scale_handler_id.set(scale_handler_id).unwrap();

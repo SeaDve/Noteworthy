@@ -174,22 +174,20 @@ impl AudioPlayer {
         imp.uri.borrow().clone()
     }
 
-    pub fn seek(&self, position: u64) {
+    pub fn seek(&self, position: gst::ClockTime) {
         let flags = gst::SeekFlags::FLUSH | gst::SeekFlags::KEY_UNIT;
-        let clock_time_position = gst::ClockTime::from_seconds(position);
-        if let Err(err) = self.player().seek_simple(flags, clock_time_position) {
+        if let Err(err) = self.player().seek_simple(flags, position) {
             log::error!("Failed to seek at pos {}: {}", position, err);
         }
     }
 
-    pub fn query_position(&self) -> anyhow::Result<u64> {
-        match self.player().query_position::<gst::ClockTime>() {
-            Some(clock_time) => Ok(clock_time.seconds()),
-            None => anyhow::bail!("Failed to query position"),
-        }
+    pub fn query_position(&self) -> anyhow::Result<gst::ClockTime> {
+        self.player()
+            .query_position::<gst::ClockTime>()
+            .ok_or_else(|| anyhow::anyhow!("Failed to query position"))
     }
 
-    pub async fn duration(&self) -> anyhow::Result<u64> {
+    pub async fn duration(&self) -> anyhow::Result<gst::ClockTime> {
         let uri = self.uri();
 
         let discover_info = spawn_blocking!(move || {
@@ -199,7 +197,7 @@ impl AudioPlayer {
         })
         .await?;
 
-        Ok(discover_info.duration().map_or(0, gst::ClockTime::seconds))
+        Ok(discover_info.duration().unwrap_or(gst::ClockTime::ZERO))
     }
 
     pub fn play(&self) {
