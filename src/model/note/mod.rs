@@ -221,7 +221,10 @@ impl Note {
         Ok(())
     }
 
-    pub fn connect_metadata_changed<F: Fn(&Self) + 'static>(&self, f: F) -> glib::SignalHandlerId {
+    pub fn connect_metadata_changed<F>(&self, f: F) -> glib::SignalHandlerId
+    where
+        F: Fn(&Self) + 'static,
+    {
         self.connect_local("metadata-changed", true, move |values| {
             let obj = values[0].get::<Self>().unwrap();
             f(&obj);
@@ -230,10 +233,10 @@ impl Note {
         .unwrap()
     }
 
-    pub fn connect_is_saved_notify<F: Fn(&Self, &glib::ParamSpec) + 'static>(
-        &self,
-        f: F,
-    ) -> glib::SignalHandlerId {
+    pub fn connect_is_saved_notify<F>(&self, f: F) -> glib::SignalHandlerId
+    where
+        F: Fn(&Self, &glib::ParamSpec) + 'static,
+    {
         self.connect_notify_local(Some("is-saved"), f)
     }
 

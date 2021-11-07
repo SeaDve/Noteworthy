@@ -82,10 +82,10 @@ impl Tag {
         self.property("name").unwrap().get().unwrap()
     }
 
-    pub fn connect_name_notify<F: Fn(&Self, &glib::ParamSpec) + 'static>(
-        &self,
-        f: F,
-    ) -> glib::SignalHandlerId {
+    pub fn connect_name_notify<F>(&self, f: F) -> glib::SignalHandlerId
+    where
+        F: Fn(&Self, &glib::ParamSpec) + 'static,
+    {
         self.connect_notify_local(Some("name"), f)
     }
 }

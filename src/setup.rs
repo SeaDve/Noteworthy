@@ -168,10 +168,10 @@ impl Setup {
         glib::Object::new(&[]).expect("Failed to create Setup.")
     }
 
-    pub fn connect_session_setup_done<F: Fn(&Self, Session) + 'static>(
-        &self,
-        f: F,
-    ) -> glib::SignalHandlerId {
+    pub fn connect_session_setup_done<F>(&self, f: F) -> glib::SignalHandlerId
+    where
+        F: Fn(&Self, Session) + 'static,
+    {
         self.connect_local("session-setup-done", true, move |values| {
             let obj = values[0].get::<Self>().unwrap();
             let session = values[1].get::<Session>().unwrap();

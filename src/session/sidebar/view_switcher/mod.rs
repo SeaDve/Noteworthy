@@ -165,10 +165,10 @@ impl ViewSwitcher {
         self.notify("tag-list");
     }
 
-    pub fn connect_selected_type_notify<F: Fn(&Self, &glib::ParamSpec) + 'static>(
-        &self,
-        f: F,
-    ) -> glib::SignalHandlerId {
+    pub fn connect_selected_type_notify<F>(&self, f: F) -> glib::SignalHandlerId
+    where
+        F: Fn(&Self, &glib::ParamSpec) + 'static,
+    {
         self.connect_notify_local(Some("selected-type"), f)
     }
 

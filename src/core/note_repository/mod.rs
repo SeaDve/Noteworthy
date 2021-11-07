@@ -150,10 +150,10 @@ impl NoteRepository {
         imp.sync_state.get()
     }
 
-    pub fn connect_remote_changed<F: Fn(&RepositoryWatcher) + 'static>(
-        &self,
-        f: F,
-    ) -> glib::SignalHandlerId {
+    pub fn connect_remote_changed<F>(&self, f: F) -> glib::SignalHandlerId
+    where
+        F: Fn(&RepositoryWatcher) + 'static,
+    {
         spawn!(clone!(@weak self as obj => async move {
             assert!(!obj.is_offline_mode().await, "Trying to connect remote change even it is offline mode");
         }));

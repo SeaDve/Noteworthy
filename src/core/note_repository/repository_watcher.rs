@@ -105,7 +105,10 @@ impl RepositoryWatcher {
             .expect("Failed to create RepositoryWatcher.")
     }
 
-    pub fn connect_remote_changed<F: Fn(&Self) + 'static>(&self, f: F) -> glib::SignalHandlerId {
+    pub fn connect_remote_changed<F>(&self, f: F) -> glib::SignalHandlerId
+    where
+        F: Fn(&Self) + 'static,
+    {
         self.connect_local("remote-changed", true, move |values| {
             let obj = values[0].get::<Self>().unwrap();
             f(&obj);
