@@ -13,7 +13,10 @@ use std::{
 };
 
 use super::note_repository::{NoteRepository, SyncState};
-use crate::model::{note::Id, Note, NoteList, TagList};
+use crate::{
+    model::{note::Id, Note, NoteList, TagList},
+    spawn,
+};
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(default)]
@@ -433,7 +436,7 @@ impl NoteManager {
             self.repository()
                 .connect_remote_changed(clone!(@weak self as obj => move |_| {
                     log::info!("New remote changes! Syncing...");
-                    crate::spawn!(async move {
+                    spawn!(async move {
                         if let Err(err) = obj.sync().await {
                             log::error!("Failed to sync {}", err);
                         }

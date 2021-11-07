@@ -17,7 +17,7 @@ use std::cell::{Cell, RefCell};
 use self::{
     content::Content, note_tag_dialog::NoteTagDialog, sidebar::Sidebar, tag_editor::TagEditor,
 };
-use crate::{core::NoteManager, model::Note};
+use crate::{core::NoteManager, model::Note, spawn};
 
 mod imp {
     use super::*;
@@ -52,7 +52,7 @@ mod imp {
 
             klass.install_action("session.sync", None, move |obj, _, _| {
                 let note_manager = obj.note_manager();
-                crate::spawn!(clone!(@weak note_manager => async move {
+                spawn!(clone!(@weak note_manager => async move {
                     note_manager.sync().await.expect("Failed to sync");
                 }));
             });
@@ -126,7 +126,7 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
-            crate::spawn!(clone!(@weak obj => async move {
+            spawn!(clone!(@weak obj => async move {
                 let note_manager = obj.note_manager();
                 note_manager.load().await.expect("Failed to load notes and data file");
 
@@ -239,7 +239,7 @@ impl Session {
         }
 
         // Save all notes note before switching to other notes
-        crate::spawn!(
+        spawn!(
             glib::PRIORITY_DEFAULT_IDLE,
             clone!(@weak self as obj => async move {
                 if let Err(err) = obj.save().await {

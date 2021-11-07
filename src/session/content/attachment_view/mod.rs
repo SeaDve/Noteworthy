@@ -126,7 +126,10 @@ impl AttachmentView {
             attachment_row.connect_on_delete(move |attachment_row| {
                 let attachment = attachment_row.attachment().unwrap();
 
-                let attachment_list = obj.attachment_list().expect("No current attachment list on attachment view");
+                let attachment_list = obj
+                    .attachment_list()
+                    .expect("No current attachment list on attachment view");
+
                 attachment_list.remove(&attachment).unwrap();
 
                 spawn!(async move {

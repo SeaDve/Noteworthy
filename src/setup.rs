@@ -9,7 +9,7 @@ use num_enum::TryFromPrimitive;
 
 use std::{cell::RefCell, convert::TryFrom};
 
-use crate::{core::NoteRepository, session::Session, utils};
+use crate::{core::NoteRepository, session::Session, spawn, utils};
 
 mod imp {
     use super::*;
@@ -82,7 +82,7 @@ mod imp {
             });
 
             klass.install_action("setup.setup-offline-mode", None, move |obj, _, _| {
-                crate::spawn!(clone!(@weak obj => async move {
+                spawn!(clone!(@weak obj => async move {
                     let new_session = obj.setup_offline_session().await;
                     obj.emit_by_name("session-setup-done", &[&new_session]).unwrap();
                 }));
