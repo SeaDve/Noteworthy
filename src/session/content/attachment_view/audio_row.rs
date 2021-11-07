@@ -176,13 +176,7 @@ impl AudioRow {
     }
 
     fn update_playback_position_scale(&self) {
-        let audio_player = self.audio_player();
-
-        if self.audio_player().state() != PlaybackState::Playing {
-            return;
-        }
-
-        match audio_player.query_position() {
+        match self.audio_player().query_position() {
             Ok(position) => {
                 let seconds = microseconds_to_seconds(position.mseconds());
                 self.set_playback_position_scale_value_blocking(seconds);
@@ -236,7 +230,10 @@ impl AudioRow {
         glib::timeout_add_local(
             Duration::from_millis(500),
             clone!(@weak self as obj => @default-return Continue(false), move || {
-                obj.update_playback_position_scale();
+                if obj.audio_player().state() == PlaybackState::Playing {
+                    obj.update_playback_position_scale();
+                }
+
                 Continue(true)
             }),
         );
