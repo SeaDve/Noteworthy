@@ -195,7 +195,7 @@ impl Row {
         // Works well when clicking the row but when you click the button it gets activated
         // twice, Idk how to not let the click pass through both widgets
         // let gesture = gtk::GestureClick::new();
-        // gesture.connect_pressed(clone!(@weak self as obj => move |_,_,_,_| {
+        // gesture.connect_pressed(clone!(@weak self as obj => move |_, _, _, _| {
         //     let imp = imp::Row::from_instance(&obj);
         //     imp.check_button.activate();
         // }));

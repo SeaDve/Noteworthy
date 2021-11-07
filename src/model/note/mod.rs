@@ -59,17 +59,17 @@ mod imp {
             // Unless we want to show the tags in the sidebar
             metadata
                 .tag_list()
-                .connect_items_changed(clone!(@weak obj => move |_,_,_,_| {
+                .connect_items_changed(clone!(@weak obj => move |_, _, _, _| {
                     obj.emit_by_name("metadata-changed", &[]).unwrap();
                     obj.set_is_saved(false);
                 }));
 
-            metadata
-                .attachment_list()
-                .connect_items_changed(clone!(@weak obj => move |_,_,_,_| {
+            metadata.attachment_list().connect_items_changed(
+                clone!(@weak obj => move |_, _, _, _| {
                     obj.emit_by_name("metadata-changed", &[]).unwrap();
                     obj.set_is_saved(false);
-                }));
+                }),
+            );
         }
 
         fn signals() -> &'static [Signal] {

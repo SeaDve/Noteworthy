@@ -257,7 +257,7 @@ impl Sidebar {
             .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
             .build();
 
-        selection_model.connect_selection_changed(clone!(@weak self as obj => move |model,position,n_items| {
+        selection_model.connect_selection_changed(clone!(@weak self as obj => move |model, position, n_items| {
             let selection_size = model.selection().size();
             if obj.selection_mode() == SelectionMode::Multi {
                 obj.update_selection_menu_button_label(selection_size);
@@ -267,7 +267,7 @@ impl Sidebar {
             log::info!("Selection changed, n_selected: {}, position: {}, n_items: {}", selection_size, position, n_items);
         }));
         selection_model.connect_items_changed(
-            clone!(@weak self as obj => move |model,pos,removed,added| {
+            clone!(@weak self as obj => move |model, pos, removed, added| {
                 if obj.selection_mode() == SelectionMode::Multi {
                     let selection_size = model.selection().size();
                     obj.update_selection_menu_button_label(selection_size);
