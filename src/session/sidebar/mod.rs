@@ -245,7 +245,7 @@ impl Sidebar {
             .build();
         let filter_model = gtk::FilterListModel::new(Some(&sorter_model), Some(&filter));
 
-        imp.view_switcher.connect_selected_type_notify(move |_, _| {
+        imp.view_switcher.connect_selected_type_notify(move |_| {
             filter.changed(gtk::FilterChange::Different);
         });
 

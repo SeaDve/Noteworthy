@@ -172,7 +172,7 @@ impl AudioRecorderButton {
         let imp = imp::AudioRecorderButton::from_instance(self);
 
         imp.recorder
-            .connect_peak_notify(clone!(@weak self as obj => move |recording,_| {
+            .connect_peak_notify(clone!(@weak self as obj => move |recording| {
                 let peak = 10_f64.powf(recording.peak() / 20.0);
 
                 obj.visualizer().push_peak(peak as f32);

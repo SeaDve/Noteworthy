@@ -139,9 +139,9 @@ impl Attachment {
 
     pub fn connect_title_notify<F>(&self, f: F) -> glib::SignalHandlerId
     where
-        F: Fn(&Self, &glib::ParamSpec) + 'static,
+        F: Fn(&Self) + 'static,
     {
-        self.connect_notify_local(Some("title"), f)
+        self.connect_notify_local(Some("title"), move |obj, _| f(obj))
     }
 
     pub async fn delete(&self) {

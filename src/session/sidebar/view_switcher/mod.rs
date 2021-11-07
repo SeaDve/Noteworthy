@@ -167,9 +167,9 @@ impl ViewSwitcher {
 
     pub fn connect_selected_type_notify<F>(&self, f: F) -> glib::SignalHandlerId
     where
-        F: Fn(&Self, &glib::ParamSpec) + 'static,
+        F: Fn(&Self) + 'static,
     {
-        self.connect_notify_local(Some("selected-type"), f)
+        self.connect_notify_local(Some("selected-type"), move |obj, _| f(obj))
     }
 
     pub fn selected_type(&self) -> ItemKind {

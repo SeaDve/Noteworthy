@@ -81,7 +81,7 @@ impl TagList {
             anyhow::bail!("Cannot append exisiting tag name");
         }
 
-        tag.connect_name_notify(clone!(@weak self as obj => move |tag, _| {
+        tag.connect_name_notify(clone!(@weak self as obj => move |tag| {
             if let Some(position) = obj.get_index_of(tag) {
                 obj.items_changed(position as u32, 1, 1);
             }

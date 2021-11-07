@@ -65,7 +65,7 @@ impl AttachmentList {
     pub fn append(&self, attachment: Attachment) -> anyhow::Result<()> {
         let imp = imp::AttachmentList::from_instance(self);
 
-        attachment.connect_title_notify(clone!(@weak self as obj => move |attachment, _| {
+        attachment.connect_title_notify(clone!(@weak self as obj => move |attachment| {
             if let Some(position) = obj.get_index_of(attachment) {
                 obj.items_changed(position as u32, 1, 1);
             }

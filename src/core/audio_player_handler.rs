@@ -39,7 +39,7 @@ impl AudioPlayerHandler {
         let imp = imp::AudioPlayerHandler::from_instance(self);
 
         let handler_id =
-            audio_player.connect_state_notify(clone!(@weak self as obj => move |audio_player,_| {
+            audio_player.connect_state_notify(clone!(@weak self as obj => move |audio_player| {
                 if audio_player.state() == PlaybackState::Playing {
                     obj.stop_all_except(audio_player);
                     log::info!("Stopping all except: {}", audio_player.uri());

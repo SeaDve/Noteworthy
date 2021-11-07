@@ -66,7 +66,7 @@ impl NoteTagList {
     pub fn append(&self, tag: Tag) -> anyhow::Result<()> {
         let imp = imp::NoteTagList::from_instance(self);
 
-        tag.connect_name_notify(clone!(@weak self as obj => move |tag, _| {
+        tag.connect_name_notify(clone!(@weak self as obj => move |tag| {
             if let Some(position) = obj.get_index_of(tag) {
                 obj.items_changed(position as u32, 1, 1);
             }

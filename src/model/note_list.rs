@@ -74,7 +74,7 @@ impl NoteList {
             }
         }));
 
-        note.connect_is_saved_notify(clone!(@weak self as obj => move |note, _| {
+        note.connect_is_saved_notify(clone!(@weak self as obj => move |note| {
             let imp = imp::NoteList::from_instance(&obj);
             let mut unsaved_notes = imp.unsaved_notes.borrow_mut();
 

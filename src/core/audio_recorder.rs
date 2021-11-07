@@ -87,9 +87,9 @@ impl AudioRecorder {
 
     pub fn connect_peak_notify<F>(&self, f: F) -> glib::SignalHandlerId
     where
-        F: Fn(&Self, &glib::ParamSpec) + 'static,
+        F: Fn(&Self) + 'static,
     {
-        self.connect_notify_local(Some("peak"), f)
+        self.connect_notify_local(Some("peak"), move |obj, _| f(obj))
     }
 
     pub fn start(&self, base_path: &Path) -> Result<(), gst::StateChangeError> {

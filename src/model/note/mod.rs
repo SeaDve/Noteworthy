@@ -235,9 +235,9 @@ impl Note {
 
     pub fn connect_is_saved_notify<F>(&self, f: F) -> glib::SignalHandlerId
     where
-        F: Fn(&Self, &glib::ParamSpec) + 'static,
+        F: Fn(&Self) + 'static,
     {
-        self.connect_notify_local(Some("is-saved"), f)
+        self.connect_notify_local(Some("is-saved"), move |obj, _| f(obj))
     }
 
     pub async fn update(&self) -> anyhow::Result<()> {

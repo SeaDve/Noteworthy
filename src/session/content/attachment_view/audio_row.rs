@@ -223,7 +223,7 @@ impl AudioRow {
         imp.scale_handler_id.set(scale_handler_id).unwrap();
 
         imp.audio_player
-            .connect_state_notify(clone!(@weak self as obj => move |audio_player, _| {
+            .connect_state_notify(clone!(@weak self as obj => move |audio_player| {
                 obj.on_audio_player_state_changed(audio_player.state());
             }));
     }
