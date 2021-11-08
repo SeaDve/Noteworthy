@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <template class="NwtyContentAttachmentViewFileOpenerButton" parent="AdwBin">
+  <template class="NwtyContentAttachmentViewFileImporterButton" parent="AdwBin">
     <property name="child">
       <object class="GtkButton">
         <property name="icon-name">mail-attachment-symbolic</property>
-        <property name="action-name">file-opener-button.open-file</property>
+        <property name="action-name">file-importer-button.import-file</property>
       </object>
     </property>
   </template>

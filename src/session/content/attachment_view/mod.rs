@@ -1,6 +1,6 @@
 mod audio_recorder_button;
 mod audio_row;
-mod file_opener_button;
+mod file_importer_button;
 mod other_row;
 mod row;
 
@@ -13,7 +13,7 @@ use gtk::{
 
 use self::{
     audio_recorder_button::AudioRecorderButton, audio_row::AudioRow,
-    file_opener_button::FileOpenerButton, other_row::OtherRow, row::Row,
+    file_importer_button::FileImporterButton, other_row::OtherRow, row::Row,
 };
 use crate::{
     core::AudioPlayerHandler,
@@ -35,7 +35,7 @@ mod imp {
         #[template_child]
         pub audio_recorder_button: TemplateChild<AudioRecorderButton>,
         #[template_child]
-        pub file_opener_button: TemplateChild<FileOpenerButton>,
+        pub file_importer_button: TemplateChild<FileImporterButton>,
 
         pub audio_player_handler: AudioPlayerHandler,
     }
@@ -48,7 +48,7 @@ mod imp {
 
         fn class_init(klass: &mut Self::Class) {
             AudioRecorderButton::static_type();
-            FileOpenerButton::static_type();
+            FileImporterButton::static_type();
             Self::bind_template(klass);
         }
 
@@ -187,7 +187,7 @@ impl AttachmentView {
                 attachment_list.append(new_attachment).unwrap();
             }));
 
-        imp.file_opener_button.connect_open_done(clone!(@weak self as obj => move |_, file| {
+        imp.file_importer_button.connect_new_import(clone!(@weak self as obj => move |_, file| {
                 let new_attachment = Attachment::new(file, &DateTime::now());
                 let attachment_list = obj.attachment_list().expect("No current attachment list on attachment view");
                 attachment_list.append(new_attachment).unwrap();

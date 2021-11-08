@@ -19,9 +19,9 @@ mod imp {
 
     #[derive(Debug, Default, CompositeTemplate)]
     #[template(
-        resource = "/io/github/seadve/Noteworthy/ui/content-attachment-view-file-opener-button.ui"
+        resource = "/io/github/seadve/Noteworthy/ui/content-attachment-view-file-importer-button.ui"
     )]
-    pub struct FileOpenerButton {
+    pub struct FileImporterButton {
         #[template_child]
         pub button: TemplateChild<gtk::Button>,
 
@@ -29,17 +29,21 @@ mod imp {
     }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for FileOpenerButton {
-        const NAME: &'static str = "NwtyContentAttachmentViewFileOpenerButton";
-        type Type = super::FileOpenerButton;
+    impl ObjectSubclass for FileImporterButton {
+        const NAME: &'static str = "NwtyContentAttachmentViewFileImporterButton";
+        type Type = super::FileImporterButton;
         type ParentType = adw::Bin;
 
         fn class_init(klass: &mut Self::Class) {
             Self::bind_template(klass);
 
-            klass.install_action("file-opener-button.open-file", None, move |obj, _, _| {
-                obj.on_open_file();
-            });
+            klass.install_action(
+                "file-importer-button.import-file",
+                None,
+                move |obj, _, _| {
+                    obj.on_import_file();
+                },
+            );
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
@@ -47,11 +51,11 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for FileOpenerButton {
+    impl ObjectImpl for FileImporterButton {
         fn signals() -> &'static [Signal] {
             static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
                 vec![Signal::builder(
-                    "open-done",
+                    "new-import",
                     &[gio::File::static_type().into()],
                     <()>::static_type().into(),
                 )
@@ -59,34 +63,28 @@ mod imp {
             });
             SIGNALS.as_ref()
         }
-
-        fn constructed(&self, obj: &Self::Type) {
-            self.parent_constructed(obj);
-
-            // obj.setup_signals();
-        }
     }
 
-    impl WidgetImpl for FileOpenerButton {}
-    impl BinImpl for FileOpenerButton {}
+    impl WidgetImpl for FileImporterButton {}
+    impl BinImpl for FileImporterButton {}
 }
 
 glib::wrapper! {
-    pub struct FileOpenerButton(ObjectSubclass<imp::FileOpenerButton>)
+    pub struct FileImporterButton(ObjectSubclass<imp::FileImporterButton>)
         @extends gtk::Widget, adw::Bin,
         @implements gtk::Accessible;
 }
 
-impl FileOpenerButton {
+impl FileImporterButton {
     pub fn new() -> Self {
-        glib::Object::new(&[]).expect("Failed to create FileOpenerButton")
+        glib::Object::new(&[]).expect("Failed to create FileImporterButton")
     }
 
-    pub fn connect_open_done<F>(&self, f: F) -> glib::SignalHandlerId
+    pub fn connect_new_import<F>(&self, f: F) -> glib::SignalHandlerId
     where
         F: Fn(&Self, &gio::File) + 'static,
     {
-        self.connect_local("open-done", true, move |values| {
+        self.connect_local("new-import", true, move |values| {
             let obj = values[0].get::<Self>().unwrap();
             let file = values[1].get::<gio::File>().unwrap();
             f(&obj, &file);
@@ -137,7 +135,7 @@ impl FileOpenerButton {
                                 "File {} exceeds maximum file size of 20 MB",
                                 file.basename().unwrap().display(),
                             ),
-                            &gettext("Please try other file."),
+                            &gettext("Please try other files."),
                         );
                         log::info!(
                             "File at {} exceeds max size of {} B",
@@ -164,8 +162,8 @@ impl FileOpenerButton {
         }));
     }
 
-    fn on_open_file(&self) {
-        let imp = imp::FileOpenerButton::from_instance(self);
+    fn on_import_file(&self) {
+        let imp = imp::FileImporterButton::from_instance(self);
 
         let chooser = imp.file_chooser.get_or_init(|| self.init_file_chooser());
         chooser.show();
@@ -215,7 +213,7 @@ impl FileOpenerButton {
 
             match spawn_blocking!(move || fs::copy(&source_path, &destination_path)).await {
                 Ok(_) => {
-                    self.emit_by_name("open-done", &[&destination_file])
+                    self.emit_by_name("new-import", &[&destination_file])
                         .unwrap();
                 }
                 Err(err) => {
