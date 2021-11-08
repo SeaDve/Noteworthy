@@ -150,8 +150,8 @@ impl AudioRecorder {
 
     pub fn cancel(&self) {
         let imp = imp::AudioRecorder::from_instance(self);
-        let _ = imp.sender.take();
-        let _ = imp.receiver.take();
+        imp.sender.replace(None);
+        imp.receiver.replace(None);
 
         if let Some(recording) = self.cleanup_and_take_recording() {
             spawn!(async move {
