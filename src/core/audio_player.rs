@@ -20,6 +20,7 @@ use crate::spawn_blocking;
 #[genum(type_name = "AudioPlayerPlaybackState")]
 pub enum PlaybackState {
     Stopped,
+    Loading,
     Paused,
     Playing,
 }
@@ -148,6 +149,9 @@ impl AudioPlayer {
                 let imp = imp::AudioPlayer::from_instance(self);
                 imp.state.set(state);
                 self.notify("state");
+            }
+            PlaybackState::Loading => {
+                player.set_state(gst::State::Ready).unwrap();
             }
             PlaybackState::Paused => {
                 player.set_state(gst::State::Paused).unwrap();

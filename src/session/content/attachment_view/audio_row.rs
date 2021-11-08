@@ -190,15 +190,18 @@ impl AudioRow {
     fn on_audio_player_state_changed(&self, state: PlaybackState) {
         let imp = imp::AudioRow::from_instance(self);
 
-        imp.playback_position_scale
-            .set_sensitive(state != PlaybackState::Stopped);
-
-        if state == PlaybackState::Stopped {
-            self.set_playback_position_scale_value_blocking(0.0);
+        match state {
+            PlaybackState::Stopped | PlaybackState::Loading => {
+                self.set_playback_position_scale_value_blocking(0.0);
+                imp.playback_position_scale.set_sensitive(false);
+            }
+            PlaybackState::Playing | PlaybackState::Paused => {
+                imp.playback_position_scale.set_sensitive(true);
+            }
         }
 
         match state {
-            PlaybackState::Stopped | PlaybackState::Paused => {
+            PlaybackState::Stopped | PlaybackState::Paused | PlaybackState::Loading => {
                 imp.playback_button
                     .set_icon_name("media-playback-start-symbolic");
             }
