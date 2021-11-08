@@ -91,6 +91,9 @@ impl FileImporterButton {
     }
 
     fn init_file_chooser(&self) -> gtk::FileChooserNative {
+        // FIXME Should not allow folders, this makes it easy to delete an attachment. Additionally,
+        // an attachment should not be able to store a folder
+
         let chooser = gtk::FileChooserNativeBuilder::new()
             .accept_label(&gettext("Select"))
             .cancel_label(&gettext("Cancel"))
