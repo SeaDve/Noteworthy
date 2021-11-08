@@ -25,7 +25,7 @@
             </child>
             <child>
               <object class="NwtyContentAttachmentViewFileImporterButton" id="file_importer_button">
-                <property name="tooltip-text" translatable="yes">Import Other File</property>
+                <property name="tooltip-text" translatable="yes">Import Other Files</property>
               </object>
             </child>
             <child>

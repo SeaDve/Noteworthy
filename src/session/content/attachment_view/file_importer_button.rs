@@ -22,9 +22,6 @@ mod imp {
         resource = "/io/github/seadve/Noteworthy/ui/content-attachment-view-file-importer-button.ui"
     )]
     pub struct FileImporterButton {
-        #[template_child]
-        pub button: TemplateChild<gtk::Button>,
-
         pub file_chooser: OnceCell<gtk::FileChooserNative>,
     }
 
