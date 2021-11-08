@@ -1,4 +1,4 @@
-use futures::channel::oneshot::{self, Receiver, Sender};
+use futures_channel::oneshot::{self, Receiver, Sender};
 use gst_pbutils::prelude::*;
 use gtk::{
     glib::{self, clone},
