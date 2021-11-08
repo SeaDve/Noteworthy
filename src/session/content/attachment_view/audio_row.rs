@@ -30,6 +30,7 @@ mod imp {
         pub attachment: RefCell<Attachment>,
 
         pub scale_handler_id: OnceCell<glib::SignalHandlerId>,
+        pub seek_timeout_id: RefCell<Option<glib::SourceId>>,
         pub audio_player: AudioPlayer,
     }
 
@@ -208,12 +209,34 @@ impl AudioRow {
         }
     }
 
+    fn on_playback_position_scale_value_changed(&self, scale: &gtk::Scale) {
+        let imp = imp::AudioRow::from_instance(self);
+
+        // Cancel the seek when the value changed again within 50ms. So, it
+        // will only seek when the value is stabilized within that span.
+        if let Some(source_id) = imp.seek_timeout_id.take() {
+            glib::source_remove(source_id); // TODO replace with `source_id.remove();` on gtk-rs 0.3.4
+        }
+
+        let value = scale.value();
+
+        imp.seek_timeout_id
+            .replace(Some(glib::timeout_add_local_once(
+                Duration::from_millis(50),
+                clone!(@weak self as obj => move || {
+                    let imp = imp::AudioRow::from_instance(&obj);
+                    imp.seek_timeout_id.replace(None);
+
+                    obj.audio_player().seek(Duration::from_secs_f64(value));
+                }),
+            )));
+    }
+
     fn setup_signals(&self) {
         let imp = imp::AudioRow::from_instance(self);
         let scale_handler_id = imp.playback_position_scale.connect_value_changed(
             clone!(@weak self as obj => move |scale| {
-                let value = scale.value();
-                obj.audio_player().seek(Duration::from_secs_f64(value));
+                obj.on_playback_position_scale_value_changed(scale);
             }),
         );
         imp.scale_handler_id.set(scale_handler_id).unwrap();
