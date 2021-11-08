@@ -135,7 +135,7 @@ impl FileImporterButton {
                             &gettext("Please try other files."),
                         );
                         log::info!(
-                            "File at {} exceeds max size of {} B",
+                            "File at {} with size {} B exceeds max size",
                             file_path.display(),
                             byte_size
                         );
