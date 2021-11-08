@@ -220,7 +220,7 @@ impl AudioRecorder {
     fn create_pipeline(&self, recording_path: &Path) -> anyhow::Result<gst::Pipeline> {
         let pipeline = gst::Pipeline::new(None);
 
-        let src = gst::ElementFactory::make("pulsesrc", Some("pulsesrc"))
+        let pulsesrc = gst::ElementFactory::make("pulsesrc", Some("pulsesrc"))
             .map_err(|_| MissingElement("pulsesrc"))?;
         let audioconvert = gst::ElementFactory::make("audioconvert", None)
             .map_err(|_| MissingElement("audioconvert"))?;
@@ -231,14 +231,14 @@ impl AudioRecorder {
         let filesink =
             gst::ElementFactory::make("filesink", None).map_err(|_| MissingElement("filesink"))?;
 
-        src.set_property("device", &self.default_audio_source_name())?;
+        pulsesrc.set_property("device", &self.default_audio_source_name())?;
         encodebin.set_property("profile", &self.encodebin_profile())?;
         filesink.set_property("location", recording_path.to_str().unwrap())?;
 
-        let elements = [&src, &audioconvert, &level, &encodebin, &filesink];
+        let elements = [&pulsesrc, &audioconvert, &level, &encodebin, &filesink];
         pipeline.add_many(&elements)?;
 
-        src.link(&audioconvert)?;
+        pulsesrc.link(&audioconvert)?;
         audioconvert.link_filtered(&level, &gst::Caps::builder("audio/x-raw").build())?;
         level.link(&encodebin)?;
         encodebin.link(&filesink)?;
