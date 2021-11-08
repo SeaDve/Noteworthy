@@ -249,11 +249,12 @@ impl AudioPlayer {
     }
 
     fn handle_bus_message(&self, message: &gst::Message) -> Continue {
-        use gst::MessageView::*;
+        use gst::MessageView;
+
         match message.view() {
-            Error(message) => self.on_bus_error(message),
-            Eos(_) => self.on_bus_eos(),
-            StateChanged(message) => self.on_state_changed(message),
+            MessageView::Error(message) => self.on_bus_error(message),
+            MessageView::Eos(_) => self.on_bus_eos(),
+            MessageView::StateChanged(message) => self.on_state_changed(message),
             _ => (),
         }
 

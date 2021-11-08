@@ -264,8 +264,10 @@ impl AudioRecorder {
     }
 
     fn handle_bus_message(&self, message: &gst::Message) -> Continue {
+        use gst::MessageView;
+
         match message.view() {
-            gst::MessageView::Element(_) => {
+            MessageView::Element(_) => {
                 let peak = message
                     .structure()
                     .unwrap()
@@ -279,7 +281,7 @@ impl AudioRecorder {
 
                 Continue(true)
             }
-            gst::MessageView::Eos(_) => {
+            MessageView::Eos(_) => {
                 log::info!("Eos signal received from record bus");
 
                 let recording = self.cleanup_and_take_recording();
@@ -290,7 +292,7 @@ impl AudioRecorder {
 
                 Continue(false)
             }
-            gst::MessageView::Error(error) => {
+            MessageView::Error(error) => {
                 log::error!(
                     "Error from record bus: {:?} (debug {:?})",
                     error.error(),
@@ -307,7 +309,7 @@ impl AudioRecorder {
 
                 Continue(false)
             }
-            gst::MessageView::StateChanged(sc) => {
+            MessageView::StateChanged(sc) => {
                 if message.src().as_ref() == Some(self.pipeline().upcast_ref::<gst::Object>()) {
                     log::info!(
                         "Pipeline state set from {:?} -> {:?}",
