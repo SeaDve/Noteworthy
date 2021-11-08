@@ -77,11 +77,9 @@ impl NoteTagList {
             list.insert(tag)
         };
 
-        if is_list_appended {
-            self.items_changed(self.n_items() - 1, 0, 1);
-        } else {
-            anyhow::bail!("Cannot append exisiting object tag");
-        }
+        anyhow::ensure!(is_list_appended, "Cannot append exisiting object tag");
+
+        self.items_changed(self.n_items() - 1, 0, 1);
 
         Ok(())
     }

@@ -68,18 +68,14 @@ impl TagList {
 
         let tag_name = tag.name();
 
-        if tag_name.is_empty() {
-            anyhow::bail!("Tag name cannot be empty");
-        }
+        anyhow::ensure!(!tag_name.is_empty(), "Tag name cannot be empty");
 
         let is_name_list_appended = {
             let mut name_list = imp.name_list.borrow_mut();
             name_list.insert(tag_name)
         };
 
-        if !is_name_list_appended {
-            anyhow::bail!("Cannot append exisiting tag name");
-        }
+        anyhow::ensure!(is_name_list_appended, "Cannot append existing tag name");
 
         tag.connect_name_notify(clone!(@weak self as obj => move |tag| {
             if let Some(position) = obj.get_index_of(tag) {
@@ -100,14 +96,15 @@ impl TagList {
     pub fn remove(&self, tag: &Tag) -> anyhow::Result<()> {
         let imp = imp::TagList::from_instance(self);
 
-        let name_list_removed = {
+        let is_name_list_removed = {
             let mut name_list = imp.name_list.borrow_mut();
             name_list.shift_remove(&tag.name())
         };
 
-        if !name_list_removed {
-            anyhow::bail!("Cannot remove tag name that doesnt exist");
-        }
+        anyhow::ensure!(
+            is_name_list_removed,
+            "Cannot remove tag name that doesnt exist"
+        );
 
         let removed = {
             let mut list = imp.list.borrow_mut();
@@ -124,13 +121,11 @@ impl TagList {
     }
 
     pub fn rename_tag(&self, tag: &Tag, name: &str) -> anyhow::Result<()> {
-        if self.contains_with_name(name) {
-            anyhow::bail!("Cannot rename a tag to a name that already exist");
-        }
-
-        if name.is_empty() {
-            anyhow::bail!("Tag name cannot be empty");
-        }
+        anyhow::ensure!(
+            !self.contains_with_name(name),
+            "Cannot rename a tag to a name that already exist"
+        );
+        anyhow::ensure!(!name.is_empty(), "Tag name cannot be empty");
 
         let imp = imp::TagList::from_instance(self);
         let previous_name = tag.name();

@@ -314,9 +314,10 @@ impl Repository {
 
         let head_type = ref_head.kind();
 
-        if head_type != Some(git2::ReferenceType::Direct) {
-            anyhow::bail!("Head is not a direct reference.")
-        }
+        anyhow::ensure!(
+            head_type == Some(git2::ReferenceType::Direct),
+            "Head is not a direct reference"
+        );
 
         let mut callbacks = git2::RemoteCallbacks::new();
         callbacks.credentials(|_, username_from_url, _| Self::credentials_cb(username_from_url));

@@ -76,11 +76,12 @@ impl AttachmentList {
             list.insert(attachment)
         };
 
-        if is_list_appended {
-            self.items_changed(self.n_items() - 1, 0, 1);
-        } else {
-            anyhow::bail!("Cannot append exisiting object attachment");
-        }
+        anyhow::ensure!(
+            is_list_appended,
+            "Cannot append exisiting object attachment"
+        );
+
+        self.items_changed(self.n_items() - 1, 0, 1);
 
         Ok(())
     }
