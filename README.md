@@ -2,7 +2,7 @@
   Noteworthy
 </h1>
 
-<p align="center"><strong>Modern, Fast and Simple Notes App for the GNOME Desktop</strong></p>
+<p align="center"><strong>Modern, Fast, and Version-Controlled Markdown Notes App</strong></p>
 
 <p align="center">
   <a href="https://github.com/SeaDve/Noteworthy/actions/workflows/ci.yml">
@@ -13,7 +13,7 @@
   </a>
 </p>
 
-## v0.1.0 Milestone
+## 0.1.0 Milestone
 
 - [x] Trash and pinning
 - [x] Note creation and deletion
@@ -55,7 +55,7 @@ environment cross-distro. Thus, it is highly recommended you use it.
 
 #### Prerequisites
 
-The following packages are required to build Kooha:
+The following packages are required to build Noteworthy:
 
 * meson
 * ninja
