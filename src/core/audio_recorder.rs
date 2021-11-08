@@ -14,6 +14,10 @@ use std::{
 use super::AudioRecording;
 use crate::spawn;
 
+#[derive(Debug, thiserror::Error)]
+#[error("Missing element {0}")]
+struct MissingElement(&'static str);
+
 mod imp {
     use super::*;
 
@@ -92,9 +96,9 @@ impl AudioRecorder {
         self.connect_notify_local(Some("peak"), move |obj, _| f(obj))
     }
 
-    pub fn start(&self, base_path: &Path) -> Result<(), gst::StateChangeError> {
+    pub fn start(&self, base_path: &Path) -> anyhow::Result<()> {
         let new_recording = AudioRecording::new(base_path);
-        let pipeline = self.create_pipeline(&new_recording.path());
+        let pipeline = self.create_pipeline(&new_recording.path())?;
 
         let bus = pipeline.bus().unwrap();
         bus.add_watch_local(
@@ -213,38 +217,37 @@ impl AudioRecorder {
             .unwrap()
     }
 
-    fn create_pipeline(&self, recording_path: &Path) -> gst::Pipeline {
+    fn create_pipeline(&self, recording_path: &Path) -> anyhow::Result<gst::Pipeline> {
         let pipeline = gst::Pipeline::new(None);
 
-        let src = gst::ElementFactory::make("pulsesrc", Some("pulsesrc")).unwrap();
-        src.set_property("device", &self.default_audio_source_name())
-            .unwrap();
+        let src = gst::ElementFactory::make("pulsesrc", Some("pulsesrc"))
+            .map_err(|_| MissingElement("pulsesrc"))?;
+        let audioconvert = gst::ElementFactory::make("audioconvert", None)
+            .map_err(|_| MissingElement("audioconvert"))?;
+        let level =
+            gst::ElementFactory::make("level", None).map_err(|_| MissingElement("level"))?;
+        let encodebin = gst::ElementFactory::make("encodebin", None)
+            .map_err(|_| MissingElement("encodebin"))?;
+        let filesink =
+            gst::ElementFactory::make("filesink", None).map_err(|_| MissingElement("filesink"))?;
 
-        let audioconvert = gst::ElementFactory::make("audioconvert", None).unwrap();
-        let level = gst::ElementFactory::make("level", None).unwrap();
+        src.set_property("device", &self.default_audio_source_name())?;
+        encodebin.set_property("profile", &self.encodebin_profile())?;
+        filesink.set_property("location", recording_path.to_str().unwrap())?;
 
-        let encodebin = gst::ElementFactory::make("encodebin", None).unwrap();
-        encodebin
-            .set_property("profile", &self.encodebin_profile())
-            .unwrap();
+        let elements = [&src, &audioconvert, &level, &encodebin, &filesink];
+        pipeline.add_many(&elements)?;
 
-        let filesink = gst::ElementFactory::make("filesink", None).unwrap();
-        filesink
-            .set_property("location", recording_path.to_str().unwrap())
-            .unwrap();
+        src.link(&audioconvert)?;
+        audioconvert.link_filtered(&level, &gst::Caps::builder("audio/x-raw").build())?;
+        level.link(&encodebin)?;
+        encodebin.link(&filesink)?;
 
-        pipeline
-            .add_many(&[&src, &audioconvert, &level, &encodebin, &filesink])
-            .unwrap();
+        for e in elements {
+            e.sync_state_with_parent()?;
+        }
 
-        src.link(&audioconvert).unwrap();
-        audioconvert
-            .link_filtered(&level, &gst::Caps::builder("audio/x-raw").build())
-            .unwrap();
-        level.link(&encodebin).unwrap();
-        encodebin.link(&filesink).unwrap();
-
-        pipeline
+        Ok(pipeline)
     }
 
     fn cleanup_and_take_recording(&self) -> Option<AudioRecording> {

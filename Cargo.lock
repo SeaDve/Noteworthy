@@ -937,6 +937,7 @@ dependencies = [
  "serde",
  "serde_yaml",
  "sourceview5",
+ "thiserror",
 ]
 
 [[package]]
