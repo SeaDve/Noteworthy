@@ -1,4 +1,5 @@
 use adw::{prelude::*, subclass::prelude::*};
+use anyhow::Context;
 use gettextrs::gettext;
 use gtk::{
     gio,
@@ -35,10 +36,10 @@ mod imp {
             Self::bind_template(klass);
 
             klass.install_action(
-                "file-importer-button.import-file",
+                "file-importer-button.open-file-chooser",
                 None,
                 move |obj, _, _| {
-                    obj.on_import_file();
+                    obj.on_open_file_chooser();
                 },
             );
         }
@@ -90,6 +91,87 @@ impl FileImporterButton {
         .unwrap()
     }
 
+    fn validify_files(&self, files: gio::ListModel) -> anyhow::Result<Vec<PathBuf>> {
+        let mut valid_files = Vec::new();
+
+        for index in 0..files.n_items() {
+            let file = files.item(index).unwrap().downcast::<gio::File>().unwrap();
+            let file_path = file.path().unwrap();
+            let file_byte_size = fs::metadata(&file_path)
+                .map(|metadata| metadata.len())
+                .with_context(|| format!("Failed to read file at `{}`", file_path.display()))?;
+
+            // TODO maybe make this less strict or remove this restriction?
+            anyhow::ensure!(
+                file_byte_size < MAX_BYTES_FILE_SIZE,
+                "File `{}` exceeds maximum file size of 20 MB",
+                file.basename().unwrap().display()
+            );
+
+            valid_files.push(file_path);
+        }
+
+        Ok(valid_files)
+    }
+
+    async fn import_files(&self, files: Vec<PathBuf>) -> anyhow::Result<()> {
+        let default_notes_dir = utils::default_notes_dir();
+
+        for source_path in files {
+            let destination_path = {
+                let file_name = utils::generate_unique_file_name("OtherFile");
+                let mut path = default_notes_dir.join(file_name);
+
+                if let Some(extension) = source_path.extension() {
+                    path.set_extension(extension);
+                }
+
+                path
+            };
+
+            let destination_file = gio::File::for_path(&destination_path);
+
+            log::info!(
+                "Copying file from {} to {}",
+                source_path.display(),
+                destination_path.display()
+            );
+
+            spawn_blocking!(
+                move || fs::copy(&source_path, &destination_path).with_context(|| format!(
+                    "Failed to copy `{}` to `{}`",
+                    source_path.display(),
+                    destination_path.display()
+                ))
+            )
+            .await?;
+
+            self.emit_by_name("new-import", &[&destination_file])
+                .unwrap();
+        }
+
+        Ok(())
+    }
+
+    fn show_error(&self, text: &str, secondary_text: &str) {
+        let error_dialog = gtk::MessageDialogBuilder::new()
+            .text(text)
+            .secondary_text(secondary_text)
+            .buttons(gtk::ButtonsType::Ok)
+            .message_type(gtk::MessageType::Error)
+            .modal(true)
+            .build();
+
+        error_dialog.set_transient_for(
+            self.root()
+                .map(|w| w.downcast::<gtk::Window>().unwrap())
+                .as_ref(),
+        );
+
+        error_dialog.connect_response(|error_dialog, _| error_dialog.destroy());
+        error_dialog.present();
+    }
+
     fn init_file_chooser(&self) -> gtk::FileChooserNative {
         // FIXME Should not allow folders, this makes it easy to delete an attachment. Additionally,
         // an attachment should not be able to store a folder
@@ -119,107 +201,26 @@ impl FileImporterButton {
     }
 
     fn on_accept_response(&self, files: gio::ListModel) {
-        let mut files_to_import = Vec::new();
-
-        for index in 0..files.n_items() {
-            let file = files.item(index).unwrap().downcast::<gio::File>().unwrap();
-            let file_path = file.path().unwrap();
-            let file_byte_size = fs::metadata(&file_path).map(|metadata| metadata.len());
-
-            match file_byte_size {
-                Ok(byte_size) => {
-                    // TODO maybe increase or remove this restriction?
-                    if byte_size >= MAX_BYTES_FILE_SIZE {
-                        self.show_error(
-                            &gettext!(
-                                "File {} exceeds maximum file size of 20 MB",
-                                file.basename().unwrap().display(),
-                            ),
-                            &gettext("Please try other files."),
-                        );
-                        log::info!(
-                            "File at {} with size {} B exceeds max size",
-                            file_path.display(),
-                            byte_size
-                        );
-                        return;
+        match self.validify_files(files) {
+            Ok(files) => {
+                spawn!(clone!(@weak self as obj => async move {
+                    if let Err(err) = obj.import_files(files).await {
+                        obj.show_error(&err.to_string(), "Please try again.");
+                        log::error!("Error on importing files: {:#}", err);
                     }
-
-                    files_to_import.push(file_path);
-                }
-                Err(err) => {
-                    self.show_error(
-                        &gettext("An error occurred while getting file info"),
-                        &gettext("Please try again."),
-                    );
-                    log::error!("Failed to query file info: {:#}", err);
-                }
+                }));
+            }
+            Err(err) => {
+                self.show_error(&err.to_string(), "Please try again.");
+                log::error!("Error on validifying files: {:#}", err);
             }
         }
-
-        spawn!(clone!(@weak self as obj => async move {
-            obj.import_files(files_to_import).await;
-        }));
     }
 
-    fn on_import_file(&self) {
+    fn on_open_file_chooser(&self) {
         let imp = imp::FileImporterButton::from_instance(self);
 
         let chooser = imp.file_chooser.get_or_init(|| self.init_file_chooser());
         chooser.show();
-    }
-
-    fn show_error(&self, text: &str, secondary_text: &str) {
-        let error_dialog = gtk::MessageDialogBuilder::new()
-            .text(text)
-            .secondary_text(secondary_text)
-            .buttons(gtk::ButtonsType::Ok)
-            .message_type(gtk::MessageType::Error)
-            .modal(true)
-            .build();
-
-        error_dialog.set_transient_for(
-            self.root()
-                .map(|w| w.downcast::<gtk::Window>().unwrap())
-                .as_ref(),
-        );
-
-        error_dialog.connect_response(|error_dialog, _| error_dialog.destroy());
-        error_dialog.present();
-    }
-
-    async fn import_files(&self, files: Vec<PathBuf>) {
-        let default_notes_dir = utils::default_notes_dir();
-
-        for source_path in files {
-            let destination_path = {
-                let file_name = utils::generate_unique_file_name("OtherFile");
-                let mut destination_path = default_notes_dir.join(file_name);
-
-                if let Some(extension) = source_path.extension() {
-                    destination_path.set_extension(extension);
-                }
-
-                destination_path
-            };
-
-            let destination_file = gio::File::for_path(&destination_path);
-
-            log::info!(
-                "Copying file from {} to {}",
-                source_path.display(),
-                destination_path.display()
-            );
-
-            match spawn_blocking!(move || fs::copy(&source_path, &destination_path)).await {
-                Ok(_) => {
-                    self.emit_by_name("new-import", &[&destination_file])
-                        .unwrap();
-                }
-                Err(err) => {
-                    log::error!("An error occurred while copying file: {}", err);
-                }
-            }
-        }
     }
 }
