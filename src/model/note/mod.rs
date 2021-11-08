@@ -294,14 +294,10 @@ impl Note {
         }
 
         let bytes = self.serialize_to_bytes()?;
-        let res = self
-            .file()
+        self.file()
             .replace_contents_async_future(bytes, None, false, gio::FileCreateFlags::NONE)
-            .await;
-
-        if let Err(err) = res {
-            anyhow::bail!("Fail saving note: {}", err.1);
-        }
+            .await
+            .map_err(|err| err.1)?;
 
         self.set_is_saved(true);
 

@@ -299,15 +299,11 @@ impl NoteManager {
         };
         let data_bytes = serde_yaml::to_vec(&data)?;
 
-        let data_file = gio::File::for_path(self.data_file_path());
         // FIXME consider making backup on all replace_contents
-        let res = data_file
+        gio::File::for_path(self.data_file_path())
             .replace_contents_async_future(data_bytes, None, false, gio::FileCreateFlags::NONE)
-            .await;
-
-        if let Err(err) = res {
-            anyhow::bail!("Fail saving data_file: {}", err.1);
-        }
+            .await
+            .map_err(|err| err.1)?;
 
         log::info!("Sucessfully saved data file");
 
