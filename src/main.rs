@@ -30,7 +30,7 @@ static THREAD_POOL: Lazy<glib::ThreadPool> =
     Lazy::new(|| glib::ThreadPool::new_shared(None).unwrap());
 
 fn main() {
-    pretty_env_logger::init();
+    pretty_env_logger::init_timed();
 
     gettextrs::setlocale(LocaleCategory::LcAll, "");
     gettextrs::bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR).expect("Unable to bind the text domain");

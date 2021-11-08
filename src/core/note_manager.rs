@@ -359,11 +359,7 @@ impl NoteManager {
             self.handle_changed_files(&changed_files).await?;
         }
 
-        log::info!(
-            "Session synced {}, is_offline_mode: {}",
-            chrono::Local::now().format("%H:%M:%S"),
-            is_offline_mode
-        );
+        log::info!("Session synced, is_offline_mode: {}", is_offline_mode);
 
         Ok(())
     }
