@@ -24,8 +24,7 @@
               </object>
             </child>
             <child>
-              <object class="GtkButton">
-                <property name="icon-name">mail-attachment-symbolic</property>
+              <object class="NwtyContentAttachmentViewFileOpenerButton" id="file_opener_button">
                 <property name="tooltip-text" translatable="yes">Add Other File</property>
               </object>
             </child>

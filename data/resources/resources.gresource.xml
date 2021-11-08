@@ -9,6 +9,7 @@
     <file compressed="true" preprocess="xml-stripblanks">ui/content-attachment-view.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/content-attachment-view-audio-recorder-button.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/content-attachment-view-audio-row.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">ui/content-attachment-view-file-opener-button.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/content-attachment-view-other-row.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/content-attachment-view-row.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/content-view.ui</file>

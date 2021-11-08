@@ -45,6 +45,7 @@ rust_sources = files(
   'session/content/attachment_view/audio_recorder_button/mod.rs',
   'session/content/attachment_view/audio_recorder_button/visualizer.rs',
   'session/content/attachment_view/audio_row.rs',
+  'session/content/attachment_view/file_opener_button.rs',
   'session/content/attachment_view/mod.rs',
   'session/content/attachment_view/other_row.rs',
   'session/content/attachment_view/row.rs',

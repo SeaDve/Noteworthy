@@ -1,5 +1,6 @@
 mod audio_recorder_button;
 mod audio_row;
+mod file_opener_button;
 mod other_row;
 mod row;
 
@@ -11,7 +12,8 @@ use gtk::{
 };
 
 use self::{
-    audio_recorder_button::AudioRecorderButton, audio_row::AudioRow, other_row::OtherRow, row::Row,
+    audio_recorder_button::AudioRecorderButton, audio_row::AudioRow,
+    file_opener_button::FileOpenerButton, other_row::OtherRow, row::Row,
 };
 use crate::{
     core::AudioPlayerHandler,
@@ -32,6 +34,8 @@ mod imp {
         pub selection: TemplateChild<gtk::NoSelection>,
         #[template_child]
         pub audio_recorder_button: TemplateChild<AudioRecorderButton>,
+        #[template_child]
+        pub file_opener_button: TemplateChild<FileOpenerButton>,
 
         pub audio_player_handler: AudioPlayerHandler,
     }
@@ -44,6 +48,7 @@ mod imp {
 
         fn class_init(klass: &mut Self::Class) {
             AudioRecorderButton::static_type();
+            FileOpenerButton::static_type();
             Self::bind_template(klass);
         }
 
@@ -177,6 +182,12 @@ impl AttachmentView {
             }));
 
         imp.audio_recorder_button.connect_record_done(clone!(@weak self as obj => move |_, file| {
+                let new_attachment = Attachment::new(file, &DateTime::now());
+                let attachment_list = obj.attachment_list().expect("No current attachment list on attachment view");
+                attachment_list.append(new_attachment).unwrap();
+            }));
+
+        imp.file_opener_button.connect_open_done(clone!(@weak self as obj => move |_, file| {
                 let new_attachment = Attachment::new(file, &DateTime::now());
                 let attachment_list = obj.attachment_list().expect("No current attachment list on attachment view");
                 attachment_list.append(new_attachment).unwrap();
