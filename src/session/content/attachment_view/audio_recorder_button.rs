@@ -1,5 +1,3 @@
-mod visualizer;
-
 use adw::{prelude::*, subclass::prelude::*};
 use gtk::{
     gio,
@@ -9,8 +7,7 @@ use gtk::{
 };
 use once_cell::{sync::Lazy, unsync::OnceCell};
 
-use self::visualizer::Visualizer;
-use crate::{core::AudioRecorder, spawn, utils};
+use crate::{core::AudioRecorder, spawn, utils, widgets::AudioVisualizer};
 
 mod imp {
     use super::*;
@@ -25,7 +22,7 @@ mod imp {
         #[template_child]
         pub popover: TemplateChild<gtk::Popover>,
         #[template_child]
-        pub visualizer: TemplateChild<Visualizer>,
+        pub visualizer: TemplateChild<AudioVisualizer>,
 
         pub recorder: AudioRecorder,
         pub popover_closed_handler_id: OnceCell<glib::SignalHandlerId>,
@@ -38,7 +35,7 @@ mod imp {
         type ParentType = adw::Bin;
 
         fn class_init(klass: &mut Self::Class) {
-            Visualizer::static_type();
+            AudioVisualizer::static_type();
             Self::bind_template(klass);
 
             klass.install_action("audio-recorder-button.record-ok", None, move |obj, _, _| {
@@ -120,7 +117,7 @@ impl AudioRecorderButton {
         .unwrap()
     }
 
-    fn visualizer(&self) -> &Visualizer {
+    fn visualizer(&self) -> &AudioVisualizer {
         let imp = imp::AudioRecorderButton::from_instance(self);
         &imp.visualizer
     }

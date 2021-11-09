@@ -21,20 +21,20 @@ mod imp {
     use super::*;
 
     #[derive(Debug, Default)]
-    pub struct Visualizer {
+    pub struct AudioVisualizer {
         pub peaks: RefCell<VecDeque<f32>>,
     }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for Visualizer {
-        const NAME: &'static str = "NwtyContentAttachmentViewAudioRecorderButtonVisualizer";
-        type Type = super::Visualizer;
+    impl ObjectSubclass for AudioVisualizer {
+        const NAME: &'static str = "NwtyAudioVisualizer";
+        type Type = super::AudioVisualizer;
         type ParentType = gtk::Widget;
     }
 
-    impl ObjectImpl for Visualizer {}
+    impl ObjectImpl for AudioVisualizer {}
 
-    impl WidgetImpl for Visualizer {
+    impl WidgetImpl for AudioVisualizer {
         fn snapshot(&self, obj: &Self::Type, snapshot: &gtk::Snapshot) {
             obj.on_snapshot(snapshot);
         }
@@ -42,13 +42,13 @@ mod imp {
 }
 
 glib::wrapper! {
-    pub struct Visualizer(ObjectSubclass<imp::Visualizer>)
+    pub struct AudioVisualizer(ObjectSubclass<imp::AudioVisualizer>)
         @extends gtk::Widget;
 }
 
-impl Visualizer {
+impl AudioVisualizer {
     pub fn new() -> Self {
-        glib::Object::new(&[]).expect("Failed to create Visualizer")
+        glib::Object::new(&[]).expect("Failed to create AudioVisualizer")
     }
 
     pub fn push_peak(&self, peak: f32) {
@@ -64,19 +64,19 @@ impl Visualizer {
     }
 
     pub fn clear_peaks(&self) {
-        let imp = imp::Visualizer::from_instance(self);
+        let imp = imp::AudioVisualizer::from_instance(self);
         imp.peaks.borrow_mut().clear();
 
         self.queue_draw();
     }
 
     fn peaks(&self) -> std::cell::Ref<VecDeque<f32>> {
-        let imp = imp::Visualizer::from_instance(self);
+        let imp = imp::AudioVisualizer::from_instance(self);
         imp.peaks.borrow()
     }
 
     fn peaks_mut(&self) -> std::cell::RefMut<VecDeque<f32>> {
-        let imp = imp::Visualizer::from_instance(self);
+        let imp = imp::AudioVisualizer::from_instance(self);
         imp.peaks.borrow_mut()
     }
 

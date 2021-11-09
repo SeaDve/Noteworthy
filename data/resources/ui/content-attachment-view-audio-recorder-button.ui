@@ -11,7 +11,7 @@
               <object class="GtkBox">
                 <property name="spacing">6</property>
                 <child>
-                  <object class="NwtyContentAttachmentViewAudioRecorderButtonVisualizer" id="visualizer">
+                  <object class="NwtyAudioVisualizer" id="visualizer">
                     <property name="width-request">180</property>
                     <property name="height-request">48</property>
                   </object>
