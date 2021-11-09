@@ -5,12 +5,6 @@
       <object class="GtkBox">
         <property name="spacing">12</property>
         <child>
-          <object class="NwtyRoundedPicture" id="picture">
-            <property name="max-size">60</property>
-            <property name="border-radius">6</property>
-          </object>
-        </child>
-        <child>
           <object class="GtkLabel">
             <property name="xalign">0</property>
             <property name="hexpand">True</property>
@@ -19,6 +13,12 @@
                 <lookup name="attachment">NwtyContentAttachmentViewPictureRow</lookup>
               </lookup>
             </binding>
+          </object>
+        </child>
+        <child>
+          <object class="NwtyRoundedPicture" id="picture">
+            <property name="max-size">60</property>
+            <property name="border-radius">6</property>
           </object>
         </child>
       </object>
