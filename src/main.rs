@@ -17,6 +17,7 @@ mod model;
 mod session;
 mod setup;
 mod utils;
+mod widgets;
 mod window;
 
 use gettextrs::{gettext, LocaleCategory};

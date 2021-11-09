@@ -8,7 +8,7 @@ use once_cell::sync::Lazy;
 
 use std::cell::RefCell;
 
-use super::{AudioRow, OtherRow};
+use super::{AudioRow, OtherRow, PictureRow};
 use crate::model::{Attachment, AttachmentKind};
 
 mod imp {
@@ -149,6 +149,7 @@ impl Row {
     fn replace_child(&self, attachment: &Attachment) {
         let child: gtk::Widget = match attachment.kind() {
             AttachmentKind::Ogg => AudioRow::new(attachment).upcast(),
+            AttachmentKind::Png => PictureRow::new(attachment).upcast(),
             AttachmentKind::Other => OtherRow::new(attachment).upcast(),
         };
 

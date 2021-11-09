@@ -2,6 +2,7 @@ mod audio_recorder_button;
 mod audio_row;
 mod file_importer_button;
 mod other_row;
+mod picture_row;
 mod row;
 
 use adw::{prelude::*, subclass::prelude::*};
@@ -13,7 +14,8 @@ use gtk::{
 
 use self::{
     audio_recorder_button::AudioRecorderButton, audio_row::AudioRow,
-    file_importer_button::FileImporterButton, other_row::OtherRow, row::Row,
+    file_importer_button::FileImporterButton, other_row::OtherRow, picture_row::PictureRow,
+    row::Row,
 };
 use crate::{
     core::AudioPlayerHandler,

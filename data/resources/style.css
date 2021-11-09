@@ -129,6 +129,11 @@
   padding-left: 12px;
 }
 
+.content-attachment-view-picture-row {
+  padding: 6px;
+  padding-right: 0;
+}
+
 
 .note-tag-dialog-list-view row {
   padding: 12px;

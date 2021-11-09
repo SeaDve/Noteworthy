@@ -5,14 +5,18 @@
       <object class="GtkBox">
         <property name="orientation">vertical</property>
         <child>
-          <object class="GtkListView" id="list_view">
-            <property name="vexpand">True</property>
-            <property name="model">
-              <object class="GtkNoSelection" id="selection"/>
+          <object class="GtkScrolledWindow">
+            <property name="child">
+              <object class="GtkListView" id="list_view">
+                <property name="vexpand">True</property>
+                <property name="model">
+                  <object class="GtkNoSelection" id="selection"/>
+                </property>
+                <style>
+                  <class name="content-attachment-view-list-view"/>
+                </style>
+              </object>
             </property>
-            <style>
-              <class name="content-attachment-view-list-view"/>
-            </style>
           </object>
         </child>
         <child>
