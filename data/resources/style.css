@@ -112,11 +112,8 @@
 
 .content-attachment-view-audio-row {
   padding: 6px;
+  padding-left: 12px;
   padding-right: 0;
-}
-
-.content-attachment-view-audio-row-title {
-  padding-right: 6px;
 }
 
 .content-attachment-view-audio-row-position {
@@ -125,14 +122,14 @@
 
 .content-attachment-view-other-row {
   padding: 6px;
-  padding-right: 0;
   padding-left: 12px;
+  padding-right: 0;
 }
 
 .content-attachment-view-picture-row {
   padding: 6px;
-  padding-right: 0;
   padding-left: 12px;
+  padding-right: 0;
 }
 
 

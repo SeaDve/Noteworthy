@@ -8,15 +8,6 @@
           <object class="GtkBox">
             <property name="spacing">6</property>
             <child>
-              <object class="GtkButton" id="playback_button">
-                <property name="action-name">audio-row.toggle-playback</property>
-                <property name="valign">center</property>
-                <style>
-                  <class name="flat"/>
-                </style>
-              </object>
-            </child>
-            <child>
               <object class="GtkLabel">
                 <property name="xalign">0</property>
                 <property name="hexpand">True</property>
@@ -25,8 +16,14 @@
                     <lookup name="attachment">NwtyContentAttachmentViewAudioRow</lookup>
                   </lookup>
                 </binding>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton" id="playback_button">
+                <property name="action-name">audio-row.toggle-playback</property>
+                <property name="valign">center</property>
                 <style>
-                  <class name="content-attachment-view-audio-row-title"/>
+                  <class name="flat"/>
                 </style>
               </object>
             </child>
