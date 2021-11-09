@@ -339,6 +339,7 @@ impl NoteManager {
         Ok(())
     }
 
+    // TODO Application::inhibit while syncing
     // TODO Better way to handle trying to sync multiple times (maybe refactor to use a thread pool)
     pub async fn sync(&self) -> anyhow::Result<()> {
         let repo = self.repository();
