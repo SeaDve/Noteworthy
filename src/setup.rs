@@ -134,6 +134,8 @@ mod imp {
         }
 
         fn constructed(&self, obj: &Self::Type) {
+            self.parent_constructed(obj);
+
             self.content
                 .connect_visible_child_notify(clone!(@weak obj => move |content| {
                     let imp = imp::Setup::from_instance(&obj);

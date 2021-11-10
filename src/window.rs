@@ -70,10 +70,16 @@ mod imp {
             }
 
             obj.load_window_size();
+
+            let camera = crate::camera::Camera::new();
+            self.main_stack.add_child(&camera);
+            self.main_stack.set_visible_child(&camera);
+            camera.start();
         }
     }
 
     impl WidgetImpl for Window {}
+
     impl WindowImpl for Window {
         fn close_request(&self, obj: &Self::Type) -> gtk::Inhibit {
             if let Err(err) = obj.save_window_size() {
