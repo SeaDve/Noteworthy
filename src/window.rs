@@ -71,7 +71,7 @@ mod imp {
 
             obj.load_window_size();
 
-            let camera = crate::camera::Camera::new();
+            let camera = crate::widgets::Camera::new();
             self.main_stack.add_child(&camera);
             self.main_stack.set_visible_child(&camera);
             camera.start();

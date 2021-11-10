@@ -362,6 +362,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "fragile"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "69a039c3498dc930fe810151a34ba0c1c70b02b8625035592e74432f678591f2"
+
+[[package]]
 name = "futures"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -726,6 +732,28 @@ dependencies = [
  "libc",
  "pango-sys",
  "system-deps 5.0.0",
+]
+
+[[package]]
+name = "gst-plugin-gtk4"
+version = "0.1.0"
+source = "git+https://gitlab.freedesktop.org/SeaDve/gst-plugins-rs.git?branch=use_published_gtk#c76f0eabc6bed3604fc8aacc49ff4136efc03f8d"
+dependencies = [
+ "fragile",
+ "gst-plugin-version-helper",
+ "gstreamer",
+ "gstreamer-base",
+ "gstreamer-video",
+ "gtk4",
+ "once_cell",
+]
+
+[[package]]
+name = "gst-plugin-version-helper"
+version = "0.8.0"
+source = "git+https://gitlab.freedesktop.org/SeaDve/gst-plugins-rs.git?branch=use_published_gtk#c76f0eabc6bed3604fc8aacc49ff4136efc03f8d"
+dependencies = [
+ "chrono",
 ]
 
 [[package]]
@@ -1223,10 +1251,9 @@ dependencies = [
  "gettext-rs",
  "git2",
  "gray_matter",
+ "gst-plugin-gtk4",
  "gstreamer",
- "gstreamer-base",
  "gstreamer-pbutils",
- "gstreamer-video",
  "gtk4",
  "indexmap",
  "libadwaita",
