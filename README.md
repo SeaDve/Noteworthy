@@ -22,7 +22,8 @@
 - [x] Filtering
 - [x] Basic markdown
 - [x] Batch notes selection and editing
-- [ ] Attachments
+- [x] Attachments
+- [ ] Canvas drawing
 - [ ] Syncing (Barely working)
 - [ ] Git integration (Barely working)
 - [ ] Setup page
