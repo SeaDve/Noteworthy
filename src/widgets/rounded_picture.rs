@@ -161,6 +161,8 @@ impl RoundedPicture {
         let imp = imp::RoundedPicture::from_instance(self);
 
         // TODO load lazily
+        // Maybe gio::File::load_bytes_async_future then load it through
+        // gdk::Texture::from_bytes in gtk 4.6
         if let Some(file) = file {
             let res = gdk::Texture::from_file(file).with_context(|| {
                 format!(
