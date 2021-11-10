@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="NwtyCamera" parent="AdwBin">
+    <property name="child">
+      <object class="GtkPicture" id="picture">
+        <property name="hexpand">True</property>
+        <property name="vexpand">True</property>
+        <property name="keep-aspect-ratio">False</property>
+      </object>
+    </property>
+  </template>
+</interface>

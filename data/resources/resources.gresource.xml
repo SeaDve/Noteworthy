@@ -5,6 +5,7 @@
     <file compressed="true" preprocess="xml-stripblanks">icons/scalable/status/external-link-symbolic.svg</file>
     <file compressed="true" preprocess="xml-stripblanks">icons/scalable/status/sidebar-toggle-right-symbolic.svg</file>
     <file compressed="true" preprocess="xml-stripblanks">icons/scalable/status/tag-symbolic.svg</file>
+    <file compressed="true" preprocess="xml-stripblanks">ui/camera.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/content.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/content-attachment-view.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/content-attachment-view-audio-recorder-button.ui</file>

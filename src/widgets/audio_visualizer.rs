@@ -1,4 +1,4 @@
-// Based on code from GNOME Sound Recorder
+// Based on code from GNOME Sound Recorder GPLv3
 // Modified to be bidirectional and use snapshots instead of cairo
 // See https://gitlab.gnome.org/GNOME/gnome-sound-recorder/-/blob/master/src/waveform.js
 

@@ -10,6 +10,7 @@
         "--socket=fallback-x11",
         "--socket=wayland",
         "--socket=pulseaudio",
+        "--filesystem=xdg-run/pipewire-0",
         "--socket=ssh-auth",
         "--device=dri",
         "--talk-name=org.a11y.Bus",
