@@ -12,7 +12,7 @@ mod imp {
     #[template(resource = "/io/github/seadve/Noteworthy/ui/content-attachment-view-picture-row.ui")]
     pub struct PictureRow {
         #[template_child]
-        pub picture: TemplateChild<RoundedPicture>,
+        pub picture: TemplateChild<RoundedPicture>, // TODO use gtk::Image here
 
         pub attachment: RefCell<Attachment>,
     }
