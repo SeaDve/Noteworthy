@@ -160,11 +160,7 @@ impl Camera {
                 Continue(false)
             }
             MessageView::Element(e) => {
-                if let Some(s) = e.structure() {
-                    if let Ok(symbol) = s.get::<String>("symbol") {
-                        self.emit_by_name("code-detected", &[&symbol]).unwrap();
-                    }
-                }
+                // TODO get bytes from stream to be able to have Camera::capture -> gio::File method
 
                 Continue(true)
             }
