@@ -25,7 +25,7 @@ mod imp {
 
     #[glib::object_subclass]
     impl ObjectSubclass for Application {
-        const NAME: &'static str = "NoteworthyApplication";
+        const NAME: &'static str = "NwtyApplication";
         type Type = super::Application;
         type ParentType = adw::Application;
 
@@ -40,7 +40,7 @@ mod imp {
     impl ObjectImpl for Application {}
 
     impl ApplicationImpl for Application {
-        fn activate(&self, app: &Self::Type) {
+        fn activate(&self, obj: &Self::Type) {
             if let Some(window) = self.window.get() {
                 let window = window.upgrade().unwrap();
                 window.show();
@@ -48,21 +48,21 @@ mod imp {
                 return;
             }
 
-            let window = Window::new(app);
+            let window = Window::new(obj);
             self.window
                 .set(window.downgrade())
                 .expect("Window already set.");
 
-            app.main_window().present();
+            obj.main_window().present();
         }
 
-        fn startup(&self, app: &Self::Type) {
-            self.parent_startup(app);
+        fn startup(&self, obj: &Self::Type) {
+            self.parent_startup(obj);
 
             gtk::Window::set_default_icon_name(APP_ID);
 
-            app.setup_gactions();
-            app.setup_accels();
+            obj.setup_gactions();
+            obj.setup_accels();
         }
     }
 
@@ -110,16 +110,16 @@ impl Application {
 
     fn setup_gactions(&self) {
         let action_quit = gio::SimpleAction::new("quit", None);
-        action_quit.connect_activate(clone!(@weak self as app => move |_, _| {
+        action_quit.connect_activate(clone!(@weak self as obj => move |_, _| {
             // This is needed to trigger the delete event and saving the window state
-            app.main_window().close();
-            app.quit();
+            obj.main_window().close();
+            obj.quit();
         }));
         self.add_action(&action_quit);
 
         let action_about = gio::SimpleAction::new("about", None);
-        action_about.connect_activate(clone!(@weak self as app => move |_, _| {
-            app.show_about_dialog();
+        action_about.connect_activate(clone!(@weak self as obj => move |_, _| {
+            obj.show_about_dialog();
         }));
         self.add_action(&action_about);
     }
