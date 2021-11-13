@@ -71,10 +71,23 @@ mod imp {
 
             obj.load_window_size();
 
-            let camera = crate::widgets::Camera::new();
-            self.main_stack.add_child(&camera);
-            self.main_stack.set_visible_child(&camera);
-            camera.start();
+            // FIXME FIXME FIXME FIXME FIXME these are just test
+            glib::timeout_add_seconds_local_once(
+                3,
+                clone!(@weak obj => move || {
+                    let imp = imp::Window::from_instance(&obj);
+
+                    let camera = crate::widgets::Camera::new();
+                    imp.main_stack.add_child(&camera);
+                    imp.main_stack.set_visible_child(&camera);
+                    camera.start();
+
+                    glib::timeout_add_seconds_local_once(3, move || {
+                        camera.capture().save_to_png("/home/dave/test.png");
+                    });
+                }),
+            );
+            // FIXME FIXME FIXME FIXME FIXME
         }
     }
 
