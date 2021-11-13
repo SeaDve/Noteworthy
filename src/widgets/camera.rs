@@ -4,6 +4,7 @@ use gst::prelude::*;
 use gtk::{
     gdk,
     glib::{self, clone, subclass::Signal},
+    graphene,
     subclass::prelude::*,
     CompositeTemplate,
 };
@@ -110,6 +111,21 @@ impl Camera {
         pipeline.set_state(gst::State::Null).unwrap();
         let bus = pipeline.bus().unwrap();
         bus.remove_watch().unwrap();
+    }
+
+    pub fn capture(&self) -> gdk::Texture {
+        let imp = imp::Camera::from_instance(self);
+
+        let snapshot = gtk::Snapshot::new();
+        imp.snapshot(&self, &snapshot);
+
+        let node = snapshot.free_to_node().unwrap();
+
+        let native = self.native().unwrap();
+        let renderer = native.renderer().unwrap();
+
+        let bounds = graphene::Rect::new(0.0, 0.0, self.width() as f32, self.height() as f32);
+        renderer.render_texture(&node, Some(&bounds)).unwrap()
     }
 
     fn setup_pipeline(&self) -> anyhow::Result<()> {
