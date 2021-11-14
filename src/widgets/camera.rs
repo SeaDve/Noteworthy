@@ -160,8 +160,11 @@ impl Camera {
     fn save_current_to_texture(&self) -> gdk::Texture {
         let imp = imp::Camera::from_instance(self);
 
+        let picture = imp.picture.get();
+        let picture_parent = picture.parent().unwrap();
+
         let snapshot = gtk::Snapshot::new();
-        imp.snapshot(&self, &snapshot);
+        picture_parent.snapshot_child(&picture, &snapshot);
 
         let node = snapshot.free_to_node().unwrap();
 
