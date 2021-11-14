@@ -157,22 +157,22 @@ impl Camera {
         bus.remove_watch().unwrap();
     }
 
-    // FIXME handle this in the pipeline for higher quality and no black edges
     fn save_current_to_texture(&self) -> gdk::Texture {
         let imp = imp::Camera::from_instance(self);
+        let paintable = imp.picture.paintable().unwrap();
 
-        let picture = imp.picture.get();
-        let picture_parent = picture.parent().unwrap();
+        let width = paintable.intrinsic_width();
+        let height = paintable.intrinsic_height();
 
         let snapshot = gtk::Snapshot::new();
-        picture_parent.snapshot_child(&picture, &snapshot);
+        paintable.snapshot(snapshot.upcast_ref(), width as f64, height as f64);
 
         let node = snapshot.free_to_node().unwrap();
 
         let native = self.native().unwrap();
         let renderer = native.renderer().unwrap();
 
-        let bounds = graphene::Rect::new(0.0, 0.0, self.width() as f32, self.height() as f32);
+        let bounds = graphene::Rect::new(0.0, 0.0, width as f32, height as f32);
         renderer.render_texture(&node, Some(&bounds)).unwrap()
     }
 
