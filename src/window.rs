@@ -82,9 +82,13 @@ mod imp {
                     imp.main_stack.set_visible_child(&camera);
                     camera.start();
 
-                    glib::timeout_add_seconds_local_once(3, move || {
-                        camera.capture().save_to_png("/home/dave/test.png");
+                    camera.connect_capture_done(|_, texture| {
+                        texture.save_to_png("/home/dave/a.png");
                     });
+
+                    camera.connect_on_exit(clone!(@weak obj => move |_| {
+                        obj.switch_to_session_page()
+                    }));
                 }),
             );
             // FIXME FIXME FIXME FIXME FIXME

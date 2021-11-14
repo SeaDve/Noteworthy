@@ -2,10 +2,89 @@
 <interface>
   <template class="NwtyCamera" parent="AdwBin">
     <property name="child">
-      <object class="GtkPicture" id="picture">
-        <property name="hexpand">True</property>
-        <property name="vexpand">True</property>
-        <property name="keep-aspect-ratio">False</property>
+      <object class="GtkWindowHandle">
+        <property name="child">
+          <object class="GtkOverlay">
+            <property name="child">
+              <object class="GtkPicture" id="picture">
+                <property name="hexpand">True</property>
+                <property name="vexpand">True</property>
+                <property name="keep-aspect-ratio">False</property>
+              </object>
+            </property>
+            <child type="overlay">
+              <object class="GtkStack" id="stack">
+                <child>
+                  <object class="GtkCenterBox" id="main_control_box">
+                    <property name="orientation">vertical</property>
+                    <property name="halign">end</property>
+                    <property name="vexpand">True</property>
+                    <style>
+                      <class name="osd"/>
+                      <class name="camera-control-box"/>
+                    </style>
+                    <child type="center">
+                      <object class="AdwBin">
+                        <style>
+                          <class name="camera-capture-button-ring"/>
+                        </style>
+                        <property name="child">
+                          <object class="GtkButton">
+                            <property name="action-name">camera.capture</property>
+                            <style>
+                              <class name="camera-capture-button"/>
+                            </style>
+                          </object>
+                        </property>
+                      </object>
+                    </child>
+                    <child type="end">
+                      <object class="GtkButton">
+                        <property name="halign">center</property>
+                        <property name="icon-name">edit-delete-symbolic</property>
+                        <property name="action-name">camera.exit</property>
+                        <style>
+                          <class name="circular"/>
+                        </style>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkCenterBox" id="preview_control_box">
+                    <property name="orientation">vertical</property>
+                    <property name="halign">end</property>
+                    <property name="vexpand">True</property>
+                    <style>
+                      <class name="osd"/>
+                      <class name="camera-control-box"/>
+                    </style>
+                    <child type="start">
+                      <object class="GtkButton">
+                        <property name="halign">center</property>
+                        <property name="icon-name">emblem-ok-symbolic</property>
+                        <property name="action-name">camera.capture-done</property>
+                        <style>
+                          <class name="circular"/>
+                        </style>
+                      </object>
+                    </child>
+                    <child type="end">
+                      <object class="GtkButton">
+                        <property name="halign">center</property>
+                        <property name="icon-name">edit-delete-symbolic</property>
+                        <property name="action-name">camera.capture-discard</property>
+                        <style>
+                          <class name="circular"/>
+                        </style>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </property>
       </object>
     </property>
   </template>

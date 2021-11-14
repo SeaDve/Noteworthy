@@ -18,6 +18,35 @@
   min-width: 240px;
 }
 
+.camera-control-box {
+  padding: 12px;
+}
+
+.camera-capture-button {
+  background-color: @theme_bg_color;
+  border-radius: 100%;
+  margin: 3px;
+  opacity: 0.8;
+}
+
+.camera-capture-button:hover {
+  opacity: 1;
+}
+
+.camera-capture-button:active {
+  opacity: 0.5;
+}
+
+.camera-capture-button-ring {
+  opacity: 0.8;
+  border: 0.3em solid @theme_bg_color;
+  border-radius: 100%;
+}
+
+.camera-capture-button-ring:active {
+  opacity: 1;
+}
+
 
 .sidebar {
   min-width: 300px;
