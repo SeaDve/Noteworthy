@@ -1,5 +1,4 @@
 use adw::{prelude::*, subclass::prelude::*};
-use ashpd::{desktop::camera::CameraProxy, zbus};
 use gst::prelude::*;
 use gtk::{
     gdk,
@@ -10,8 +9,6 @@ use gtk::{
 };
 use once_cell::unsync::OnceCell;
 
-use crate::spawn;
-
 mod imp {
     use super::*;
 
@@ -20,6 +17,12 @@ mod imp {
     pub struct Camera {
         #[template_child]
         pub picture: TemplateChild<gtk::Picture>,
+        #[template_child]
+        pub stack: TemplateChild<gtk::Stack>,
+        #[template_child]
+        pub main_control_box: TemplateChild<gtk::CenterBox>,
+        #[template_child]
+        pub preview_control_box: TemplateChild<gtk::CenterBox>,
 
         pub pipeline: OnceCell<gst::Pipeline>,
     }
@@ -33,8 +36,21 @@ mod imp {
         fn class_init(klass: &mut Self::Class) {
             Self::bind_template(klass);
 
-            // klass.install_action("setup.navigate-back", None, move |obj, _, _| {
-            // });
+            klass.install_action("camera.capture", None, move |obj, _, _| {
+                obj.on_capture();
+            });
+
+            klass.install_action("camera.exit", None, move |obj, _, _| {
+                obj.on_exit();
+            });
+
+            klass.install_action("camera.capture-done", None, move |obj, _, _| {
+                obj.on_capture_done();
+            });
+
+            klass.install_action("camera.capture-discard", None, move |obj, _, _| {
+                obj.on_capture_discard();
+            });
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
@@ -43,18 +59,21 @@ mod imp {
     }
 
     impl ObjectImpl for Camera {
-        // fn signals() -> &'static [Signal] {
-        //     use once_cell::sync::Lazy;
-        //     static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
-        //         vec![Signal::builder(
-        //             "session-setup-done",
-        //             &[Session::static_type().into()],
-        //             <()>::static_type().into(),
-        //         )
-        //         .build()]
-        //     });
-        //     SIGNALS.as_ref()
-        // }
+        fn signals() -> &'static [Signal] {
+            use once_cell::sync::Lazy;
+            static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
+                vec![
+                    Signal::builder(
+                        "capture-done",
+                        &[gdk::Texture::static_type().into()],
+                        <()>::static_type().into(),
+                    )
+                    .build(),
+                    Signal::builder("on-exit", &[], <()>::static_type().into()).build(),
+                ]
+            });
+            SIGNALS.as_ref()
+        }
 
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
@@ -87,6 +106,31 @@ impl Camera {
         glib::Object::new(&[]).expect("Failed to create Camera.")
     }
 
+    pub fn connect_capture_done<F>(&self, f: F) -> glib::SignalHandlerId
+    where
+        F: Fn(&Self, gdk::Texture) + 'static,
+    {
+        self.connect_local("capture-done", true, move |values| {
+            let obj = values[0].get::<Self>().unwrap();
+            let texture = values[1].get::<gdk::Texture>().unwrap();
+            f(&obj, texture);
+            None
+        })
+        .unwrap()
+    }
+
+    pub fn connect_on_exit<F>(&self, f: F) -> glib::SignalHandlerId
+    where
+        F: Fn(&Self) + 'static,
+    {
+        self.connect_local("on-exit", true, move |values| {
+            let obj = values[0].get::<Self>().unwrap();
+            f(&obj);
+            None
+        })
+        .unwrap()
+    }
+
     pub fn start(&self) {
         let imp = imp::Camera::from_instance(self);
         let pipeline = imp.pipeline.get().unwrap();
@@ -113,7 +157,7 @@ impl Camera {
         bus.remove_watch().unwrap();
     }
 
-    pub fn capture(&self) -> gdk::Texture {
+    fn save_current_to_texture(&self) -> gdk::Texture {
         let imp = imp::Camera::from_instance(self);
 
         let snapshot = gtk::Snapshot::new();
@@ -136,7 +180,10 @@ impl Camera {
         let videoconvert = gst::ElementFactory::make("videoconvert", None)?;
         let sink = gst::ElementFactory::make("gtk4paintablesink", None)?;
 
+        // FIXME properly setup fd and node_id
+        // After that, also remove `--filesystem=xdg-run/pipewire-0` in flatpak manifest
         // pipewiresrc.set_property("fd", &fd.as_raw_fd())?;
+        // pipewiresrc.set_property("path", node_id)?;
 
         let elements = &[&pipewiresrc, &queue, &videoconvert, &sink];
         pipeline.add_many(elements)?;
@@ -159,6 +206,19 @@ impl Camera {
         Ok(())
     }
 
+    // async fn try_start(&self) -> anyhow::Result<()> {
+    //     let connection = zbus::Connection::session().await?;
+    //     let proxy = CameraProxy::new(&connection).await?;
+    //     proxy.access_camera().await?;
+
+    //     let fd = proxy.open_pipe_wire_remote().await?;
+
+    //     let imp = imp::Camera::from_instance(self);
+    //     imp.paintable.start(0)?;
+
+    //     Ok(())
+    // }
+
     fn handle_bus_message(&self, message: &gst::Message) -> Continue {
         use gst::MessageView;
 
@@ -174,11 +234,6 @@ impl Camera {
                 self.stop();
 
                 Continue(false)
-            }
-            MessageView::Element(e) => {
-                // TODO get bytes from stream to be able to have Camera::capture -> gio::File method
-
-                Continue(true)
             }
             MessageView::StateChanged(sc) => {
                 let imp = imp::Camera::from_instance(self);
@@ -197,29 +252,27 @@ impl Camera {
         }
     }
 
-    // async fn try_start(&self) -> anyhow::Result<()> {
-    //     let connection = zbus::Connection::session().await?;
-    //     let proxy = CameraProxy::new(&connection).await?;
-    // proxy.access_camera().await?;
+    fn on_capture(&self) {
+        self.stop();
 
-    // let fd = proxy.open_pipe_wire_remote().await?;
+        let imp = imp::Camera::from_instance(self);
+        imp.stack.set_visible_child(&imp.preview_control_box.get());
+    }
 
-    //     let imp = imp::Camera::from_instance(self);
-    //     imp.paintable.start(0)?;
+    fn on_exit(&self) {
+        self.emit_by_name("on-exit", &[]).unwrap();
+    }
 
-    //     Ok(())
-    // }
+    fn on_capture_done(&self) {
+        let texture = self.save_current_to_texture();
+        self.emit_by_name("capture-done", &[&texture]).unwrap();
+        self.on_exit();
+    }
 
-    // pub fn connect_session_setup_done<F>(&self, f: F) -> glib::SignalHandlerId
-    // where
-    //     F: Fn(&Self, Session) + 'static,
-    // {
-    //     self.connect_local("session-setup-done", true, move |values| {
-    //         let obj = values[0].get::<Self>().unwrap();
-    //         let session = values[1].get::<Session>().unwrap();
-    //         f(&obj, session);
-    //         None
-    //     })
-    //     .unwrap()
-    // }
+    fn on_capture_discard(&self) {
+        self.start();
+
+        let imp = imp::Camera::from_instance(self);
+        imp.stack.set_visible_child(&imp.main_control_box.get());
+    }
 }
