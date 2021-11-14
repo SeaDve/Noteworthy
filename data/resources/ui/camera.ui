@@ -14,6 +14,7 @@
             </property>
             <child type="overlay">
               <object class="GtkStack" id="stack">
+                <property name="transition-type">crossfade</property>
                 <child>
                   <object class="GtkCenterBox" id="main_control_box">
                     <property name="orientation">vertical</property>
