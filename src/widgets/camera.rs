@@ -157,6 +157,7 @@ impl Camera {
         bus.remove_watch().unwrap();
     }
 
+    // FIXME handle this in the pipeline for higher quality and no black edges
     fn save_current_to_texture(&self) -> gdk::Texture {
         let imp = imp::Camera::from_instance(self);
 
