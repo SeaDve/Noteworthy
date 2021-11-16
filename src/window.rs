@@ -54,6 +54,8 @@ mod imp {
                 obj.add_css_class("devel");
             }
 
+            obj.load_window_size();
+
             self.setup
                 .connect_session_setup_done(clone!(@weak obj => move |_, session| {
                     obj.load_session(session);
@@ -68,30 +70,6 @@ mod imp {
                     obj.load_session(existing_session);
                 }));
             }
-
-            obj.load_window_size();
-
-            // FIXME FIXME FIXME FIXME FIXME these are just test
-            glib::timeout_add_seconds_local_once(
-                3,
-                clone!(@weak obj => move || {
-                    let imp = imp::Window::from_instance(&obj);
-
-                    let camera = crate::widgets::Camera::new();
-                    imp.main_stack.add_child(&camera);
-                    imp.main_stack.set_visible_child(&camera);
-                    camera.start();
-
-                    camera.connect_capture_done(|_, texture| {
-                        texture.save_to_png("/home/dave/a.png");
-                    });
-
-                    camera.connect_on_exit(clone!(@weak obj => move |_| {
-                        obj.switch_to_session_page()
-                    }));
-                }),
-            );
-            // FIXME FIXME FIXME FIXME FIXME
         }
     }
 
@@ -137,16 +115,31 @@ impl Window {
         imp.session.get().expect("Call load_session first").clone()
     }
 
+    pub fn add_page(&self, page: &impl IsA<gtk::Widget>) {
+        let imp = imp::Window::from_instance(self);
+        imp.main_stack.add_child(page);
+    }
+
+    pub fn remove_page(&self, page: &impl IsA<gtk::Widget>) {
+        let imp = imp::Window::from_instance(self);
+        imp.main_stack.remove(page);
+    }
+
+    pub fn set_visible_page(&self, page: &impl IsA<gtk::Widget>) {
+        let imp = imp::Window::from_instance(self);
+        imp.main_stack.set_visible_child(page);
+    }
+
+    pub fn switch_to_session_page(&self) {
+        let imp = imp::Window::from_instance(self);
+        imp.main_stack.set_visible_child(&self.session());
+    }
+
     fn load_session(&self, session: Session) {
         let imp = imp::Window::from_instance(self);
         imp.main_stack.add_child(&session);
         imp.session.set(session).unwrap();
         self.switch_to_session_page();
-    }
-
-    fn switch_to_session_page(&self) {
-        let imp = imp::Window::from_instance(self);
-        imp.main_stack.set_visible_child(&self.session());
     }
 
     fn save_window_size(&self) -> Result<(), glib::BoolError> {

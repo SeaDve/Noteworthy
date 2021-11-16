@@ -22,8 +22,7 @@
         <child>
           <object class="GtkActionBar">
             <child>
-              <object class="GtkButton">
-                <property name="icon-name">camera-photo-symbolic</property>
+              <object class="NwtyContentAttachmentViewCameraButton" id="camera_button">
                 <property name="tooltip-text" translatable="yes">Take Photo</property>
               </object>
             </child>
