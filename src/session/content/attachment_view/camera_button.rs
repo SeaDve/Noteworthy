@@ -6,6 +6,8 @@ use gtk::{
     CompositeTemplate,
 };
 
+use std::cell::RefCell;
+
 use crate::{utils, widgets::Camera, Application};
 
 mod imp {
@@ -16,7 +18,9 @@ mod imp {
         resource = "/io/github/seadve/Noteworthy/ui/content-attachment-view-camera-button.ui"
     )]
     pub struct CameraButton {
-        pub camera: Camera,
+        pub camera: RefCell<Option<Camera>>,
+        pub on_exit_handler_id: RefCell<Option<glib::SignalHandlerId>>,
+        pub capture_done_handler_id: RefCell<Option<glib::SignalHandlerId>>,
     }
 
     #[glib::object_subclass]
@@ -51,12 +55,6 @@ mod imp {
             });
             SIGNALS.as_ref()
         }
-
-        fn constructed(&self, obj: &Self::Type) {
-            self.parent_constructed(obj);
-
-            obj.setup_signals();
-        }
     }
 
     impl WidgetImpl for CameraButton {}
@@ -87,21 +85,37 @@ impl CameraButton {
         .unwrap()
     }
 
-    fn setup_signals(&self) {
+    fn disconnect_handler_ids(&self) {
         let imp = imp::CameraButton::from_instance(self);
 
-        imp.camera
-            .connect_capture_done(clone!(@weak self as obj => move |_, texture| {
-                let file_name = utils::generate_unique_file_name("Camera");
-                let mut file_path = utils::default_notes_dir().join(file_name);
-                file_path.set_extension("png");
+        let camera = imp.camera.take().unwrap();
 
-                texture.save_to_png(&file_path);
-                obj.emit_by_name("capture-done", &[&gio::File::for_path(&file_path)]).unwrap();
-            }));
+        let capture_done_handler_id = imp.capture_done_handler_id.take().unwrap();
+        camera.disconnect(capture_done_handler_id);
 
-        imp.camera
-            .connect_on_exit(clone!(@weak self as obj => move |camera| {
+        let on_exit_handler_id = imp.on_exit_handler_id.take().unwrap();
+        camera.disconnect(on_exit_handler_id);
+    }
+
+    fn on_launch(&self) {
+        let imp = imp::CameraButton::from_instance(self);
+
+        let camera = Camera::new();
+
+        imp.capture_done_handler_id
+            .replace(Some(camera.connect_capture_done(
+                clone!(@weak self as obj => move |_, texture| {
+                    let file_name = utils::generate_unique_file_name("Camera");
+                    let mut file_path = utils::default_notes_dir().join(file_name);
+                    file_path.set_extension("png");
+
+                    texture.save_to_png(&file_path);
+                    obj.emit_by_name("capture-done", &[&gio::File::for_path(&file_path)]).unwrap();
+                }),
+            )));
+
+        imp.on_exit_handler_id.replace(Some(camera.connect_on_exit(
+            clone!(@weak self as obj => move |camera| {
                 let main_window = Application::default().main_window();
                 main_window.switch_to_session_page();
                 main_window.remove_page(camera);
@@ -109,20 +123,19 @@ impl CameraButton {
                 if let Err(err) = camera.stop() {
                     log::warn!("Failed to stop camera: {:?}", err);
                 }
-            }));
-    }
 
-    fn on_launch(&self) {
-        let imp = imp::CameraButton::from_instance(self);
+                obj.disconnect_handler_ids();
+            }),
+        )));
 
-        // TODO On the second add of camera page, there will be critical and the actions will be
-        // disabled. See https://gitlab.gnome.org/GNOME/gtk/-/issues/4421
         let main_window = Application::default().main_window();
-        main_window.add_page(&imp.camera);
-        main_window.set_visible_page(&imp.camera);
+        main_window.add_page(&camera);
+        main_window.set_visible_page(&camera);
 
-        if let Err(err) = imp.camera.start() {
+        if let Err(err) = camera.start() {
             log::error!("Failed to start camera: {:?}", err);
         }
+
+        imp.camera.replace(Some(camera));
     }
 }
