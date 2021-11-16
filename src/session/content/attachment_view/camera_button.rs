@@ -100,6 +100,8 @@ impl CameraButton {
     fn on_launch(&self) {
         let imp = imp::CameraButton::from_instance(self);
 
+        // TODO Consider reusing camera for faster startup
+        // Blocker: https://gitlab.gnome.org/GNOME/gtk/-/issues/4421
         let camera = Camera::new();
 
         imp.capture_done_handler_id
