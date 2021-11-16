@@ -187,21 +187,33 @@ impl AttachmentView {
                 imp.audio_player_handler.stop_all();
             }));
 
-        imp.audio_recorder_button.connect_record_done(clone!(@weak self as obj => move |_, file| {
+        imp.audio_recorder_button
+            .connect_record_done(clone!(@weak self as obj => move |_, file| {
+                let attachment_list = obj
+                    .attachment_list()
+                    .expect("No current attachment list on attachment view");
+
                 let new_attachment = Attachment::new(file, &DateTime::now());
-                let attachment_list = obj.attachment_list().expect("No current attachment list on attachment view");
                 attachment_list.append(new_attachment).unwrap();
             }));
 
-        imp.camera_button.connect_capture_done(clone!(@weak self as obj => move |_, file| {
-            let new_attachment = Attachment::new(file, &DateTime::now());
-            let attachment_list = obj.attachment_list().expect("No current attachment list on attachment view");
-            attachment_list.append(new_attachment).unwrap();
-        }));
+        imp.camera_button
+            .connect_capture_done(clone!(@weak self as obj => move |_, file| {
+                let attachment_list = obj
+                    .attachment_list()
+                    .expect("No current attachment list on attachment view");
 
-        imp.file_importer_button.connect_new_import(clone!(@weak self as obj => move |_, file| {
                 let new_attachment = Attachment::new(file, &DateTime::now());
-                let attachment_list = obj.attachment_list().expect("No current attachment list on attachment view");
+                attachment_list.append(new_attachment).unwrap();
+            }));
+
+        imp.file_importer_button
+            .connect_new_import(clone!(@weak self as obj => move |_, file| {
+                let attachment_list = obj
+                    .attachment_list()
+                    .expect("No current attachment list on attachment view");
+
+                let new_attachment = Attachment::new(file, &DateTime::now());
                 attachment_list.append(new_attachment).unwrap();
             }));
     }
