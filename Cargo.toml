@@ -16,7 +16,6 @@ gst = { package = "gstreamer", version = "0.17" }
 gst-plugin-gtk4 = { git = "https://gitlab.freedesktop.org/SeaDve/gst-plugins-rs.git", branch = "use_published_gtk" }
 gst_pbutils = { package = "gstreamer-pbutils", version = "0.17.2" }
 adw = { package = "libadwaita", version = "0.1.0-alpha-3" }
-ashpd = "0.2.0-alpha-5"
 
 anyhow = "1.0.44"
 indexmap = { version = "1.7.0", features = ["serde"] }

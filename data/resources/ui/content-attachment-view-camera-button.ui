@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="NwtyContentAttachmentViewCameraButton" parent="AdwBin">
+    <property name="child">
+      <object class="GtkButton">
+        <property name="icon-name">camera-photo-symbolic</property>
+        <property name="action-name">camera-button.launch</property>
+      </object>
+    </property>
+  </template>
+</interface>

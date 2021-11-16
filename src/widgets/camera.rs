@@ -1,4 +1,5 @@
 use adw::{prelude::*, subclass::prelude::*};
+use anyhow::Context;
 use gst::prelude::*;
 use gtk::{
     gdk,
@@ -80,6 +81,7 @@ mod imp {
 
             if let Err(err) = obj.setup_pipeline() {
                 log::error!("Failed to setup pipeline: {:#}", err);
+                // TODO handle this. Add UI error or something
             }
         }
 
@@ -131,7 +133,7 @@ impl Camera {
         .unwrap()
     }
 
-    pub fn start(&self) {
+    pub fn start(&self) -> anyhow::Result<()> {
         let imp = imp::Camera::from_instance(self);
         let pipeline = imp.pipeline.get().unwrap();
 
@@ -143,18 +145,22 @@ impl Camera {
         )
         .unwrap();
 
-        if let Err(err) = pipeline.set_state(gst::State::Playing) {
-            log::error!("Failed to set pipeline state to Playing: {:#}", err);
-        }
+        pipeline
+            .set_state(gst::State::Playing)
+            .context("Failed to set pipeline state to Playing")?;
+
+        Ok(())
     }
 
-    pub fn stop(&self) {
+    pub fn stop(&self) -> anyhow::Result<()> {
         let imp = imp::Camera::from_instance(self);
         let pipeline = imp.pipeline.get().unwrap();
 
-        pipeline.set_state(gst::State::Null).unwrap();
+        pipeline.set_state(gst::State::Null)?;
         let bus = pipeline.bus().unwrap();
-        bus.remove_watch().unwrap();
+        bus.remove_watch()?;
+
+        Ok(())
     }
 
     fn save_current_to_texture(&self) -> gdk::Texture {
@@ -184,7 +190,7 @@ impl Camera {
         let videoconvert = gst::ElementFactory::make("videoconvert", None)?;
         let sink = gst::ElementFactory::make("gtk4paintablesink", None)?;
 
-        // FIXME properly setup fd and node_id
+        // FIXME properly setup fd and node_id, use portal and ashpd
         // After that, also remove `--filesystem=xdg-run/pipewire-0` in flatpak manifest
         // pipewiresrc.set_property("fd", &fd.as_raw_fd())?;
         // pipewiresrc.set_property("path", node_id)?;
@@ -235,7 +241,7 @@ impl Camera {
                     err.debug()
                 );
 
-                self.stop();
+                self.stop().unwrap();
 
                 Continue(false)
             }
@@ -257,7 +263,7 @@ impl Camera {
     }
 
     fn on_capture(&self) {
-        self.stop();
+        self.stop().unwrap();
 
         let imp = imp::Camera::from_instance(self);
         imp.stack.set_visible_child(&imp.preview_control_box.get());
@@ -274,9 +280,15 @@ impl Camera {
     }
 
     fn on_capture_discard(&self) {
-        self.start();
+        self.start().unwrap();
 
         let imp = imp::Camera::from_instance(self);
         imp.stack.set_visible_child(&imp.main_control_box.get());
+    }
+}
+
+impl Default for Camera {
+    fn default() -> Self {
+        Self::new()
     }
 }
