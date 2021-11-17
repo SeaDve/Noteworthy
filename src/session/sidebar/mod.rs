@@ -61,7 +61,7 @@ mod imp {
     impl ObjectSubclass for Sidebar {
         const NAME: &'static str = "NwtySidebar";
         type Type = super::Sidebar;
-        type ParentType = gtk::Box;
+        type ParentType = gtk::Widget;
 
         fn class_init(klass: &mut Self::Class) {
             ViewSwitcher::static_type();
@@ -94,13 +94,6 @@ mod imp {
     }
 
     impl ObjectImpl for Sidebar {
-        fn constructed(&self, obj: &Self::Type) {
-            self.parent_constructed(obj);
-
-            obj.setup_list_view();
-            obj.setup_signals();
-        }
-
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
@@ -188,15 +181,27 @@ mod imp {
                 _ => unimplemented!(),
             }
         }
+
+        fn constructed(&self, obj: &Self::Type) {
+            self.parent_constructed(obj);
+
+            obj.setup_list_view();
+            obj.setup_signals();
+        }
+
+        fn dispose(&self, obj: &Self::Type) {
+            while let Some(child) = obj.first_child() {
+                child.unparent();
+            }
+        }
     }
 
     impl WidgetImpl for Sidebar {}
-    impl BoxImpl for Sidebar {}
 }
 
 glib::wrapper! {
     pub struct Sidebar(ObjectSubclass<imp::Sidebar>)
-        @extends gtk::Widget, gtk::Box;
+        @extends gtk::Widget;
 }
 
 impl Sidebar {

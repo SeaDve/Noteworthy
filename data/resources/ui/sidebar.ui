@@ -28,8 +28,12 @@
       </item>
     </section>
   </menu>
-  <template class="NwtySidebar" parent="GtkBox">
-    <property name="orientation">vertical</property>
+  <template class="NwtySidebar" parent="GtkWidget">
+    <property name="layout-manager">
+      <object class="GtkBoxLayout">
+        <property name="orientation">vertical</property>
+      </object>
+    </property>
     <style>
       <class name="sidebar"/>
     </style>

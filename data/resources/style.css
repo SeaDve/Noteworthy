@@ -54,10 +54,6 @@
 
 .sidebar-list-view row {
   min-height: 30px;
-  padding: 0;
-}
-
-.sidebar-list-view row > box {
   padding: 9px;
 }
 

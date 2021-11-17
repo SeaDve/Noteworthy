@@ -46,7 +46,7 @@ mod imp {
     impl ObjectSubclass for NoteRow {
         const NAME: &'static str = "NwtySidebarNoteRow";
         type Type = super::NoteRow;
-        type ParentType = gtk::Box;
+        type ParentType = gtk::Widget;
 
         fn class_init(klass: &mut Self::Class) {
             Self::bind_template(klass);
@@ -58,13 +58,6 @@ mod imp {
     }
 
     impl ObjectImpl for NoteRow {
-        fn constructed(&self, obj: &Self::Type) {
-            self.parent_constructed(obj);
-
-            obj.setup_expressions();
-            obj.setup_signals();
-        }
-
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
@@ -155,16 +148,27 @@ mod imp {
                 _ => unimplemented!(),
             }
         }
+
+        fn constructed(&self, obj: &Self::Type) {
+            self.parent_constructed(obj);
+
+            obj.setup_expressions();
+            obj.setup_signals();
+        }
+
+        fn dispose(&self, obj: &Self::Type) {
+            while let Some(child) = obj.first_child() {
+                child.unparent();
+            }
+        }
     }
 
     impl WidgetImpl for NoteRow {}
-    impl BoxImpl for NoteRow {}
 }
 
 glib::wrapper! {
     pub struct NoteRow(ObjectSubclass<imp::NoteRow>)
-        @extends gtk::Widget, gtk::Box,
-        @implements gtk::Accessible;
+        @extends gtk::Widget;
 }
 
 impl NoteRow {

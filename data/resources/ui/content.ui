@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <template class="NwtyContent" parent="GtkBox">
-    <property name="orientation">vertical</property>
+  <template class="NwtyContent" parent="GtkWidget">
+    <property name="layout-manager">
+      <object class="GtkBoxLayout">
+        <property name="orientation">vertical</property>
+      </object>
+    </property>
     <child>
       <object class="AdwHeaderBar">
         <property name="show-start-title-buttons" bind-source="NwtyContent" bind-property="compact" bind-flags="sync-create"/>
