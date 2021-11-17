@@ -20,7 +20,7 @@ mod imp {
         #[template_child]
         pub edit_tags_child: TemplateChild<gtk::Button>,
         #[template_child]
-        pub bin: TemplateChild<adw::Bin>,
+        pub content: TemplateChild<adw::Bin>,
         #[template_child]
         pub select_icon: TemplateChild<gtk::Image>,
 
@@ -175,23 +175,23 @@ impl ItemRow {
                 match item.kind() {
                     ItemKind::AllNotes | ItemKind::Trash => {
                         imp.label_child.set_label(&item.display_name().unwrap());
-                        imp.bin.set_child(Some(&imp.label_child.get()));
+                        imp.content.set_child(Some(&imp.label_child.get()));
                         self.set_margin_start(6);
                         self.set_margin_end(6);
                     }
                     ItemKind::Category => {
                         imp.category_child.set_label(&item.display_name().unwrap());
-                        imp.bin.set_child(Some(&imp.category_child.get()));
+                        imp.content.set_child(Some(&imp.category_child.get()));
                         self.set_margin_start(6);
                         self.set_margin_end(6);
                     }
                     ItemKind::EditTags => {
-                        imp.bin.set_child(Some(&imp.edit_tags_child.get()));
+                        imp.content.set_child(Some(&imp.edit_tags_child.get()));
                         self.set_margin_start(6);
                         self.set_margin_end(6);
                     }
                     ItemKind::Separator => {
-                        imp.bin.set_child(Some(&imp.separator_child.get()));
+                        imp.content.set_child(Some(&imp.separator_child.get()));
                         self.set_margin_start(0);
                         self.set_margin_end(0);
                     }
@@ -203,7 +203,7 @@ impl ItemRow {
                     .flags(glib::BindingFlags::SYNC_CREATE)
                     .build();
                 imp.binding.replace(binding);
-                imp.bin.set_child(Some(&imp.label_child.get()));
+                imp.content.set_child(Some(&imp.label_child.get()));
                 self.set_margin_start(6);
                 self.set_margin_end(6);
             } else {
