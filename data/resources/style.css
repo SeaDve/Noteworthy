@@ -14,89 +14,7 @@
 }
 
 
-.setup-button-box {
-  min-width: 240px;
-}
-
-.camera-control-box {
-  padding: 12px;
-}
-
-.camera-capture-button {
-  background-color: @theme_bg_color;
-  border-radius: 100%;
-  margin: 3px;
-  opacity: 0.8;
-}
-
-.camera-capture-button:hover {
-  opacity: 1;
-}
-
-.camera-capture-button:active {
-  opacity: 0.5;
-}
-
-.camera-capture-button-ring {
-  opacity: 0.8;
-  border: 0.3em solid @theme_bg_color;
-  border-radius: 100%;
-}
-
-.camera-capture-button-ring:active {
-  opacity: 1;
-}
-
-
-.sidebar {
-  min-width: 300px;
-}
-
-.sidebar-list-view row {
-  min-height: 30px;
-  padding: 9px;
-}
-
-.sidebar-list-view-multi-selection-mode row:selected:not(:hover) {
-  background: none;
-}
-
-.sidebar-spinner {
-  min-width: 32px;
-  min-height: 32px;
-}
-
-.sidebar-view-switcher-list-view row {
-  min-height: 6px;
-  min-width: 120px;
-}
-
-.sidebar-view-switcher-list-view row:selected {
-  background: none;
-}
-
-.sidebar-view-switcher-list-view row:hover {
-  background: none;
-}
-
-.sidebar-view-switcher-item-row-edit-tags {
-  padding: 0px;
-  border-radius: 3px;
-  transition: box-shadow 0s;
-  background: none;
-  color: @theme_fg_color;
-}
-
-.sidebar-view-switcher-item-row-edit-tags:hover {
-  background-color: shade(@accent_fg_color, 0.92);
-  box-shadow: 0 0 0 4px shade(@accent_fg_color, 0.92);
-}
-
-.sidebar-view-switcher-item-row-edit-tags label {
-  font-weight: 400;
-}
-
-
+/* Content */
 .content-view {
   padding-left: 24px;
   padding-right: 24px;
@@ -157,6 +75,7 @@
 }
 
 
+/* NoteTagDialog */
 .note-tag-dialog-list-view row {
   padding: 12px;
 }
@@ -180,6 +99,57 @@
 }
 
 
+/* Sidebar */
+.sidebar {
+  min-width: 300px;
+}
+
+.sidebar-list-view row {
+  min-height: 30px;
+  padding: 9px;
+}
+
+.sidebar-list-view-multi-selection-mode row:selected:not(:hover) {
+  background: none;
+}
+
+.sidebar-spinner {
+  min-width: 32px;
+  min-height: 32px;
+}
+
+.sidebar-view-switcher-list-view row {
+  min-height: 6px;
+  min-width: 120px;
+}
+
+.sidebar-view-switcher-list-view row:selected {
+  background: none;
+}
+
+.sidebar-view-switcher-list-view row:hover {
+  background: none;
+}
+
+.sidebar-view-switcher-item-row-edit-tags {
+  padding: 0px;
+  border-radius: 3px;
+  transition: box-shadow 0s;
+  background: none;
+  color: @theme_fg_color;
+}
+
+.sidebar-view-switcher-item-row-edit-tags:hover {
+  background-color: shade(@accent_fg_color, 0.92);
+  box-shadow: 0 0 0 4px shade(@accent_fg_color, 0.92);
+}
+
+.sidebar-view-switcher-item-row-edit-tags label {
+  font-weight: 400;
+}
+
+
+/* TagEditor */
 .tag-editor-create-tag {
   padding-top: 12px;
   padding-bottom: 6px;
@@ -197,4 +167,41 @@
 
 .tag-editor-list-view row:hover {
   background: none;
+}
+
+
+/* Camera */
+.camera-control-box {
+  padding: 12px;
+}
+
+.camera-capture-button {
+  background-color: @theme_bg_color;
+  border-radius: 100%;
+  margin: 3px;
+  opacity: 0.8;
+}
+
+.camera-capture-button:hover {
+  opacity: 1;
+}
+
+.camera-capture-button:active {
+  opacity: 0.5;
+}
+
+.camera-capture-button-ring {
+  opacity: 0.8;
+  border: 0.3em solid @theme_bg_color;
+  border-radius: 100%;
+}
+
+.camera-capture-button-ring:active {
+  opacity: 1;
+}
+
+
+/* Setup */
+.setup-button-box {
+  min-width: 240px;
 }
