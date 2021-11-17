@@ -1,5 +1,4 @@
-use adw::{prelude::*, subclass::prelude::*};
-use gtk::{glib, subclass::prelude::*, CompositeTemplate};
+use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::RefCell;
 
@@ -21,7 +20,7 @@ mod imp {
     impl ObjectSubclass for PictureRow {
         const NAME: &'static str = "NwtyContentAttachmentViewPictureRow";
         type Type = super::PictureRow;
-        type ParentType = adw::Bin;
+        type ParentType = gtk::Widget;
 
         fn class_init(klass: &mut Self::Class) {
             RoundedPicture::static_type();
@@ -75,16 +74,20 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
         }
+
+        fn dispose(&self, obj: &Self::Type) {
+            while let Some(child) = obj.first_child() {
+                child.unparent();
+            }
+        }
     }
 
     impl WidgetImpl for PictureRow {}
-    impl BinImpl for PictureRow {}
 }
 
 glib::wrapper! {
     pub struct PictureRow(ObjectSubclass<imp::PictureRow>)
-        @extends gtk::Widget, adw::Bin,
-        @implements gtk::Accessible;
+        @extends gtk::Widget;
 }
 
 impl PictureRow {

@@ -1,47 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <template class="NwtyContentAttachmentView" parent="AdwBin">
-    <property name="child">
-      <object class="GtkBox">
+  <template class="NwtyContentAttachmentView" parent="GtkWidget">
+    <property name="layout-manager">
+      <object class="GtkBoxLayout">
         <property name="orientation">vertical</property>
-        <child>
-          <object class="GtkScrolledWindow">
-            <property name="child">
-              <object class="GtkListView" id="list_view">
-                <property name="vexpand">True</property>
-                <property name="model">
-                  <object class="GtkNoSelection" id="selection"/>
-                </property>
-                <style>
-                  <class name="content-attachment-view-list-view"/>
-                </style>
-              </object>
-            </property>
-          </object>
-        </child>
-        <child>
-          <object class="GtkActionBar">
-            <child>
-              <object class="NwtyContentAttachmentViewCameraButton" id="camera_button">
-                <property name="tooltip-text" translatable="yes">Take Photo</property>
-              </object>
-            </child>
-            <child>
-              <object class="NwtyContentAttachmentViewFileImporterButton" id="file_importer_button">
-                <property name="tooltip-text" translatable="yes">Import Other Files</property>
-              </object>
-            </child>
-            <child>
-              <object class="NwtyContentAttachmentViewAudioRecorderButton" id="audio_recorder_button">
-                <property name="tooltip-text" translatable="yes">Start Audio Recording</property>
-              </object>
-            </child>
-          </object>
-        </child>
       </object>
     </property>
     <style>
       <class name="content-attachment-view"/>
     </style>
+    <child>
+      <object class="GtkScrolledWindow">
+        <property name="child">
+          <object class="GtkListView" id="list_view">
+            <property name="vexpand">True</property>
+            <property name="model">
+              <object class="GtkNoSelection" id="selection"/>
+            </property>
+            <style>
+              <class name="content-attachment-view-list-view"/>
+            </style>
+          </object>
+        </property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkActionBar">
+        <child>
+          <object class="NwtyContentAttachmentViewCameraButton" id="camera_button">
+            <property name="tooltip-text" translatable="yes">Take Photo</property>
+          </object>
+        </child>
+        <child>
+          <object class="NwtyContentAttachmentViewFileImporterButton" id="file_importer_button">
+            <property name="tooltip-text" translatable="yes">Import Other Files</property>
+          </object>
+        </child>
+        <child>
+          <object class="NwtyContentAttachmentViewAudioRecorderButton" id="audio_recorder_button">
+            <property name="tooltip-text" translatable="yes">Start Audio Recording</property>
+          </object>
+        </child>
+      </object>
+    </child>
   </template>
 </interface>

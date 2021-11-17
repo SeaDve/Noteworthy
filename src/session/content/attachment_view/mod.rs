@@ -6,9 +6,9 @@ mod other_row;
 mod picture_row;
 mod row;
 
-use adw::{prelude::*, subclass::prelude::*};
 use gtk::{
     glib::{self, clone},
+    prelude::*,
     subclass::prelude::*,
     CompositeTemplate,
 };
@@ -49,7 +49,7 @@ mod imp {
     impl ObjectSubclass for AttachmentView {
         const NAME: &'static str = "NwtyContentAttachmentView";
         type Type = super::AttachmentView;
-        type ParentType = adw::Bin;
+        type ParentType = gtk::Widget;
 
         fn class_init(klass: &mut Self::Class) {
             AudioRecorderButton::static_type();
@@ -101,15 +101,20 @@ mod imp {
             obj.setup_list_view();
             obj.setup_signals();
         }
+
+        fn dispose(&self, obj: &Self::Type) {
+            while let Some(child) = obj.first_child() {
+                child.unparent();
+            }
+        }
     }
 
     impl WidgetImpl for AttachmentView {}
-    impl BinImpl for AttachmentView {}
 }
 
 glib::wrapper! {
     pub struct AttachmentView(ObjectSubclass<imp::AttachmentView>)
-        @extends gtk::Widget, adw::Bin;
+        @extends gtk::Widget;
 }
 
 impl AttachmentView {

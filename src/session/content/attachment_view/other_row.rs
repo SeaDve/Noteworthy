@@ -1,5 +1,4 @@
-use adw::{prelude::*, subclass::prelude::*};
-use gtk::{gio, glib, subclass::prelude::*, CompositeTemplate};
+use gtk::{gio, glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::RefCell;
 
@@ -18,7 +17,7 @@ mod imp {
     impl ObjectSubclass for OtherRow {
         const NAME: &'static str = "NwtyContentAttachmentViewOtherRow";
         type Type = super::OtherRow;
-        type ParentType = adw::Bin;
+        type ParentType = gtk::Widget;
 
         fn class_init(klass: &mut Self::Class) {
             Self::bind_template(klass);
@@ -78,16 +77,20 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
         }
+
+        fn dispose(&self, obj: &Self::Type) {
+            while let Some(child) = obj.first_child() {
+                child.unparent();
+            }
+        }
     }
 
     impl WidgetImpl for OtherRow {}
-    impl BinImpl for OtherRow {}
 }
 
 glib::wrapper! {
     pub struct OtherRow(ObjectSubclass<imp::OtherRow>)
-        @extends gtk::Widget, adw::Bin,
-        @implements gtk::Accessible;
+        @extends gtk::Widget;
 }
 
 impl OtherRow {

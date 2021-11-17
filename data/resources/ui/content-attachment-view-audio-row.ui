@@ -1,63 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <template class="NwtyContentAttachmentViewAudioRow" parent="AdwBin">
-    <property name="child">
-      <object class="GtkBox">
+  <template class="NwtyContentAttachmentViewAudioRow" parent="GtkWidget">
+    <property name="layout-manager">
+      <object class="GtkBoxLayout">
         <property name="orientation">vertical</property>
-        <child>
-          <object class="GtkBox">
-            <property name="spacing">6</property>
-            <child>
-              <object class="GtkLabel">
-                <property name="xalign">0</property>
-                <property name="hexpand">True</property>
-                <binding name="label">
-                  <lookup name="title">
-                    <lookup name="attachment">NwtyContentAttachmentViewAudioRow</lookup>
-                  </lookup>
-                </binding>
-              </object>
-            </child>
-            <child>
-              <object class="GtkButton" id="playback_button">
-                <property name="action-name">audio-row.toggle-playback</property>
-                <property name="valign">center</property>
-                <style>
-                  <class name="flat"/>
-                </style>
-              </object>
-            </child>
-          </object>
-        </child>
-        <child>
-          <object class="GtkBox">
-            <child>
-              <object class="GtkScale" id="playback_position_scale">
-                <property name="hexpand">True</property>
-                <property name="adjustment">
-                  <object class="GtkAdjustment">
-                    <property name="upper">100</property>
-                    <property name="value">0</property>
-                    <property name="step-increment">1</property>
-                    <property name="page-increment">10</property>
-                  </object>
-                </property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkLabel" id="playback_duration_label">
-                <style>
-                  <class name="content-attachment-view-audio-row-position"/>
-                  <class name="caption"/>
-                </style>
-              </object>
-            </child>
-          </object>
-        </child>
       </object>
     </property>
     <style>
       <class name="content-attachment-view-audio-row"/>
     </style>
+    <child>
+      <object class="GtkBox">
+        <property name="spacing">6</property>
+        <child>
+          <object class="GtkLabel">
+            <property name="xalign">0</property>
+            <property name="hexpand">True</property>
+            <binding name="label">
+              <lookup name="title">
+                <lookup name="attachment">NwtyContentAttachmentViewAudioRow</lookup>
+              </lookup>
+            </binding>
+          </object>
+        </child>
+        <child>
+          <object class="GtkButton" id="playback_button">
+            <property name="action-name">audio-row.toggle-playback</property>
+            <property name="valign">center</property>
+            <style>
+              <class name="flat"/>
+            </style>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkBox">
+        <child>
+          <object class="GtkScale" id="playback_position_scale">
+            <property name="hexpand">True</property>
+            <property name="adjustment">
+              <object class="GtkAdjustment">
+                <property name="upper">100</property>
+                <property name="value">0</property>
+                <property name="step-increment">1</property>
+                <property name="page-increment">10</property>
+              </object>
+            </property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="playback_duration_label">
+            <style>
+              <class name="content-attachment-view-audio-row-position"/>
+              <class name="caption"/>
+            </style>
+          </object>
+        </child>
+      </object>
+    </child>
   </template>
 </interface>

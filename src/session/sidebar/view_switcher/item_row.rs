@@ -1,4 +1,4 @@
-use adw::{prelude::*, subclass::prelude::BinImpl};
+use adw::prelude::*;
 use gtk::{glib, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::{Cell, RefCell};
@@ -35,7 +35,7 @@ mod imp {
     impl ObjectSubclass for ItemRow {
         const NAME: &'static str = "NwtySidebarViewSwitcherItemRow";
         type Type = super::ItemRow;
-        type ParentType = adw::Bin;
+        type ParentType = gtk::Widget;
 
         fn class_init(klass: &mut Self::Class) {
             Self::bind_template(klass);
@@ -110,16 +110,20 @@ mod imp {
                 _ => unimplemented!(),
             }
         }
+
+        fn dispose(&self, obj: &Self::Type) {
+            while let Some(child) = obj.first_child() {
+                child.unparent();
+            }
+        }
     }
 
     impl WidgetImpl for ItemRow {}
-    impl BinImpl for ItemRow {}
 }
 
 glib::wrapper! {
     pub struct ItemRow(ObjectSubclass<imp::ItemRow>)
-        @extends gtk::Widget, adw::Bin,
-        @implements gtk::Accessible;
+        @extends gtk::Widget;
 }
 
 impl ItemRow {

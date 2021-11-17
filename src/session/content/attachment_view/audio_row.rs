@@ -1,6 +1,6 @@
-use adw::{prelude::*, subclass::prelude::*};
 use gtk::{
     glib::{self, clone},
+    prelude::*,
     subclass::prelude::*,
     CompositeTemplate,
 };
@@ -38,7 +38,7 @@ mod imp {
     impl ObjectSubclass for AudioRow {
         const NAME: &'static str = "NwtyContentAttachmentViewAudioRow";
         type Type = super::AudioRow;
-        type ParentType = adw::Bin;
+        type ParentType = gtk::Widget;
 
         fn class_init(klass: &mut Self::Class) {
             Self::bind_template(klass);
@@ -105,16 +105,20 @@ mod imp {
             obj.setup_timer();
             obj.on_audio_player_state_changed(PlaybackState::default());
         }
+
+        fn dispose(&self, obj: &Self::Type) {
+            while let Some(child) = obj.first_child() {
+                child.unparent();
+            }
+        }
     }
 
     impl WidgetImpl for AudioRow {}
-    impl BinImpl for AudioRow {}
 }
 
 glib::wrapper! {
     pub struct AudioRow(ObjectSubclass<imp::AudioRow>)
-        @extends gtk::Widget, adw::Bin,
-        @implements gtk::Accessible;
+        @extends gtk::Widget;
 }
 
 impl AudioRow {

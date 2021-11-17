@@ -31,21 +31,21 @@
       <class name="sidebar-view-switcher-item-row-edit-tags"/>
     </style>
   </object>
-  <template class="NwtySidebarViewSwitcherItemRow" parent="AdwBin">
-    <property name="child">
-      <object class="GtkBox">
+  <template class="NwtySidebarViewSwitcherItemRow" parent="GtkWidget">
+    <property name="layout-manager">
+      <object class="GtkBoxLayout">
         <property name="spacing">6</property>
-        <child>
-          <object class="AdwBin" id="bin">
-            <property name="hexpand">True</property>
-          </object>
-        </child>
-        <child>
-          <object class="GtkImage" id="select_icon">
-            <property name="icon-name">object-select-symbolic</property>
-          </object>
-        </child>
       </object>
     </property>
+    <child>
+      <object class="AdwBin" id="bin">
+        <property name="hexpand">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImage" id="select_icon">
+        <property name="icon-name">object-select-symbolic</property>
+      </object>
+    </child>
   </template>
 </interface>

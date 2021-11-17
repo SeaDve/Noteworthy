@@ -1,4 +1,4 @@
-use adw::{prelude::*, subclass::prelude::*};
+use adw::prelude::*;
 use gtk::{
     glib::{self, subclass::Signal},
     subclass::prelude::*,
@@ -27,7 +27,7 @@ mod imp {
     impl ObjectSubclass for Row {
         const NAME: &'static str = "NwtyContentAttachmentViewRow";
         type Type = super::Row;
-        type ParentType = adw::Bin;
+        type ParentType = gtk::Widget;
 
         fn class_init(klass: &mut Self::Class) {
             Self::bind_template(klass);
@@ -90,16 +90,20 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
         }
+
+        fn dispose(&self, obj: &Self::Type) {
+            while let Some(child) = obj.first_child() {
+                child.unparent();
+            }
+        }
     }
 
     impl WidgetImpl for Row {}
-    impl BinImpl for Row {}
 }
 
 glib::wrapper! {
     pub struct Row(ObjectSubclass<imp::Row>)
-        @extends gtk::Widget, adw::Bin,
-        @implements gtk::Accessible;
+        @extends gtk::Widget;
 }
 
 impl Row {

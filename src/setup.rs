@@ -1,4 +1,4 @@
-use adw::{prelude::*, subclass::prelude::*};
+use adw::prelude::*;
 use gtk::{
     gio,
     glib::{self, clone, subclass::Signal},
@@ -68,7 +68,7 @@ mod imp {
     impl ObjectSubclass for Setup {
         const NAME: &'static str = "NwtySetup";
         type Type = super::Setup;
-        type ParentType = adw::Bin;
+        type ParentType = gtk::Widget;
 
         fn class_init(klass: &mut Self::Class) {
             Self::bind_template(klass);
@@ -154,15 +154,20 @@ mod imp {
                     }
                 }));
         }
+
+        fn dispose(&self, obj: &Self::Type) {
+            while let Some(child) = obj.first_child() {
+                child.unparent();
+            }
+        }
     }
 
     impl WidgetImpl for Setup {}
-    impl BinImpl for Setup {}
 }
 
 glib::wrapper! {
     pub struct Setup(ObjectSubclass<imp::Setup>)
-        @extends gtk::Widget, adw::Bin;
+        @extends gtk::Widget;
 }
 
 impl Setup {
