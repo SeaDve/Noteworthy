@@ -1,4 +1,4 @@
-use gtk::{gio, prelude::*};
+use std::path::Path;
 
 #[derive(Debug, PartialEq)]
 pub enum AttachmentKind {
@@ -8,10 +8,8 @@ pub enum AttachmentKind {
 }
 
 impl AttachmentKind {
-    pub fn for_file(file: &gio::File) -> Self {
-        // TODO what if the file has no extension
-
-        let path = file.path().unwrap();
+    pub fn for_path(path: &Path) -> Self {
+        // TODO what if the path has no extension
         let extension = path
             .extension()
             .unwrap()

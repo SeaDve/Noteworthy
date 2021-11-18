@@ -118,7 +118,8 @@ impl Attachment {
     }
 
     pub fn kind(&self) -> AttachmentKind {
-        AttachmentKind::for_file(&self.file())
+        let path = self.file().path().unwrap();
+        AttachmentKind::for_path(&path)
     }
 
     pub fn file(&self) -> gio::File {
