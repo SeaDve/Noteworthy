@@ -104,7 +104,6 @@ impl CameraButton {
             .connect_on_exit(clone!(@weak self as obj => move |camera| {
                 let main_window = Application::default().main_window();
                 main_window.switch_to_session_page();
-                main_window.remove_page(camera);
 
                 if let Err(err) = camera.stop() {
                     log::warn!("Failed to stop camera: {:?}", err);
@@ -118,7 +117,11 @@ impl CameraButton {
         // TODO On the second add of camera page, there will be critical and the actions will be
         // disabled. See https://gitlab.gnome.org/GNOME/gtk/-/issues/4421
         let main_window = Application::default().main_window();
-        main_window.add_page(&imp.camera);
+
+        if !main_window.has_page(&imp.camera) {
+            main_window.add_page(&imp.camera);
+        }
+
         main_window.set_visible_page(&imp.camera);
 
         if let Err(err) = imp.camera.start() {

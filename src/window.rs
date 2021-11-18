@@ -120,6 +120,11 @@ impl Window {
         imp.main_stack.add_child(page);
     }
 
+    pub fn has_page(&self, page: &impl IsA<gtk::Widget>) -> bool {
+        let imp = imp::Window::from_instance(self);
+        imp.main_stack.page(page).is_some()
+    }
+
     pub fn remove_page(&self, page: &impl IsA<gtk::Widget>) {
         let imp = imp::Window::from_instance(self);
         imp.main_stack.remove(page);
