@@ -133,6 +133,14 @@ impl AttachmentView {
         imp.selection.model().map(|model| model.downcast().unwrap())
     }
 
+    fn append_attachment(&self, attachment: Attachment) {
+        let attachment_list = self
+            .attachment_list()
+            .expect("No current attachment list on attachment view");
+
+        attachment_list.append(attachment).unwrap();
+    }
+
     fn setup_list_view(&self) {
         let factory = gtk::SignalListItemFactory::new();
 
@@ -194,32 +202,20 @@ impl AttachmentView {
 
         imp.audio_recorder_button
             .connect_record_done(clone!(@weak self as obj => move |_, file| {
-                let attachment_list = obj
-                    .attachment_list()
-                    .expect("No current attachment list on attachment view");
-
                 let new_attachment = Attachment::new(file, &DateTime::now());
-                attachment_list.append(new_attachment).unwrap();
+                obj.append_attachment(new_attachment);
             }));
 
         imp.camera_button
             .connect_capture_done(clone!(@weak self as obj => move |_, file| {
-                let attachment_list = obj
-                    .attachment_list()
-                    .expect("No current attachment list on attachment view");
-
                 let new_attachment = Attachment::new(file, &DateTime::now());
-                attachment_list.append(new_attachment).unwrap();
+                obj.append_attachment(new_attachment);
             }));
 
         imp.file_importer_button
             .connect_new_import(clone!(@weak self as obj => move |_, file| {
-                let attachment_list = obj
-                    .attachment_list()
-                    .expect("No current attachment list on attachment view");
-
                 let new_attachment = Attachment::new(file, &DateTime::now());
-                attachment_list.append(new_attachment).unwrap();
+                obj.append_attachment(new_attachment);
             }));
     }
 }
