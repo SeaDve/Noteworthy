@@ -112,6 +112,8 @@ impl CameraButton {
 
                 if let Err(err) = camera.stop() {
                     log::warn!("Failed to stop camera: {:?}", err);
+                } else {
+                    log::info!("Successfully stopped camera");
                 }
             }));
     }
@@ -129,6 +131,8 @@ impl CameraButton {
 
         if let Err(err) = imp.camera.start() {
             log::error!("Failed to start camera: {:?}", err);
+        } else {
+            log::info!("Successfully started camera");
         }
     }
 }

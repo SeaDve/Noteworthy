@@ -145,11 +145,17 @@ impl Camera {
         )
         .unwrap();
 
-        pipeline
+        let res = pipeline
             .set_state(gst::State::Playing)
-            .context("Failed to set pipeline state to Playing")?;
+            .context("Failed to set pipeline state to Playing");
 
-        Ok(())
+        if let Err(err) = res {
+            self.disable_capture();
+            Err(err)
+        } else {
+            self.enable_capture();
+            Ok(())
+        }
     }
 
     pub fn stop(&self) -> anyhow::Result<()> {
@@ -180,6 +186,17 @@ impl Camera {
 
         let bounds = graphene::Rect::new(0.0, 0.0, width as f32, height as f32);
         renderer.render_texture(&node, Some(&bounds)).unwrap()
+    }
+
+    fn enable_capture(&self) {
+        self.action_set_enabled("camera.capture", true);
+    }
+
+    fn disable_capture(&self) {
+        self.action_set_enabled("camera.capture", false);
+
+        // TODO Remove picture's paintable and add an AdwToast about error on connecting to camera
+        // Add a button too to retry reconnecting to the camera
     }
 
     fn setup_pipeline(&self) -> anyhow::Result<()> {
@@ -242,6 +259,7 @@ impl Camera {
                 );
 
                 self.stop().unwrap();
+                self.disable_capture();
 
                 Continue(false)
             }
