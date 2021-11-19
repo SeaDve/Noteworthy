@@ -105,6 +105,11 @@ impl CameraButton {
                 let main_window = Application::default().main_window();
                 main_window.switch_to_session_page();
 
+                // TODO Remove the page on exit.
+                // The blocker is when you add, remove, then add again the same widget,
+                // there will be critical errors and the actions will be disabled.
+                // See https://gitlab.gnome.org/GNOME/gtk/-/issues/4421
+
                 if let Err(err) = camera.stop() {
                     log::warn!("Failed to stop camera: {:?}", err);
                 }
@@ -114,8 +119,6 @@ impl CameraButton {
     fn on_launch(&self) {
         let imp = imp::CameraButton::from_instance(self);
 
-        // TODO On the second add of camera page, there will be critical and the actions will be
-        // disabled. See https://gitlab.gnome.org/GNOME/gtk/-/issues/4421
         let main_window = Application::default().main_window();
 
         if !main_window.has_page(&imp.camera) {
