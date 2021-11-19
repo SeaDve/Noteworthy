@@ -48,18 +48,7 @@ mod imp {
             Self::bind_template(klass);
 
             klass.install_action("note-tag-dialog.create-tag", None, move |obj, _, _| {
-                let imp = imp::NoteTagDialog::from_instance(obj);
-                let tag_name = imp.search_entry.text();
-                let new_tag = Tag::new(&tag_name);
-
-                for tag_list in obj.other_tag_lists().iter() {
-                    tag_list.append(new_tag.clone()).unwrap();
-                }
-
-                obj.tag_list().append(new_tag).unwrap();
-                // TODO new_tag should be added on top
-
-                imp.search_entry.set_text("");
+                obj.on_create_tag();
             });
         }
 
@@ -124,28 +113,8 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
-            let factory = gtk::SignalListItemFactory::new();
-            factory.connect_setup(clone!(@weak obj => move |_, list_item| {
-                let tag_row = Row::new(&obj.other_tag_lists());
-
-                list_item
-                    .property_expression("item")
-                    .bind(&tag_row, "tag", None::<&gtk::Widget>);
-
-                list_item.set_child(Some(&tag_row));
-            }));
-            self.list_view.set_factory(Some(&factory));
-
-            self.search_entry.connect_text_notify(
-                clone!(@weak obj => move |search_entry| {
-                    let search_entry_text = search_entry.text();
-                    let does_contain_tag = obj.tag_list().contains_with_name(&search_entry_text);
-                    let is_search_entry_empty = search_entry_text.is_empty();
-                    let imp = imp::NoteTagDialog::from_instance(&obj);
-                    imp.create_tag_button_revealer.set_reveal_child(!does_contain_tag && !is_search_entry_empty);
-                    imp.create_tag_button_label.set_label(&gettext!("Create “{}”", search_entry_text));
-                }),
-            );
+            obj.setup_list_view();
+            obj.setup_signals();
         }
     }
 
@@ -205,5 +174,56 @@ impl NoteTagDialog {
         imp.list_view.set_model(Some(&selection_model));
 
         imp.tag_list.set(tag_list).unwrap();
+    }
+
+    fn on_create_tag(&self) {
+        let imp = imp::NoteTagDialog::from_instance(self);
+        let tag_name = imp.search_entry.text();
+        let new_tag = Tag::new(&tag_name);
+
+        for tag_list in self.other_tag_lists().iter() {
+            tag_list.append(new_tag.clone()).unwrap();
+        }
+
+        self.tag_list().append(new_tag).unwrap();
+        // TODO new_tag should be added on top
+
+        imp.search_entry.set_text("");
+    }
+
+    fn on_search_entry_text_notify(&self, tag_name: &str) {
+        let does_contain_tag = self.tag_list().contains_with_name(&tag_name);
+
+        let imp = imp::NoteTagDialog::from_instance(self);
+        imp.create_tag_button_revealer
+            .set_reveal_child(!does_contain_tag && !tag_name.is_empty());
+        imp.create_tag_button_label
+            .set_label(&gettext!("Create “{}”", tag_name));
+    }
+
+    fn setup_list_view(&self) {
+        let imp = imp::NoteTagDialog::from_instance(self);
+
+        let factory = gtk::SignalListItemFactory::new();
+        factory.connect_setup(clone!(@weak self as obj => move |_, list_item| {
+            let tag_row = Row::new(&obj.other_tag_lists());
+
+            list_item
+                .property_expression("item")
+                .bind(&tag_row, "tag", None::<&gtk::Widget>);
+
+            list_item.set_child(Some(&tag_row));
+        }));
+
+        imp.list_view.set_factory(Some(&factory));
+    }
+
+    fn setup_signals(&self) {
+        let imp = imp::NoteTagDialog::from_instance(self);
+
+        imp.search_entry
+            .connect_text_notify(clone!(@weak self as obj => move |search_entry| {
+                obj.on_search_entry_text_notify(&search_entry.text());
+            }));
     }
 }

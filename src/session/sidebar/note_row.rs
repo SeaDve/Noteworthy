@@ -295,14 +295,13 @@ impl NoteRow {
         let imp = imp::NoteRow::from_instance(self);
         imp.check_button
             .connect_active_notify(clone!(@weak self as obj => move |check_button| {
-                let is_active = check_button.is_active();
-                let model = obj.sidebar().selection_model();
-
                 if obj.selection_mode() != SelectionMode::Multi {
                     return;
                 }
 
-                if is_active {
+                let model = obj.sidebar().selection_model();
+
+                if check_button.is_active() {
                     model.select_item(obj.position(), false);
                 } else {
                     model.unselect_item(obj.position());
