@@ -182,8 +182,6 @@ impl AudioPlayer {
     }
 
     pub fn seek(&self, position: Duration) {
-        use std::convert::TryInto;
-
         let position: gst::ClockTime = position
             .try_into()
             .expect("Position in nanos cannot be above std::u64::MAX");

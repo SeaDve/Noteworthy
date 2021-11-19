@@ -192,7 +192,7 @@ impl NoteTagDialog {
     }
 
     fn on_search_entry_text_notify(&self, tag_name: &str) {
-        let does_contain_tag = self.tag_list().contains_with_name(&tag_name);
+        let does_contain_tag = self.tag_list().contains_with_name(tag_name);
 
         let imp = imp::NoteTagDialog::from_instance(self);
         imp.create_tag_button_revealer
