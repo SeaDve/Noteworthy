@@ -298,6 +298,7 @@ impl AudioPlayer {
 
         let state = match new_state {
             gst::State::Null => PlaybackState::Stopped,
+            gst::State::Ready => PlaybackState::Loading,
             gst::State::Paused => PlaybackState::Paused,
             gst::State::Playing => PlaybackState::Playing,
             _ => return,
