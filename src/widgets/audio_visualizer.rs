@@ -4,9 +4,7 @@
 
 use gtk::{gdk, glib, graphene, prelude::*, subclass::prelude::*};
 
-use std::cell::RefCell;
-
-use std::collections::VecDeque;
+use std::{cell::RefCell, collections::VecDeque};
 
 const GUTTER: f32 = 6.0;
 const WIDTH: f32 = 2.0;
@@ -52,20 +50,19 @@ impl AudioVisualizer {
     }
 
     pub fn push_peak(&self, peak: f32) {
-        let peaks_len = self.peaks().len() as i32;
+        let mut peaks = self.peaks_mut();
 
-        if peaks_len > self.allocated_width() / (2 * GUTTER as i32) {
-            self.peaks_mut().pop_front();
+        if peaks.len() as i32 > self.allocated_width() / (2 * GUTTER as i32) {
+            peaks.pop_front();
         }
 
-        self.peaks_mut().push_back(peak);
+        peaks.push_back(peak);
 
         self.queue_draw();
     }
 
     pub fn clear_peaks(&self) {
-        let imp = imp::AudioVisualizer::from_instance(self);
-        imp.peaks.borrow_mut().clear();
+        self.peaks_mut().clear();
 
         self.queue_draw();
     }
