@@ -2,6 +2,8 @@ use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::{cell::RefCell, path::PathBuf};
 
+use once_cell::unsync::OnceCell;
+
 use super::attachment_kind::AttachmentKind;
 use crate::model::DateTime;
 
@@ -31,6 +33,7 @@ mod imp {
     #[derive(Debug, Default)]
     pub struct Attachment {
         pub inner: RefCell<AttachmentInner>,
+        pub kind: OnceCell<AttachmentKind>,
     }
 
     #[glib::object_subclass]
@@ -118,8 +121,14 @@ impl Attachment {
     }
 
     pub fn kind(&self) -> AttachmentKind {
-        let path = self.file().path().unwrap();
-        AttachmentKind::for_path(&path)
+        let imp = imp::Attachment::from_instance(self);
+
+        let kind = imp.kind.get_or_init(|| {
+            let path = self.file().path().unwrap();
+            AttachmentKind::for_path(&path)
+        });
+
+        *kind
     }
 
     pub fn file(&self) -> gio::File {
