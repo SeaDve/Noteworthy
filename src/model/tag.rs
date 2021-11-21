@@ -72,9 +72,9 @@ impl Tag {
         glib::Object::new::<Self>(&[("name", &name.to_string())]).expect("Failed to create Tag.")
     }
 
-    // Must not call this directly when trying to edit the name of a tag in a tag_list. Use
-    // TagList::rename_tag instead as it contains sanity checks and other handling.
-    pub fn set_name(&self, name: &str) {
+    /// Must not be called directly if a tag is in a TagList or NoteTagList.
+    /// Use TagList::rename_tag instead as it contains sanity checks and other handling.
+    pub(super) fn set_name(&self, name: &str) {
         self.set_property("name", name).unwrap();
     }
 
