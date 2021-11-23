@@ -212,49 +212,17 @@ impl Sidebar {
     pub fn set_note_list(&self, note_list: NoteList) {
         let imp = imp::Sidebar::from_instance(self);
 
-        let sorter = gtk::CustomSorter::new(move |obj1, obj2| {
-            let note_1 = obj1.downcast_ref::<Note>().unwrap().metadata();
-            let note_2 = obj2.downcast_ref::<Note>().unwrap().metadata();
+        let filter = self.note_filter();
+        let filter_model = gtk::FilterListModel::new(Some(&note_list), Some(&filter));
 
-            // Sort is pinned first before classifying by last modified
-            if note_1.is_pinned() == note_2.is_pinned() {
-                note_2.last_modified().cmp(&note_1.last_modified()).into()
-            } else if note_1.is_pinned() && !note_2.is_pinned() {
-                gtk::Ordering::Smaller
-            } else {
-                gtk::Ordering::Larger
-            }
-        });
-        let sorter_model = gtk::SortListModel::new(Some(&note_list), Some(&sorter));
-
-        let filter_expression = gtk::ClosureExpression::new(
-            clone!(@weak self as obj => @default-return true, move |value| {
-                let note = value[0].get::<Note>().unwrap().metadata();
-                let imp = imp::Sidebar::from_instance(&obj);
-
-                match imp.view_switcher.selected_type() {
-                    ItemKind::AllNotes => !note.is_trashed(),
-                    ItemKind::Trash => note.is_trashed(),
-                    ItemKind::Tag(ref tag) => {
-                        note.tag_list().contains(tag) && !note.is_trashed()
-                    }
-                    ItemKind::Separator | ItemKind::Category | ItemKind::EditTags => {
-                        panic!("ItemKind of type Separator, Category, or EditTags cannot be selected.");
-                    }
-                }
-            }),
-            &[],
-        );
-        let filter = gtk::BoolFilterBuilder::new()
-            .expression(&filter_expression)
-            .build();
-        let filter_model = gtk::FilterListModel::new(Some(&sorter_model), Some(&filter));
+        let sorter = self.note_sorter();
+        let sorter_model = gtk::SortListModel::new(Some(&filter_model), Some(&sorter));
 
         imp.view_switcher.connect_selected_type_notify(move |_| {
             filter.changed(gtk::FilterChange::Different);
         });
 
-        let selection_model = Selection::new(Some(&filter_model));
+        let selection_model = Selection::new(Some(&sorter_model));
         self.bind_property("selected-note", &selection_model, "selected-item")
             .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
             .build();
@@ -282,6 +250,7 @@ impl Sidebar {
                 log::info!("Selection items changed at {}; {} removed, {} added", pos, removed, added);
             }),
         );
+
         imp.list_view.set_model(Some(&selection_model));
 
         self.set_selection_mode(SelectionMode::Single);
@@ -365,6 +334,48 @@ impl Sidebar {
         }
 
         selected_notes
+    }
+
+    fn note_filter(&self) -> gtk::BoolFilter {
+        let filter_expression = gtk::ClosureExpression::new(
+            clone!(@weak self as obj => @default-return true, move |value| {
+                let note = value[0].get::<Note>().unwrap().metadata();
+
+                let imp = imp::Sidebar::from_instance(&obj);
+
+                match imp.view_switcher.selected_type() {
+                    ItemKind::AllNotes => !note.is_trashed(),
+                    ItemKind::Trash => note.is_trashed(),
+                    ItemKind::Tag(ref tag) => {
+                        note.tag_list().contains(tag) && !note.is_trashed()
+                    }
+                    ItemKind::Separator | ItemKind::Category | ItemKind::EditTags => {
+                        panic!("ItemKind of type Separator, Category, or EditTags cannot be selected.");
+                    }
+                }
+            }),
+            &[],
+        );
+
+        gtk::BoolFilterBuilder::new()
+            .expression(&filter_expression)
+            .build()
+    }
+
+    fn note_sorter(&self) -> gtk::CustomSorter {
+        gtk::CustomSorter::new(move |obj1, obj2| {
+            let note_1 = obj1.downcast_ref::<Note>().unwrap().metadata();
+            let note_2 = obj2.downcast_ref::<Note>().unwrap().metadata();
+
+            // Sort is pinned first before classifying by last modified
+            if note_1.is_pinned() == note_2.is_pinned() {
+                note_2.last_modified().cmp(&note_1.last_modified()).into()
+            } else if note_1.is_pinned() && !note_2.is_pinned() {
+                gtk::Ordering::Smaller
+            } else {
+                gtk::Ordering::Larger
+            }
+        })
     }
 
     fn update_action_bar_sensitivity(&self, n_selected_items: u64) {
