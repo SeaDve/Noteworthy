@@ -1,30 +1,9 @@
 use adw::subclass::prelude::*;
-use gtk::{
-    gio,
-    glib::{self, GBoxed},
-    prelude::*,
-};
+use gtk::{gio, glib, prelude::*};
 
 use std::cell::RefCell;
 
-use super::Tag;
-
-#[derive(Debug, Clone, GBoxed, PartialEq)]
-#[gboxed(type_name = "NwtySidebarViewSwitcherType")]
-pub enum ItemKind {
-    Separator,
-    Category,
-    AllNotes,
-    EditTags,
-    Tag(Tag),
-    Trash,
-}
-
-impl Default for ItemKind {
-    fn default() -> Self {
-        Self::AllNotes
-    }
-}
+use super::ItemKind;
 
 mod imp {
     use super::*;

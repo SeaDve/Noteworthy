@@ -1,4 +1,5 @@
 mod item;
+mod item_kind;
 mod item_list;
 mod item_row;
 
@@ -7,7 +8,7 @@ use gtk::{gio, glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::RefCell;
 
-pub use self::item::ItemKind;
+pub use self::item_kind::ItemKind;
 use self::{item::Item, item_list::ItemList, item_row::ItemRow};
 use crate::{
     model::{Tag, TagList},
