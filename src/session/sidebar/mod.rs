@@ -350,7 +350,7 @@ impl Sidebar {
                         note.tag_list().contains(tag) && !note.is_trashed()
                     }
                     ItemKind::Separator | ItemKind::Category | ItemKind::EditTags => {
-                        panic!("ItemKind of type Separator, Category, or EditTags cannot be selected.");
+                        unreachable!("ItemKind of type Separator, Category, or EditTags cannot be selected.");
                     }
                 }
             }),

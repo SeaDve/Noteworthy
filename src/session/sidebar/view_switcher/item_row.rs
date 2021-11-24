@@ -207,7 +207,7 @@ impl ItemRow {
                 self.set_margin_start(6);
                 self.set_margin_end(6);
             } else {
-                panic!("Wrong row item: {:?}", item);
+                unreachable!("Invalid row item: {:?}", item);
             }
         }
 
