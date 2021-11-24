@@ -4,7 +4,7 @@ mod item_list;
 mod item_row;
 
 use adw::subclass::prelude::*;
-use gtk::{gio, glib, prelude::*, subclass::prelude::*, CompositeTemplate};
+use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::RefCell;
 
@@ -148,11 +148,7 @@ impl ViewSwitcher {
                         if let Some(item) = i.downcast_ref::<Item>() {
                             item.clone()
                         } else if let Some(tag) = i.downcast_ref::<Tag>() {
-                            let item = Item::new(
-                                ItemKind::Tag(tag.clone()),
-                                None,
-                                None::<&gio::ListModel>,
-                            );
+                            let item = Item::builder(ItemKind::Tag(tag.clone())).build();
                             tag.bind_property("name", &item, "display-name")
                                 .flags(glib::BindingFlags::SYNC_CREATE)
                                 .build();

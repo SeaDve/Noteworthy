@@ -94,17 +94,8 @@ glib::wrapper! {
 }
 
 impl Item {
-    pub fn new(
-        kind: ItemKind,
-        display_name: Option<&str>,
-        model: Option<&impl IsA<gio::ListModel>>,
-    ) -> Self {
-        glib::Object::new(&[
-            ("kind", &kind),
-            ("display-name", &display_name),
-            ("model", &model),
-        ])
-        .expect("Failed to create Item.")
+    pub fn builder(kind: ItemKind) -> ItemBuilder {
+        ItemBuilder::new(kind)
     }
 
     pub fn kind(&self) -> ItemKind {
@@ -117,5 +108,45 @@ impl Item {
 
     pub fn model(&self) -> Option<gio::ListModel> {
         self.property("model").unwrap().get().unwrap()
+    }
+}
+
+pub struct ItemBuilder {
+    kind: ItemKind,
+    display_name: Option<String>,
+    model: Option<gio::ListModel>,
+}
+
+impl ItemBuilder {
+    pub fn new(kind: ItemKind) -> Self {
+        Self {
+            kind,
+            display_name: None,
+            model: None,
+        }
+    }
+
+    pub fn display_name(mut self, display_name: &str) -> Self {
+        self.display_name = Some(display_name.to_string());
+        self
+    }
+
+    pub fn model(mut self, model: &impl IsA<gio::ListModel>) -> Self {
+        self.model = Some(model.clone().upcast());
+        self
+    }
+
+    pub fn build(self) -> Item {
+        let mut properties: Vec<(&str, &dyn ToValue)> = vec![("kind", &self.kind)];
+
+        if let Some(ref display_name) = self.display_name {
+            properties.push(("display-name", display_name));
+        }
+
+        if let Some(ref model) = self.model {
+            properties.push(("model", model));
+        }
+
+        glib::Object::new::<Item>(&properties).expect("Failed to create an instance of Item")
     }
 }

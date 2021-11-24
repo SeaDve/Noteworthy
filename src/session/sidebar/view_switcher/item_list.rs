@@ -86,22 +86,22 @@ impl ItemList {
         let imp = imp::ItemList::from_instance(self);
 
         let list = [
-            Item::new(
-                ItemKind::AllNotes,
-                Some(&gettext("All Notes")),
-                None::<&gio::ListModel>,
-            )
-            .upcast(),
-            Item::new(ItemKind::Separator, None, None::<&gio::ListModel>).upcast(),
-            Item::new(ItemKind::Category, Some(&gettext("Tags")), Some(&tag_list)).upcast(),
-            Item::new(ItemKind::EditTags, None, None::<&gio::ListModel>).upcast(),
-            Item::new(ItemKind::Separator, None, None::<&gio::ListModel>).upcast(),
-            Item::new(
-                ItemKind::Trash,
-                Some(&gettext("Trash")),
-                None::<&gio::ListModel>,
-            )
-            .upcast(),
+            Item::builder(ItemKind::AllNotes)
+                .display_name(&gettext("All Notes"))
+                .build()
+                .upcast(),
+            Item::builder(ItemKind::Separator).build().upcast(),
+            Item::builder(ItemKind::Category)
+                .display_name(&gettext("Tags"))
+                .model(&tag_list)
+                .build()
+                .upcast(),
+            Item::builder(ItemKind::EditTags).build().upcast(),
+            Item::builder(ItemKind::Separator).build().upcast(),
+            Item::builder(ItemKind::Trash)
+                .display_name(&gettext("Trash"))
+                .build()
+                .upcast(),
         ];
         let len = list.len() as u32;
 
