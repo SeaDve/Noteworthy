@@ -1,15 +1,15 @@
 mod item;
 mod item_kind;
-mod item_list;
 mod item_row;
 
 use adw::subclass::prelude::*;
-use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
+use gettextrs::gettext;
+use gtk::{gio, glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::RefCell;
 
 pub use self::item_kind::ItemKind;
-use self::{item::Item, item_list::ItemList, item_row::ItemRow};
+use self::{item::Item, item_row::ItemRow};
 use crate::{
     model::{Tag, TagList},
     utils::{ChainExpr, PropExpr},
@@ -131,7 +131,27 @@ impl ViewSwitcher {
     pub fn set_tag_list(&self, tag_list: TagList) {
         let imp = imp::ViewSwitcher::from_instance(self);
 
-        let item_list = ItemList::new(&tag_list);
+        let items = &[
+            Item::builder(ItemKind::AllNotes)
+                .display_name(&gettext("All Notes"))
+                .build()
+                .upcast(),
+            Item::builder(ItemKind::Separator).build().upcast(),
+            Item::builder(ItemKind::Category)
+                .display_name(&gettext("Tags"))
+                .model(&tag_list)
+                .build()
+                .upcast(),
+            Item::builder(ItemKind::EditTags).build().upcast(),
+            Item::builder(ItemKind::Separator).build().upcast(),
+            Item::builder(ItemKind::Trash)
+                .display_name(&gettext("Trash"))
+                .build()
+                .upcast(),
+        ];
+        let item_list = gio::ListStore::new(Item::static_type());
+        item_list.splice(0, 0, items);
+
         let tree_model = gtk::TreeListModel::new(&item_list, false, true, |item| {
             item.downcast_ref::<Item>().and_then(|item| item.model())
         });
