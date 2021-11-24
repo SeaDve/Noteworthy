@@ -26,7 +26,7 @@ mod imp {
         #[template_child]
         pub list_view: TemplateChild<gtk::ListView>,
 
-        pub selected_item: RefCell<Option<Item>>,
+        pub selected_item: RefCell<Option<glib::Object>>,
     }
 
     #[glib::object_subclass]
@@ -54,7 +54,7 @@ mod imp {
                         "selected-item",
                         "Selected-item",
                         "The selected item in popover",
-                        Item::static_type(),
+                        glib::Object::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
                     glib::ParamSpec::new_boxed(
@@ -119,8 +119,7 @@ mod imp {
 
 glib::wrapper! {
     pub struct ViewSwitcher(ObjectSubclass<imp::ViewSwitcher>)
-        @extends gtk::Widget, adw::Bin,
-        @implements gtk::Accessible;
+        @extends gtk::Widget, adw::Bin;
 }
 
 impl ViewSwitcher {
@@ -164,19 +163,6 @@ impl ViewSwitcher {
                     .get::<Option<glib::Object>>()
                     .unwrap()
                     .map(|o| o.downcast::<gtk::TreeListRow>().unwrap().item().unwrap())
-                    .map(|i| {
-                        if let Some(item) = i.downcast_ref::<Item>() {
-                            item.clone()
-                        } else if let Some(tag) = i.downcast_ref::<Tag>() {
-                            let item = Item::builder(ItemKind::Tag(tag.clone())).build();
-                            tag.bind_property("name", &item, "display-name")
-                                .flags(glib::BindingFlags::SYNC_CREATE)
-                                .build();
-                            item
-                        } else {
-                            panic!("Invalid item: {:?}", i);
-                        }
-                    })
                     .map(|i| i.to_value())
             })
             .flags(glib::BindingFlags::SYNC_CREATE)
@@ -195,28 +181,36 @@ impl ViewSwitcher {
 
     pub fn selected_type(&self) -> ItemKind {
         self.selected_item()
-            .map_or(ItemKind::AllNotes, |i| match i.kind() {
-                ItemKind::Separator | ItemKind::Category | ItemKind::EditTags => {
-                    let imp = imp::ViewSwitcher::from_instance(self);
-                    let model: gtk::SingleSelection =
-                        imp.list_view.model().unwrap().downcast().unwrap();
-                    // These three get selected when trying to delete an item that was selected.
-                    // Therefore, select the first item, AllNotes, instead. Maybe a GTK bug?
-                    model.set_selected(0);
-                    ItemKind::AllNotes
+            .map_or(ItemKind::AllNotes, |selected_item| {
+                if let Some(item) = selected_item.downcast_ref::<Item>() {
+                    match item.kind() {
+                        ItemKind::Separator | ItemKind::Category | ItemKind::EditTags => {
+                            let imp = imp::ViewSwitcher::from_instance(self);
+                            let model: gtk::SingleSelection =
+                                imp.list_view.model().unwrap().downcast().unwrap();
+                            // These three get selected when trying to delete an item that was selected.
+                            // Therefore, select the first item, AllNotes, instead. Maybe a GTK bug?
+                            model.set_selected(0);
+                            ItemKind::AllNotes
+                        }
+                        other_kind => other_kind,
+                    }
+                } else if let Some(tag) = selected_item.downcast_ref::<Tag>() {
+                    ItemKind::Tag(tag.clone())
+                } else {
+                    panic!("Invalid selected item {:?}", selected_item);
                 }
-                other_kind => other_kind,
             })
     }
 
-    fn set_selected_item(&self, selected_item: Option<Item>) {
+    fn set_selected_item(&self, selected_item: Option<glib::Object>) {
         let imp = imp::ViewSwitcher::from_instance(self);
         imp.selected_item.replace(selected_item);
         self.notify("selected-item");
         self.notify("selected-type");
     }
 
-    fn selected_item(&self) -> Option<Item> {
+    fn selected_item(&self) -> Option<glib::Object> {
         let imp = imp::ViewSwitcher::from_instance(self);
         imp.selected_item.borrow().clone()
     }
@@ -225,7 +219,19 @@ impl ViewSwitcher {
         let imp = imp::ViewSwitcher::from_instance(self);
 
         self.property_expression("selected-item")
-            .property_expression("display-name")
+            .closure_expression(|args| {
+                let selected_item: Option<glib::Object> = args[1].get().unwrap();
+
+                selected_item.map_or(String::new(), |selected_item| {
+                    if let Some(tag) = selected_item.downcast_ref::<Tag>() {
+                        tag.name()
+                    } else if let Some(item) = selected_item.downcast_ref::<Item>() {
+                        item.display_name().unwrap()
+                    } else {
+                        panic!("Invalid selected item {:?}", selected_item);
+                    }
+                })
+            })
             .bind(&imp.menu_button.get(), "label", None::<&gtk::Widget>);
     }
 
