@@ -16,8 +16,8 @@
     <file compressed="true" preprocess="xml-stripblanks">ui/content-attachment-view-picture-row.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/content-attachment-view-row.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/content-view.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">ui/content-view-tag-list-view.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">ui/content-view-tag-list-view-row.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">ui/content-view-tag-bar.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">ui/content-view-tag-bar-row.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/note-tag-dialog.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/note-tag-dialog-row.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/rounded-picture.ui</file>

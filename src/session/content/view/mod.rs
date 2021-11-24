@@ -1,4 +1,4 @@
-mod tag_list_view;
+mod tag_bar;
 
 use adw::subclass::prelude::*;
 use gettextrs::gettext;
@@ -6,7 +6,7 @@ use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::RefCell;
 
-use self::tag_list_view::TagListView;
+use self::tag_bar::TagBar;
 use crate::{
     model::{DateTime, Note},
     utils::{ChainExpr, PropExpr},
@@ -23,7 +23,7 @@ mod imp {
         #[template_child]
         pub last_modified_label: TemplateChild<gtk::Label>,
         #[template_child]
-        pub tag_list_view: TemplateChild<TagListView>,
+        pub tag_bar: TemplateChild<TagBar>,
         #[template_child]
         pub source_view: TemplateChild<sourceview::View>,
 
@@ -39,7 +39,7 @@ mod imp {
         type ParentType = adw::Bin;
 
         fn class_init(klass: &mut Self::Class) {
-            TagListView::static_type();
+            TagBar::static_type();
             Self::bind_template(klass);
         }
 

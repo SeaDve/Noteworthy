@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <template class="NwtyContentViewTagListViewRow" parent="AdwBin">
+  <template class="NwtyContentViewTagBarRow" parent="AdwBin">
     <property name="child">
       <object class="GtkLabel" id="label">
         <binding name="label">
           <lookup name="name">
-            <lookup name="tag">NwtyContentViewTagListViewRow</lookup>
+            <lookup name="tag">NwtyContentViewTagBarRow</lookup>
           </lookup>
         </binding>
         <style>

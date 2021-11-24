@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <template class="NwtyContentViewTagListView" parent="AdwBin">
+  <template class="NwtyContentViewTagBar" parent="AdwBin">
     <property name="child">
       <object class="GtkListView" id="list_view">
         <property name="orientation">horizontal</property>
@@ -11,7 +11,7 @@
 <interface>
   <template class="GtkListItem">
     <property name="child">
-      <object class="NwtyContentViewTagListViewRow">
+      <object class="NwtyContentViewTagBarRow">
         <binding name="tag">
           <lookup name="item">GtkListItem</lookup>
         </binding>
@@ -23,7 +23,7 @@
           </object>
         </property>
         <style>
-          <class name="content-view-tag-list-view"/>
+          <class name="content-view-tag-bar"/>
         </style>
       </object>
     </property>

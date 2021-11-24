@@ -10,16 +10,16 @@ mod imp {
     use super::*;
 
     #[derive(Debug, Default, CompositeTemplate)]
-    #[template(resource = "/io/github/seadve/Noteworthy/ui/content-view-tag-list-view.ui")]
-    pub struct TagListView {
+    #[template(resource = "/io/github/seadve/Noteworthy/ui/content-view-tag-bar.ui")]
+    pub struct TagBar {
         #[template_child]
         pub list_view: TemplateChild<gtk::ListView>,
     }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for TagListView {
-        const NAME: &'static str = "NwtyContentViewTagListView";
-        type Type = super::TagListView;
+    impl ObjectSubclass for TagBar {
+        const NAME: &'static str = "NwtyContentViewTagBar";
+        type Type = super::TagBar;
         type ParentType = adw::Bin;
 
         fn class_init(klass: &mut Self::Class) {
@@ -32,7 +32,7 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for TagListView {
+    impl ObjectImpl for TagBar {
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
@@ -69,23 +69,23 @@ mod imp {
         }
     }
 
-    impl WidgetImpl for TagListView {}
-    impl BinImpl for TagListView {}
+    impl WidgetImpl for TagBar {}
+    impl BinImpl for TagBar {}
 }
 
 glib::wrapper! {
-    pub struct TagListView(ObjectSubclass<imp::TagListView>)
+    pub struct TagBar(ObjectSubclass<imp::TagBar>)
         @extends gtk::Widget, adw::Bin,
         @implements gtk::Accessible;
 }
 
-impl TagListView {
+impl TagBar {
     pub fn new() -> Self {
-        glib::Object::new(&[]).expect("Failed to create TagListView")
+        glib::Object::new(&[]).expect("Failed to create TagBar")
     }
 
     pub fn set_tag_list(&self, tag_list: NoteTagList) {
-        let imp = imp::TagListView::from_instance(self);
+        let imp = imp::TagBar::from_instance(self);
 
         let selection_model = gtk::NoSelection::new(Some(&tag_list));
         imp.list_view.set_model(Some(&selection_model));

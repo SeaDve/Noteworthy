@@ -23,14 +23,14 @@
   background-color: @theme_base_color;
 }
 
-.content-view-tag-list-view row {
+.content-view-tag-bar row {
   padding-top: 0;
   padding-bottom: 0;
   padding-left: 3px;
   padding-right: 3px;
 }
 
-.content-view-tag-list-view row label {
+.content-view-tag-bar row label {
   padding-left: 6px;
   padding-right: 6px;
   border-radius: 9px;

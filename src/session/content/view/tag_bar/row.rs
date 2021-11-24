@@ -9,7 +9,7 @@ mod imp {
     use super::*;
 
     #[derive(Debug, Default, CompositeTemplate)]
-    #[template(resource = "/io/github/seadve/Noteworthy/ui/content-view-tag-list-view-row.ui")]
+    #[template(resource = "/io/github/seadve/Noteworthy/ui/content-view-tag-bar-row.ui")]
     pub struct Row {
         #[template_child]
         pub label: TemplateChild<gtk::Label>,
@@ -19,7 +19,7 @@ mod imp {
 
     #[glib::object_subclass]
     impl ObjectSubclass for Row {
-        const NAME: &'static str = "NwtyContentViewTagListViewRow";
+        const NAME: &'static str = "NwtyContentViewTagBarRow";
         type Type = super::Row;
         type ParentType = adw::Bin;
 

@@ -38,7 +38,7 @@
                       </object>
                     </child>
                     <child>
-                      <object class="NwtyContentViewTagListView" id="tag_list_view">
+                      <object class="NwtyContentViewTagBar" id="tag_bar">
                         <binding name="tag-list">
                           <lookup name="tag-list">
                             <lookup name="metadata">
