@@ -118,7 +118,18 @@
   min-height: 32px;
 }
 
+.sidebar-view-switcher-popover contents {
+  padding: 0;
+}
+
+.sidebar-view-switcher-list-view {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
 .sidebar-view-switcher-list-view row {
+  padding-left: 12px;
+  padding-right: 12px;
   min-height: 6px;
   min-width: 120px;
 }

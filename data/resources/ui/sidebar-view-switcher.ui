@@ -7,12 +7,21 @@
         <property name="popover">
           <object class="GtkPopover">
             <property name="child">
-              <object class="GtkListView" id="list_view">
-                <style>
-                  <class name="sidebar-view-switcher-list-view"/>
-                </style>
+              <object class="GtkScrolledWindow">
+                <property name="hscrollbar-policy">never</property>
+                <property name="propagate-natural-height">True</property>
+                <property name="child">
+                  <object class="GtkListView" id="list_view">
+                    <style>
+                      <class name="sidebar-view-switcher-list-view"/>
+                    </style>
+                  </object>
+                </property>
               </object>
             </property>
+            <style>
+              <class name="sidebar-view-switcher-popover"/>
+            </style>
           </object>
         </property>
       </object>

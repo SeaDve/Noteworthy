@@ -2,6 +2,7 @@
 <interface>
   <template class="NwtyContentViewTagBar" parent="AdwBin">
     <property name="child">
+      <!-- Use flowbox or something similar as this is broken when the item is >200 -->
       <object class="GtkListView" id="list_view">
         <property name="orientation">horizontal</property>
         <property name="factory">
