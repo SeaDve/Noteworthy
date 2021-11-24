@@ -88,15 +88,20 @@ impl ItemList {
         let list = [
             Item::new(
                 ItemKind::AllNotes,
-                Some(gettext("All Notes")),
-                None::<TagList>,
+                Some(&gettext("All Notes")),
+                None::<&gio::ListModel>,
             )
             .upcast(),
-            Item::new(ItemKind::Separator, None, None).upcast(),
-            Item::new(ItemKind::Category, Some(gettext("Tags")), Some(tag_list)).upcast(),
-            Item::new(ItemKind::EditTags, None, None).upcast(),
-            Item::new(ItemKind::Separator, None, None).upcast(),
-            Item::new(ItemKind::Trash, Some(gettext("Trash")), None).upcast(),
+            Item::new(ItemKind::Separator, None, None::<&gio::ListModel>).upcast(),
+            Item::new(ItemKind::Category, Some(&gettext("Tags")), Some(&tag_list)).upcast(),
+            Item::new(ItemKind::EditTags, None, None::<&gio::ListModel>).upcast(),
+            Item::new(ItemKind::Separator, None, None::<&gio::ListModel>).upcast(),
+            Item::new(
+                ItemKind::Trash,
+                Some(&gettext("Trash")),
+                None::<&gio::ListModel>,
+            )
+            .upcast(),
         ];
         let len = list.len() as u32;
 

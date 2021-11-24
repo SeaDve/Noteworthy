@@ -1,13 +1,13 @@
 use adw::subclass::prelude::*;
 use gtk::{
     gio,
-    glib::{self, clone, GBoxed},
+    glib::{self, GBoxed},
     prelude::*,
 };
 
 use std::cell::RefCell;
 
-use super::{Tag, TagList};
+use super::Tag;
 
 #[derive(Debug, Clone, GBoxed, PartialEq)]
 #[gboxed(type_name = "NwtySidebarViewSwitcherType")]
@@ -41,20 +41,9 @@ mod imp {
         const NAME: &'static str = "NwtySidebarViewSwitcherItem";
         type Type = super::Item;
         type ParentType = glib::Object;
-        type Interfaces = (gio::ListModel,);
     }
 
     impl ObjectImpl for Item {
-        fn constructed(&self, obj: &Self::Type) {
-            self.parent_constructed(obj);
-
-            if let Some(ref model) = *self.model.borrow() {
-                model.connect_items_changed(clone!(@weak obj => move |_, pos, added, removed| {
-                    obj.items_changed(pos, added, removed);
-                }));
-            }
-        }
-
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
@@ -119,29 +108,18 @@ mod imp {
             }
         }
     }
-
-    impl ListModelImpl for Item {
-        fn item_type(&self, _list_model: &Self::Type) -> glib::Type {
-            Tag::static_type()
-        }
-
-        fn n_items(&self, _list_model: &Self::Type) -> u32 {
-            self.model.borrow().as_ref().map_or(0, |l| l.n_items())
-        }
-
-        fn item(&self, _list_model: &Self::Type, position: u32) -> Option<glib::Object> {
-            self.model.borrow().as_ref().and_then(|l| l.item(position))
-        }
-    }
 }
 
 glib::wrapper! {
-    pub struct Item(ObjectSubclass<imp::Item>)
-        @implements gio::ListModel;
+    pub struct Item(ObjectSubclass<imp::Item>);
 }
 
 impl Item {
-    pub fn new(kind: ItemKind, display_name: Option<String>, model: Option<TagList>) -> Self {
+    pub fn new(
+        kind: ItemKind,
+        display_name: Option<&str>,
+        model: Option<&impl IsA<gio::ListModel>>,
+    ) -> Self {
         glib::Object::new(&[
             ("kind", &kind),
             ("display-name", &display_name),
@@ -156,5 +134,9 @@ impl Item {
 
     pub fn display_name(&self) -> Option<String> {
         self.property("display-name").unwrap().get().unwrap()
+    }
+
+    pub fn model(&self) -> Option<gio::ListModel> {
+        self.property("model").unwrap().get().unwrap()
     }
 }

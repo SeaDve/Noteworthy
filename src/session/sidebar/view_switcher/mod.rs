@@ -132,7 +132,7 @@ impl ViewSwitcher {
 
         let item_list = ItemList::new(&tag_list);
         let tree_model = gtk::TreeListModel::new(&item_list, false, true, |item| {
-            item.clone().downcast::<gio::ListModel>().ok()
+            item.downcast_ref::<Item>().and_then(|item| item.model())
         });
 
         let selection_model = gtk::SingleSelection::new(Some(&tree_model));
@@ -147,7 +147,11 @@ impl ViewSwitcher {
                         if let Some(item) = i.downcast_ref::<Item>() {
                             item.clone()
                         } else if let Some(tag) = i.downcast_ref::<Tag>() {
-                            let item = Item::new(ItemKind::Tag(tag.clone()), None, None);
+                            let item = Item::new(
+                                ItemKind::Tag(tag.clone()),
+                                None,
+                                None::<&gio::ListModel>,
+                            );
                             tag.bind_property("name", &item, "display-name")
                                 .flags(glib::BindingFlags::SYNC_CREATE)
                                 .build();
