@@ -234,9 +234,9 @@ impl AudioPlayer {
     fn setup_player(&self) {
         let imp = imp::AudioPlayer::from_instance(self);
 
-        let player: gst::Pipeline = gst::ElementFactory::make("playbin3", Some("playbin"))
+        let player = gst::ElementFactory::make("playbin3", None)
             .unwrap()
-            .downcast()
+            .downcast::<gst::Pipeline>()
             .unwrap();
 
         let bus = player.bus().unwrap();
