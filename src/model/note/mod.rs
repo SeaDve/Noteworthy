@@ -313,16 +313,14 @@ impl Note {
     fn serialize_to_bytes(&self) -> anyhow::Result<Vec<u8>> {
         // FIXME replace with not hacky implementation
         let mut bytes = serde_yaml::to_vec(&self.metadata())?;
-        bytes.extend("---\n".as_bytes());
+
+        let delimiter = "---\n".to_string();
+        bytes.append(&mut delimiter.into_bytes());
 
         let buffer = self.buffer();
         let (start_iter, end_iter) = buffer.bounds();
-        let buffer_text = buffer.text(&start_iter, &end_iter, true);
-
-        // TODO I think Vec::extend copy the elements. Maybe it's possible to take the Vec<u8> of
-        // glib::GString and Vec::append it to avoid copying. Because this is expensive especially
-        // when a note has very long text.
-        bytes.extend(buffer_text.as_bytes());
+        let buffer_text = buffer.text(&start_iter, &end_iter, true).to_string();
+        bytes.append(&mut buffer_text.into_bytes());
 
         Ok(bytes)
     }

@@ -242,7 +242,10 @@ impl NoteManager {
 
             log::info!("Loading file: {}", file_path.display());
 
-            // TODO consider using sourcefile here
+            // TODO consider using GtkSourceFile here
+            // So we could use GtkSourceFileLoader and GtkSourceFileSaver to handle
+            // saving and loading, and perhaps reduce allocations on serializing into buffer and
+            // deserializiations.
             let file = gio::File::for_path(file_path);
             let note = Note::deserialize(&file).await?;
             note_list.append(note);
@@ -283,7 +286,7 @@ impl NoteManager {
         let unsaved_notes = self.note_list().take_unsaved_notes();
 
         if unsaved_notes.is_empty() {
-            log::info!("No unsaved notes, skipping...");
+            log::info!("No unsaved notes, skipping save...");
         }
 
         for note in unsaved_notes.iter() {
