@@ -5,7 +5,6 @@
 #![warn(clippy::await_holding_refcell_ref)]
 #![warn(clippy::map_unwrap_or)]
 #![warn(clippy::implicit_clone)]
-#![warn(clippy::redundant_closure_for_method_calls)]
 #![warn(clippy::struct_excessive_bools)]
 #![warn(clippy::trivially_copy_pass_by_ref)]
 #![warn(clippy::option_if_let_else)]
@@ -28,7 +27,7 @@ use self::application::Application;
 use self::config::{GETTEXT_PACKAGE, LOCALEDIR, RESOURCES_FILE};
 
 static THREAD_POOL: Lazy<glib::ThreadPool> =
-    Lazy::new(|| glib::ThreadPool::new_shared(None).unwrap());
+    Lazy::new(|| glib::ThreadPool::new_shared(None).expect("Unable to create thread pool"));
 
 fn main() {
     pretty_env_logger::init_timed();
