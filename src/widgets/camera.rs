@@ -45,8 +45,8 @@ mod imp {
                 obj.on_exit();
             });
 
-            klass.install_action("camera.capture-done", None, move |obj, _, _| {
-                obj.on_capture_done();
+            klass.install_action("camera.capture-accept", None, move |obj, _, _| {
+                obj.on_capture_accept();
             });
 
             klass.install_action("camera.capture-discard", None, move |obj, _, _| {
@@ -65,7 +65,7 @@ mod imp {
             static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
                 vec![
                     Signal::builder(
-                        "capture-done",
+                        "capture-accept",
                         &[gdk::Texture::static_type().into()],
                         <()>::static_type().into(),
                     )
@@ -108,11 +108,11 @@ impl Camera {
         glib::Object::new(&[]).expect("Failed to create Camera.")
     }
 
-    pub fn connect_capture_done<F>(&self, f: F) -> glib::SignalHandlerId
+    pub fn connect_capture_accept<F>(&self, f: F) -> glib::SignalHandlerId
     where
         F: Fn(&Self, gdk::Texture) + 'static,
     {
-        self.connect_local("capture-done", true, move |values| {
+        self.connect_local("capture-accept", true, move |values| {
             let obj = values[0].get::<Self>().unwrap();
             let texture = values[1].get::<gdk::Texture>().unwrap();
             f(&obj, texture);
@@ -169,7 +169,7 @@ impl Camera {
         Ok(())
     }
 
-    fn save_current_to_texture(&self) -> gdk::Texture {
+    fn save_current_frame_to_texture(&self) -> gdk::Texture {
         let imp = imp::Camera::from_instance(self);
         let paintable = imp.picture.paintable().unwrap();
 
@@ -291,9 +291,9 @@ impl Camera {
         self.emit_by_name("on-exit", &[]).unwrap();
     }
 
-    fn on_capture_done(&self) {
-        let texture = self.save_current_to_texture();
-        self.emit_by_name("capture-done", &[&texture]).unwrap();
+    fn on_capture_accept(&self) {
+        let texture = self.save_current_frame_to_texture();
+        self.emit_by_name("capture-accept", &[&texture]).unwrap();
         self.on_exit();
     }
 
