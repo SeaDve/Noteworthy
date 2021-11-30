@@ -207,6 +207,12 @@ impl AttachmentView {
             }));
 
         imp.camera_button
+            .connect_on_launch(clone!(@weak self as obj => move |_| {
+                let imp = imp::AttachmentView::from_instance(&obj);
+                imp.audio_player_handler.stop_all();
+            }));
+
+        imp.camera_button
             .connect_capture_done(clone!(@weak self as obj => move |_, file| {
                 let new_attachment = Attachment::new(file, &DateTime::now());
                 obj.append_attachment(new_attachment);

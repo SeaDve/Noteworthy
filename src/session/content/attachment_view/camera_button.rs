@@ -42,12 +42,15 @@ mod imp {
         fn signals() -> &'static [Signal] {
             use once_cell::sync::Lazy;
             static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
-                vec![Signal::builder(
-                    "capture-done",
-                    &[gio::File::static_type().into()],
-                    <()>::static_type().into(),
-                )
-                .build()]
+                vec![
+                    Signal::builder(
+                        "capture-done",
+                        &[gio::File::static_type().into()],
+                        <()>::static_type().into(),
+                    )
+                    .build(),
+                    Signal::builder("on-launch", &[], <()>::static_type().into()).build(),
+                ]
             });
             SIGNALS.as_ref()
         }
@@ -72,6 +75,18 @@ glib::wrapper! {
 impl CameraButton {
     pub fn new() -> Self {
         glib::Object::new(&[]).expect("Failed to create CameraButton")
+    }
+
+    pub fn connect_on_launch<F>(&self, f: F) -> glib::SignalHandlerId
+    where
+        F: Fn(&Self) + 'static,
+    {
+        self.connect_local("on-launch", true, move |values| {
+            let obj = values[0].get::<Self>().unwrap();
+            f(&obj);
+            None
+        })
+        .unwrap()
     }
 
     pub fn connect_capture_done<F>(&self, f: F) -> glib::SignalHandlerId
@@ -119,6 +134,8 @@ impl CameraButton {
     }
 
     fn on_launch(&self) {
+        self.emit_by_name("on-launch", &[]).unwrap();
+
         let imp = imp::CameraButton::from_instance(self);
 
         let main_window = Application::default().main_window();
