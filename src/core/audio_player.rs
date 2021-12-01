@@ -16,7 +16,7 @@ use std::{
 
 use crate::spawn_blocking;
 
-#[derive(Debug, PartialEq, Clone, Copy, GEnum)]
+#[derive(Debug, Clone, Copy, PartialEq, GEnum)]
 #[genum(type_name = "AudioPlayerPlaybackState")]
 pub enum PlaybackState {
     Stopped,

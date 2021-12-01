@@ -1,20 +1,22 @@
-use gtk::glib::{self, GBoxed};
+use gtk::glib::{self, GSharedBoxed};
 
-use crate::model::NoteTagList;
+use std::rc::Rc;
 
-#[derive(Debug, Clone, GBoxed)]
-#[gboxed(type_name = "NwtyTagLists")]
-pub struct NoteTagLists(Vec<NoteTagList>);
+use super::NoteTagList;
+
+#[derive(Debug, Clone, GSharedBoxed)]
+#[gshared_boxed(type_name = "NwtyTagLists")]
+pub struct NoteTagLists(Rc<Vec<NoteTagList>>);
 
 impl From<Vec<NoteTagList>> for NoteTagLists {
     fn from(vec: Vec<NoteTagList>) -> Self {
-        Self(vec)
+        Self(Rc::new(vec))
     }
 }
 
 impl Default for NoteTagLists {
     fn default() -> Self {
-        Self(Vec::new())
+        Self(Rc::new(Vec::new()))
     }
 }
 

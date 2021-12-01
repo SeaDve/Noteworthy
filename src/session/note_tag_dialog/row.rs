@@ -47,7 +47,7 @@ mod imp {
                     glib::ParamSpec::new_boxed(
                         "other-tag-lists",
                         "A list of other tag lists",
-                        "The tag list to compare with",
+                        "The tag lists to compare with",
                         NoteTagLists::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
