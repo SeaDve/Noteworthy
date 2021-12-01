@@ -14,6 +14,7 @@ use std::{
 
 use super::note_repository::{NoteRepository, SyncState};
 use crate::{
+    core::FileType,
     model::{note::Id, Note, NoteList, TagList},
     spawn,
 };
@@ -217,7 +218,7 @@ impl NoteManager {
 
     async fn load_notes(&self) -> anyhow::Result<()> {
         let directory = self.directory();
-        let files = directory
+        let file_infos = directory
             .enumerate_children_async_future(
                 &gio::FILE_ATTRIBUTE_STANDARD_NAME,
                 gio::FileQueryInfoFlags::NONE,
@@ -226,10 +227,10 @@ impl NoteManager {
             .await?;
         let note_list = NoteList::new();
 
-        for file in files.flatten() {
-            let file_name = file.name();
+        for file_info in file_infos.flatten() {
+            let file_name = file_info.name();
 
-            if file_name.extension().unwrap_or_default() != "md" {
+            if FileType::for_path(&file_name) != FileType::Markdown {
                 log::info!(
                     "The file {} doesn't have an md extension, skipping...",
                     file_name.display()

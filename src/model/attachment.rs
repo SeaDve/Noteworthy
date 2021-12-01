@@ -4,8 +4,7 @@ use std::{cell::RefCell, path::PathBuf};
 
 use once_cell::unsync::OnceCell;
 
-use super::attachment_kind::AttachmentKind;
-use crate::model::DateTime;
+use crate::{core::FileType, model::DateTime};
 
 mod imp {
     use super::*;
@@ -33,7 +32,7 @@ mod imp {
     #[derive(Debug, Default)]
     pub struct Attachment {
         pub inner: RefCell<AttachmentInner>,
-        pub kind: OnceCell<AttachmentKind>,
+        pub file_type: OnceCell<FileType>,
     }
 
     #[glib::object_subclass]
@@ -120,15 +119,15 @@ impl Attachment {
             .expect("Failed to create Attachment.")
     }
 
-    pub fn kind(&self) -> AttachmentKind {
+    pub fn file_type(&self) -> FileType {
         let imp = imp::Attachment::from_instance(self);
 
-        let kind = imp.kind.get_or_init(|| {
+        let file_type = imp.file_type.get_or_init(|| {
             let path = self.file().path().unwrap();
-            AttachmentKind::for_path(&path)
+            FileType::for_path(&path)
         });
 
-        *kind
+        *file_type
     }
 
     pub fn file(&self) -> gio::File {
