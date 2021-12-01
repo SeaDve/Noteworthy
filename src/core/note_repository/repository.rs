@@ -18,19 +18,19 @@ impl std::fmt::Debug for Repository {
 }
 
 impl Repository {
-    pub fn init(base_path: &Path) -> anyhow::Result<Self> {
+    pub fn init(base_path: impl AsRef<Path>) -> anyhow::Result<Self> {
         let mut init_options = git2::RepositoryInitOptions::new();
         init_options.no_reinit(true);
 
-        let repo = git2::Repository::init_opts(base_path, &init_options)?;
+        let repo = git2::Repository::init_opts(base_path.as_ref(), &init_options)?;
 
         Ok(Self {
             inner: repo,
-            base_path: base_path.to_owned(),
+            base_path: base_path.as_ref().to_owned(),
         })
     }
 
-    pub fn clone(base_path: &Path, remote_url: &str) -> anyhow::Result<Self> {
+    pub fn clone(base_path: impl AsRef<Path>, remote_url: &str) -> anyhow::Result<Self> {
         let mut callbacks = git2::RemoteCallbacks::new();
         callbacks.credentials(|_, username_from_url, _| Self::credentials_cb(username_from_url));
         callbacks.transfer_progress(Self::transfer_progress_cb);
@@ -42,11 +42,11 @@ impl Repository {
         repo_builder.fetch_options(fetch_options);
 
         log::info!("Cloning from {} ...", remote_url);
-        let repo = repo_builder.clone(remote_url, base_path)?;
+        let repo = repo_builder.clone(remote_url, base_path.as_ref())?;
 
         Ok(Self {
             inner: repo,
-            base_path: base_path.to_owned(),
+            base_path: base_path.as_ref().to_owned(),
         })
     }
 
@@ -145,16 +145,13 @@ impl Repository {
         Ok(())
     }
 
-    pub fn add<P: AsRef<Path> + Clone + git2::IntoCString>(
-        &self,
-        paths: &[P],
-    ) -> anyhow::Result<()> {
+    pub fn add(&self, paths: &[impl AsRef<Path>]) -> anyhow::Result<()> {
         let repo = self.inner();
 
         let mut index = repo.index()?;
 
         index.add_all(
-            paths,
+            paths.iter().map(|p| p.as_ref()),
             git2::IndexAddOption::DEFAULT,
             Some(&mut |path: &Path, _: &[u8]| {
                 log::info!("Add match: {}", path.display());
@@ -166,16 +163,13 @@ impl Repository {
         Ok(())
     }
 
-    pub fn remove<P: AsRef<Path> + Clone + git2::IntoCString>(
-        &self,
-        paths: &[P],
-    ) -> anyhow::Result<()> {
+    pub fn remove(&self, paths: &[impl AsRef<Path>]) -> anyhow::Result<()> {
         let repo = self.inner();
 
         let mut index = repo.index()?;
 
         index.remove_all(
-            paths,
+            paths.iter().map(|p| p.as_ref()),
             Some(&mut |path: &Path, _: &[u8]| {
                 let full_path = self.base_path().join(path);
 
