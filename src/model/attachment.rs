@@ -122,10 +122,9 @@ impl Attachment {
     pub fn file_type(&self) -> FileType {
         let imp = imp::Attachment::from_instance(self);
 
-        let file_type = imp.file_type.get_or_init(|| {
-            let path = self.file().path().unwrap();
-            FileType::for_path(&path)
-        });
+        let file_type = imp
+            .file_type
+            .get_or_init(|| FileType::for_file(&self.file()));
 
         *file_type
     }

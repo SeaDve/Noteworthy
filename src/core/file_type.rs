@@ -1,6 +1,4 @@
-use gtk::gio;
-
-use std::path::Path;
+use gtk::{gio, prelude::*};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum FileType {
@@ -11,30 +9,30 @@ pub enum FileType {
 }
 
 impl FileType {
-    pub fn for_path(path: &Path) -> Self {
-        use gtk::prelude::*;
-        dbg!(gio::File::for_path(path)
-            .query_info(
-                "standard::*",
-                gio::FileQueryInfoFlags::NONE,
-                None::<&gio::Cancellable>
-            )
-            .map(|i| i.content_type()));
-
-        let (mime_type, is_certain) = gio::content_type_guess(Some(&path.to_string_lossy()), &[]);
-
-        log::info!(
-            "Mimetype of {} for path {}; is certain: {}",
-            mime_type,
-            path.display(),
-            is_certain
+    pub fn for_file(file: &gio::File) -> Self {
+        let res = file.query_info(
+            &gio::FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE,
+            gio::FileQueryInfoFlags::NONE,
+            None::<&gio::Cancellable>,
         );
 
-        match mime_type.as_str() {
-            "image/png" | "image/jpeg" => Self::Bitmap,
-            "audio/ogg" => Self::Audio,
-            "text/markdown" => Self::Markdown,
-            _ => Self::Unknown,
+        match res {
+            Ok(file_info) => {
+                let mime_type = file_info.content_type().unwrap();
+
+                log::info!("Mimetype of {} for file {}", mime_type, file.uri(),);
+
+                match mime_type.as_str() {
+                    "image/png" | "image/jpeg" => Self::Bitmap,
+                    "audio/x-vorbis+ogg" | "audio/x-opus+ogg" => Self::Audio,
+                    "text/markdown" => Self::Markdown,
+                    _ => Self::Unknown,
+                }
+            }
+            Err(err) => {
+                log::warn!("Failed to query info for file {}: {}", file.uri(), err);
+                Self::Unknown
+            }
         }
     }
 }
