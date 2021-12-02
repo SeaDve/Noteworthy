@@ -91,7 +91,7 @@ mod imp {
                 }
                 "tag-list" => {
                     let tag_list = value.get().unwrap();
-                    obj.set_tag_list(tag_list);
+                    obj.set_tag_list(&tag_list);
                 }
                 _ => unimplemented!(),
             }
@@ -127,7 +127,7 @@ impl ViewSwitcher {
         glib::Object::new(&[]).expect("Failed to create ViewSwitcher.")
     }
 
-    pub fn set_tag_list(&self, tag_list: TagList) {
+    pub fn set_tag_list(&self, tag_list: &TagList) {
         let imp = imp::ViewSwitcher::from_instance(self);
 
         let items = &[
@@ -138,7 +138,7 @@ impl ViewSwitcher {
             Item::builder(ItemKind::Separator).build().upcast(),
             Item::builder(ItemKind::Category)
                 .display_name(&gettext("Tags"))
-                .model(&tag_list)
+                .model(tag_list)
                 .build()
                 .upcast(),
             Item::builder(ItemKind::EditTags).build().upcast(),
@@ -269,7 +269,7 @@ impl ViewSwitcher {
                     ItemKind::Separator | ItemKind::Category | ItemKind::EditTags => {
                         list_item.set_selectable(false);
                     }
-                    _ => (),
+                    ItemKind::AllNotes | ItemKind::Tag(_) | ItemKind::Trash => (),
                 }
             }
         });

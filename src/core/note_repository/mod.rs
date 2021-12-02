@@ -194,14 +194,14 @@ impl NoteRepository {
     ) -> anyhow::Result<Option<Vec<(PathBuf, git2::Delta)>>> {
         self.set_sync_state(SyncState::Syncing);
 
-        let changed_files = if !sync_opts.is_skip_pull {
+        let changed_files = if sync_opts.is_skip_pull {
+            None
+        } else {
             log::info!("Sync: Repo pulling changes...");
             self.set_sync_state(SyncState::Pulling);
             let changed_files = self.pull().await?;
             log::info!("Sync: Repo pulled changes");
             Some(changed_files)
-        } else {
-            None
         };
 
         if self.is_file_changed_in_workdir().await? {

@@ -88,8 +88,8 @@ mod imp {
         ) {
             match pspec.name() {
                 "attachment-list" => {
-                    let attachment_list = value.get().unwrap();
-                    obj.set_attachment_list(attachment_list);
+                    let attachment_list: Option<AttachmentList> = value.get().unwrap();
+                    obj.set_attachment_list(attachment_list.as_ref());
                 }
                 _ => unimplemented!(),
             }
@@ -122,9 +122,9 @@ impl AttachmentView {
         glib::Object::new(&[]).expect("Failed to create AttachmentView.")
     }
 
-    pub fn set_attachment_list(&self, attachment_list: Option<AttachmentList>) {
+    pub fn set_attachment_list(&self, attachment_list: Option<&AttachmentList>) {
         let imp = imp::AttachmentView::from_instance(self);
-        imp.selection.set_model(attachment_list.as_ref());
+        imp.selection.set_model(attachment_list);
         self.notify("attachment-list");
     }
 

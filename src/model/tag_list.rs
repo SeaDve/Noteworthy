@@ -194,7 +194,7 @@ impl<'de> Deserialize<'de> for TagList {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let tags: Vec<Tag> = Vec::deserialize(deserializer)?;
 
-        let tag_list = tags.into_iter().collect::<TagList>();
+        let tag_list = tags.into_iter().collect::<Self>();
 
         Ok(tag_list)
     }

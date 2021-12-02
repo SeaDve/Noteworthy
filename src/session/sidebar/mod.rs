@@ -158,7 +158,7 @@ mod imp {
                 }
                 "note-list" => {
                     let note_list = value.get().unwrap();
-                    obj.set_note_list(note_list);
+                    obj.set_note_list(&note_list);
                 }
                 "selected-note" => {
                     let selected_note = value.get().unwrap();
@@ -209,13 +209,13 @@ impl Sidebar {
         glib::Object::new(&[]).expect("Failed to create Sidebar.")
     }
 
-    pub fn set_note_list(&self, note_list: NoteList) {
+    pub fn set_note_list(&self, note_list: &NoteList) {
         let imp = imp::Sidebar::from_instance(self);
 
         let filter = self.note_filter();
-        let filter_model = gtk::FilterListModel::new(Some(&note_list), Some(&filter));
+        let filter_model = gtk::FilterListModel::new(Some(note_list), Some(&filter));
 
-        let sorter = self.note_sorter();
+        let sorter = Self::default_note_sorter();
         let sorter_model = gtk::SortListModel::new(Some(&filter_model), Some(&sorter));
 
         imp.view_switcher.connect_selected_type_notify(move |_| {
@@ -271,7 +271,7 @@ impl Sidebar {
         imp.selected_note.borrow().clone()
     }
 
-    pub fn set_tag_list(&self, tag_list: TagList) {
+    pub fn set_tag_list(&self, tag_list: &TagList) {
         let imp = imp::Sidebar::from_instance(self);
         imp.view_switcher.set_tag_list(tag_list);
     }
@@ -362,7 +362,7 @@ impl Sidebar {
             .build()
     }
 
-    fn note_sorter(&self) -> gtk::CustomSorter {
+    fn default_note_sorter() -> gtk::CustomSorter {
         gtk::CustomSorter::new(move |obj1, obj2| {
             let note_1 = obj1.downcast_ref::<Note>().unwrap().metadata();
             let note_2 = obj2.downcast_ref::<Note>().unwrap().metadata();
@@ -425,7 +425,7 @@ impl Sidebar {
         imp.trash_button
             .connect_clicked(clone!(@weak self as obj => move |button| {
                 let is_active = button.is_active();
-                for note in obj.selected_notes().iter() {
+                for note in &obj.selected_notes() {
                     note.metadata().set_is_trashed(is_active);
                 }
             }));
@@ -433,7 +433,7 @@ impl Sidebar {
         imp.pin_button
             .connect_clicked(clone!(@weak self as obj => move |button| {
                 let is_active = button.is_active();
-                for note in obj.selected_notes().iter() {
+                for note in &obj.selected_notes() {
                     note.metadata().set_is_pinned(is_active);
                 }
             }));

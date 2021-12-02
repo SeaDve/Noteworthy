@@ -12,7 +12,7 @@ impl SshKey {
         let public_key = rsa_key.public_key_to_pem()?;
         let private_key = rsa_key.private_key_to_pem()?;
 
-        Ok(SshKey {
+        Ok(Self {
             public_key: String::from_utf8(public_key)?,
             private_key: String::from_utf8(private_key)?,
             password: password.to_string(),

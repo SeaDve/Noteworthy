@@ -94,7 +94,7 @@ glib::wrapper! {
 }
 
 impl Item {
-    pub fn builder(kind: ItemKind) -> ItemBuilder {
+    pub const fn builder(kind: ItemKind) -> ItemBuilder {
         ItemBuilder::new(kind)
     }
 
@@ -118,7 +118,7 @@ pub struct ItemBuilder {
 }
 
 impl ItemBuilder {
-    pub fn new(kind: ItemKind) -> Self {
+    pub const fn new(kind: ItemKind) -> Self {
         Self {
             kind,
             display_name: None,

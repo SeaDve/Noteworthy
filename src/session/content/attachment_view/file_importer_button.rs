@@ -91,7 +91,8 @@ impl FileImporterButton {
         .unwrap()
     }
 
-    fn validify_files(&self, files: gio::ListModel) -> anyhow::Result<Vec<PathBuf>> {
+    /// Make sures that the files are less than `MAX_BYTES_FILE_SIZE`
+    fn validify_files(files: &gio::ListModel) -> anyhow::Result<Vec<PathBuf>> {
         let mut valid_files = Vec::new();
 
         for index in 0..files.n_items() {
@@ -193,15 +194,15 @@ impl FileImporterButton {
 
         chooser.connect_response(clone!(@weak self as obj => move |chooser, response| {
             if response == gtk::ResponseType::Accept {
-                obj.on_accept_response(chooser.files().unwrap());
+                obj.on_accept_response(&chooser.files().unwrap());
             }
         }));
 
         chooser
     }
 
-    fn on_accept_response(&self, files: gio::ListModel) {
-        match self.validify_files(files) {
+    fn on_accept_response(&self, files: &gio::ListModel) {
+        match Self::validify_files(files) {
             Ok(files) => {
                 spawn!(clone!(@weak self as obj => async move {
                     if let Err(err) = obj.import_files(files).await {

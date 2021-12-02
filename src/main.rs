@@ -1,4 +1,10 @@
 #![allow(clippy::new_without_default)]
+#![warn(clippy::doc_markdown)]
+#![warn(clippy::missing_const_for_fn)]
+#![warn(clippy::or_fun_call)]
+#![warn(clippy::unused_self)]
+#![warn(clippy::needless_pass_by_value)]
+#![warn(clippy::explicit_iter_loop)]
 #![warn(clippy::semicolon_if_nothing_returned)]
 #![warn(clippy::match_wildcard_for_single_variants)]
 #![warn(clippy::inefficient_to_string)]
@@ -8,6 +14,9 @@
 #![warn(clippy::struct_excessive_bools)]
 #![warn(clippy::trivially_copy_pass_by_ref)]
 #![warn(clippy::option_if_let_else)]
+#![warn(clippy::unreadable_literal)]
+#![warn(clippy::if_not_else)]
+#![warn(clippy::doc_markdown)]
 
 mod application;
 mod config;

@@ -139,7 +139,7 @@ impl<'de> Deserialize<'de> for AttachmentList {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let attachments: Vec<Attachment> = Vec::deserialize(deserializer)?;
 
-        let attachment_list = attachments.into_iter().collect::<AttachmentList>();
+        let attachment_list = attachments.into_iter().collect::<Self>();
 
         Ok(attachment_list)
     }

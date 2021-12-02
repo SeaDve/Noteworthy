@@ -33,7 +33,7 @@ impl Repository {
     pub fn clone(base_path: impl AsRef<Path>, remote_url: &str) -> anyhow::Result<Self> {
         let mut callbacks = git2::RemoteCallbacks::new();
         callbacks.credentials(|_, username_from_url, _| Self::credentials_cb(username_from_url));
-        callbacks.transfer_progress(Self::transfer_progress_cb);
+        callbacks.transfer_progress(|ref progress| Self::transfer_progress_cb(progress));
 
         let mut fetch_options = git2::FetchOptions::new();
         fetch_options.remote_callbacks(callbacks);
@@ -134,7 +134,7 @@ impl Repository {
 
         let mut callbacks = git2::RemoteCallbacks::new();
         callbacks.credentials(|_, username_from_url, _| Self::credentials_cb(username_from_url));
-        callbacks.transfer_progress(Self::transfer_progress_cb);
+        callbacks.transfer_progress(|ref progress| Self::transfer_progress_cb(progress));
 
         let mut fetch_options = git2::FetchOptions::new();
         fetch_options.remote_callbacks(callbacks);
@@ -195,12 +195,11 @@ impl Repository {
     ) -> anyhow::Result<()> {
         let repo = self.inner();
 
-        let annotated_commit = match fetch_commit {
-            Some(commit) => commit,
-            None => {
-                let origin_head_ref = repo.find_branch(source_branch, git2::BranchType::Remote)?;
-                repo.reference_to_annotated_commit(origin_head_ref.get())?
-            }
+        let annotated_commit = if let Some(commit) = fetch_commit {
+            commit
+        } else {
+            let origin_head_ref = repo.find_branch(source_branch, git2::BranchType::Remote)?;
+            repo.reference_to_annotated_commit(origin_head_ref.get())?
         };
 
         let (merge_analysis, _) = repo.merge_analysis(&[&annotated_commit])?;
@@ -315,7 +314,7 @@ impl Repository {
 
         let mut callbacks = git2::RemoteCallbacks::new();
         callbacks.credentials(|_, username_from_url, _| Self::credentials_cb(username_from_url));
-        callbacks.transfer_progress(Self::transfer_progress_cb);
+        callbacks.transfer_progress(|ref progress| Self::transfer_progress_cb(progress));
 
         let mut push_options = git2::PushOptions::new();
         push_options.remote_callbacks(callbacks);
@@ -392,7 +391,7 @@ impl Repository {
         Ok(())
     }
 
-    fn inner(&self) -> &git2::Repository {
+    const fn inner(&self) -> &git2::Repository {
         &self.inner
     }
 
@@ -404,7 +403,7 @@ impl Repository {
         git2::Cred::ssh_key_from_agent(username_from_url.unwrap())
     }
 
-    fn transfer_progress_cb(progress: git2::Progress) -> bool {
+    fn transfer_progress_cb(progress: &git2::Progress) -> bool {
         if progress.received_objects() == progress.total_objects() {
             log::info!(
                 "Resolving deltas {}/{}",

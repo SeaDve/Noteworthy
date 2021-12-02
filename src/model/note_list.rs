@@ -78,12 +78,12 @@ impl NoteList {
             let imp = imp::NoteList::from_instance(&obj);
             let mut unsaved_notes = imp.unsaved_notes.borrow_mut();
 
-            if !note.is_saved() {
-                let res = unsaved_notes.insert(note.clone());
-                log::info!("Inserted unsaved note with ret: {}", res);
-            } else {
+            if note.is_saved() {
                 let res = unsaved_notes.remove(note);
                 log::info!("Removed unsaved note with ret: {}", res);
+            } else {
+                let res = unsaved_notes.insert(note.clone());
+                log::info!("Inserted unsaved note with ret: {}", res);
             }
         }));
 
@@ -134,7 +134,7 @@ pub struct Iter {
 }
 
 impl Iter {
-    fn new(model: NoteList) -> Self {
+    const fn new(model: NoteList) -> Self {
         Self {
             model,
             i: Cell::new(0),

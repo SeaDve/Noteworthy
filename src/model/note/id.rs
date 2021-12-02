@@ -6,6 +6,12 @@ pub struct Id {
     id: Box<str>,
 }
 
+impl std::fmt::Display for Id {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.id)
+    }
+}
+
 impl Id {
     pub fn from_path(path: &Path) -> Self {
         Self {

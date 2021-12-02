@@ -59,7 +59,7 @@ mod imp {
 
             klass.install_action("session.create-note", None, move |obj, _, _| {
                 let note_manager = obj.note_manager();
-                note_manager.create_note().expect("Failed to create note");
+                note_manager.create_note();
             });
 
             klass.install_action("session.edit-tags", None, move |obj, _, _| {
@@ -131,8 +131,8 @@ mod imp {
                 note_manager.load().await.expect("Failed to load notes and data file");
 
                 let imp = imp::Session::from_instance(&obj);
-                imp.sidebar.set_note_list(note_manager.note_list());
-                imp.sidebar.set_tag_list(note_manager.tag_list());
+                imp.sidebar.set_note_list(&note_manager.note_list());
+                imp.sidebar.set_tag_list(&note_manager.tag_list());
 
                 note_manager.sync().await.expect("Failed to sync notes and data file");
             }));

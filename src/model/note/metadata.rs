@@ -207,7 +207,7 @@ impl Metadata {
         self.set_last_modified(&DateTime::now());
     }
 
-    pub fn update(&self, other: &Metadata) {
+    pub fn update(&self, other: &Self) {
         self.set_title(&other.title());
         self.set_tag_list(other.tag_list());
         self.set_attachment_list(other.attachment_list());

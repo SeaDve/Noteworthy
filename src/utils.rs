@@ -46,7 +46,7 @@ impl<T: IsA<glib::Object>> PropExpr for T {
 }
 
 pub trait ChainExpr {
-    /// Create an expression with prop_name chained from self
+    /// Create an expression with `prop_name` chained from self
     fn property_expression(&self, prop_name: &str) -> gtk::Expression;
 
     /// Create a closure expression chained from self

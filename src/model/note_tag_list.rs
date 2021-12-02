@@ -132,7 +132,7 @@ impl<'de> Deserialize<'de> for NoteTagList {
         let app = Application::default();
         let tag_list = app.main_window().session().note_manager().tag_list();
 
-        let new_tag_list = NoteTagList::new();
+        let new_tag_list = Self::new();
         for name in tag_name_list {
             let tag = tag_list.get_with_name(&name).unwrap_or_else(|| {
                 log::error!("Tag with name '{}' not found, Creating new instead", &name);

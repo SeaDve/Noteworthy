@@ -58,7 +58,7 @@ mod imp {
             match pspec.name() {
                 "tag-list" => {
                     let tag_list = value.get().unwrap();
-                    obj.set_tag_list(tag_list);
+                    obj.set_tag_list(&tag_list);
                 }
                 _ => unimplemented!(),
             }
@@ -84,10 +84,10 @@ impl TagBar {
         glib::Object::new(&[]).expect("Failed to create TagBar")
     }
 
-    pub fn set_tag_list(&self, tag_list: NoteTagList) {
+    pub fn set_tag_list(&self, tag_list: &NoteTagList) {
         let imp = imp::TagBar::from_instance(self);
 
-        let selection_model = gtk::NoSelection::new(Some(&tag_list));
+        let selection_model = gtk::NoSelection::new(Some(tag_list));
         imp.list_view.set_model(Some(&selection_model));
 
         self.notify("tag-list");

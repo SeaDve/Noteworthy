@@ -289,7 +289,7 @@ impl NoteManager {
             log::info!("No unsaved notes, skipping save...");
         }
 
-        for note in unsaved_notes.iter() {
+        for note in &unsaved_notes {
             note.serialize().await?;
         }
 
@@ -313,22 +313,22 @@ impl NoteManager {
         Ok(())
     }
 
-    pub fn create_note(&self) -> anyhow::Result<()> {
+    pub fn create_note(&self) {
         let base_path = self.directory().path().unwrap();
         let new_note = Note::create_default(&base_path);
         self.note_list().append(new_note);
 
         log::info!("Created note {}", base_path.display());
-
-        Ok(())
     }
 
     pub fn delete_note(&self, note_id: &Id) -> anyhow::Result<()> {
         let note_list = self.note_list();
         note_list.remove(note_id);
 
-        let note = note_list.get(note_id).unwrap();
-        note.delete().unwrap();
+        let note = note_list.get(note_id).ok_or_else(|| {
+            anyhow::anyhow!("Failed to delete note: Note with id {} not found", note_id)
+        })?;
+        note.delete()?;
 
         log::info!("Deleted note {}", note.file().path().unwrap().display());
 

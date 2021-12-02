@@ -98,7 +98,7 @@ impl AudioRecorder {
 
     pub fn start(&self, base_path: &Path) -> anyhow::Result<()> {
         let new_recording = AudioRecording::new(base_path);
-        let pipeline = self.create_pipeline(&new_recording.path())?;
+        let pipeline = Self::default_pipeline(&new_recording.path())?;
 
         let bus = pipeline.bus().unwrap();
         bus.add_watch_local(
@@ -184,7 +184,7 @@ impl AudioRecorder {
             .expect("Pipeline not setup")
     }
 
-    fn default_audio_source_name(&self) -> String {
+    fn default_audio_source_name() -> String {
         let res = pulsectl::controllers::SourceController::create()
             .and_then(|mut controller| controller.get_server_info())
             .and_then(|server_info| {
@@ -203,7 +203,7 @@ impl AudioRecorder {
         }
     }
 
-    fn encodebin_profile(&self) -> gst_pbutils::EncodingContainerProfile {
+    fn default_encodebin_profile() -> gst_pbutils::EncodingContainerProfile {
         let encoding_profile = gst_pbutils::EncodingAudioProfileBuilder::new()
             .format(&gst::Caps::builder("audio/x-opus").build())
             .presence(1)
@@ -217,7 +217,7 @@ impl AudioRecorder {
             .unwrap()
     }
 
-    fn create_pipeline(&self, recording_path: &Path) -> anyhow::Result<gst::Pipeline> {
+    fn default_pipeline(recording_path: &Path) -> anyhow::Result<gst::Pipeline> {
         let pipeline = gst::Pipeline::new(None);
 
         let pulsesrc = gst::ElementFactory::make("pulsesrc", Some("pulsesrc"))
@@ -231,8 +231,8 @@ impl AudioRecorder {
         let filesink =
             gst::ElementFactory::make("filesink", None).map_err(|_| MissingElement("filesink"))?;
 
-        pulsesrc.set_property("device", &self.default_audio_source_name())?;
-        encodebin.set_property("profile", &self.encodebin_profile())?;
+        pulsesrc.set_property("device", &Self::default_audio_source_name())?;
+        encodebin.set_property("profile", &Self::default_encodebin_profile())?;
         filesink.set_property("location", recording_path.to_str().unwrap())?;
 
         let elements = [&pulsesrc, &audioconvert, &level, &encodebin, &filesink];
@@ -299,7 +299,7 @@ impl AudioRecorder {
                     error
                 );
 
-                let _ = self.cleanup_and_take_recording();
+                let _recording = self.cleanup_and_take_recording();
 
                 let imp = imp::AudioRecorder::from_instance(self);
                 let sender = imp.sender.take().unwrap();

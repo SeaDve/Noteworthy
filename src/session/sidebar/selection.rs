@@ -201,8 +201,7 @@ glib::wrapper! {
 }
 
 impl Selection {
-    pub fn new<P: IsA<gio::ListModel>>(model: Option<&P>) -> Selection {
-        let model = model.map(|m| m.clone().upcast::<gio::ListModel>());
+    pub fn new(model: Option<&impl IsA<gio::ListModel>>) -> Self {
         glib::Object::new(&[("model", &model)]).expect("Failed to create Selection")
     }
 
@@ -245,7 +244,7 @@ impl Selection {
         }
     }
 
-    pub fn set_model<P: IsA<gio::ListModel>>(&self, model: Option<&P>) {
+    pub fn set_model(&self, model: Option<&impl IsA<gio::ListModel>>) {
         let imp = imp::Selection::from_instance(self);
 
         let _guard = self.freeze_notify();

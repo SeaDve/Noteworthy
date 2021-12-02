@@ -254,16 +254,16 @@ impl AudioPlayer {
         use gst::MessageView;
 
         match message.view() {
-            MessageView::Error(message) => self.on_bus_error(message),
+            MessageView::Error(ref message) => self.on_bus_error(message),
             MessageView::Eos(_) => self.on_bus_eos(),
-            MessageView::StateChanged(message) => self.on_state_changed(message),
+            MessageView::StateChanged(ref message) => self.on_state_changed(message),
             _ => (),
         }
 
         Continue(true)
     }
 
-    fn on_bus_error(&self, message: gst::message::Error) {
+    fn on_bus_error(&self, message: &gst::message::Error) {
         let error = message.error();
         let debug = message.debug();
 
@@ -286,7 +286,7 @@ impl AudioPlayer {
         self.set_state(PlaybackState::Stopped);
     }
 
-    fn on_state_changed(&self, message: gst::message::StateChanged) {
+    fn on_state_changed(&self, message: &gst::message::StateChanged) {
         if message.src().as_ref() != Some(self.player().upcast_ref::<gst::Object>()) {
             return;
         }

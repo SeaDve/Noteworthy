@@ -150,9 +150,6 @@ impl Application {
 
 impl Default for Application {
     fn default() -> Self {
-        gio::Application::default()
-            .unwrap()
-            .downcast::<Application>()
-            .unwrap()
+        gio::Application::default().unwrap().downcast().unwrap()
     }
 }
