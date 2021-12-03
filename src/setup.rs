@@ -26,10 +26,7 @@ mod imp {
         pub fn from_u8(int: u8) -> Self {
             match Self::try_from(int) {
                 Ok(this) => this,
-                Err(err) => panic!(
-                    "Failed to convert u8 with value {} to GitHost: {}",
-                    int, err
-                ),
+                Err(err) => panic!("Failed to get GitHost from u8: {}", err),
             }
         }
     }
@@ -278,7 +275,9 @@ mod test {
     }
 
     #[test]
-    #[should_panic(expected = "hey")]
+    #[should_panic(
+        expected = "Failed to get GitHost from u8: No discriminant in enum `GitHost` matches the value `3`"
+    )]
     fn git_host_not_found() {
         use imp::GitHost;
 
@@ -286,7 +285,9 @@ mod test {
     }
 
     #[test]
-    #[should_panic(expected = "there")]
+    #[should_panic(
+        expected = "Failed to get GitHost from u8: No discriminant in enum `GitHost` matches the value `255`"
+    )]
     fn git_host_not_found_2() {
         use imp::GitHost;
 
