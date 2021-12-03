@@ -19,8 +19,7 @@ impl FileType {
         match res {
             Ok(file_info) => {
                 let mime_type = file_info.content_type().unwrap();
-
-                log::info!("Mimetype of {} for file {}", mime_type, file.uri(),);
+                log::info!("Found mimetype of {} for file {}", mime_type, file.uri());
 
                 match mime_type.as_str() {
                     "image/png" | "image/jpeg" => Self::Bitmap,
