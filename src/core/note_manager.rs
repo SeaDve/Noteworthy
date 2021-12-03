@@ -14,6 +14,7 @@ use std::{
 
 use super::note_repository::{NoteRepository, SyncState};
 use crate::{
+    core::FileType,
     model::{note::Id, Note, NoteList, TagList},
     spawn,
 };
@@ -217,7 +218,7 @@ impl NoteManager {
 
     async fn load_notes(&self) -> anyhow::Result<()> {
         let directory = self.directory();
-        let files = directory
+        let file_infos = directory
             .enumerate_children_async_future(
                 &gio::FILE_ATTRIBUTE_STANDARD_NAME,
                 gio::FileQueryInfoFlags::NONE,
@@ -226,27 +227,29 @@ impl NoteManager {
             .await?;
         let note_list = NoteList::new();
 
-        for file in files.flatten() {
-            let file_name = file.name();
+        for file_info in file_infos.flatten() {
+            let file_path = {
+                let mut file_path = directory.path().unwrap();
+                file_path.push(file_info.name());
+                file_path
+            };
 
-            if file_name.extension().unwrap_or_default() != "md" {
+            log::info!("Loading file: {}", file_path.display());
+
+            let file = gio::File::for_path(&file_path);
+
+            if FileType::for_file(&file) != FileType::Markdown {
                 log::info!(
                     "The file {} doesn't have an md extension, skipping...",
-                    file_name.display()
+                    file_path.display()
                 );
                 continue;
             }
-
-            let mut file_path = directory.path().unwrap();
-            file_path.push(file_name);
-
-            log::info!("Loading file: {}", file_path.display());
 
             // TODO consider using GtkSourceFile here
             // So we could use GtkSourceFileLoader and GtkSourceFileSaver to handle
             // saving and loading, and perhaps reduce allocations on serializing into buffer and
             // deserializiations.
-            let file = gio::File::for_path(file_path);
             let note = Note::deserialize(&file).await?;
             note_list.append(note);
         }

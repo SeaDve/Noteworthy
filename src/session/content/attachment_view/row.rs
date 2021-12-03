@@ -9,7 +9,7 @@ use once_cell::sync::Lazy;
 use std::cell::RefCell;
 
 use super::{AudioRow, OtherRow, PictureRow};
-use crate::model::{Attachment, AttachmentKind};
+use crate::{core::FileType, model::Attachment};
 
 mod imp {
     use super::*;
@@ -151,10 +151,10 @@ impl Row {
     }
 
     fn replace_child(&self, attachment: &Attachment) {
-        let child: gtk::Widget = match attachment.kind() {
-            AttachmentKind::Ogg => AudioRow::new(attachment).upcast(),
-            AttachmentKind::Png => PictureRow::new(attachment).upcast(),
-            AttachmentKind::Other => OtherRow::new(attachment).upcast(),
+        let child: gtk::Widget = match attachment.file_type() {
+            FileType::Audio => AudioRow::new(attachment).upcast(),
+            FileType::Bitmap => PictureRow::new(attachment).upcast(),
+            FileType::Markdown | FileType::Unknown => OtherRow::new(attachment).upcast(),
         };
 
         let imp = imp::Row::from_instance(self);
