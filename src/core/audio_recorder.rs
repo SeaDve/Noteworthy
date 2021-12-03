@@ -122,7 +122,7 @@ impl AudioRecorder {
         pipeline.set_state(gst::State::Playing)?;
 
         log::info!(
-            "Started audio recording with device name: {}",
+            "Started audio recording with device name `{}`",
             pipeline
                 .by_name("pulsesrc")
                 .unwrap()
@@ -312,7 +312,7 @@ impl AudioRecorder {
             MessageView::StateChanged(sc) => {
                 if message.src().as_ref() == Some(self.pipeline().upcast_ref::<gst::Object>()) {
                     log::info!(
-                        "Pipeline state set from {:?} -> {:?}",
+                        "Pipeline state set from `{:?}` -> `{:?}`",
                         sc.old(),
                         sc.current()
                     );

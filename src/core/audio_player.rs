@@ -188,7 +188,7 @@ impl AudioPlayer {
 
         let flags = gst::SeekFlags::FLUSH | gst::SeekFlags::KEY_UNIT;
         if let Err(err) = self.player().seek_simple(flags, position) {
-            log::error!("Failed to seek at pos {}: {}", position, err);
+            log::error!("Failed to seek at pos `{}`: {}", position, err);
         }
     }
 
@@ -268,7 +268,7 @@ impl AudioPlayer {
         let debug = message.debug();
 
         log::warn!(
-            "Error from element {}: {:?}",
+            "Error from element `{}`: {:?}",
             message.src().unwrap().name(),
             error
         );
@@ -277,7 +277,7 @@ impl AudioPlayer {
             log::warn!("Debug info: {}", debug);
         }
 
-        log::warn!("Error while playing audio with uri: {}", self.uri());
+        log::warn!("Error while playing audio with uri `{}`", self.uri());
 
         self.set_state(PlaybackState::Stopped);
     }
@@ -294,7 +294,11 @@ impl AudioPlayer {
         let old_state = message.old();
         let new_state = message.current();
 
-        log::info!("Player state changed: {:?} -> {:?}", old_state, new_state);
+        log::info!(
+            "Player state changed: `{:?}` -> `{:?}`",
+            old_state,
+            new_state
+        );
 
         let state = match new_state {
             gst::State::Null => PlaybackState::Stopped,

@@ -151,7 +151,7 @@ impl RepositoryWatcher {
             }
             Err(err) => {
                 log::error!(
-                    "Failed to open repo with path {}: {}",
+                    "Failed to open repo with path `{}`: {}",
                     base_path.display(),
                     err
                 );

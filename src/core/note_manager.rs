@@ -234,13 +234,13 @@ impl NoteManager {
                 file_path
             };
 
-            log::info!("Loading file: {}", file_path.display());
+            log::info!("Loading file `{}`", file_path.display());
 
             let file = gio::File::for_path(&file_path);
 
             if FileType::for_file(&file) != FileType::Markdown {
                 log::info!(
-                    "The file {} doesn't have an md extension, skipping...",
+                    "The file `{}` doesn't have an md extension, skipping...",
                     file_path.display()
                 );
                 continue;
@@ -266,15 +266,15 @@ impl NoteManager {
         let data: Data = match file.load_contents_async_future().await {
             Ok((file_content, _)) => {
                 log::info!(
-                    "Data file found at {} is loaded successfully",
+                    "Data file found at `{}` is loaded successfully",
                     data_file_path.display()
                 );
                 serde_yaml::from_slice(&file_content).unwrap_or_default()
             }
-            Err(e) => {
+            Err(err) => {
                 log::warn!(
                     "Falling back to default data, Failed to load data file: {}",
-                    e
+                    err
                 );
                 Data::default()
             }
@@ -321,7 +321,7 @@ impl NoteManager {
         let new_note = Note::create_default(&base_path);
         self.note_list().append(new_note);
 
-        log::info!("Created note {}", base_path.display());
+        log::info!("Created note with base_path `{}`", base_path.display());
     }
 
     pub fn delete_note(&self, note_id: &Id) -> anyhow::Result<()> {
@@ -329,11 +329,14 @@ impl NoteManager {
         note_list.remove(note_id);
 
         let note = note_list.get(note_id).ok_or_else(|| {
-            anyhow::anyhow!("Failed to delete note: Note with id {} not found", note_id)
+            anyhow::anyhow!(
+                "Failed to delete note: Note with id `{}` not found",
+                note_id
+            )
         })?;
         note.delete()?;
 
-        log::info!("Deleted note {}", note.file().path().unwrap().display());
+        log::info!("Deleted note `{}`", note.file().path().unwrap().display());
 
         Ok(())
     }
@@ -366,7 +369,7 @@ impl NoteManager {
             self.handle_changed_files(&changed_files).await?;
         }
 
-        log::info!("Session synced, is_offline_mode: {}", is_offline_mode);
+        log::info!("Session synced; is_offline_mode `{}`", is_offline_mode);
 
         Ok(())
     }
@@ -386,18 +389,24 @@ impl NoteManager {
 
             match delta {
                 git2::Delta::Added => {
-                    log::info!("Sync: Found added files {}, appending...", path.display());
+                    log::info!("Sync: Found added files `{}`; appending...", path.display());
                     let file = gio::File::for_path(&path);
                     let added_note = Note::deserialize(&file).await?;
                     note_list.append(added_note);
                 }
                 git2::Delta::Deleted => {
-                    log::info!("Sync: Found removed files {}, removing...", path.display());
+                    log::info!(
+                        "Sync: Found removed files `{}`; removing...",
+                        path.display()
+                    );
                     let note_id = Id::from_path(path);
                     note_list.remove(&note_id);
                 }
                 git2::Delta::Modified => {
-                    log::info!("Sync: Found modified files {}, updating...", path.display());
+                    log::info!(
+                        "Sync: Found modified files `{}`; updating...",
+                        path.display()
+                    );
                     let note_id = Id::from_path(path);
                     let note = note_list.get(&note_id).unwrap();
                     note.update().await?;
@@ -437,7 +446,7 @@ impl NoteManager {
                     log::info!("New remote changes! Syncing...");
                     spawn!(async move {
                         if let Err(err) = obj.sync().await {
-                            log::error!("Failed to sync {}", err);
+                            log::error!("Failed to sync: {}", err);
                         }
                     });
                 }));

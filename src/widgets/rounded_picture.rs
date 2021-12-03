@@ -166,7 +166,7 @@ impl RoundedPicture {
         if let Some(file) = file {
             let res = gdk::Texture::from_file(file).with_context(|| {
                 format!(
-                    "Failed to load texture from file at {}",
+                    "Failed to load texture from file at `{}`",
                     file.path().unwrap().display()
                 )
             });

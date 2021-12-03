@@ -269,7 +269,7 @@ impl Camera {
 
                 if message.src().as_ref() == Some(pipeline.upcast_ref::<gst::Object>()) {
                     log::info!(
-                        "Pipeline state set from {:?} -> {:?}",
+                        "Pipeline state set from `{:?}` -> `{:?}`",
                         sc.old(),
                         sc.current()
                     );

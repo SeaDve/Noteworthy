@@ -195,7 +195,7 @@ impl Setup {
             .await
         {
             // TODO add user facing error dialog
-            log::error!("Failed to create note folder, {:?}", err);
+            log::error!("Failed to create note folder: {:?}", err);
         }
 
         Session::new_offline(&notes_folder).await
@@ -215,7 +215,7 @@ impl Setup {
             "create-repo" => {
                 self.create_repo();
             }
-            other => unreachable!("Invalid page name '{}'", other),
+            other => unreachable!("Invalid page name `{}`", other),
         }
     }
 
@@ -230,7 +230,7 @@ impl Setup {
             "create-repo" => {
                 imp.content.set_visible_child_name("select-provider");
             }
-            other => unreachable!("Invalid page name '{}'", other),
+            other => unreachable!("Invalid page name `{}`", other),
         }
 
         self.action_set_enabled("setup.navigate-forward", true);

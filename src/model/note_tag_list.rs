@@ -135,7 +135,7 @@ impl<'de> Deserialize<'de> for NoteTagList {
         let new_tag_list = Self::new();
         for name in tag_name_list {
             let tag = tag_list.get_with_name(&name).unwrap_or_else(|| {
-                log::error!("Tag with name '{}' not found, Creating new instead", &name);
+                log::error!("Tag with name `{}` not found, Creating new instead", &name);
                 Tag::new(&name)
             });
             new_tag_list.append(tag).unwrap();

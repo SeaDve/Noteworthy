@@ -41,7 +41,7 @@ impl Repository {
         let mut repo_builder = git2::build::RepoBuilder::new();
         repo_builder.fetch_options(fetch_options);
 
-        log::info!("Cloning from {} ...", remote_url);
+        log::info!("Cloning from `{}` ...", remote_url);
         let repo = repo_builder.clone(remote_url, base_path.as_ref())?;
 
         Ok(Self {
@@ -51,7 +51,7 @@ impl Repository {
     }
 
     pub fn open(base_path: &Path) -> anyhow::Result<Self> {
-        log::info!("Opening repo from {}", base_path.display());
+        log::info!("Opening repo from `{}`", base_path.display());
         let repo = git2::Repository::open(base_path)?;
 
         Ok(Self {
@@ -90,7 +90,7 @@ impl Repository {
             let old_file_path = diff_delta.old_file().path().unwrap();
             let new_file_path = diff_delta.new_file().path().unwrap();
             log::info!(
-                "Diff: Found file {} -> {}",
+                "Diff: Found file `{}` -> `{}`",
                 old_file_path.display(),
                 new_file_path.display()
             );
@@ -121,8 +121,8 @@ impl Repository {
         let object_a_id = repo.revparse_single(spec_a)?.id();
         let object_b_id = repo.revparse_single(spec_b)?.id();
 
-        log::info!("Revparse spec_a: {} <-> {}", spec_a, object_a_id);
-        log::info!("Revparse spec_a: {} <-> {}", spec_b, object_b_id);
+        log::info!("Revparse spec_a: `{}` <-> `{}`", spec_a, object_a_id);
+        log::info!("Revparse spec_a: `{}` <-> `{}`", spec_b, object_b_id);
 
         Ok(object_a_id == object_b_id)
     }
@@ -139,7 +139,7 @@ impl Repository {
         let mut fetch_options = git2::FetchOptions::new();
         fetch_options.remote_callbacks(callbacks);
 
-        log::info!("Fetching from {} ...", remote_name);
+        log::info!("Fetching from `{}`...", remote_name);
         remote.fetch::<&str>(&[], Some(&mut fetch_options), None)?;
 
         Ok(())
@@ -154,7 +154,7 @@ impl Repository {
             paths.iter().map(|p| p.as_ref()),
             git2::IndexAddOption::DEFAULT,
             Some(&mut |path: &Path, _: &[u8]| {
-                log::info!("Add match: {}", path.display());
+                log::info!("Added match `{}`", path.display());
                 0
             }),
         )?;
@@ -173,9 +173,13 @@ impl Repository {
             Some(&mut |path: &Path, _: &[u8]| {
                 let full_path = self.base_path().join(path);
 
-                log::info!("Removing file: {}", full_path.display());
+                log::info!("Removing file `{}`", full_path.display());
                 if let Err(err) = fs::remove_file(&full_path) {
-                    log::error!("File {} could not be deleted {}", full_path.display(), err);
+                    log::error!(
+                        "File `{}` could not be deleted: {}",
+                        full_path.display(),
+                        err
+                    );
                 }
 
                 0
@@ -225,9 +229,9 @@ impl Repository {
                 let their = conflict.their.unwrap();
 
                 let current_conflict_path = std::str::from_utf8(&their.path).unwrap();
-                log::info!("Pull: Conflict on file {}", current_conflict_path);
+                log::info!("Pull: Conflict on file `{}`", current_conflict_path);
                 self.resolve_conflict(&our)?;
-                log::info!("Resolved conflict on file {}", current_conflict_path);
+                log::info!("Resolved conflict on file `{}`", current_conflict_path);
 
                 let path = std::str::from_utf8(&our.path).unwrap();
                 let path = Path::new(&path);
@@ -319,7 +323,7 @@ impl Repository {
         let mut push_options = git2::PushOptions::new();
         push_options.remote_callbacks(callbacks);
 
-        log::info!("Pushing to {} ...", remote_name);
+        log::info!("Pushing to `{}` ...", remote_name);
         remote.push(&[ref_head_name], Some(&mut push_options))?;
 
         Ok(())
@@ -397,7 +401,7 @@ impl Repository {
 
     fn credentials_cb(username_from_url: Option<&str>) -> Result<git2::Cred, git2::Error> {
         log::info!(
-            "Credential callback with username: {}",
+            "Credential callback with username `{}`",
             username_from_url.unwrap()
         );
         git2::Cred::ssh_key_from_agent(username_from_url.unwrap())

@@ -180,14 +180,14 @@ impl Row {
                 if check_button.is_active() {
                     for tag_list in obj.other_tag_lists().iter() {
                         if tag_list.append(tag.clone()).is_err() {
-                            log::warn!("Trying to append an existing tag: {}", tag.name());
+                            log::warn!("Trying to append an existing tag with name `{}`", tag.name());
                         }
                     }
                 } else {
                     for tag_list in obj.other_tag_lists().iter() {
                         if tag_list.remove(&tag).is_err() {
                             log::warn!(
-                                "Trying to remove a tag that doesn't exist in the list: {}",
+                                "Trying to remove a tag with name `{}` that doesn't exist in the list",
                                 tag.name()
                             );
                         }

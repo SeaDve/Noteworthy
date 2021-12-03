@@ -42,7 +42,7 @@ impl AudioPlayerHandler {
             audio_player.connect_state_notify(clone!(@weak self as obj => move |audio_player| {
                 if audio_player.state() == PlaybackState::Playing {
                     obj.stop_all_except(audio_player);
-                    log::info!("Stopping all except: {}", audio_player.uri());
+                    log::info!("Stopping all except player with uri `{}`", audio_player.uri());
                 }
             }));
 

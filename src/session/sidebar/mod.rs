@@ -237,7 +237,7 @@ impl Sidebar {
                 obj.update_action_bar_sensitivity(selection_size);
                 obj.update_action_bar(selection_size);
             }
-            log::info!("Selection changed, n_selected: {}, position: {}, n_items: {}", selection_size, position, n_items);
+            log::info!("Selection changed; n_selected `{}`; position `{}`; n_items `{}`", selection_size, position, n_items);
         }));
         selection_model.connect_items_changed(
             clone!(@weak self as obj => move |model, pos, removed, added| {
@@ -247,7 +247,7 @@ impl Sidebar {
                     obj.update_action_bar_sensitivity(selection_size);
                     obj.update_action_bar(selection_size);
                 }
-                log::info!("Selection items changed at {}; {} removed, {} added", pos, removed, added);
+                log::info!("Selection items changed at `{}`; removed `{}`; added `{}`", pos, removed, added);
             }),
         );
 

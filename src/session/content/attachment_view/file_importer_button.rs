@@ -133,7 +133,7 @@ impl FileImporterButton {
             let destination_file = gio::File::for_path(&destination_path);
 
             log::info!(
-                "Copying file from {} to {}",
+                "Copying file from `{}` to `{}`",
                 source_path.display(),
                 destination_path.display()
             );

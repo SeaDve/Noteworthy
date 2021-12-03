@@ -80,10 +80,10 @@ impl NoteList {
 
             if note.is_saved() {
                 let res = unsaved_notes.remove(note);
-                log::info!("Removed unsaved note with ret: {}", res);
+                log::info!("Removed unsaved note with ret `{}`", res);
             } else {
                 let res = unsaved_notes.insert(note.clone());
-                log::info!("Inserted unsaved note with ret: {}", res);
+                log::info!("Inserted unsaved note with ret `{}`", res);
             }
         }));
 

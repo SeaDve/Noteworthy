@@ -281,7 +281,7 @@ impl Note {
             )
             .build();
 
-        log::info!("File {} is loaded", file.path().unwrap().display());
+        log::info!("File `{}` is loaded", file.path().unwrap().display());
 
         Ok(Self::new(file, &metadata, &buffer))
     }
@@ -302,7 +302,7 @@ impl Note {
         self.set_is_saved(true);
 
         log::info!(
-            "Saved noted with title of {} and path of {:?}",
+            "Saved noted with title of `{}` and path of `{}`",
             self.metadata().title(),
             self.file().path().unwrap().display()
         );

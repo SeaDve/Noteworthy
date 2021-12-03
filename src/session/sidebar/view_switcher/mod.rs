@@ -198,7 +198,7 @@ impl ViewSwitcher {
                 } else if let Some(tag) = selected_item.downcast_ref::<Tag>() {
                     ItemKind::Tag(tag.clone())
                 } else {
-                    unreachable!("Invalid selected item {:?}", selected_item);
+                    unreachable!("Invalid selected item `{:?}`", selected_item);
                 }
             })
     }
@@ -228,7 +228,7 @@ impl ViewSwitcher {
                     } else if let Some(item) = selected_item.downcast_ref::<Item>() {
                         item.display_name().unwrap()
                     } else {
-                        unreachable!("Invalid selected item {:?}", selected_item);
+                        unreachable!("Invalid selected item `{:?}`", selected_item);
                     }
                 })
             })
