@@ -278,7 +278,7 @@ mod test {
     }
 
     #[test]
-    #[should_panic(expected = "")]
+    #[should_panic(expected = "hey")]
     fn git_host_not_found() {
         use imp::GitHost;
 
@@ -286,7 +286,7 @@ mod test {
     }
 
     #[test]
-    #[should_panic(expected = "")]
+    #[should_panic(expected = "there")]
     fn git_host_not_found_2() {
         use imp::GitHost;
 
