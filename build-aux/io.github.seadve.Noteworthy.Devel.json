@@ -6,17 +6,16 @@
     "sdk-extensions": ["org.freedesktop.Sdk.Extension.rust-stable"],
     "command": "noteworthy",
     "finish-args" : [
+        "--device=dri",
         "--share=network",
         "--socket=fallback-x11",
-        "--socket=wayland",
         "--socket=pulseaudio",
-        "--filesystem=xdg-run/pipewire-0",
         "--socket=ssh-auth",
-        "--device=dri",
-        "--talk-name=org.a11y.Bus",
+        "--socket=wayland",
         "--env=RUST_LOG=noteworthy=debug",
         "--env=RUST_BACKTRACE=1",
-        "--env=G_MESSAGES_DEBUG=none"
+        "--env=G_MESSAGES_DEBUG=none",
+        "--filesystem=xdg-run/pipewire-0"
     ],
     "build-options" : {
         "append-path" : "/usr/lib/sdk/rust-stable/bin",
