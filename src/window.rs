@@ -22,6 +22,8 @@ mod imp {
         pub main_stack: TemplateChild<gtk::Stack>,
         #[template_child]
         pub setup: TemplateChild<Setup>,
+        #[template_child]
+        pub loading: TemplateChild<gtk::WindowHandle>,
 
         pub session: OnceCell<Session>,
     }
@@ -141,10 +143,17 @@ impl Window {
         self.set_visible_page(self.session());
     }
 
+    fn switch_to_loading_page(&self) {
+        let imp = imp::Window::from_instance(self);
+        self.set_visible_page(&imp.loading.get());
+    }
+
     async fn load_session(&self, session: Session) -> anyhow::Result<()> {
         let imp = imp::Window::from_instance(self);
         imp.main_stack.add_child(&session);
         imp.session.set(session).unwrap();
+
+        self.switch_to_loading_page();
 
         let session = self.session();
         session.load().await?;

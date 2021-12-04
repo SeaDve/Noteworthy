@@ -113,11 +113,6 @@
   background: none;
 }
 
-.sidebar-spinner {
-  min-width: 32px;
-  min-height: 32px;
-}
-
 .sidebar-view-switcher-popover contents {
   padding: 0;
 }

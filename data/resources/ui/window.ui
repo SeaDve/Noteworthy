@@ -10,6 +10,18 @@
         <child>
           <object class="NwtySetup" id="setup"/>
         </child>
+        <child>
+          <object class="GtkWindowHandle" id="loading">
+            <property name="child">
+              <object class="GtkSpinner">
+                <property name="halign">center</property>
+                <property name="width-request">32</property>
+                <property name="height-request">32</property>
+                <property name="spinning">True</property>
+              </object>
+            </property>
+          </object>
+        </child>
       </object>
     </property>
   </template>
