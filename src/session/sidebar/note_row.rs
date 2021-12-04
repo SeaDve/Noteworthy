@@ -250,7 +250,7 @@ impl NoteRow {
         note_expression
             .property_expression("buffer")
             .closure_expression(|args| {
-                let buffer: sourceview::Buffer = args[1].get().unwrap();
+                let buffer: gtk_source::Buffer = args[1].get().unwrap();
                 let mut iter = buffer.start_iter();
                 let mut subtitle = String::from(iter.char());
 

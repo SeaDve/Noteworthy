@@ -23,7 +23,7 @@ mod imp {
         pub file: OnceCell<gio::File>,
         pub is_saved: Cell<bool>,
         pub metadata: OnceCell<Metadata>,
-        pub buffer: OnceCell<sourceview::Buffer>,
+        pub buffer: OnceCell<gtk_source::Buffer>,
     }
 
     #[glib::object_subclass]
@@ -102,7 +102,7 @@ mod imp {
                         "buffer",
                         "Buffer",
                         "The buffer containing note text content",
-                        sourceview::Buffer::static_type(),
+                        gtk_source::Buffer::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
                     glib::ParamSpec::new_boolean(
@@ -163,7 +163,7 @@ glib::wrapper! {
 }
 
 impl Note {
-    pub fn new(file: &gio::File, metadata: &Metadata, buffer: &sourceview::Buffer) -> Self {
+    pub fn new(file: &gio::File, metadata: &Metadata, buffer: &gtk_source::Buffer) -> Self {
         glib::Object::new::<Self>(&[("file", file), ("metadata", metadata), ("buffer", buffer)])
             .expect("Failed to create Note.")
     }
@@ -177,10 +177,10 @@ impl Note {
         Self::new(
             &gio::File::for_path(&file),
             &Metadata::default(),
-            &sourceview::Buffer::builder()
+            &gtk_source::Buffer::builder()
                 .highlight_matching_brackets(false)
                 .language(
-                    &sourceview::LanguageManager::default()
+                    &gtk_source::LanguageManager::default()
                         .and_then(|lm| lm.language("markdown"))
                         .unwrap(),
                 )
@@ -198,7 +198,7 @@ impl Note {
         imp.metadata.get().unwrap().clone()
     }
 
-    pub fn buffer(&self) -> sourceview::Buffer {
+    pub fn buffer(&self) -> gtk_source::Buffer {
         let imp = imp::Note::from_instance(self);
         imp.buffer.get().unwrap().clone()
     }
@@ -271,11 +271,11 @@ impl Note {
             .and_then(|p| p.deserialize().ok())
             .unwrap_or_default();
 
-        let buffer = sourceview::BufferBuilder::new()
+        let buffer = gtk_source::BufferBuilder::new()
             .text(&parsed_entity.content)
             .highlight_matching_brackets(false)
             .language(
-                &sourceview::LanguageManager::default()
+                &gtk_source::LanguageManager::default()
                     .and_then(|lm| lm.language("markdown"))
                     .unwrap(),
             )

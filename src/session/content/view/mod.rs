@@ -19,13 +19,13 @@ mod imp {
     #[template(resource = "/io/github/seadve/Noteworthy/ui/content-view.ui")]
     pub struct View {
         #[template_child]
-        pub title_label: TemplateChild<sourceview::View>,
+        pub title_label: TemplateChild<gtk_source::View>,
         #[template_child]
         pub last_modified_label: TemplateChild<gtk::Label>,
         #[template_child]
         pub tag_bar: TemplateChild<TagBar>,
         #[template_child]
-        pub source_view: TemplateChild<sourceview::View>,
+        pub source_view: TemplateChild<gtk_source::View>,
 
         pub bindings: RefCell<Vec<glib::Binding>>,
 
