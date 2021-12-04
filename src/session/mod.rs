@@ -196,7 +196,6 @@ mod imp {
             self.parent_constructed(obj);
 
             obj.setup_signals();
-            obj.load_and_sync();
         }
     }
 
@@ -256,6 +255,17 @@ impl Session {
         imp.note_manager.get().unwrap()
     }
 
+    pub async fn load(&self) -> anyhow::Result<()> {
+        let note_manager = self.note_manager();
+        note_manager.load().await?;
+
+        let imp = imp::Session::from_instance(self);
+        imp.sidebar.set_note_list(&note_manager.note_list());
+        imp.sidebar.set_tag_list(&note_manager.tag_list());
+
+        Ok(())
+    }
+
     pub async fn sync(&self) -> anyhow::Result<()> {
         self.note_manager().sync().await?;
         log::info!("Session synced");
@@ -265,19 +275,6 @@ impl Session {
     fn set_note_manager(&self, note_manager: NoteManager) {
         let imp = imp::Session::from_instance(self);
         imp.note_manager.set(note_manager).unwrap();
-    }
-
-    fn load_and_sync(&self) {
-        spawn!(clone!(@weak self as obj => async move {
-            let note_manager = obj.note_manager();
-            note_manager.load().await.expect("Failed to load notes and data file");
-
-            let imp = imp::Session::from_instance(&obj);
-            imp.sidebar.set_note_list(&note_manager.note_list());
-            imp.sidebar.set_tag_list(&note_manager.tag_list());
-
-            note_manager.sync().await.expect("Failed to sync notes and data file");
-        }));
     }
 
     fn setup_signals(&self) {

@@ -58,7 +58,9 @@ mod imp {
 
             self.setup
                 .connect_session_setup_done(clone!(@weak obj => move |_, session| {
-                    obj.load_session(session);
+                    spawn!(async move {
+                        obj.load_session(session).await.expect("Failed to load session");
+                    });
                 }));
 
             // If already setup
@@ -67,7 +69,7 @@ mod imp {
                 spawn!(clone!(@weak obj => async move {
                     // FIXME detect if it is offline mode or online
                     let existing_session = Session::new_offline(&notes_folder).await;
-                    obj.load_session(existing_session);
+                    obj.load_session(existing_session).await.expect("Failed to load session");
                 }));
             }
         }
@@ -110,9 +112,9 @@ impl Window {
         glib::Object::new(&[("application", app)]).expect("Failed to create Window.")
     }
 
-    pub fn session(&self) -> Session {
+    pub fn session(&self) -> &Session {
         let imp = imp::Window::from_instance(self);
-        imp.session.get().expect("Call load_session first").clone()
+        imp.session.get().expect("Call load_session first")
     }
 
     pub fn add_page(&self, page: &impl IsA<gtk::Widget>) {
@@ -136,15 +138,21 @@ impl Window {
     }
 
     pub fn switch_to_session_page(&self) {
-        let imp = imp::Window::from_instance(self);
-        imp.main_stack.set_visible_child(&self.session());
+        self.set_visible_page(self.session());
     }
 
-    fn load_session(&self, session: Session) {
+    async fn load_session(&self, session: Session) -> anyhow::Result<()> {
         let imp = imp::Window::from_instance(self);
         imp.main_stack.add_child(&session);
         imp.session.set(session).unwrap();
+
+        let session = self.session();
+        session.load().await?;
+        session.sync().await?;
+
         self.switch_to_session_page();
+
+        Ok(())
     }
 
     fn save_window_size(&self) -> Result<(), glib::BoolError> {
