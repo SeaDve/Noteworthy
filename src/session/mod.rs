@@ -230,12 +230,13 @@ impl Session {
             return;
         }
 
-        // Save all notes note before switching to other notes
+        // FIXME this is unexpected for this function, maybe let the caller handle this syncing
+        // Sync session before switching to other notes
         spawn!(
             glib::PRIORITY_DEFAULT_IDLE,
             clone!(@weak self as obj => async move {
-                if let Err(err) = obj.save().await {
-                    log::error!("Failed to save session: {}", err);
+                if let Err(err) = obj.sync().await {
+                    log::error!("Failed to sync session: {}", err);
                 }
             })
         );
@@ -255,18 +256,15 @@ impl Session {
         imp.note_manager.get().unwrap()
     }
 
-    pub fn set_note_manager(&self, note_manager: NoteManager) {
-        let imp = imp::Session::from_instance(self);
-        imp.note_manager.set(note_manager).unwrap();
+    pub async fn sync(&self) -> anyhow::Result<()> {
+        self.note_manager().sync().await?;
+        log::info!("Session synced");
+        Ok(())
     }
 
-    // TODO Add autosave
-    pub async fn save(&self) -> anyhow::Result<()> {
-        let note_manager = self.note_manager();
-        note_manager.sync().await?;
-        log::info!("Session saved");
-
-        Ok(())
+    fn set_note_manager(&self, note_manager: NoteManager) {
+        let imp = imp::Session::from_instance(self);
+        imp.note_manager.set(note_manager).unwrap();
     }
 
     fn load_and_sync(&self) {

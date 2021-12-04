@@ -81,12 +81,12 @@ mod imp {
                 log::warn!("Failed to save window state, {}", &err);
             }
 
-            // TODO what if app crashed? so maybe implement autosave
+            // TODO what if app crashed? so maybe implement autosync
             if let Some(session) = self.session.get() {
                 let ctx = glib::MainContext::default();
                 ctx.block_on(async move {
-                    if let Err(err) = session.save().await {
-                        log::error!("Failed to save session: {}", err);
+                    if let Err(err) = session.sync().await {
+                        log::error!("Failed to sync session: {}", err);
                     }
                 });
             }
