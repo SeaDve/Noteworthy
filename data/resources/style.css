@@ -43,14 +43,14 @@
 }
 
 .content-attachment-view-list-view {
-  padding-top: 3px;
-  padding-bottom: 3px;
+  padding-top: 6px;
+  padding-bottom: 6px;
 }
 
 .content-attachment-view-list-view row {
-  padding: 6px;
-  padding-top: 3px;
-  padding-bottom: 3px;
+  padding: 12px;
+  padding-top: 6px;
+  padding-bottom: 6px;
 }
 
 .content-attachment-view-audio-row {
