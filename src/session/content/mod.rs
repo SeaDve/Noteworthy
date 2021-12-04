@@ -50,10 +50,6 @@ mod imp {
             View::static_type();
             AttachmentView::static_type();
             Self::bind_template(klass);
-
-            klass.install_action("content.go-back", None, move |obj, _, _| {
-                obj.set_note(None);
-            });
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {

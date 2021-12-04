@@ -13,7 +13,7 @@
           <object class="GtkButton">
             <property name="visible" bind-source="NwtyContent" bind-property="compact" bind-flags="sync-create"/>
             <property name="icon-name">go-previous-symbolic</property>
-            <property name="action-name">content.go-back</property>
+            <property name="action-name">session.navigate-back</property>
           </object>
         </child>
         <child type="end">

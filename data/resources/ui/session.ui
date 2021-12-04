@@ -3,6 +3,7 @@
   <template class="NwtySession" parent="AdwBin">
     <property name="child">
       <object class="AdwLeaflet" id="leaflet">
+        <property name="can-navigate-back">True</property>
         <child>
           <object class="NwtySidebar" id="sidebar">
             <property name="compact" bind-source="leaflet" bind-property="folded" bind-flags="sync-create"/>

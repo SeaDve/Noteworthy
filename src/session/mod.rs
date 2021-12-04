@@ -50,6 +50,11 @@ mod imp {
             Content::static_type();
             Self::bind_template(klass);
 
+            klass.install_action("session.navigate-back", None, move |obj, _, _| {
+                let imp = imp::Session::from_instance(obj);
+                imp.leaflet.navigate(adw::NavigationDirection::Back);
+            });
+
             klass.install_action("session.sync", None, move |obj, _, _| {
                 let note_manager = obj.note_manager();
                 spawn!(clone!(@weak note_manager => async move {
@@ -123,26 +128,6 @@ mod imp {
     }
 
     impl ObjectImpl for Session {
-        fn constructed(&self, obj: &Self::Type) {
-            self.parent_constructed(obj);
-
-            spawn!(clone!(@weak obj => async move {
-                let note_manager = obj.note_manager();
-                note_manager.load().await.expect("Failed to load notes and data file");
-
-                let imp = imp::Session::from_instance(&obj);
-                imp.sidebar.set_note_list(&note_manager.note_list());
-                imp.sidebar.set_tag_list(&note_manager.tag_list());
-
-                note_manager.sync().await.expect("Failed to sync notes and data file");
-            }));
-
-            obj.note_manager()
-                .bind_property("is-syncing", obj, "is-syncing")
-                .flags(glib::BindingFlags::SYNC_CREATE)
-                .build();
-        }
-
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
@@ -206,6 +191,13 @@ mod imp {
                 _ => unimplemented!(),
             }
         }
+
+        fn constructed(&self, obj: &Self::Type) {
+            self.parent_constructed(obj);
+
+            obj.setup_signals();
+            obj.load_and_sync();
+        }
     }
 
     impl WidgetImpl for Session {}
@@ -252,8 +244,6 @@ impl Session {
 
         if selected_note.is_some() {
             imp.leaflet.navigate(adw::NavigationDirection::Forward);
-        } else {
-            imp.leaflet.navigate(adw::NavigationDirection::Back);
         }
 
         imp.selected_note.replace(selected_note);
@@ -277,5 +267,39 @@ impl Session {
         log::info!("Session saved");
 
         Ok(())
+    }
+
+    fn load_and_sync(&self) {
+        spawn!(clone!(@weak self as obj => async move {
+            let note_manager = obj.note_manager();
+            note_manager.load().await.expect("Failed to load notes and data file");
+
+            let imp = imp::Session::from_instance(&obj);
+            imp.sidebar.set_note_list(&note_manager.note_list());
+            imp.sidebar.set_tag_list(&note_manager.tag_list());
+
+            note_manager.sync().await.expect("Failed to sync notes and data file");
+        }));
+    }
+
+    fn setup_signals(&self) {
+        self.note_manager()
+            .bind_property("is-syncing", self, "is-syncing")
+            .flags(glib::BindingFlags::SYNC_CREATE)
+            .build();
+
+        let imp = imp::Session::from_instance(self);
+
+        imp.leaflet.connect_child_transition_running_notify(
+            clone!(@weak self as obj => move |leaflet| {
+                let imp = imp::Session::from_instance(&obj);
+
+                // Only deselect the note when the content is fully hidden
+                let is_sidebar_visible = leaflet.visible_child().unwrap() == imp.sidebar.get();
+                if !leaflet.is_child_transition_running() && is_sidebar_visible  {
+                    obj.set_selected_note(None);
+                }
+            }),
+        );
     }
 }
