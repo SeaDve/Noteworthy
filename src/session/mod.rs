@@ -58,9 +58,8 @@ mod imp {
             });
 
             klass.install_action("session.sync", None, move |obj, _, _| {
-                let note_manager = obj.note_manager();
-                spawn!(clone!(@weak note_manager => async move {
-                    note_manager.sync().await.expect("Failed to sync");
+                spawn!(clone!(@weak obj => async move {
+                    obj.sync().await.expect("Failed to sync");
                 }));
             });
 
