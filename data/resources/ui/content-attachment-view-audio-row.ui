@@ -52,6 +52,7 @@
         <child>
           <object class="NwtyTimeLabel" id="playback_duration_label">
             <style>
+              <class name="content-attachment-view-audio-row-position"/>
               <class name="caption"/>
               <class name="dim-label"/>
             </style>
