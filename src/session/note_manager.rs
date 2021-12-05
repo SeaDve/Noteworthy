@@ -310,7 +310,7 @@ impl NoteManager {
             .await
             .map_err(|err| err.1)?;
 
-        log::info!("Sucessfully saved data file");
+        log::info!("Successfully saved data file");
 
         Ok(())
     }

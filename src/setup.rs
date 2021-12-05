@@ -105,7 +105,7 @@ mod imp {
             //         {
             //             log::error!("Failed to clone: {}", err);
             //         } else {
-            //             log::info!("Successfull repo clone");
+            //             log::info!("Successful repo clone");
             //         }
             //     });
             // });

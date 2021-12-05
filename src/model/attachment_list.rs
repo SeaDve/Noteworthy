@@ -76,10 +76,7 @@ impl AttachmentList {
             list.insert(attachment)
         };
 
-        anyhow::ensure!(
-            is_list_appended,
-            "Cannot append exisiting object attachment"
-        );
+        anyhow::ensure!(is_list_appended, "Cannot append existing object attachment");
 
         self.items_changed(self.n_items() - 1, 0, 1);
 
@@ -97,7 +94,7 @@ impl AttachmentList {
         if let Some((position, _)) = removed {
             self.items_changed(position as u32, 1, 0);
         } else {
-            anyhow::bail!("Cannot remove attachment that doesnt exist");
+            anyhow::bail!("Cannot remove attachment that does not exist");
         }
 
         Ok(())

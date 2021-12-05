@@ -159,7 +159,7 @@ impl Attachment {
         if let Err(err) = file.delete_async_future(glib::PRIORITY_DEFAULT_IDLE).await {
             log::error!("Failed to delete attachment: {}", err);
         } else {
-            log::info!("Sucessfully deleted attachment at `{}`", file.uri());
+            log::info!("Successfully deleted attachment at `{}`", file.uri());
         }
     }
 }

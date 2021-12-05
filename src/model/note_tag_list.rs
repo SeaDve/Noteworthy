@@ -77,7 +77,7 @@ impl NoteTagList {
             list.insert(tag)
         };
 
-        anyhow::ensure!(is_list_appended, "Cannot append exisiting object tag");
+        anyhow::ensure!(is_list_appended, "Cannot append existing object tag");
 
         self.items_changed(self.n_items() - 1, 0, 1);
 
@@ -95,7 +95,7 @@ impl NoteTagList {
         if let Some((position, _)) = removed {
             self.items_changed(position as u32, 1, 0);
         } else {
-            anyhow::bail!("Cannot remove tag that doesnt exist");
+            anyhow::bail!("Cannot remove tag that does not exist");
         }
 
         Ok(())

@@ -103,7 +103,7 @@ impl TagList {
 
         anyhow::ensure!(
             is_name_list_removed,
-            "Cannot remove tag name that doesnt exist"
+            "Cannot remove tag name that does not exist"
         );
 
         let removed = {
@@ -114,7 +114,7 @@ impl TagList {
         if let Some((position, _)) = removed {
             self.items_changed(position as u32, 1, 0);
         } else {
-            anyhow::bail!("Cannot remove tag that doesnt exist");
+            anyhow::bail!("Cannot remove tag that does not exist");
         }
 
         Ok(())
