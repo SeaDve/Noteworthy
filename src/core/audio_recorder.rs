@@ -13,7 +13,7 @@ use std::{
 };
 
 use super::AudioRecording;
-use crate::spawn;
+use crate::{model::ClockTime, spawn};
 
 #[derive(Debug, thiserror::Error)]
 #[error("Missing element {0}")]
@@ -25,7 +25,7 @@ mod imp {
     #[derive(Debug, Default)]
     pub struct AudioRecorder {
         pub peak: Cell<f64>,
-        pub duration: Cell<u64>,
+        pub duration: Cell<ClockTime>,
 
         pub recording: RefCell<Option<AudioRecording>>,
         pub pipeline: RefCell<Option<gst::Pipeline>>,
@@ -54,13 +54,11 @@ mod imp {
                         0.0,
                         glib::ParamFlags::READABLE,
                     ),
-                    glib::ParamSpec::new_uint64(
+                    glib::ParamSpec::new_boxed(
                         "duration",
                         "Duration",
-                        "Current duration while recording (nanos)",
-                        u64::MIN,
-                        u64::MAX,
-                        0,
+                        "Current duration while recording",
+                        ClockTime::static_type(),
                         glib::ParamFlags::READABLE,
                     ),
                 ]
@@ -107,7 +105,7 @@ impl AudioRecorder {
         imp.peak.get()
     }
 
-    pub fn duration(&self) -> u64 {
+    pub fn duration(&self) -> ClockTime {
         let imp = imp::AudioRecorder::from_instance(self);
         imp.duration.get()
     }
@@ -156,7 +154,7 @@ impl AudioRecorder {
 
                 match pipeline.as_ref().unwrap().query_position::<gst::ClockTime>() {
                     Some(position) => {
-                        imp.duration.set(position.nseconds());
+                        imp.duration.set(position.into());
                         obj.notify("duration");
                     }
                     None => log::warn!("Failed to query position"),

@@ -10,7 +10,7 @@ use std::{cell::RefCell, time::Duration};
 
 use crate::{
     core::{AudioPlayer, PlaybackState},
-    model::Attachment,
+    model::{Attachment, ClockTime},
     spawn,
 };
 
@@ -234,7 +234,7 @@ impl AudioRow {
                     let imp = imp::AudioRow::from_instance(&obj);
                     imp.seek_timeout_id.replace(None);
 
-                    obj.audio_player().seek(Duration::from_secs_f64(value));
+                    obj.audio_player().seek(ClockTime::from_secs_f64(value));
                 }),
             )));
     }

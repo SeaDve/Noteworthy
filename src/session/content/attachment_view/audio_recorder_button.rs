@@ -7,8 +7,6 @@ use gtk::{
 };
 use once_cell::{sync::Lazy, unsync::OnceCell};
 
-use std::time::Duration;
-
 use crate::{core::AudioRecorder, spawn, utils, widgets::AudioVisualizer};
 
 mod imp {
@@ -185,11 +183,9 @@ impl AudioRecorderButton {
 
         imp.recorder
             .connect_duration_notify(clone!(@weak self as obj => move |recorder| {
-                let duration = Duration::from_nanos(recorder.duration());
-
-                let rounded_seconds = duration.as_secs();
-                let seconds_display = rounded_seconds % 60;
-                let minutes_display = rounded_seconds / 60;
+                let seconds = recorder.duration().as_secs();
+                let seconds_display = seconds % 60;
+                let minutes_display = seconds / 60;
                 let formatted_time = format!("{:02}∶{:02}", minutes_display, seconds_display);
                 obj.duration_label().set_label(&formatted_time);
             }));

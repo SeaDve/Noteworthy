@@ -9,12 +9,9 @@ use gtk::{
 };
 use once_cell::{sync::Lazy, unsync::OnceCell};
 
-use std::{
-    cell::{Cell, RefCell},
-    time::Duration,
-};
+use std::cell::{Cell, RefCell};
 
-use crate::spawn_blocking;
+use crate::{model::ClockTime, spawn_blocking};
 
 #[derive(Debug, Clone, Copy, PartialEq, GEnum)]
 #[genum(type_name = "AudioPlayerPlaybackState")]
@@ -181,7 +178,7 @@ impl AudioPlayer {
         imp.uri.borrow().clone()
     }
 
-    pub fn seek(&self, position: Duration) {
+    pub fn seek(&self, position: ClockTime) {
         let position: gst::ClockTime = position
             .try_into()
             .expect("Position in nanos cannot be above std::u64::MAX");
@@ -192,14 +189,14 @@ impl AudioPlayer {
         }
     }
 
-    pub fn query_position(&self) -> anyhow::Result<Duration> {
+    pub fn query_position(&self) -> anyhow::Result<ClockTime> {
         match self.player().query_position::<gst::ClockTime>() {
             Some(clock_time) => Ok(clock_time.into()),
             None => Err(anyhow::anyhow!("Failed to query position")),
         }
     }
 
-    pub async fn duration(&self) -> anyhow::Result<Duration> {
+    pub async fn duration(&self) -> anyhow::Result<ClockTime> {
         let uri = self.uri();
 
         let discover_info = spawn_blocking!(move || {
@@ -211,7 +208,7 @@ impl AudioPlayer {
 
         Ok(discover_info
             .duration()
-            .map_or(Duration::ZERO, |ct| ct.into()))
+            .map_or(ClockTime::ZERO, |ct| ct.into()))
     }
 
     pub fn play(&self) {

@@ -2,6 +2,7 @@ use chrono::Local;
 use gtk::glib::{self, GBoxed};
 use serde::{Deserialize, Serialize};
 
+/// A boxed [`DateTime`](chrono::DateTime<Local>)
 #[derive(Debug, Clone, GBoxed, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[gboxed(type_name = "NwtyDateTime")]
 #[serde(transparent)]
