@@ -12,6 +12,7 @@ use crate::{
     core::{AudioPlayer, PlaybackState},
     model::{Attachment, ClockTime},
     spawn,
+    widgets::TimeLabel,
 };
 
 mod imp {
@@ -23,7 +24,7 @@ mod imp {
         #[template_child]
         pub playback_button: TemplateChild<gtk::Button>,
         #[template_child]
-        pub playback_duration_label: TemplateChild<gtk::Label>,
+        pub playback_duration_label: TemplateChild<TimeLabel>,
         #[template_child]
         pub playback_position_scale: TemplateChild<gtk::Scale>,
 
@@ -160,11 +161,7 @@ impl AudioRow {
                 let seconds = duration.as_secs_f64();
                 imp.playback_position_scale.set_range(0.0, seconds);
 
-                let rounded_seconds = seconds.round() as i32;
-                let seconds_display = rounded_seconds % 60;
-                let minutes_display = rounded_seconds / 60;
-                let formatted_time = format!("{:02}∶{:02}", minutes_display, seconds_display);
-                imp.playback_duration_label.set_label(&formatted_time);
+                imp.playback_duration_label.set_time(duration);
             }
             Err(err) => {
                 log::warn!("Error getting duration: {}", err);

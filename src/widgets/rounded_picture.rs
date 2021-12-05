@@ -144,8 +144,7 @@ mod imp {
 
 glib::wrapper! {
     pub struct RoundedPicture(ObjectSubclass<imp::RoundedPicture>)
-        @extends gtk::Widget, adw::Bin,
-        @implements gtk::Accessible;
+        @extends gtk::Widget;
 }
 
 impl RoundedPicture {

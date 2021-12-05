@@ -7,7 +7,11 @@ use gtk::{
 };
 use once_cell::{sync::Lazy, unsync::OnceCell};
 
-use crate::{core::AudioRecorder, spawn, utils, widgets::AudioVisualizer};
+use crate::{
+    core::AudioRecorder,
+    spawn, utils,
+    widgets::{AudioVisualizer, TimeLabel},
+};
 
 mod imp {
     use super::*;
@@ -24,7 +28,7 @@ mod imp {
         #[template_child]
         pub visualizer: TemplateChild<AudioVisualizer>,
         #[template_child]
-        pub duration_label: TemplateChild<gtk::Label>,
+        pub duration_label: TemplateChild<TimeLabel>,
 
         pub recorder: AudioRecorder,
         pub popover_closed_handler_id: OnceCell<glib::SignalHandlerId>,
@@ -124,7 +128,7 @@ impl AudioRecorderButton {
         &imp.visualizer
     }
 
-    fn duration_label(&self) -> &gtk::Label {
+    fn duration_label(&self) -> &TimeLabel {
         let imp = imp::AudioRecorderButton::from_instance(self);
         &imp.duration_label
     }
@@ -183,11 +187,7 @@ impl AudioRecorderButton {
 
         imp.recorder
             .connect_duration_notify(clone!(@weak self as obj => move |recorder| {
-                let seconds = recorder.duration().as_secs();
-                let seconds_display = seconds % 60;
-                let minutes_display = seconds / 60;
-                let formatted_time = format!("{:02}∶{:02}", minutes_display, seconds_display);
-                obj.duration_label().set_label(&formatted_time);
+                obj.duration_label().set_time(recorder.duration());
             }));
 
         imp.popover

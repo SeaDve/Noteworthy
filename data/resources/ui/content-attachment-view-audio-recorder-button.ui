@@ -10,11 +10,10 @@
             <property name="child">
               <object class="GtkBox">
                 <child>
-                  <object class="GtkLabel" id="duration_label">
+                  <object class="NwtyTimeLabel" id="duration_label">
                     <style>
                       <class name="caption"/>
                       <class name="dim-label"/>
-                      <class name="numeric"/>
                     </style>
                   </object>
                 </child>
