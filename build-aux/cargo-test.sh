@@ -16,4 +16,4 @@ then
 fi
 
 cargo fetch --locked
-cargo test --all-features --offline -- --test-threads=1 --nocapture
+cargo test --all-features --offline -- --nocapture
