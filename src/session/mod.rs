@@ -1,4 +1,5 @@
 mod content;
+mod note_manager;
 mod note_tag_dialog;
 mod sidebar;
 mod tag_editor;
@@ -15,9 +16,10 @@ use once_cell::unsync::OnceCell;
 use std::cell::{Cell, RefCell};
 
 use self::{
-    content::Content, note_tag_dialog::NoteTagDialog, sidebar::Sidebar, tag_editor::TagEditor,
+    content::Content, note_manager::NoteManager, note_tag_dialog::NoteTagDialog, sidebar::Sidebar,
+    tag_editor::TagEditor,
 };
-use crate::{core::NoteManager, model::Note, spawn};
+use crate::{model::Note, spawn};
 
 mod imp {
     use super::*;

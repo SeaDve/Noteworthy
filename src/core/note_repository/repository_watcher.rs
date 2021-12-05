@@ -8,7 +8,7 @@ use once_cell::{sync::Lazy, unsync::OnceCell};
 
 use std::{thread, time::Duration};
 
-use super::repository::Repository;
+use super::Repository;
 
 const DEFAULT_SLEEP_TIME_SECS: u64 = 3;
 

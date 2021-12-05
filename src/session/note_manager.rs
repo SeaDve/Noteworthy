@@ -12,9 +12,8 @@ use std::{
     path::PathBuf,
 };
 
-use super::note_repository::{NoteRepository, SyncState};
 use crate::{
-    core::FileType,
+    core::{FileType, NoteRepository, SyncState},
     model::{note::Id, Note, NoteList, TagList},
     spawn,
 };

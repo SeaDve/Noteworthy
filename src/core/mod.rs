@@ -5,7 +5,6 @@ mod audio_recording;
 mod clock_time;
 mod date_time;
 mod file_type;
-mod note_manager;
 mod note_repository;
 mod ssh_key;
 
@@ -17,7 +16,6 @@ pub use self::{
     clock_time::ClockTime,
     date_time::DateTime,
     file_type::FileType,
-    note_manager::NoteManager,
-    note_repository::NoteRepository,
+    note_repository::{NoteRepository, SyncState},
     ssh_key::SshKey,
 };
