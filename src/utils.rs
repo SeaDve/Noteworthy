@@ -41,7 +41,7 @@ pub trait ChainExpr {
     /// Create an expression with `prop_name` chained from self
     fn property_expression(&self, prop_name: &str) -> gtk::Expression;
 
-    /// Create a closure expression chained from self
+    /// Creat a closue expression chained from self
     fn closure_expression<F, T>(self, f: F) -> gtk::Expression
     where
         F: Fn(&[glib::Value]) -> T + 'static,
