@@ -155,6 +155,7 @@ impl AudioRecorderButton {
         self.recorder().cancel();
 
         self.visualizer().clear_peaks();
+        self.duration_label().reset();
 
         log::info!("Cancelled recording");
     }
@@ -172,6 +173,7 @@ impl AudioRecorderButton {
         }));
 
         self.visualizer().clear_peaks();
+        self.duration_label().reset();
 
         log::info!("Stopped recording");
     }
