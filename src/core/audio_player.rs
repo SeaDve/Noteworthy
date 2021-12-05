@@ -11,7 +11,8 @@ use once_cell::{sync::Lazy, unsync::OnceCell};
 
 use std::cell::{Cell, RefCell};
 
-use crate::{model::ClockTime, spawn_blocking};
+use super::ClockTime;
+use crate::spawn_blocking;
 
 #[derive(Debug, Clone, Copy, PartialEq, GEnum)]
 #[genum(type_name = "AudioPlayerPlaybackState")]

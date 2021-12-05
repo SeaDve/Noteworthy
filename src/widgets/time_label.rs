@@ -2,7 +2,7 @@ use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::Cell;
 
-use crate::model::ClockTime;
+use crate::core::ClockTime;
 
 mod imp {
     use super::*;

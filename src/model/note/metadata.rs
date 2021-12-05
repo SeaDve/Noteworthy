@@ -3,7 +3,10 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use std::cell::RefCell;
 
-use crate::model::{AttachmentList, DateTime, NoteTagList};
+use crate::{
+    core::DateTime,
+    model::{AttachmentList, NoteTagList},
+};
 
 mod imp {
     use super::*;

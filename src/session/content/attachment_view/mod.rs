@@ -19,8 +19,8 @@ use self::{
     row::Row,
 };
 use crate::{
-    core::AudioPlayerHandler,
-    model::{Attachment, AttachmentList, DateTime},
+    core::{AudioPlayerHandler, DateTime},
+    model::{Attachment, AttachmentList},
     spawn,
     utils::PropExpr,
 };

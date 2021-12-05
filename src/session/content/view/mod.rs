@@ -8,7 +8,8 @@ use std::cell::RefCell;
 
 use self::tag_bar::TagBar;
 use crate::{
-    model::{DateTime, Note},
+    core::DateTime,
+    model::Note,
     utils::{ChainExpr, PropExpr},
 };
 

@@ -4,7 +4,7 @@ use std::{cell::RefCell, path::PathBuf};
 
 use once_cell::unsync::OnceCell;
 
-use crate::{core::FileType, model::DateTime};
+use crate::core::{DateTime, FileType};
 
 mod imp {
     use super::*;

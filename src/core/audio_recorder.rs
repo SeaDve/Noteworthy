@@ -12,8 +12,8 @@ use std::{
     time::Duration,
 };
 
-use super::AudioRecording;
-use crate::{model::ClockTime, spawn};
+use super::{AudioRecording, ClockTime};
+use crate::spawn;
 
 #[derive(Debug, thiserror::Error)]
 #[error("Missing element {0}")]

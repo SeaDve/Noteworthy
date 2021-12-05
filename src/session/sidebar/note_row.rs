@@ -11,7 +11,7 @@ use std::cell::{Cell, RefCell};
 
 use super::{Note, SelectionMode, Sidebar};
 use crate::{
-    model::DateTime,
+    core::DateTime,
     utils::{ChainExpr, PropExpr},
 };
 

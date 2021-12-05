@@ -9,8 +9,8 @@ use once_cell::unsync::OnceCell;
 use std::{cell::RefCell, time::Duration};
 
 use crate::{
-    core::{AudioPlayer, PlaybackState},
-    model::{Attachment, ClockTime},
+    core::{AudioPlayer, ClockTime, PlaybackState},
+    model::Attachment,
     spawn,
     widgets::TimeLabel,
 };
