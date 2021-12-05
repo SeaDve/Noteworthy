@@ -8,7 +8,7 @@ set -x
 export CARGO_TARGET_DIR="$1/target/"
 export CARGO_HOME="$CARGO_TARGET_DIR/cargo-home"
 
-# If this is run inside a flatpak envrironment, append the export the rustc
+# If this is run inside a flatpak environment, append the export the rustc
 # sdk-extension binaries to the path
 if [ -f "/.flatpak-info" ]
 then
