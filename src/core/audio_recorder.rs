@@ -9,6 +9,7 @@ use once_cell::sync::Lazy;
 use std::{
     cell::{Cell, RefCell},
     path::Path,
+    time::Duration,
 };
 
 use super::AudioRecording;
@@ -24,9 +25,11 @@ mod imp {
     #[derive(Debug, Default)]
     pub struct AudioRecorder {
         pub peak: Cell<f64>,
+        pub duration: Cell<u64>,
 
         pub recording: RefCell<Option<AudioRecording>>,
         pub pipeline: RefCell<Option<gst::Pipeline>>,
+        pub source_id: RefCell<Option<glib::SourceId>>,
         pub sender: RefCell<Option<Sender<anyhow::Result<AudioRecording>>>>,
         pub receiver: RefCell<Option<Receiver<anyhow::Result<AudioRecording>>>>,
     }
@@ -41,39 +44,35 @@ mod imp {
     impl ObjectImpl for AudioRecorder {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_double(
-                    "peak",
-                    "Peak",
-                    "Current volume peak while recording",
-                    f64::MIN,
-                    f64::MAX,
-                    0.0,
-                    glib::ParamFlags::READWRITE,
-                )]
+                vec![
+                    glib::ParamSpec::new_double(
+                        "peak",
+                        "Peak",
+                        "Current volume peak while recording",
+                        f64::MIN,
+                        f64::MAX,
+                        0.0,
+                        glib::ParamFlags::READABLE,
+                    ),
+                    glib::ParamSpec::new_uint64(
+                        "duration",
+                        "Duration",
+                        "Current duration while recording (nanos)",
+                        u64::MIN,
+                        u64::MAX,
+                        0,
+                        glib::ParamFlags::READABLE,
+                    ),
+                ]
             });
 
             PROPERTIES.as_ref()
         }
 
-        fn set_property(
-            &self,
-            _obj: &Self::Type,
-            _id: usize,
-            value: &glib::Value,
-            pspec: &glib::ParamSpec,
-        ) {
+        fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "peak" => {
-                    let peak = value.get().unwrap();
-                    self.peak.set(peak);
-                }
-                _ => unimplemented!(),
-            }
-        }
-
-        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
-            match pspec.name() {
-                "peak" => self.peak.get().to_value(),
+                "peak" => obj.peak().to_value(),
+                "duration" => obj.duration().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -94,6 +93,23 @@ impl AudioRecorder {
         F: Fn(&Self) + 'static,
     {
         self.connect_notify_local(Some("peak"), move |obj, _| f(obj))
+    }
+
+    pub fn connect_duration_notify<F>(&self, f: F) -> glib::SignalHandlerId
+    where
+        F: Fn(&Self) + 'static,
+    {
+        self.connect_notify_local(Some("duration"), move |obj, _| f(obj))
+    }
+
+    pub fn peak(&self) -> f64 {
+        let imp = imp::AudioRecorder::from_instance(self);
+        imp.peak.get()
+    }
+
+    pub fn duration(&self) -> u64 {
+        let imp = imp::AudioRecorder::from_instance(self);
+        imp.duration.get()
     }
 
     pub fn start(&self, base_path: &Path) -> anyhow::Result<()> {
@@ -132,6 +148,24 @@ impl AudioRecorder {
                 .unwrap()
         );
 
+        imp.source_id.replace(Some(glib::timeout_add_local(
+            Duration::from_millis(100),
+            clone!(@weak self as obj => @default-return Continue(false), move || {
+                let imp = imp::AudioRecorder::from_instance(&obj);
+                let pipeline = imp.pipeline.borrow();
+
+                match pipeline.as_ref().unwrap().query_position::<gst::ClockTime>() {
+                    Some(position) => {
+                        imp.duration.set(position.nseconds());
+                        obj.notify("duration");
+                    }
+                    None => log::warn!("Failed to query position"),
+                }
+
+                Continue(true)
+            }),
+        )));
+
         Ok(())
     }
 
@@ -169,10 +203,6 @@ impl AudioRecorder {
     pub fn state(&self) -> gst::State {
         let (_ret, current, _pending) = self.pipeline().state(None);
         current
-    }
-
-    pub fn peak(&self) -> f64 {
-        self.property("peak").unwrap().get().unwrap()
     }
 
     fn pipeline(&self) -> gst::Pipeline {
@@ -258,6 +288,9 @@ impl AudioRecorder {
 
             let bus = pipeline.bus().unwrap();
             bus.remove_watch().unwrap();
+
+            let source_id = imp.source_id.take().unwrap();
+            glib::source_remove(source_id); // TODO replace with `source_id.remove();` on gtk-rs 0.4.0
         }
 
         imp.recording.take()
@@ -276,8 +309,13 @@ impl AudioRecorder {
                     .get::<glib::ValueArray>()
                     .unwrap()
                     .nth(0)
+                    .unwrap()
+                    .get::<f64>()
                     .unwrap();
-                self.set_property_from_value("peak", &peak).unwrap();
+
+                let imp = imp::AudioRecorder::from_instance(self);
+                imp.peak.set(peak);
+                self.notify("peak");
 
                 Continue(true)
             }

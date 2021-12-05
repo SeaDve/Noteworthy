@@ -7,6 +7,8 @@ use gtk::{
 };
 use once_cell::{sync::Lazy, unsync::OnceCell};
 
+use std::time::Duration;
+
 use crate::{core::AudioRecorder, spawn, utils, widgets::AudioVisualizer};
 
 mod imp {
@@ -23,6 +25,8 @@ mod imp {
         pub popover: TemplateChild<gtk::Popover>,
         #[template_child]
         pub visualizer: TemplateChild<AudioVisualizer>,
+        #[template_child]
+        pub duration_label: TemplateChild<gtk::Label>,
 
         pub recorder: AudioRecorder,
         pub popover_closed_handler_id: OnceCell<glib::SignalHandlerId>,
@@ -122,6 +126,11 @@ impl AudioRecorderButton {
         &imp.visualizer
     }
 
+    fn duration_label(&self) -> &gtk::Label {
+        let imp = imp::AudioRecorderButton::from_instance(self);
+        &imp.duration_label
+    }
+
     fn recorder(&self) -> &AudioRecorder {
         let imp = imp::AudioRecorderButton::from_instance(self);
         &imp.recorder
@@ -169,10 +178,20 @@ impl AudioRecorderButton {
         let imp = imp::AudioRecorderButton::from_instance(self);
 
         imp.recorder
-            .connect_peak_notify(clone!(@weak self as obj => move |recording| {
-                let peak = 10_f64.powf(recording.peak() / 20.0);
-
+            .connect_peak_notify(clone!(@weak self as obj => move |recorder| {
+                let peak = 10_f64.powf(recorder.peak() / 20.0);
                 obj.visualizer().push_peak(peak as f32);
+            }));
+
+        imp.recorder
+            .connect_duration_notify(clone!(@weak self as obj => move |recorder| {
+                let duration = Duration::from_nanos(recorder.duration());
+
+                let rounded_seconds = duration.as_secs();
+                let seconds_display = rounded_seconds % 60;
+                let minutes_display = rounded_seconds / 60;
+                let formatted_time = format!("{:02}∶{:02}", minutes_display, seconds_display);
+                obj.duration_label().set_label(&formatted_time);
             }));
 
         imp.popover

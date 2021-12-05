@@ -222,7 +222,7 @@ impl AudioRow {
         // Cancel the seek when the value changed again within 20ms. So, it
         // will only seek when the value is stabilized within that span.
         if let Some(source_id) = imp.seek_timeout_id.take() {
-            glib::source_remove(source_id); // TODO replace with `source_id.remove();` on gtk-rs 0.3.4
+            glib::source_remove(source_id); // TODO replace with `source_id.remove();` on gtk-rs 0.4.0
         }
 
         let value = scale.value();

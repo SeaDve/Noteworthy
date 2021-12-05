@@ -9,11 +9,18 @@
           <object class="GtkPopover" id="popover">
             <property name="child">
               <object class="GtkBox">
-                <property name="spacing">6</property>
+                <child>
+                  <object class="GtkLabel" id="duration_label">
+                    <style>
+                      <class name="caption"/>
+                      <class name="dim-label"/>
+                      <class name="numeric"/>
+                    </style>
+                  </object>
+                </child>
                 <child>
                   <object class="NwtyAudioVisualizer" id="visualizer">
                     <property name="width-request">180</property>
-                    <property name="height-request">48</property>
                   </object>
                 </child>
                 <child>
