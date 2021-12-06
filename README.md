@@ -72,7 +72,7 @@ The following packages are required to build Noteworthy:
 #### Build Instructions
 
 ```shell
-meson . _build --prefix=/usr/local
+meson . _build
 ninja -C _build
 ninja -C _build install
 ```
