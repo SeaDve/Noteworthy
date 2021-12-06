@@ -209,23 +209,13 @@ impl AudioRecorder {
             .expect("Pipeline not setup")
     }
 
-    fn default_audio_source_name() -> String {
-        let res = pulsectl::controllers::SourceController::create()
-            .and_then(|mut controller| controller.get_server_info())
-            .and_then(|server_info| {
-                server_info.default_source_name.ok_or_else(|| {
-                    pulsectl::ControllerError::GetInfo("default source name not found".into())
-                })
-            });
+    fn default_audio_source_name() -> anyhow::Result<String> {
+        let mut controller = pulsectl::controllers::SourceController::create()?;
+        let server_info = controller.get_server_info()?;
 
-        match res {
-            Ok(audio_source_name) => audio_source_name,
-            Err(err) => {
-                log::warn!("Failed to get audio source name: {}", err);
-                log::warn!("Falling back to default");
-                String::new()
-            }
-        }
+        server_info
+            .default_source_name
+            .ok_or_else(|| anyhow::anyhow!("Default audio source name not found"))
     }
 
     fn default_encodebin_profile() -> gst_pbutils::EncodingContainerProfile {
@@ -256,7 +246,11 @@ impl AudioRecorder {
         let filesink =
             gst::ElementFactory::make("filesink", None).map_err(|_| MissingElement("filesink"))?;
 
-        pulsesrc.set_property("device", &Self::default_audio_source_name())?;
+        match Self::default_audio_source_name() {
+            Ok(ref audio_source_name) => pulsesrc.set_property("device", audio_source_name)?,
+            Err(err) => log::warn!("Failed to set pulsesrc device: {}", err),
+        }
+
         encodebin.set_property("profile", &Self::default_encodebin_profile())?;
         filesink.set_property("location", recording_path.to_str().unwrap())?;
 
