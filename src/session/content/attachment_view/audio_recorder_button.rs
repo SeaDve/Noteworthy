@@ -152,7 +152,9 @@ impl AudioRecorderButton {
     }
 
     fn cancel_recording(&self) {
-        self.recorder().cancel();
+        spawn!(clone!(@weak self as obj => async move {
+            obj.recorder().cancel().await;
+        }));
 
         self.visualizer().clear_peaks();
         self.duration_label().reset();

@@ -13,7 +13,6 @@ use std::{
 };
 
 use super::{AudioRecording, ClockTime};
-use crate::spawn;
 
 #[derive(Debug, thiserror::Error)]
 #[error("Missing element {0}")]
@@ -184,17 +183,15 @@ impl AudioRecorder {
         receiver.await.unwrap()
     }
 
-    pub fn cancel(&self) {
+    pub async fn cancel(&self) {
         let imp = imp::AudioRecorder::from_instance(self);
         imp.sender.replace(None);
         imp.receiver.replace(None);
 
         if let Some(recording) = self.cleanup_and_take_recording() {
-            spawn!(async move {
-                if let Err(err) = recording.delete().await {
-                    log::warn!("Failed to delete recording: {}", err);
-                }
-            });
+            if let Err(err) = recording.delete().await {
+                log::warn!("Failed to delete recording: {}", err);
+            }
         }
     }
 
