@@ -134,17 +134,6 @@ impl AudioRecorder {
 
         pipeline.set_state(gst::State::Playing)?;
 
-        log::info!(
-            "Started audio recording with device name `{}`",
-            pipeline
-                .by_name("pulsesrc")
-                .unwrap()
-                .property("device")
-                .unwrap()
-                .get::<String>()
-                .unwrap()
-        );
-
         imp.source_id.replace(Some(glib::timeout_add_local(
             Duration::from_millis(100),
             clone!(@weak self as obj => @default-return Continue(false), move || {
@@ -235,8 +224,8 @@ impl AudioRecorder {
     fn default_pipeline(recording_path: &Path) -> anyhow::Result<gst::Pipeline> {
         let pipeline = gst::Pipeline::new(None);
 
-        let pulsesrc = gst::ElementFactory::make("pulsesrc", Some("pulsesrc"))
-            .map_err(|_| MissingElement("pulsesrc"))?;
+        let pulsesrc =
+            gst::ElementFactory::make("pulsesrc", None).map_err(|_| MissingElement("pulsesrc"))?;
         let audioconvert = gst::ElementFactory::make("audioconvert", None)
             .map_err(|_| MissingElement("audioconvert"))?;
         let level =
@@ -247,7 +236,13 @@ impl AudioRecorder {
             gst::ElementFactory::make("filesink", None).map_err(|_| MissingElement("filesink"))?;
 
         match Self::default_audio_source_name() {
-            Ok(ref audio_source_name) => pulsesrc.set_property("device", audio_source_name)?,
+            Ok(ref audio_source_name) => {
+                log::info!(
+                    "Pipeline setup with pulsesrc device name `{}`",
+                    audio_source_name
+                );
+                pulsesrc.set_property("device", audio_source_name)?;
+            }
             Err(err) => log::warn!("Failed to set pulsesrc device: {}", err),
         }
 
