@@ -268,8 +268,9 @@ impl AudioRecorder {
         let imp = imp::AudioRecorder::from_instance(self);
 
         if let Some(pipeline) = imp.pipeline.take() {
-            let source_id = imp.source_id.take().unwrap();
-            glib::source_remove(source_id); // TODO replace with `source_id.remove();` on gtk-rs 0.4.0
+            if let Some(source_id) = imp.source_id.take() {
+                glib::source_remove(source_id); // TODO replace with `source_id.remove();` on gtk-rs 0.4.0
+            }
 
             pipeline.set_state(gst::State::Null).unwrap();
 
