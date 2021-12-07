@@ -8,6 +8,7 @@ use gtk::{
     prelude::*,
     subclass::prelude::*,
 };
+use gtk_source::prelude::*;
 use once_cell::unsync::OnceCell;
 
 use std::{cell::Cell, path::Path};
@@ -177,14 +178,7 @@ impl Note {
         Self::new(
             &gio::File::for_path(&file),
             &Metadata::default(),
-            &gtk_source::Buffer::builder()
-                .highlight_matching_brackets(false)
-                .language(
-                    &gtk_source::LanguageManager::default()
-                        .and_then(|lm| lm.language("markdown"))
-                        .unwrap(),
-                )
-                .build(),
+            &Self::default_buffer(),
         )
     }
 
@@ -271,15 +265,8 @@ impl Note {
             .and_then(|p| p.deserialize().ok())
             .unwrap_or_default();
 
-        let buffer = gtk_source::BufferBuilder::new()
-            .text(&parsed_entity.content)
-            .highlight_matching_brackets(false)
-            .language(
-                &gtk_source::LanguageManager::default()
-                    .and_then(|lm| lm.language("markdown"))
-                    .unwrap(),
-            )
-            .build();
+        let buffer = Self::default_buffer();
+        buffer.set_text(&parsed_entity.content);
 
         log::info!("File `{}` is loaded", file.path().unwrap().display());
 
@@ -323,5 +310,17 @@ impl Note {
         bytes.append(&mut buffer_text.into_bytes());
 
         Ok(bytes)
+    }
+
+    fn default_buffer() -> gtk_source::Buffer {
+        // FIXME not following AdwStyleManager::is-dark
+        gtk_source::BufferBuilder::new()
+            .highlight_matching_brackets(false)
+            .language(
+                &gtk_source::LanguageManager::default()
+                    .and_then(|lm| lm.language("markdown"))
+                    .unwrap(),
+            )
+            .build()
     }
 }

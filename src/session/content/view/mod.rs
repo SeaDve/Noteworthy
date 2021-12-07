@@ -3,6 +3,7 @@ mod tag_bar;
 use adw::subclass::prelude::*;
 use gettextrs::gettext;
 use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
+use gtk_source::prelude::*;
 
 use std::cell::RefCell;
 
@@ -50,23 +51,6 @@ mod imp {
     }
 
     impl ObjectImpl for View {
-        fn constructed(&self, obj: &Self::Type) {
-            self.parent_constructed(obj);
-
-            obj.property_expression("note")
-                .property_expression("metadata")
-                .property_expression("last-modified")
-                .closure_expression(|args| {
-                    let last_modified: DateTime = args[1].get().unwrap();
-                    gettext!("Last edited {}", last_modified.fuzzy_display())
-                })
-                .bind(
-                    &self.last_modified_label.get(),
-                    "label",
-                    None::<&gtk::Widget>,
-                );
-        }
-
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
@@ -103,6 +87,21 @@ mod imp {
                 "note" => obj.note().to_value(),
                 _ => unimplemented!(),
             }
+        }
+
+        fn constructed(&self, obj: &Self::Type) {
+            self.parent_constructed(obj);
+
+            // For some reason Buffer:style-scheme default is set to something making it
+            // not follow libadwaita's StyleManager:is-dark
+            let title_label_buffer = self
+                .title_label
+                .buffer()
+                .downcast::<gtk_source::Buffer>()
+                .unwrap();
+            title_label_buffer.set_style_scheme(None);
+
+            obj.setup_expressions();
         }
     }
 
@@ -155,5 +154,22 @@ impl View {
 
         imp.note.replace(note);
         self.notify("note");
+    }
+
+    fn setup_expressions(&self) {
+        let imp = imp::View::from_instance(self);
+
+        self.property_expression("note")
+            .property_expression("metadata")
+            .property_expression("last-modified")
+            .closure_expression(|args| {
+                let last_modified: DateTime = args[1].get().unwrap();
+                gettext!("Last edited {}", last_modified.fuzzy_display())
+            })
+            .bind(
+                &imp.last_modified_label.get(),
+                "label",
+                None::<&gtk::Widget>,
+            );
     }
 }
