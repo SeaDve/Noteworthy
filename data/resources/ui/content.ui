@@ -53,9 +53,6 @@
           <object class="AdwFlap" id="view_flap">
             <property name="flap-position">end</property>
             <property name="fold-policy">always</property>
-            <property name="separator">
-              <object class="GtkSeparator"/>
-            </property>
             <property name="content">
               <object class="NwtyContentView" id="view">
                 <property name="note" bind-source="NwtyContent" bind-property="note" bind-flags="sync-create"/>
