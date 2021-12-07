@@ -1,5 +1,4 @@
-use adw::prelude::*;
-use gtk::{glib, subclass::prelude::*, CompositeTemplate};
+use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::{Cell, RefCell};
 
@@ -14,7 +13,7 @@ mod imp {
         #[template_child]
         pub label_child: TemplateChild<gtk::Label>,
         #[template_child]
-        pub separator_child: TemplateChild<adw::Bin>,
+        pub separator_child: TemplateChild<gtk::Separator>,
         #[template_child]
         pub category_child: TemplateChild<gtk::Label>,
         #[template_child]

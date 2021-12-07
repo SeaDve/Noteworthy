@@ -3,12 +3,8 @@
   <object class="GtkLabel" id="label_child">
     <property name="xalign">0</property>
   </object>
-  <object class="AdwBin" id="separator_child">
-    <property name="child">
-      <object class="GtkSeparator">
-        <property name="hexpand">True</property>
-      </object>
-    </property>
+  <object class="GtkSeparator" id="separator_child">
+    <property name="hexpand">True</property>
   </object>
   <object class="GtkLabel" id="category_child">
     <property name="xalign">0</property>
