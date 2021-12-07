@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <object class="GtkLabel" id="label_child">
-    <property name="margin-top">6</property>
-    <property name="margin-bottom">6</property>
     <property name="xalign">0</property>
   </object>
-  <object class="GtkSeparator" id="separator_child">
-    <property name="valign">center</property>
+  <object class="AdwBin" id="separator_child">
+    <property name="child">
+      <object class="GtkSeparator">
+        <property name="hexpand">True</property>
+      </object>
+    </property>
   </object>
   <object class="GtkLabel" id="category_child">
-    <property name="margin-top">6</property>
-    <property name="margin-bottom">6</property>
     <property name="xalign">0</property>
     <style>
       <class name="caption-heading"/>
@@ -18,9 +18,8 @@
     </style>
   </object>
   <object class="GtkButton" id="edit_tags_child">
-    <property name="margin-top">6</property>
-    <property name="margin-bottom">6</property>
     <property name="action-name">session.edit-tags</property>
+    <property name="hexpand">True</property>
     <property name="child">
       <object class="GtkLabel">
         <property name="halign">start</property>
@@ -37,11 +36,6 @@
         <property name="spacing">6</property>
       </object>
     </property>
-    <child>
-      <object class="AdwBin" id="content">
-        <property name="hexpand">True</property>
-      </object>
-    </child>
     <child>
       <object class="GtkImage" id="select_icon">
         <property name="icon-name">object-select-symbolic</property>

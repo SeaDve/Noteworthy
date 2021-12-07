@@ -95,7 +95,7 @@
 }
 
 .note-tag-dialog-create-tag-button label {
-  font-weight: 400;
+  font-weight: normal;
 }
 
 
@@ -118,15 +118,21 @@
 }
 
 .sidebar-view-switcher-list-view {
-  padding-top: 12px;
-  padding-bottom: 12px;
+  padding-top: 6px;
+  padding-bottom: 6px;
 }
 
 .sidebar-view-switcher-list-view row {
-  padding-left: 12px;
-  padding-right: 12px;
-  min-height: 6px;
+  padding-left: 6px;
+  padding-right: 6px;
   min-width: 120px;
+}
+
+.sidebar-view-switcher-list-view row > itemrow > label {
+  padding-left: 9px;
+  padding-right: 9px;
+  padding-top: 6px;
+  padding-bottom: 6px;
 }
 
 .sidebar-view-switcher-list-view row:selected {
@@ -137,21 +143,12 @@
   background: none;
 }
 
-.sidebar-view-switcher-item-row-edit-tags {
-  padding: 0px;
-  border-radius: 3px;
-  transition: box-shadow 0s;
+.sidebar-view-switcher-item-row-edit-tags:not(:hover) {
   background: none;
-  color: @theme_fg_color;
-}
-
-.sidebar-view-switcher-item-row-edit-tags:hover {
-  background-color: shade(@accent_fg_color, 0.92);
-  box-shadow: 0 0 0 4px shade(@accent_fg_color, 0.92);
 }
 
 .sidebar-view-switcher-item-row-edit-tags label {
-  font-weight: 400;
+  font-weight: normal;
 }
 
 

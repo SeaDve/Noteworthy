@@ -14,13 +14,11 @@ mod imp {
         #[template_child]
         pub label_child: TemplateChild<gtk::Label>,
         #[template_child]
-        pub separator_child: TemplateChild<gtk::Separator>,
+        pub separator_child: TemplateChild<adw::Bin>,
         #[template_child]
         pub category_child: TemplateChild<gtk::Label>,
         #[template_child]
         pub edit_tags_child: TemplateChild<gtk::Button>,
-        #[template_child]
-        pub content: TemplateChild<adw::Bin>,
         #[template_child]
         pub select_icon: TemplateChild<gtk::Image>,
 
@@ -39,6 +37,7 @@ mod imp {
 
         fn class_init(klass: &mut Self::Class) {
             Self::bind_template(klass);
+            klass.set_css_name("itemrow");
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
@@ -47,10 +46,6 @@ mod imp {
     }
 
     impl ObjectImpl for ItemRow {
-        fn constructed(&self, obj: &Self::Type) {
-            self.parent_constructed(obj);
-        }
-
         fn properties() -> &'static [glib::ParamSpec] {
             use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
@@ -175,25 +170,17 @@ impl ItemRow {
                 match item.kind() {
                     ItemKind::AllNotes | ItemKind::Trash => {
                         imp.label_child.set_label(&item.display_name().unwrap());
-                        imp.content.set_child(Some(&imp.label_child.get()));
-                        self.set_margin_start(6);
-                        self.set_margin_end(6);
+                        self.insert_before_select_icon(&imp.label_child.get());
                     }
                     ItemKind::Category => {
                         imp.category_child.set_label(&item.display_name().unwrap());
-                        imp.content.set_child(Some(&imp.category_child.get()));
-                        self.set_margin_start(6);
-                        self.set_margin_end(6);
+                        self.insert_before_select_icon(&imp.category_child.get());
                     }
                     ItemKind::EditTags => {
-                        imp.content.set_child(Some(&imp.edit_tags_child.get()));
-                        self.set_margin_start(6);
-                        self.set_margin_end(6);
+                        self.insert_before_select_icon(&imp.edit_tags_child.get());
                     }
                     ItemKind::Separator => {
-                        imp.content.set_child(Some(&imp.separator_child.get()));
-                        self.set_margin_start(0);
-                        self.set_margin_end(0);
+                        self.insert_before_select_icon(&imp.separator_child.get());
                     }
                     ItemKind::Tag(_) => unreachable!("This is handled by below"),
                 }
@@ -203,9 +190,7 @@ impl ItemRow {
                     .flags(glib::BindingFlags::SYNC_CREATE)
                     .build();
                 imp.binding.replace(binding);
-                imp.content.set_child(Some(&imp.label_child.get()));
-                self.set_margin_start(6);
-                self.set_margin_end(6);
+                self.insert_before_select_icon(&imp.label_child.get());
             } else {
                 unreachable!("Invalid row item `{:?}`", item);
             }
@@ -213,5 +198,10 @@ impl ItemRow {
 
         self.notify("item");
         self.notify("list-row");
+    }
+
+    fn insert_before_select_icon(&self, widget: &impl IsA<gtk::Widget>) {
+        let imp = imp::ItemRow::from_instance(self);
+        widget.insert_before(self, Some(&imp.select_icon.get()));
     }
 }
