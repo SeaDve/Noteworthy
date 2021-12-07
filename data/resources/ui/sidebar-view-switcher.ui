@@ -3,7 +3,6 @@
   <template class="NwtySidebarViewSwitcher" parent="AdwBin">
     <property name="child">
       <object class="GtkMenuButton" id="menu_button">
-        <property name="has-frame">False</property>
         <property name="popover">
           <object class="GtkPopover">
             <property name="child">
