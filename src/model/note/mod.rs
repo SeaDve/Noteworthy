@@ -8,7 +8,6 @@ use gtk::{
     prelude::*,
     subclass::prelude::*,
 };
-use gtk_source::prelude::*;
 use once_cell::unsync::OnceCell;
 
 use std::{cell::Cell, path::Path};
