@@ -8,6 +8,8 @@
             <property name="child">
               <object class="GtkScrolledWindow">
                 <property name="hscrollbar-policy">never</property>
+                <property name="max_content_height">400</property>
+                <property name="propagate-natural-width">True</property>
                 <property name="propagate-natural-height">True</property>
                 <property name="child">
                   <object class="GtkListView" id="list_view">
