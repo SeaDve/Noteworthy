@@ -86,16 +86,12 @@
   padding-left: 12px;
   padding-right: 12px;
   border-radius: 0;
-  background-color: @theme_base_color;
   color: @theme_text_color;
 }
 
 .note-tag-dialog-create-tag-button:not(:hover) {
   box-shadow: none;
-}
-
-.note-tag-dialog-create-tag-button:hover {
-  background-color: @theme_bg_color;
+  background-color: @theme_base_color;
 }
 
 .note-tag-dialog-create-tag-button label {
