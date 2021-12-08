@@ -26,6 +26,9 @@
     </child>
     <child>
       <object class="GtkActionBar">
+        <style>
+          <class name="background"/>
+        </style>
         <child>
           <object class="NwtyContentAttachmentViewCameraButton" id="camera_button">
             <property name="tooltip-text" translatable="yes">Take Photo</property>
