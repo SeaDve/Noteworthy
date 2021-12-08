@@ -90,6 +90,10 @@
   color: @theme_text_color;
 }
 
+.note-tag-dialog-create-tag-button:not(:hover) {
+  box-shadow: none;
+}
+
 .note-tag-dialog-create-tag-button:hover {
   background-color: @theme_bg_color;
 }
@@ -149,6 +153,7 @@
 
 .sidebar-view-switcher-item-row-edit-tags:not(:hover) {
   background: none;
+  box-shadow: none;
 }
 
 .sidebar-view-switcher-item-row-edit-tags label {
