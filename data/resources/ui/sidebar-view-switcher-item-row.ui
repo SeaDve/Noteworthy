@@ -28,9 +28,7 @@
   </object>
   <template class="NwtySidebarViewSwitcherItemRow" parent="GtkWidget">
     <property name="layout-manager">
-      <object class="GtkBoxLayout">
-        <property name="spacing">6</property>
-      </object>
+      <object class="GtkBoxLayout"/>
     </property>
     <child>
       <object class="GtkImage" id="select_icon">

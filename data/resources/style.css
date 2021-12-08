@@ -128,6 +128,10 @@
   min-width: 120px;
 }
 
+.sidebar-view-switcher-list-view row > itemrow > image {
+  padding-right: 9px;
+}
+
 .sidebar-view-switcher-list-view row > itemrow > label {
   padding-left: 9px;
   padding-right: 9px;

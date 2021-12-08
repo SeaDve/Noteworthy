@@ -164,6 +164,8 @@ impl ItemRow {
             binding.unbind();
         }
 
+        // FIXME use cleaner approach, so each row does have an own widget
+        // not handled by this object
         if let Some(item) = self.item() {
             if let Some(item) = item.downcast_ref::<Item>() {
                 match item.kind() {
