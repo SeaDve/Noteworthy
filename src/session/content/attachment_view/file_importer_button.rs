@@ -102,7 +102,8 @@ impl FileImporterButton {
                 .map(|metadata| metadata.len())
                 .with_context(|| format!("Failed to read file at `{}`", file_path.display()))?;
 
-            // TODO maybe make this less strict or remove this restriction?
+            // TODO maybe make this less strict or remove this restriction
+            // or maybe just warn the user that they are trying to save a large file
             anyhow::ensure!(
                 file_byte_size < MAX_BYTES_FILE_SIZE,
                 "File `{}` exceeds maximum file size of 20 MB",

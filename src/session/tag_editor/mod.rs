@@ -25,8 +25,6 @@ mod imp {
         pub search_entry: TemplateChild<gtk::SearchEntry>,
         #[template_child]
         pub create_tag_entry: TemplateChild<gtk::Entry>,
-        #[template_child]
-        pub create_tag_button: TemplateChild<gtk::Button>,
 
         pub tag_list: OnceCell<TagList>,
         pub note_list: OnceCell<NoteList>,
@@ -43,13 +41,7 @@ mod imp {
             Self::bind_template(klass);
 
             klass.install_action("tag-editor.create-tag", None, move |obj, _, _| {
-                let imp = imp::TagEditor::from_instance(obj);
-                let name = imp.create_tag_entry.text();
-
-                let tag_list = obj.tag_list();
-                tag_list.append(Tag::new(&name)).unwrap();
-
-                imp.create_tag_entry.set_text("");
+                obj.on_create_tag();
             });
         }
 
@@ -113,28 +105,25 @@ mod imp {
 
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
-            self.create_tag_button.set_sensitive(false);
+
+            obj.action_set_enabled("tag-editor.create-tag", false);
+
             self.create_tag_entry
                 .connect_text_notify(clone!(@weak obj => move |entry| {
                     let imp = imp::TagEditor::from_instance(&obj);
-                    let text = entry.text();
 
-                    if obj.tag_list().is_valid_name(&text) {
-                        imp.create_tag_button.set_sensitive(true);
+                    if obj.tag_list().is_valid_name(&entry.text()) {
+                        obj.action_set_enabled("tag-editor.create-tag", true);
                         imp.create_tag_entry.remove_css_class("error");
                     } else {
-                        imp.create_tag_button.set_sensitive(false);
+                        obj.action_set_enabled("tag-editor.create-tag", false);
                         imp.create_tag_entry.add_css_class("error");
                     }
                 }));
+
             self.create_tag_entry
                 .connect_activate(clone!(@weak obj => move |_| {
-                    let imp = imp::TagEditor::from_instance(&obj);
-
-                    if imp.create_tag_button.is_sensitive() {
-                        // TODO activate the action directly
-                        imp.create_tag_button.activate();
-                    }
+                    WidgetExt::activate_action(&obj, "tag-editor.create-tag", None);
                 }));
         }
     }
@@ -192,5 +181,15 @@ impl TagEditor {
     fn set_note_list(&self, note_list: NoteList) {
         let imp = imp::TagEditor::from_instance(self);
         imp.note_list.set(note_list).unwrap();
+    }
+
+    fn on_create_tag(&self) {
+        let imp = imp::TagEditor::from_instance(self);
+        let name = imp.create_tag_entry.text();
+
+        let tag_list = self.tag_list();
+        tag_list.append(Tag::new(&name)).unwrap();
+
+        imp.create_tag_entry.set_text("");
     }
 }

@@ -35,7 +35,7 @@
               </object>
             </child>
             <child>
-              <object class="GtkButton" id="create_tag_button">
+              <object class="GtkButton">
                 <property name="action-name">tag-editor.create-tag</property>
                 <property name="label" translatable="yes">Add</property>
               </object>
