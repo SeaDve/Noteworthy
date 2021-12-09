@@ -95,17 +95,32 @@ impl Application {
     }
 
     pub fn settings(&self) -> gio::Settings {
-        let imp = self.private();
+        let imp = imp::Application::from_instance(self);
         imp.settings.clone()
     }
 
     pub fn main_window(&self) -> Window {
-        let imp = self.private();
+        let imp = imp::Application::from_instance(self);
         imp.window.get().unwrap().upgrade().unwrap()
     }
 
-    fn private(&self) -> &imp::Application {
-        imp::Application::from_instance(self)
+    fn show_about_dialog(&self) {
+        let dialog = gtk::AboutDialogBuilder::new()
+            .transient_for(&self.main_window())
+            .modal(true)
+            // .comments(&gettext("Elegantly record your screen"))
+            .version(VERSION)
+            .logo_icon_name(APP_ID)
+            .authors(vec!["Dave Patrick".into()])
+            // Translators: Replace "translator-credits" with your names. Put a comma between.
+            .translator_credits(&gettext("translator-credits"))
+            .copyright(&gettext("Copyright 2021 Dave Patrick"))
+            .license_type(gtk::License::Gpl30)
+            .website("https://github.com/SeaDve/Noteworthy")
+            .website_label(&gettext("GitHub"))
+            .build();
+
+        dialog.show();
     }
 
     fn setup_gactions(&self) {
@@ -126,25 +141,6 @@ impl Application {
 
     fn setup_accels(&self) {
         self.set_accels_for_action("app.quit", &["<primary>q"]);
-    }
-
-    fn show_about_dialog(&self) {
-        let dialog = gtk::AboutDialogBuilder::new()
-            .transient_for(&self.main_window())
-            .modal(true)
-            // .comments(&gettext("Elegantly record your screen"))
-            .version(VERSION)
-            .logo_icon_name(APP_ID)
-            .authors(vec!["Dave Patrick".into()])
-            // Translators: Replace "translator-credits" with your names. Put a comma between.
-            .translator_credits(&gettext("translator-credits"))
-            .copyright(&gettext("Copyright 2021 Dave Patrick"))
-            .license_type(gtk::License::Gpl30)
-            .website("https://github.com/SeaDve/Noteworthy")
-            .website_label(&gettext("GitHub"))
-            .build();
-
-        dialog.show();
     }
 }
 
