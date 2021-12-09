@@ -108,23 +108,7 @@ mod imp {
 
             obj.action_set_enabled("tag-editor.create-tag", false);
 
-            self.create_tag_entry
-                .connect_text_notify(clone!(@weak obj => move |entry| {
-                    let imp = imp::TagEditor::from_instance(&obj);
-
-                    if obj.tag_list().is_valid_name(&entry.text()) {
-                        obj.action_set_enabled("tag-editor.create-tag", true);
-                        imp.create_tag_entry.remove_css_class("error");
-                    } else {
-                        obj.action_set_enabled("tag-editor.create-tag", false);
-                        imp.create_tag_entry.add_css_class("error");
-                    }
-                }));
-
-            self.create_tag_entry
-                .connect_activate(clone!(@weak obj => move |_| {
-                    WidgetExt::activate_action(&obj, "tag-editor.create-tag", None);
-                }));
+            obj.setup_signals();
         }
     }
 
@@ -191,5 +175,27 @@ impl TagEditor {
         tag_list.append(Tag::new(&name)).unwrap();
 
         imp.create_tag_entry.set_text("");
+    }
+
+    fn setup_signals(&self) {
+        let imp = imp::TagEditor::from_instance(self);
+
+        imp.create_tag_entry
+            .connect_text_notify(clone!(@weak self as obj => move |entry| {
+                let imp = imp::TagEditor::from_instance(&obj);
+
+                if obj.tag_list().is_valid_name(&entry.text()) {
+                    obj.action_set_enabled("tag-editor.create-tag", true);
+                    imp.create_tag_entry.remove_css_class("error");
+                } else {
+                    obj.action_set_enabled("tag-editor.create-tag", false);
+                    imp.create_tag_entry.add_css_class("error");
+                }
+            }));
+
+        imp.create_tag_entry
+            .connect_activate(clone!(@weak self as obj => move |_| {
+                WidgetExt::activate_action(&obj, "tag-editor.create-tag", None);
+            }));
     }
 }

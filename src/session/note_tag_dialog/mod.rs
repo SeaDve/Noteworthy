@@ -113,6 +113,8 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
+            obj.action_set_enabled("note-tag-dialog.create-tag", false);
+
             obj.setup_list_view();
             obj.setup_signals();
         }
@@ -194,9 +196,12 @@ impl NoteTagDialog {
     fn on_search_entry_text_notify(&self, tag_name: &str) {
         let does_contain_tag = self.tag_list().contains_with_name(tag_name);
 
+        let is_create_tag_enabled = !does_contain_tag && !tag_name.is_empty();
+        self.action_set_enabled("note-tag-dialog.create-tag", is_create_tag_enabled);
+
         let imp = imp::NoteTagDialog::from_instance(self);
         imp.create_tag_button_revealer
-            .set_reveal_child(!does_contain_tag && !tag_name.is_empty());
+            .set_reveal_child(is_create_tag_enabled);
         imp.create_tag_button_label
             .set_label(&gettext!("Create “{}”", tag_name));
     }
@@ -224,6 +229,11 @@ impl NoteTagDialog {
         imp.search_entry
             .connect_text_notify(clone!(@weak self as obj => move |search_entry| {
                 obj.on_search_entry_text_notify(&search_entry.text());
+            }));
+
+        imp.search_entry
+            .connect_activate(clone!(@weak self as obj => move |_| {
+                WidgetExt::activate_action(&obj, "note-tag-dialog.create-tag", None);
             }));
     }
 }
