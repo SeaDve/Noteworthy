@@ -35,7 +35,6 @@ mod imp {
         type ParentType = adw::ApplicationWindow;
 
         fn class_init(klass: &mut Self::Class) {
-            Setup::static_type();
             Self::bind_template(klass);
 
             klass.install_action("win.close", None, move |obj, _, _| {

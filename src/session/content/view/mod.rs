@@ -41,7 +41,6 @@ mod imp {
         type ParentType = adw::Bin;
 
         fn class_init(klass: &mut Self::Class) {
-            TagBar::static_type();
             Self::bind_template(klass);
         }
 

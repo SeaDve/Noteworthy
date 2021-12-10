@@ -44,7 +44,6 @@ mod imp {
         type ParentType = adw::Window;
 
         fn class_init(klass: &mut Self::Class) {
-            Row::static_type();
             Self::bind_template(klass);
 
             klass.install_action("note-tag-dialog.create-tag", None, move |obj, _, _| {

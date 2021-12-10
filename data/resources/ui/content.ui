@@ -54,7 +54,7 @@
             <property name="flap-position">end</property>
             <property name="fold-policy">always</property>
             <property name="content">
-              <object class="NwtyContentView" id="view">
+              <object class="NwtyContentView">
                 <property name="note" bind-source="NwtyContent" bind-property="note" bind-flags="sync-create"/>
               </object>
             </property>

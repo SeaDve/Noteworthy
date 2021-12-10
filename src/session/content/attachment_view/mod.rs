@@ -52,9 +52,6 @@ mod imp {
         type ParentType = gtk::Widget;
 
         fn class_init(klass: &mut Self::Class) {
-            AudioRecorderButton::static_type();
-            FileImporterButton::static_type();
-            CameraButton::static_type();
             Self::bind_template(klass);
         }
 

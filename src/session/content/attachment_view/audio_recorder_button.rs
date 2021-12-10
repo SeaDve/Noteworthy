@@ -41,7 +41,6 @@ mod imp {
         type ParentType = adw::Bin;
 
         fn class_init(klass: &mut Self::Class) {
-            AudioVisualizer::static_type();
             Self::bind_template(klass);
 
             klass.install_action("audio-recorder-button.record-ok", None, move |obj, _, _| {

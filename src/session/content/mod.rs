@@ -48,7 +48,6 @@ mod imp {
 
         fn class_init(klass: &mut Self::Class) {
             View::static_type();
-            AttachmentView::static_type();
             Self::bind_template(klass);
         }
 

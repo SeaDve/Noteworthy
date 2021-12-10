@@ -64,8 +64,6 @@ mod imp {
         type ParentType = gtk::Widget;
 
         fn class_init(klass: &mut Self::Class) {
-            ViewSwitcher::static_type();
-            NoteRow::static_type();
             SyncButton::static_type();
             Self::bind_template(klass);
 

@@ -36,7 +36,6 @@ mod imp {
         type ParentType = adw::Bin;
 
         fn class_init(klass: &mut Self::Class) {
-            ItemRow::static_type();
             Self::bind_template(klass);
         }
 

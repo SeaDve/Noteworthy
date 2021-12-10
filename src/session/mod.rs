@@ -48,8 +48,6 @@ mod imp {
         type ParentType = adw::Bin;
 
         fn class_init(klass: &mut Self::Class) {
-            Sidebar::static_type();
-            Content::static_type();
             Self::bind_template(klass);
 
             klass.install_action("session.navigate-back", None, move |obj, _, _| {
