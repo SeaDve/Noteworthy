@@ -195,7 +195,7 @@ impl Camera {
     fn disable_capture(&self) {
         self.action_set_enabled("camera.capture", false);
 
-        // TODO Remove picture's paintable and add an AdwToast about error on connecting to camera
+        // TODO Switch to a page about error on connecting to the camera
         // Add a button too to retry reconnecting to the camera
     }
 
