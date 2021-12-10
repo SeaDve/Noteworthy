@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <template class="NwtyWindow" parent="AdwApplicationWindow">
-    <property name="default-width">600</property>
-    <property name="default-height">400</property>
     <property name="content">
       <object class="GtkStack" id="main_stack">
         <property name="transition-type">crossfade</property>
