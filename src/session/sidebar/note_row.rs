@@ -1,6 +1,6 @@
 use adw::subclass::prelude::*;
 use gtk::{
-    glib::{self, clone},
+    glib::{self, clone, WeakRef},
     prelude::*,
     subclass::prelude::*,
     CompositeTemplate,
@@ -39,7 +39,7 @@ mod imp {
         pub is_checked: Cell<bool>,
         pub position: Cell<u32>,
         pub note: RefCell<Option<Note>>,
-        pub sidebar: OnceCell<Sidebar>,
+        pub sidebar: OnceCell<WeakRef<Sidebar>>,
     }
 
     #[glib::object_subclass]
@@ -222,12 +222,12 @@ impl NoteRow {
 
     pub fn sidebar(&self) -> Sidebar {
         let imp = imp::NoteRow::from_instance(self);
-        imp.sidebar.get().unwrap().clone()
+        imp.sidebar.get().unwrap().upgrade().unwrap()
     }
 
     fn set_sidebar(&self, sidebar: Sidebar) {
         let imp = imp::NoteRow::from_instance(self);
-        imp.sidebar.set(sidebar).unwrap();
+        imp.sidebar.set(sidebar.downgrade()).unwrap();
     }
 
     pub fn note(&self) -> Option<Note> {
