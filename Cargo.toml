@@ -15,12 +15,12 @@ gtk_source = { package = "sourceview5", version = "0.3.0" }
 gst = { package = "gstreamer", version = "0.17.4" }
 gst-plugin-gtk4 = { git = "https://gitlab.freedesktop.org/SeaDve/gst-plugins-rs.git", branch = "use_published_gtk" }
 gst_pbutils = { package = "gstreamer-pbutils", version = "0.17.2" }
-adw = { package = "libadwaita", version = "0.1.0-alpha-6" }
+adw = { package = "libadwaita", version = "0.1.0-beta-1" }
 
 anyhow = "1.0.51"
 indexmap = { version = "1.7.0", features = ["serde"] }
 chrono = { version = "0.4.19", features = ["serde"] }
-serde = { version = "1.0.130", features = ["derive"] }
+serde = { version = "1.0.131", features = ["derive"] }
 serde_yaml = "0.8.21"
 gray_matter = "0.2.1"
 
