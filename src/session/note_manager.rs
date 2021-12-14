@@ -329,7 +329,7 @@ impl NoteManager {
 
         let note = note_list.get(note_id).ok_or_else(|| {
             anyhow::anyhow!(
-                "Failed to delete note: Note with id `{}` not found",
+                "Failed to delete note: Note with id `{:?}` not found",
                 note_id
             )
         })?;
