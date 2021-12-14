@@ -1,6 +1,6 @@
 mod attachment;
 mod attachment_list;
-pub mod note;
+mod note;
 mod note_id;
 mod note_list;
 mod note_tag_list;
