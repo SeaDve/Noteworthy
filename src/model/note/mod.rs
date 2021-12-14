@@ -11,7 +11,7 @@ use once_cell::unsync::OnceCell;
 
 use std::{cell::Cell, path::Path};
 
-pub use self::metadata::Metadata;
+use self::metadata::Metadata;
 use super::NoteId;
 use crate::utils;
 
