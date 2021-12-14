@@ -19,3 +19,27 @@ impl Id {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use std::collections::HashMap;
+
+    #[test]
+    fn hash_map() {
+        let mut hash_map = HashMap::new();
+
+        let id_0 = Id::from_path(&Path::new("Path0"));
+        hash_map.insert(&id_0, 0);
+
+        let id_1 = Id::from_path(&Path::new("Path1"));
+        hash_map.insert(&id_1, 1);
+
+        let id_2 = Id::from_path(&Path::new("Path2"));
+        hash_map.insert(&id_2, 2);
+
+        assert_eq!(hash_map.get(&id_0), Some(&0));
+        assert_eq!(hash_map.get(&id_1), Some(&1));
+        assert_eq!(hash_map.get(&Id::from_path(&Path::new("Path2"))), Some(&2));
+    }
+}
