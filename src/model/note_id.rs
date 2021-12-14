@@ -39,7 +39,7 @@ mod test {
         hash_map.insert(&id_2, 2);
 
         assert_eq!(hash_map.get(&id_0), Some(&0));
-        assert_eq!(hash_map.get(&id_1), Some(&1));
+        assert_eq!(hash_map.get(&id_1), Some(&2));
         assert_eq!(
             hash_map.get(&NoteId::from_path(&Path::new("Path2"))),
             Some(&2)
