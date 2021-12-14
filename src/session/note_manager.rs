@@ -14,7 +14,7 @@ use std::{
 
 use crate::{
     core::{FileType, NoteRepository, SyncState},
-    model::{note::Id, Note, NoteList, TagList},
+    model::{Note, NoteId, NoteList, TagList},
     spawn,
 };
 
@@ -323,7 +323,7 @@ impl NoteManager {
         log::info!("Created note with base_path `{}`", base_path.display());
     }
 
-    pub fn delete_note(&self, note_id: &Id) -> anyhow::Result<()> {
+    pub fn delete_note(&self, note_id: &NoteId) -> anyhow::Result<()> {
         let note_list = self.note_list();
         note_list.remove(note_id);
 
@@ -398,7 +398,7 @@ impl NoteManager {
                         "Sync: Found removed files `{}`; removing...",
                         path.display()
                     );
-                    let note_id = Id::from_path(path);
+                    let note_id = NoteId::from_path(path);
                     note_list.remove(&note_id);
                 }
                 git2::Delta::Modified => {
@@ -406,7 +406,7 @@ impl NoteManager {
                         "Sync: Found modified files `{}`; updating...",
                         path.display()
                     );
-                    let note_id = Id::from_path(path);
+                    let note_id = NoteId::from_path(path);
                     let note = note_list.get(&note_id).unwrap();
                     note.update().await?;
                 }

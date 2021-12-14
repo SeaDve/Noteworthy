@@ -1,4 +1,3 @@
-mod id;
 mod metadata;
 
 use gray_matter::{engine::YAML, Matter};
@@ -12,7 +11,8 @@ use once_cell::unsync::OnceCell;
 
 use std::{cell::Cell, path::Path};
 
-pub use self::{id::Id, metadata::Metadata};
+pub use self::metadata::Metadata;
+use super::NoteId;
 use crate::utils;
 
 mod imp {
@@ -196,8 +196,8 @@ impl Note {
         imp.buffer.get().unwrap().clone()
     }
 
-    pub fn id(&self) -> Id {
-        Id::from_path(&self.file().path().unwrap())
+    pub fn id(&self) -> NoteId {
+        NoteId::from_path(&self.file().path().unwrap())
     }
 
     pub fn is_saved(&self) -> bool {

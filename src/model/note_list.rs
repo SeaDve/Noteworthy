@@ -11,14 +11,14 @@ use std::{
     collections::HashSet,
 };
 
-use super::{note::Id, Note};
+use super::{Note, NoteId};
 
 mod imp {
     use super::*;
 
     #[derive(Debug, Default)]
     pub struct NoteList {
-        pub list: RefCell<IndexMap<Id, Note>>,
+        pub list: RefCell<IndexMap<NoteId, Note>>,
         pub unsaved_notes: RefCell<HashSet<Note>>,
     }
 
@@ -95,7 +95,7 @@ impl NoteList {
         self.items_changed(self.n_items() - 1, 0, 1);
     }
 
-    pub fn remove(&self, note_id: &Id) {
+    pub fn remove(&self, note_id: &NoteId) {
         let imp = imp::NoteList::from_instance(self);
 
         let removed = {
@@ -108,12 +108,12 @@ impl NoteList {
         }
     }
 
-    pub fn get(&self, note_id: &Id) -> Option<Note> {
+    pub fn get(&self, note_id: &NoteId) -> Option<Note> {
         let imp = imp::NoteList::from_instance(self);
         imp.list.borrow().get(note_id).cloned()
     }
 
-    pub fn get_index_of(&self, note_id: &Id) -> Option<usize> {
+    pub fn get_index_of(&self, note_id: &NoteId) -> Option<usize> {
         let imp = imp::NoteList::from_instance(self);
         imp.list.borrow().get_index_of(note_id)
     }
