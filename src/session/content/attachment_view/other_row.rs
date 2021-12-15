@@ -23,10 +23,7 @@ mod imp {
             Self::bind_template(klass);
 
             klass.install_action("other-row.launch-file", None, move |obj, _, _| {
-                let file = obj.attachment().file();
-                let file_uri = file.uri();
-                gio::AppInfo::launch_default_for_uri(&file_uri, None::<&gio::AppLaunchContext>)
-                    .unwrap();
+                obj.on_launch_file();
             });
         }
 
@@ -101,5 +98,15 @@ impl OtherRow {
     fn attachment(&self) -> Attachment {
         let imp = imp::OtherRow::from_instance(self);
         imp.attachment.borrow().clone()
+    }
+
+    fn on_launch_file(&self) {
+        let file_uri = self.attachment().file().uri();
+        let res = gio::AppInfo::launch_default_for_uri(&file_uri, None::<&gio::AppLaunchContext>);
+
+        if let Err(err) = res {
+            log::error!("Failed to open file at uri `{}`: {}", file_uri, err);
+            // TODO show user facing error
+        }
     }
 }
