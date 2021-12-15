@@ -64,7 +64,7 @@ impl AudioPlayerHandler {
         let imp = imp::AudioPlayerHandler::from_instance(self);
 
         for audio_player in imp.list.borrow().keys() {
-            audio_player.stop();
+            audio_player.set_state(PlaybackState::Stopped);
         }
     }
 
@@ -73,7 +73,7 @@ impl AudioPlayerHandler {
 
         for audio_player in imp.list.borrow().keys() {
             if audio_player != exception {
-                audio_player.stop();
+                audio_player.set_state(PlaybackState::Stopped);
             }
         }
     }

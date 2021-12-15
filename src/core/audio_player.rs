@@ -135,28 +135,9 @@ impl AudioPlayer {
     }
 
     pub fn set_state(&self, state: PlaybackState) {
-        let player = self.player();
-
-        match state {
-            PlaybackState::Stopped => {
-                player.set_state(gst::State::Null).unwrap();
-                log::info!("Player state changed to Stopped");
-
-                // Changing the state to NULL flushes the pipeline.
-                // Thus, the change message never arrives.
-                let imp = imp::AudioPlayer::from_instance(self);
-                imp.state.set(state);
-                self.notify("state");
-            }
-            PlaybackState::Loading => {
-                player.set_state(gst::State::Ready).unwrap();
-            }
-            PlaybackState::Paused => {
-                player.set_state(gst::State::Paused).unwrap();
-            }
-            PlaybackState::Playing => {
-                player.set_state(gst::State::Playing).unwrap();
-            }
+        if let Err(err) = self.set_state_inner(state) {
+            log::error!("Failed to set state to `{:?}`: {}", state, err);
+            // TODO propagate this error to show user facing errors
         }
     }
 
@@ -212,16 +193,32 @@ impl AudioPlayer {
             .map_or(ClockTime::ZERO, |ct| ct.into()))
     }
 
-    pub fn play(&self) {
-        self.set_state(PlaybackState::Playing);
-    }
+    fn set_state_inner(&self, state: PlaybackState) -> anyhow::Result<()> {
+        let player = self.player();
 
-    pub fn pause(&self) {
-        self.set_state(PlaybackState::Paused);
-    }
+        match state {
+            PlaybackState::Stopped => {
+                player.set_state(gst::State::Null)?;
+                log::info!("Player state changed to Stopped");
 
-    pub fn stop(&self) {
-        self.set_state(PlaybackState::Stopped);
+                // Changing the state to NULL flushes the pipeline.
+                // Thus, the change message never arrives.
+                let imp = imp::AudioPlayer::from_instance(self);
+                imp.state.set(state);
+                self.notify("state");
+            }
+            PlaybackState::Loading => {
+                player.set_state(gst::State::Ready)?;
+            }
+            PlaybackState::Paused => {
+                player.set_state(gst::State::Paused)?;
+            }
+            PlaybackState::Playing => {
+                player.set_state(gst::State::Playing)?;
+            }
+        }
+
+        Ok(())
     }
 
     fn player(&self) -> gst::Pipeline {
