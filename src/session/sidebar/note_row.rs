@@ -128,7 +128,7 @@ mod imp {
                 }
                 "sidebar" => {
                     let sidebar = value.get().unwrap();
-                    obj.set_sidebar(sidebar);
+                    obj.set_sidebar(&sidebar);
                 }
                 "note" => {
                     let note = value.get().unwrap();
@@ -225,7 +225,7 @@ impl NoteRow {
         imp.sidebar.get().unwrap().upgrade().unwrap()
     }
 
-    fn set_sidebar(&self, sidebar: Sidebar) {
+    fn set_sidebar(&self, sidebar: &Sidebar) {
         let imp = imp::NoteRow::from_instance(self);
         imp.sidebar.set(sidebar.downgrade()).unwrap();
     }
