@@ -194,6 +194,9 @@ pub fn serialize_file<S>(file: &gio::File, s: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
+    // TODO Use relative path instead of absolute path
+    // This is to lessen redundancy
+    // I think this should be handled somewhere in Note or AttachmentList
     file.path().unwrap().serialize(s)
 }
 
