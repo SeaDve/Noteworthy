@@ -71,10 +71,7 @@ impl AttachmentList {
             }
         }));
 
-        let is_list_appended = {
-            let mut list = imp.list.borrow_mut();
-            list.insert(attachment)
-        };
+        let is_list_appended = imp.list.borrow_mut().insert(attachment);
 
         anyhow::ensure!(is_list_appended, "Cannot append existing object attachment");
 
@@ -86,10 +83,7 @@ impl AttachmentList {
     pub fn remove(&self, attachment: &Attachment) -> anyhow::Result<()> {
         let imp = imp::AttachmentList::from_instance(self);
 
-        let removed = {
-            let mut list = imp.list.borrow_mut();
-            list.shift_remove_full(attachment)
-        };
+        let removed = imp.list.borrow_mut().shift_remove_full(attachment);
 
         if let Some((position, _)) = removed {
             self.items_changed(position as u32, 1, 0);

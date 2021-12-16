@@ -72,10 +72,7 @@ impl NoteTagList {
             }
         }));
 
-        let is_list_appended = {
-            let mut list = imp.list.borrow_mut();
-            list.insert(tag)
-        };
+        let is_list_appended = imp.list.borrow_mut().insert(tag);
 
         anyhow::ensure!(is_list_appended, "Cannot append existing object tag");
 
@@ -87,10 +84,7 @@ impl NoteTagList {
     pub fn remove(&self, tag: &Tag) -> anyhow::Result<()> {
         let imp = imp::NoteTagList::from_instance(self);
 
-        let removed = {
-            let mut list = imp.list.borrow_mut();
-            list.shift_remove_full(tag)
-        };
+        let removed = imp.list.borrow_mut().shift_remove_full(tag);
 
         if let Some((position, _)) = removed {
             self.items_changed(position as u32, 1, 0);

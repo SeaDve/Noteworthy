@@ -199,8 +199,7 @@ impl AudioRecorder {
     }
 
     fn default_audio_source_name() -> anyhow::Result<String> {
-        let mut controller = pulsectl::controllers::SourceController::create()?;
-        let server_info = controller.get_server_info()?;
+        let server_info = pulsectl::controllers::SourceController::create()?.get_server_info()?;
 
         server_info
             .default_source_name

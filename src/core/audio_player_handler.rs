@@ -46,17 +46,18 @@ impl AudioPlayerHandler {
                 }
             }));
 
-        let mut list = imp.list.borrow_mut();
-        list.insert(audio_player, handler_id);
+        imp.list.borrow_mut().insert(audio_player, handler_id);
     }
 
     pub fn remove(&self, audio_player: &AudioPlayer) {
         let imp = imp::AudioPlayerHandler::from_instance(self);
 
-        let mut list = imp.list.borrow_mut();
-        let handler_id = list
+        let handler_id = imp
+            .list
+            .borrow_mut()
             .remove(audio_player)
             .expect("Trying to remove audio_player that is not handled by this");
+
         audio_player.disconnect(handler_id);
     }
 

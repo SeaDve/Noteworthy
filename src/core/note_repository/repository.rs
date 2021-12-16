@@ -85,21 +85,23 @@ impl Repository {
 
         let diff = repo.diff_tree_to_tree(Some(old_tree), Some(new_tree), None)?;
 
-        let mut files = Vec::new();
-        for diff_delta in diff.deltas() {
-            let old_file_path = diff_delta.old_file().path().unwrap();
-            let new_file_path = diff_delta.new_file().path().unwrap();
-            log::info!(
-                "Diff: Found file `{}` -> `{}`",
-                old_file_path.display(),
-                new_file_path.display()
-            );
+        let files = diff
+            .deltas()
+            .map(|delta| {
+                let old_file_path = delta.old_file().path().unwrap();
+                let new_file_path = delta.new_file().path().unwrap();
+                log::info!(
+                    "Diff: Found file `{}` -> `{}`",
+                    old_file_path.display(),
+                    new_file_path.display()
+                );
 
-            let file_path = self.base_path().join(new_file_path);
-            let status = diff_delta.status();
+                let file_path = self.base_path().join(new_file_path);
+                let status = delta.status();
 
-            files.push((file_path, status));
-        }
+                (file_path, status)
+            })
+            .collect();
 
         Ok(files)
     }

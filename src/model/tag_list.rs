@@ -70,10 +70,7 @@ impl TagList {
 
         anyhow::ensure!(!tag_name.is_empty(), "Tag name cannot be empty");
 
-        let is_name_list_appended = {
-            let mut name_list = imp.name_list.borrow_mut();
-            name_list.insert(tag_name)
-        };
+        let is_name_list_appended = imp.name_list.borrow_mut().insert(tag_name);
 
         anyhow::ensure!(is_name_list_appended, "Cannot append existing tag name");
 
@@ -83,10 +80,7 @@ impl TagList {
             }
         }));
 
-        {
-            let mut list = imp.list.borrow_mut();
-            assert!(list.insert(tag));
-        }
+        assert!(imp.list.borrow_mut().insert(tag));
 
         self.items_changed(self.n_items() - 1, 0, 1);
 
@@ -96,20 +90,14 @@ impl TagList {
     pub fn remove(&self, tag: &Tag) -> anyhow::Result<()> {
         let imp = imp::TagList::from_instance(self);
 
-        let is_name_list_removed = {
-            let mut name_list = imp.name_list.borrow_mut();
-            name_list.shift_remove(&tag.name())
-        };
+        let is_name_list_removed = imp.name_list.borrow_mut().shift_remove(&tag.name());
 
         anyhow::ensure!(
             is_name_list_removed,
             "Cannot remove tag name that does not exist"
         );
 
-        let removed = {
-            let mut list = imp.list.borrow_mut();
-            list.shift_remove_full(tag)
-        };
+        let removed = imp.list.borrow_mut().shift_remove_full(tag);
 
         if let Some((position, _)) = removed {
             self.items_changed(position as u32, 1, 0);

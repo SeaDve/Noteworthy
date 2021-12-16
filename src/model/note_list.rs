@@ -87,10 +87,7 @@ impl NoteList {
             }
         }));
 
-        {
-            let mut list = imp.list.borrow_mut();
-            list.insert(note.id(), note);
-        }
+        imp.list.borrow_mut().insert(note.id(), note);
 
         self.items_changed(self.n_items() - 1, 0, 1);
     }
@@ -98,10 +95,7 @@ impl NoteList {
     pub fn remove(&self, note_id: &NoteId) {
         let imp = imp::NoteList::from_instance(self);
 
-        let removed = {
-            let mut list = imp.list.borrow_mut();
-            list.shift_remove_full(note_id)
-        };
+        let removed = imp.list.borrow_mut().shift_remove_full(note_id);
 
         if let Some((position, _, _)) = removed {
             self.items_changed(position as u32, 1, 0);

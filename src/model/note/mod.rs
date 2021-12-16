@@ -169,16 +169,14 @@ impl Note {
     }
 
     pub fn create_default(base_path: &Path) -> Self {
-        // The file_name is also the note's id
-        let file_name = utils::generate_unique_file_name("Note");
-        let mut file = base_path.join(file_name);
-        file.set_extension("md");
+        let file = {
+            let file_name = utils::generate_unique_file_name("Note"); // Also the note's Id
+            let mut file_path = base_path.join(file_name);
+            file_path.set_extension("md");
+            gio::File::for_path(file_path)
+        };
 
-        Self::new(
-            &gio::File::for_path(&file),
-            &Metadata::default(),
-            &Self::default_buffer(),
-        )
+        Self::new(&file, &Metadata::default(), &Self::default_buffer())
     }
 
     pub fn file(&self) -> gio::File {

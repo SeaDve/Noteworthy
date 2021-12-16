@@ -107,9 +107,12 @@ impl CameraButton {
 
         imp.camera
             .connect_capture_accept(clone!(@weak self as obj => move |_, texture| {
-                let file_name = utils::generate_unique_file_name("Camera");
-                let mut file_path = utils::default_notes_dir().join(file_name);
-                file_path.set_extension("png");
+                let file_path = {
+                    let file_name = utils::generate_unique_file_name("Camera");
+                    let mut file_path = utils::default_notes_dir().join(file_name);
+                    file_path.set_extension("png");
+                    file_path
+                };
 
                 texture.save_to_png(&file_path);
                 obj.emit_by_name("capture-done", &[&gio::File::for_path(&file_path)]).unwrap();
