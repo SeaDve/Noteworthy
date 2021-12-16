@@ -8,12 +8,6 @@ use serde::{Deserialize, Serialize};
 #[serde(transparent)]
 pub struct DateTime(chrono::DateTime<Local>);
 
-impl std::fmt::Display for DateTime {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.format("%B %d %Y %H:%M:%S").fmt(f)
-    }
-}
-
 impl Default for DateTime {
     fn default() -> Self {
         Self::now()
