@@ -59,10 +59,6 @@
   padding-right: 0;
 }
 
-.content-attachment-view-audio-row-position {
-  padding-right: 3px;
-}
-
 .content-attachment-view-other-row {
   padding: 6px;
   padding-left: 12px;
@@ -156,10 +152,8 @@
 
 /* TagEditor */
 .tag-editor-create-tag {
-  padding-top: 12px;
+  padding: 12px;
   padding-bottom: 6px;
-  padding-left: 12px;
-  padding-right: 6px;
   background-color: @view_bg_color;
 }
 
