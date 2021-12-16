@@ -151,10 +151,20 @@ impl Row {
     }
 
     fn replace_child(&self, attachment: &Attachment) {
+        // TODO make other row activatable too
         let child: gtk::Widget = match attachment.file_type() {
-            FileType::Audio => AudioRow::new(attachment).upcast(),
-            FileType::Bitmap => PictureRow::new(attachment).upcast(),
-            FileType::Markdown | FileType::Unknown => OtherRow::new(attachment).upcast(),
+            FileType::Audio => {
+                self.remove_css_class("activatable");
+                AudioRow::new(attachment).upcast()
+            }
+            FileType::Bitmap => {
+                self.remove_css_class("activatable");
+                PictureRow::new(attachment).upcast()
+            }
+            FileType::Markdown | FileType::Unknown => {
+                self.add_css_class("activatable");
+                OtherRow::new(attachment).upcast()
+            }
         };
 
         let imp = imp::Row::from_instance(self);

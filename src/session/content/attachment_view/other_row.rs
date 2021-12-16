@@ -1,4 +1,10 @@
-use gtk::{gio, glib, prelude::*, subclass::prelude::*, CompositeTemplate};
+use gtk::{
+    gio,
+    glib::{self, clone},
+    prelude::*,
+    subclass::prelude::*,
+    CompositeTemplate,
+};
 
 use std::cell::RefCell;
 
@@ -73,6 +79,8 @@ mod imp {
 
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
+
+            obj.setup_gesture();
         }
 
         fn dispose(&self, obj: &Self::Type) {
@@ -108,5 +116,13 @@ impl OtherRow {
             log::error!("Failed to open file at uri `{}`: {}", file_uri, err);
             // TODO show user facing error
         }
+    }
+
+    fn setup_gesture(&self) {
+        let gesture = gtk::GestureClick::new();
+        gesture.connect_released(clone!(@weak self as obj => move |_, _, _, _| {
+            obj.activate_action("other-row.launch-file", None);
+        }));
+        self.add_controller(&gesture);
     }
 }
