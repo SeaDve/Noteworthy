@@ -117,12 +117,10 @@ impl FileImporterButton {
     }
 
     async fn import_files(&self, files: Vec<PathBuf>) -> anyhow::Result<()> {
-        let default_notes_dir = utils::default_notes_dir();
-
         for source_path in files {
             let destination_path = {
-                let file_name = utils::generate_unique_file_name("OtherFile");
-                let mut path = default_notes_dir.join(file_name);
+                let mut path = utils::default_notes_dir();
+                path.push(utils::generate_unique_file_name("OtherFile"));
 
                 if let Some(extension) = source_path.extension() {
                     path.set_extension(extension);

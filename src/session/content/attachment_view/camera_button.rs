@@ -108,8 +108,8 @@ impl CameraButton {
         imp.camera
             .connect_capture_accept(clone!(@weak self as obj => move |_, texture| {
                 let file_path = {
-                    let file_name = utils::generate_unique_file_name("Camera");
-                    let mut file_path = utils::default_notes_dir().join(file_name);
+                    let mut file_path = utils::default_notes_dir();
+                    file_path.push(utils::generate_unique_file_name("Camera"));
                     file_path.set_extension("png");
                     file_path
                 };
