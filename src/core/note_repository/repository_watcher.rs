@@ -131,6 +131,7 @@ impl RepositoryWatcher {
         let base_path = self.base_path().path().unwrap();
         let remote_name = self.remote_name();
 
+        // FIXME join and end the thread properly when `self` is dropped
         thread::spawn(move || match Repository::open(&base_path) {
             Ok(repo) => {
                 log::info!("Starting watcher thread...");
