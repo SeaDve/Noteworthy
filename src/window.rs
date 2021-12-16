@@ -152,13 +152,12 @@ impl Window {
         imp.main_stack.add_child(&session);
         imp.session.set(session).unwrap();
 
-        self.switch_to_loading_page();
-
         let session = self.session();
-        session.load().await?;
-        session.sync().await?;
 
+        self.switch_to_loading_page();
+        session.load().await?;
         self.switch_to_session_page();
+        session.sync().await?;
 
         Ok(())
     }
