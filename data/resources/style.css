@@ -20,7 +20,7 @@
   padding-right: 24px;
   padding-top: 18px;
   padding-bottom: 18px;
-  background-color: @theme_base_color;
+  background-color: @view_bg_color;
 }
 
 .content-view-tag-bar row {
@@ -81,17 +81,14 @@
 }
 
 .note-tag-dialog-create-tag-button {
-  padding-top: 9px;
-  padding-bottom: 9px;
-  padding-left: 12px;
-  padding-right: 12px;
+  padding: 12px;
   border-radius: 0;
-  color: @theme_text_color;
+  color: @view_fg_color;
 }
 
 .note-tag-dialog-create-tag-button:not(:hover) {
   box-shadow: none;
-  background-color: @theme_base_color;
+  background-color: @view_bg_color;
 }
 
 .note-tag-dialog-create-tag-button label {
@@ -163,7 +160,7 @@
   padding-bottom: 6px;
   padding-left: 12px;
   padding-right: 6px;
-  background-color: @theme_base_color;
+  background-color: @view_bg_color;
 }
 
 .tag-editor-list-view row {
@@ -184,7 +181,7 @@
 }
 
 .camera-capture-button {
-  background-color: @theme_bg_color;
+  background-color: @accent_fg_color;
   border-radius: 100%;
   margin: 3px;
   opacity: 0.8;
@@ -200,7 +197,7 @@
 
 .camera-capture-button-ring {
   opacity: 0.8;
-  border: 0.3em solid @theme_bg_color;
+  border: 0.3em solid @accent_fg_color;
   border-radius: 100%;
 }
 
