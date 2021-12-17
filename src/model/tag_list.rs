@@ -4,7 +4,7 @@ use gtk::{
     glib::{self, clone},
     prelude::*,
 };
-use indexmap::{map::MutableKeys, IndexMap};
+use indexmap::IndexMap;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use std::cell::RefCell;
@@ -89,7 +89,9 @@ impl TagList {
 
         let tag_name = tag.name();
 
-        if let Some((position, _, _)) = imp.list.borrow_mut().shift_remove_full(&tag_name) {
+        let removed = imp.list.borrow_mut().shift_remove_full(&tag_name);
+
+        if let Some((position, _, _)) = removed {
             self.items_changed(position as u32, 1, 0);
             Ok(())
         } else {
@@ -109,10 +111,11 @@ impl TagList {
 
         {
             let mut list = imp.list.borrow_mut();
-            let (_, key, _) = list
-                .get_full_mut2(&previous_name)
-                .expect("Trying to rename tag that does not exist in self");
-            key.replace_range(.., new_name)
+            // Put new name at the end
+            assert!(list.insert(new_name.to_string(), tag.clone()).is_none());
+            // Remove the old name at the list and replace it with name from the end
+            assert!(list.swap_remove(&previous_name).is_some());
+            // Might replace this in the future with https://github.com/rust-lang/rust/issues/44286
         }
 
         tag.set_name(new_name);
