@@ -164,7 +164,7 @@ impl std::iter::FromIterator<Tag> for TagList {
 impl Serialize for TagList {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let imp = imp::TagList::from_instance(self);
-        imp.list.serialize(serializer)
+        serializer.collect_seq(imp.list.borrow().keys())
     }
 }
 
