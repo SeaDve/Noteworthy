@@ -1,15 +1,14 @@
 use adw::subclass::prelude::*;
 use gtk::{
-    glib::{self, clone, WeakRef},
+    glib::{self, clone},
     prelude::*,
     subclass::prelude::*,
     CompositeTemplate,
 };
-use once_cell::unsync::OnceCell;
 
 use std::cell::{Cell, RefCell};
 
-use super::{Note, SelectionMode, Sidebar};
+use super::{Note, Selection, SelectionMode, Sidebar};
 use crate::{
     core::DateTime,
     utils::{ChainExpr, PropExpr},
@@ -39,7 +38,6 @@ mod imp {
         pub is_selected: Cell<bool>,
         pub position: Cell<u32>,
         pub note: RefCell<Option<Note>>,
-        pub sidebar: OnceCell<WeakRef<Sidebar>>,
     }
 
     #[glib::object_subclass]
@@ -87,13 +85,6 @@ mod imp {
                         glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
                     glib::ParamSpec::new_object(
-                        "sidebar",
-                        "Sidebar",
-                        "The sidebar holding this row",
-                        Sidebar::static_type(),
-                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
-                    ),
-                    glib::ParamSpec::new_object(
                         "note",
                         "Note",
                         "Note represented by self",
@@ -126,10 +117,6 @@ mod imp {
                     let position = value.get().unwrap();
                     obj.set_position(position);
                 }
-                "sidebar" => {
-                    let sidebar = value.get().unwrap();
-                    obj.set_sidebar(&sidebar);
-                }
                 "note" => {
                     let note = value.get().unwrap();
                     obj.set_note(note);
@@ -143,7 +130,6 @@ mod imp {
                 "selection-mode" => obj.selection_mode().to_value(),
                 "is-selected" => obj.is_selected().to_value(),
                 "position" => obj.position().to_value(),
-                "sidebar" => obj.sidebar().to_value(),
                 "note" => obj.note().to_value(),
                 _ => unimplemented!(),
             }
@@ -172,8 +158,8 @@ glib::wrapper! {
 }
 
 impl NoteRow {
-    pub fn new(sidebar: &Sidebar) -> Self {
-        glib::Object::new(&[("sidebar", sidebar)]).expect("Failed to create NoteRow.")
+    pub fn new() -> Self {
+        glib::Object::new(&[]).expect("Failed to create NoteRow.")
     }
 
     pub fn is_selected(&self) -> bool {
@@ -220,16 +206,6 @@ impl NoteRow {
         self.notify("selection-mode");
     }
 
-    pub fn sidebar(&self) -> Sidebar {
-        let imp = imp::NoteRow::from_instance(self);
-        imp.sidebar.get().unwrap().upgrade().unwrap()
-    }
-
-    fn set_sidebar(&self, sidebar: &Sidebar) {
-        let imp = imp::NoteRow::from_instance(self);
-        imp.sidebar.set(sidebar.downgrade()).unwrap();
-    }
-
     pub fn note(&self) -> Option<Note> {
         let imp = imp::NoteRow::from_instance(self);
         imp.note.borrow().clone()
@@ -239,6 +215,14 @@ impl NoteRow {
         let imp = imp::NoteRow::from_instance(self);
         imp.note.replace(note);
         self.notify("note");
+    }
+
+    fn parent_model(&self) -> Selection {
+        self.ancestor(Sidebar::static_type())
+            .expect("Cannot find `Sidebar` as `NoteRow` ancestor")
+            .downcast_ref::<Sidebar>()
+            .unwrap()
+            .selection_model()
     }
 
     fn setup_expressions(&self) {
@@ -299,7 +283,7 @@ impl NoteRow {
                     return;
                 }
 
-                let model = obj.sidebar().selection_model();
+                let model = obj.parent_model();
 
                 if check_button.is_active() {
                     model.select_item(obj.position(), false);
@@ -311,7 +295,7 @@ impl NoteRow {
         let gesture_click = gtk::GestureClick::new();
         gesture_click.set_button(3);
         gesture_click.connect_pressed(clone!(@weak self as obj => move |_, _, _, _| {
-            let model = obj.sidebar().selection_model();
+            let model = obj.parent_model();
             model.set_selection_mode(SelectionMode::Multi);
             model.select_item(obj.position(), true);
         }));

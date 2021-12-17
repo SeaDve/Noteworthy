@@ -442,7 +442,7 @@ impl Sidebar {
 
         let factory = gtk::SignalListItemFactory::new();
         factory.connect_setup(clone!(@weak self as obj => move |_, list_item| {
-            let note_row = NoteRow::new(&obj);
+            let note_row = NoteRow::new();
 
             obj.bind_property("selection-mode", &note_row, "selection-mode")
                 .flags(glib::BindingFlags::SYNC_CREATE)
