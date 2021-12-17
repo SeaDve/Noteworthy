@@ -36,7 +36,7 @@ mod imp {
         pub check_button: TemplateChild<gtk::CheckButton>,
 
         pub selection_mode: Cell<SelectionMode>,
-        pub is_checked: Cell<bool>,
+        pub is_selected: Cell<bool>,
         pub position: Cell<u32>,
         pub note: RefCell<Option<Note>>,
         pub sidebar: OnceCell<WeakRef<Sidebar>>,
@@ -71,9 +71,9 @@ mod imp {
                         glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
                     glib::ParamSpec::new_boolean(
-                        "is-checked",
+                        "is-selected",
                         "Is Checked",
-                        "Whether this row is checked",
+                        "Whether this row is selected",
                         false,
                         glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
@@ -118,9 +118,9 @@ mod imp {
                     let selection_mode = value.get().unwrap();
                     obj.set_selection_mode(selection_mode);
                 }
-                "is-checked" => {
-                    let is_checked = value.get().unwrap();
-                    obj.set_is_checked(is_checked);
+                "is-selected" => {
+                    let is_selected = value.get().unwrap();
+                    obj.set_is_selected(is_selected);
                 }
                 "position" => {
                     let position = value.get().unwrap();
@@ -141,7 +141,7 @@ mod imp {
         fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
                 "selection-mode" => obj.selection_mode().to_value(),
-                "is-checked" => obj.is_checked().to_value(),
+                "is-selected" => obj.is_selected().to_value(),
                 "position" => obj.position().to_value(),
                 "sidebar" => obj.sidebar().to_value(),
                 "note" => obj.note().to_value(),
@@ -176,16 +176,16 @@ impl NoteRow {
         glib::Object::new(&[("sidebar", sidebar)]).expect("Failed to create NoteRow.")
     }
 
-    pub fn is_checked(&self) -> bool {
+    pub fn is_selected(&self) -> bool {
         let imp = imp::NoteRow::from_instance(self);
-        imp.is_checked.get()
+        imp.is_selected.get()
     }
 
-    pub fn set_is_checked(&self, is_checked: bool) {
+    pub fn set_is_selected(&self, is_selected: bool) {
         let imp = imp::NoteRow::from_instance(self);
-        imp.check_button.set_active(is_checked);
-        imp.is_checked.set(is_checked);
-        self.notify("is-checked");
+        imp.check_button.set_active(is_selected);
+        imp.is_selected.set(is_selected);
+        self.notify("is-selected");
     }
 
     pub fn position(&self) -> u32 {

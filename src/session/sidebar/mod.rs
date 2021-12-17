@@ -454,7 +454,7 @@ impl Sidebar {
 
             list_item
                 .property_expression("selected")
-                .bind(&note_row, "is-checked", None::<&gtk::Widget>);
+                .bind(&note_row, "is-selected", None::<&gtk::Widget>);
 
             list_item
                 .property_expression("position")
