@@ -4,7 +4,7 @@ use gtk::{
     glib::{self, clone},
     prelude::*,
 };
-use indexmap::IndexSet;
+use indexmap::IndexMap;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use std::cell::RefCell;
@@ -16,8 +16,7 @@ mod imp {
 
     #[derive(Debug, Default)]
     pub struct TagList {
-        pub list: RefCell<IndexSet<Tag>>,
-        pub name_list: RefCell<IndexSet<String>>,
+        pub list: RefCell<IndexMap<String, Tag>>,
     }
 
     #[glib::object_subclass]
@@ -47,7 +46,7 @@ mod imp {
             self.list
                 .borrow()
                 .get_index(position as usize)
-                .map(|o| o.upcast_ref::<glib::Object>())
+                .map(|(_, v)| v.upcast_ref::<glib::Object>())
                 .cloned()
         }
     }
@@ -70,17 +69,15 @@ impl TagList {
 
         anyhow::ensure!(!tag_name.is_empty(), "Tag name cannot be empty");
 
-        let is_name_list_appended = imp.name_list.borrow_mut().insert(tag_name);
-
-        anyhow::ensure!(is_name_list_appended, "Cannot append existing tag name");
-
         tag.connect_name_notify(clone!(@weak self as obj => move |tag| {
             if let Some(position) = obj.get_index_of(tag) {
                 obj.items_changed(position as u32, 1, 1);
             }
         }));
 
-        assert!(imp.list.borrow_mut().insert(tag));
+        let is_name_appended = imp.list.borrow_mut().insert(tag_name, tag).is_none();
+
+        anyhow::ensure!(is_name_appended, "Cannot append existing tag name");
 
         self.items_changed(self.n_items() - 1, 0, 1);
 
@@ -90,61 +87,54 @@ impl TagList {
     pub fn remove(&self, tag: &Tag) -> anyhow::Result<()> {
         let imp = imp::TagList::from_instance(self);
 
-        let is_name_list_removed = imp.name_list.borrow_mut().shift_remove(&tag.name());
+        let tag_name = tag.name();
 
-        anyhow::ensure!(
-            is_name_list_removed,
-            "Cannot remove tag name that does not exist"
-        );
+        let removed = imp.list.borrow_mut().shift_remove_full(&tag_name);
 
-        let removed = imp.list.borrow_mut().shift_remove_full(tag);
-
-        if let Some((position, _)) = removed {
+        if let Some((position, _, _)) = removed {
             self.items_changed(position as u32, 1, 0);
+            Ok(())
         } else {
-            anyhow::bail!("Cannot remove tag that does not exist");
+            Err(anyhow::anyhow!("Cannot remove tag that does not exist"))
         }
-
-        Ok(())
     }
 
-    pub fn rename_tag(&self, tag: &Tag, name: &str) -> anyhow::Result<()> {
+    pub fn rename_tag(&self, tag: &Tag, new_name: &str) -> anyhow::Result<()> {
         anyhow::ensure!(
-            !self.contains_with_name(name),
+            !self.contains_with_name(new_name),
             "Cannot rename a tag to a name that already exist"
         );
-        anyhow::ensure!(!name.is_empty(), "Tag name cannot be empty");
+        anyhow::ensure!(!new_name.is_empty(), "Tag name cannot be empty");
 
         let imp = imp::TagList::from_instance(self);
         let previous_name = tag.name();
 
         {
-            let mut name_list = imp.name_list.borrow_mut();
+            let mut list = imp.list.borrow_mut();
             // Put new name at the end
-            assert!(name_list.insert(name.to_string()));
-            // Remove the old name at the name_list and replace it with name from the end
-            assert!(name_list.swap_remove(&previous_name));
+            assert!(list.insert(new_name.to_string(), tag.clone()).is_none());
+            // Remove the old name at the list and replace it with name from the end
+            assert!(list.swap_remove(&previous_name).is_some());
+            // Might replace this in the future with https://github.com/rust-lang/rust/issues/44286
         }
 
-        tag.set_name(name);
+        tag.set_name(new_name);
 
         Ok(())
     }
 
     pub fn contains(&self, tag: &Tag) -> bool {
-        let imp = imp::TagList::from_instance(self);
-        imp.list.borrow().contains(tag)
+        self.contains_with_name(&tag.name())
     }
 
     pub fn contains_with_name(&self, name: &str) -> bool {
         let imp = imp::TagList::from_instance(self);
-        imp.name_list.borrow().contains(name)
+        imp.list.borrow().contains_key(name)
     }
 
     pub fn get_with_name(&self, name: &str) -> Option<Tag> {
         let imp = imp::TagList::from_instance(self);
-        let index = imp.name_list.borrow().get_index_of(name)?;
-        imp.list.borrow().get_index(index).cloned()
+        imp.list.borrow().get(name).cloned()
     }
 
     pub fn is_valid_name(&self, name: &str) -> bool {
@@ -153,7 +143,7 @@ impl TagList {
 
     fn get_index_of(&self, tag: &Tag) -> Option<usize> {
         let imp = imp::TagList::from_instance(self);
-        imp.list.borrow().get_index_of(tag)
+        imp.list.borrow().get_index_of(&tag.name())
     }
 }
 
@@ -174,7 +164,7 @@ impl std::iter::FromIterator<Tag> for TagList {
 impl Serialize for TagList {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let imp = imp::TagList::from_instance(self);
-        imp.name_list.serialize(serializer)
+        serializer.collect_seq(imp.list.borrow().keys())
     }
 }
 
@@ -201,21 +191,36 @@ mod test {
     #[test]
     fn append() {
         let tag_list = TagList::new();
+        assert!(!tag_list.contains_with_name("A"));
+
         assert!(tag_list.append(Tag::new("A")).is_ok());
         assert_eq!(tag_list.n_items(), 1);
+        assert!(tag_list.contains_with_name("A"));
     }
 
     #[test]
     fn multiple_append() {
         let tag_list = TagList::new();
+        assert!(!tag_list.contains_with_name("A"));
+        assert!(!tag_list.contains_with_name("a"));
+        assert!(!tag_list.contains_with_name("B"));
+        assert!(!tag_list.contains_with_name("b"));
+
         assert!(tag_list.append(Tag::new("A")).is_ok());
         assert_eq!(tag_list.n_items(), 1);
+        assert!(tag_list.contains_with_name("A"));
+
         assert!(tag_list.append(Tag::new("a")).is_ok());
         assert_eq!(tag_list.n_items(), 2);
+        assert!(tag_list.contains_with_name("a"));
+
         assert!(tag_list.append(Tag::new("B")).is_ok());
         assert_eq!(tag_list.n_items(), 3);
+        assert!(tag_list.contains_with_name("B"));
+
         assert!(tag_list.append(Tag::new("b")).is_ok());
         assert_eq!(tag_list.n_items(), 4);
+        assert!(tag_list.contains_with_name("b"));
     }
 
     #[test]
@@ -230,11 +235,14 @@ mod test {
     fn remove() {
         let tag_list = TagList::new();
         let tag = Tag::new("A");
+        assert!(!tag_list.contains_with_name("A"));
 
         assert!(tag_list.append(tag.clone()).is_ok());
+        assert!(tag_list.contains_with_name("A"));
         assert_eq!(tag_list.n_items(), 1);
 
         assert!(tag_list.remove(&tag).is_ok());
+        assert!(!tag_list.contains_with_name("A"));
         assert_eq!(tag_list.n_items(), 0);
     }
 
@@ -245,21 +253,33 @@ mod test {
         let tag_a2 = Tag::new("a");
         let tag_b = Tag::new("B");
         let tag_b2 = Tag::new("b");
+        assert!(!tag_list.contains_with_name("A"));
+        assert!(!tag_list.contains_with_name("a"));
+        assert!(!tag_list.contains_with_name("B"));
+        assert!(!tag_list.contains_with_name("b"));
 
         assert!(tag_list.append(tag_a.clone()).is_ok());
+        assert!(tag_list.contains_with_name("A"));
         assert!(tag_list.append(tag_a2.clone()).is_ok());
+        assert!(tag_list.contains_with_name("a"));
         assert!(tag_list.append(tag_b.clone()).is_ok());
+        assert!(tag_list.contains_with_name("B"));
         assert!(tag_list.append(tag_b2.clone()).is_ok());
+        assert!(tag_list.contains_with_name("b"));
         assert_eq!(tag_list.n_items(), 4);
 
         assert!(tag_list.remove(&tag_a).is_ok());
         assert_eq!(tag_list.n_items(), 3);
+        assert!(!tag_list.contains_with_name("A"));
         assert!(tag_list.remove(&tag_a2).is_ok());
         assert_eq!(tag_list.n_items(), 2);
+        assert!(!tag_list.contains_with_name("a"));
         assert!(tag_list.remove(&tag_b).is_ok());
         assert_eq!(tag_list.n_items(), 1);
+        assert!(!tag_list.contains_with_name("B"));
         assert!(tag_list.remove(&tag_b2).is_ok());
         assert_eq!(tag_list.n_items(), 0);
+        assert!(!tag_list.contains_with_name("b"));
     }
 
     #[test]
