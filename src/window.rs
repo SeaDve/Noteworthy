@@ -36,10 +36,6 @@ mod imp {
 
         fn class_init(klass: &mut Self::Class) {
             Self::bind_template(klass);
-
-            klass.install_action("win.close", None, move |obj, _, _| {
-                obj.close();
-            });
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
