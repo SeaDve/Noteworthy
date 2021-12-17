@@ -142,6 +142,8 @@ mod imp {
     }
 }
 
+// TODO Consider removing this Widget and replace it with other.
+// IDK why adjusting GtkPicture border-radius on css does not work now, but I had made it work before
 glib::wrapper! {
     pub struct RoundedPicture(ObjectSubclass<imp::RoundedPicture>)
         @extends gtk::Widget;
