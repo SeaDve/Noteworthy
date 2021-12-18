@@ -109,7 +109,7 @@ impl PictureRow {
         match gdk::Texture::from_file(&file) {
             Ok(ref texture) => {
                 log::info!(
-                    "Sucessfully loaded texture from file `{}`",
+                    "Successfully loaded texture from file `{}`",
                     file.path().unwrap().display()
                 );
                 imp.picture.set_paintable(Some(texture));
