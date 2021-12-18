@@ -217,6 +217,8 @@ impl NoteRow {
         self.notify("note");
     }
 
+    // TODO remove this, maybe just emit a signal from NoteRow and let sidebar handle changing
+    // the selection model
     fn parent_model(&self) -> Selection {
         self.ancestor(Sidebar::static_type())
             .expect("Cannot find `Sidebar` as `NoteRow` ancestor")
