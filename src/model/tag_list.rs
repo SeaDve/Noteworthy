@@ -69,6 +69,9 @@ impl TagList {
 
         anyhow::ensure!(!tag_name.is_empty(), "Tag name cannot be empty");
 
+        // FIXME disconnect this when !is_name_appended
+        // audio_player_handler, attachment_list, note_list, note_tag_list, and tag_list also
+        // have this problem
         tag.connect_name_notify(clone!(@weak self as obj => move |tag| {
             if let Some(position) = obj.get_index_of(tag) {
                 obj.items_changed(position as u32, 1, 1);
