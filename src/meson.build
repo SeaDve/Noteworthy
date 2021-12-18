@@ -72,7 +72,6 @@ rust_sources = files(
   'widgets/audio_visualizer.rs',
   'widgets/camera.rs',
   'widgets/mod.rs',
-  'widgets/rounded_picture.rs',
   'widgets/time_label.rs',
   'application.rs',
   'config.rs',

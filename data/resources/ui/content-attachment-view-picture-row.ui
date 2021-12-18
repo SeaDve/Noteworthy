@@ -21,9 +21,12 @@
       </object>
     </child>
     <child>
-      <object class="NwtyRoundedPicture" id="picture">
-        <property name="max-size">60</property>
-        <property name="border-radius">6</property>
+      <object class="GtkFrame">
+        <property name="child">
+          <object class="GtkPicture" id="picture">
+            <property name="height-request">36</property>
+          </object>
+        </property>
       </object>
     </child>
   </template>

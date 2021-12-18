@@ -20,7 +20,6 @@
     <file compressed="true" preprocess="xml-stripblanks">ui/content-view-tag-bar-row.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/note-tag-dialog.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/note-tag-dialog-row.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">ui/rounded-picture.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/session.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/setup.ui</file>
     <file compressed="true" preprocess="xml-stripblanks" alias="gtk/help-overlay.ui">ui/shortcuts.ui</file>

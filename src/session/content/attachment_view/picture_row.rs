@@ -1,8 +1,8 @@
-use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
+use gtk::{gdk, glib, prelude::*, subclass::prelude::*, CompositeTemplate};
 
 use std::cell::RefCell;
 
-use crate::{model::Attachment, widgets::RoundedPicture};
+use crate::model::Attachment;
 
 mod imp {
     use super::*;
@@ -11,7 +11,7 @@ mod imp {
     #[template(resource = "/io/github/seadve/Noteworthy/ui/content-attachment-view-picture-row.ui")]
     pub struct PictureRow {
         #[template_child]
-        pub picture: TemplateChild<RoundedPicture>, // TODO use gtk::Image here
+        pub picture: TemplateChild<gtk::Picture>,
 
         pub attachment: RefCell<Attachment>,
     }
@@ -95,9 +95,33 @@ impl PictureRow {
     }
 
     fn set_attachment(&self, attachment: Attachment) {
+        if attachment == self.attachment() {
+            return;
+        }
+
         let imp = imp::PictureRow::from_instance(self);
 
-        imp.picture.set_file(Some(&attachment.file()));
+        let file = attachment.file();
+
+        // TODO load lazily
+        // Maybe gio::File::load_bytes_async_future then load it through
+        // gdk::Texture::from_bytes in gtk 4.6
+        match gdk::Texture::from_file(&file) {
+            Ok(ref texture) => {
+                log::info!(
+                    "Sucessfully loaded texture from file `{}`",
+                    file.path().unwrap().display()
+                );
+                imp.picture.set_paintable(Some(texture));
+            }
+            Err(err) => {
+                log::error!(
+                    "Failed to load texture from file `{}`: {}",
+                    file.path().unwrap().display(),
+                    err
+                );
+            }
+        }
 
         imp.attachment.replace(attachment);
         self.notify("attachment");

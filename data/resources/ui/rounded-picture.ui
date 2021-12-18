@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<interface>
-  <template class="NwtyRoundedPicture" parent="GtkWidget">
-    <child>
-      <object class="GtkPicture" id="picture"/>
-    </child>
-  </template>
-</interface>

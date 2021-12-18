@@ -70,6 +70,10 @@
   padding-left: 12px;
 }
 
+.content-attachment-view-picture-row > frame {
+  border-radius: 6px;
+}
+
 
 /* NoteTagDialog */
 .note-tag-dialog-list-view row {
