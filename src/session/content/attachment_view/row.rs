@@ -1,10 +1,5 @@
 use adw::prelude::*;
-use gtk::{
-    glib::{self, subclass::Signal},
-    subclass::prelude::*,
-    CompositeTemplate,
-};
-use once_cell::sync::Lazy;
+use gtk::{glib, subclass::prelude::*};
 
 use std::cell::RefCell;
 
@@ -13,6 +8,9 @@ use crate::{core::FileType, model::Attachment};
 
 mod imp {
     use super::*;
+    use glib::subclass::Signal;
+    use gtk::CompositeTemplate;
+    use once_cell::sync::Lazy;
 
     #[derive(Debug, Default, CompositeTemplate)]
     #[template(resource = "/io/github/seadve/Noteworthy/ui/content-attachment-view-row.ui")]
@@ -60,7 +58,6 @@ mod imp {
                     glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                 )]
             });
-
             PROPERTIES.as_ref()
         }
 
@@ -85,10 +82,6 @@ mod imp {
                 "attachment" => obj.attachment().to_value(),
                 _ => unimplemented!(),
             }
-        }
-
-        fn constructed(&self, obj: &Self::Type) {
-            self.parent_constructed(obj);
         }
 
         fn dispose(&self, obj: &Self::Type) {

@@ -1,9 +1,8 @@
 use adw::{prelude::*, subclass::prelude::*};
 use gtk::{
     gio,
-    glib::{self, clone, subclass::Signal},
+    glib::{self, clone},
     subclass::prelude::*,
-    CompositeTemplate,
 };
 use once_cell::{sync::Lazy, unsync::OnceCell};
 
@@ -15,6 +14,8 @@ use crate::{
 
 mod imp {
     use super::*;
+    use glib::subclass::Signal;
+    use gtk::CompositeTemplate;
 
     #[derive(Debug, Default, CompositeTemplate)]
     #[template(

@@ -8,7 +8,6 @@ use gtk::{
     prelude::*,
     subclass::prelude::*,
 };
-use once_cell::sync::Lazy;
 
 use std::cell::{Cell, RefCell};
 
@@ -27,6 +26,7 @@ impl Default for SelectionMode {
 
 mod imp {
     use super::*;
+    use once_cell::sync::Lazy;
 
     #[derive(Debug, Default)]
     pub struct Selection {
@@ -57,10 +57,6 @@ mod imp {
     }
 
     impl ObjectImpl for Selection {
-        fn constructed(&self, obj: &Self::Type) {
-            self.parent_constructed(obj);
-        }
-
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
@@ -97,7 +93,6 @@ mod imp {
                     ),
                 ]
             });
-
             PROPERTIES.as_ref()
         }
 

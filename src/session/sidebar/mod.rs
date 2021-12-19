@@ -8,7 +8,6 @@ use gtk::{
     glib::{self, clone},
     prelude::*,
     subclass::prelude::*,
-    CompositeTemplate,
 };
 
 use std::cell::{Cell, RefCell};
@@ -26,6 +25,8 @@ use crate::{
 
 mod imp {
     use super::*;
+    use gtk::CompositeTemplate;
+    use once_cell::sync::Lazy;
 
     #[derive(Debug, Default, CompositeTemplate)]
     #[template(resource = "/io/github/seadve/Noteworthy/ui/sidebar.ui")]
@@ -93,7 +94,6 @@ mod imp {
 
     impl ObjectImpl for Sidebar {
         fn properties() -> &'static [glib::ParamSpec] {
-            use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
                     glib::ParamSpec::new_boolean(
@@ -134,7 +134,6 @@ mod imp {
                     ),
                 ]
             });
-
             PROPERTIES.as_ref()
         }
 

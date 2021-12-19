@@ -2,7 +2,7 @@ mod tag_bar;
 
 use adw::subclass::prelude::*;
 use gettextrs::gettext;
-use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
+use gtk::{glib, prelude::*, subclass::prelude::*};
 use gtk_source::prelude::*;
 
 use std::cell::RefCell;
@@ -16,6 +16,8 @@ use crate::{
 
 mod imp {
     use super::*;
+    use gtk::CompositeTemplate;
+    use once_cell::sync::Lazy;
 
     #[derive(Debug, Default, CompositeTemplate)]
     #[template(resource = "/io/github/seadve/Noteworthy/ui/content-view.ui")]
@@ -51,7 +53,6 @@ mod imp {
 
     impl ObjectImpl for View {
         fn properties() -> &'static [glib::ParamSpec] {
-            use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![glib::ParamSpec::new_object(
                     "note",
@@ -61,7 +62,6 @@ mod imp {
                     glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                 )]
             });
-
             PROPERTIES.as_ref()
         }
 

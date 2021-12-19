@@ -3,15 +3,17 @@ use anyhow::Context;
 use gst::prelude::*;
 use gtk::{
     gdk,
-    glib::{self, clone, subclass::Signal},
+    glib::{self, clone},
     graphene,
     subclass::prelude::*,
-    CompositeTemplate,
 };
 use once_cell::unsync::OnceCell;
 
 mod imp {
     use super::*;
+    use glib::subclass::Signal;
+    use gtk::CompositeTemplate;
+    use once_cell::sync::Lazy;
 
     #[derive(Debug, Default, CompositeTemplate)]
     #[template(resource = "/io/github/seadve/Noteworthy/ui/camera.ui")]
@@ -61,7 +63,6 @@ mod imp {
 
     impl ObjectImpl for Camera {
         fn signals() -> &'static [Signal] {
-            use once_cell::sync::Lazy;
             static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
                 vec![
                     Signal::builder(

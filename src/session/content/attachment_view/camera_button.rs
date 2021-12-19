@@ -1,15 +1,17 @@
 use adw::{prelude::*, subclass::prelude::*};
 use gtk::{
     gio,
-    glib::{self, clone, subclass::Signal},
+    glib::{self, clone},
     subclass::prelude::*,
-    CompositeTemplate,
 };
 
 use crate::{utils, widgets::Camera, Application};
 
 mod imp {
     use super::*;
+    use glib::subclass::Signal;
+    use gtk::CompositeTemplate;
+    use once_cell::sync::Lazy;
 
     #[derive(Debug, Default, CompositeTemplate)]
     #[template(
@@ -40,7 +42,6 @@ mod imp {
 
     impl ObjectImpl for CameraButton {
         fn signals() -> &'static [Signal] {
-            use once_cell::sync::Lazy;
             static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
                 vec![
                     Signal::builder(

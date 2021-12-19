@@ -8,7 +8,6 @@ use gtk::{
     glib::{self, clone},
     prelude::*,
     subclass::prelude::*,
-    CompositeTemplate,
 };
 use once_cell::unsync::OnceCell;
 
@@ -20,6 +19,8 @@ use crate::{
 
 mod imp {
     use super::*;
+    use gtk::CompositeTemplate;
+    use once_cell::sync::Lazy;
 
     #[derive(Debug, Default, CompositeTemplate)]
     #[template(resource = "/io/github/seadve/Noteworthy/ui/note-tag-dialog.ui")]
@@ -58,7 +59,6 @@ mod imp {
 
     impl ObjectImpl for NoteTagDialog {
         fn properties() -> &'static [glib::ParamSpec] {
-            use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
                     glib::ParamSpec::new_object(
@@ -77,7 +77,6 @@ mod imp {
                     ),
                 ]
             });
-
             PROPERTIES.as_ref()
         }
 

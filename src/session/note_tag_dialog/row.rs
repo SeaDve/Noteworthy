@@ -2,7 +2,6 @@ use gtk::{
     glib::{self, clone},
     prelude::*,
     subclass::prelude::*,
-    CompositeTemplate,
 };
 
 use std::cell::RefCell;
@@ -11,6 +10,8 @@ use super::{NoteTagLists, Tag};
 
 mod imp {
     use super::*;
+    use gtk::CompositeTemplate;
+    use once_cell::sync::Lazy;
 
     #[derive(Debug, Default, CompositeTemplate)]
     #[template(resource = "/io/github/seadve/Noteworthy/ui/note-tag-dialog-row.ui")]
@@ -41,7 +42,6 @@ mod imp {
 
     impl ObjectImpl for Row {
         fn properties() -> &'static [glib::ParamSpec] {
-            use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
                     glib::ParamSpec::new_boxed(
@@ -60,7 +60,6 @@ mod imp {
                     ),
                 ]
             });
-
             PROPERTIES.as_ref()
         }
 

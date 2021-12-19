@@ -3,7 +3,6 @@ use gtk::{
     glib::{self, clone},
     prelude::*,
     subclass::prelude::*,
-    CompositeTemplate,
 };
 
 use std::cell::RefCell;
@@ -12,6 +11,8 @@ use crate::model::Attachment;
 
 mod imp {
     use super::*;
+    use gtk::CompositeTemplate;
+    use once_cell::sync::Lazy;
 
     #[derive(Debug, Default, CompositeTemplate)]
     #[template(resource = "/io/github/seadve/Noteworthy/ui/content-attachment-view-other-row.ui")]
@@ -40,7 +41,6 @@ mod imp {
 
     impl ObjectImpl for OtherRow {
         fn properties() -> &'static [glib::ParamSpec] {
-            use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![glib::ParamSpec::new_object(
                     "attachment",
@@ -50,7 +50,6 @@ mod imp {
                     glib::ParamFlags::READWRITE,
                 )]
             });
-
             PROPERTIES.as_ref()
         }
 

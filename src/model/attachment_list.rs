@@ -27,11 +27,7 @@ mod imp {
         type Interfaces = (gio::ListModel,);
     }
 
-    impl ObjectImpl for AttachmentList {
-        fn constructed(&self, obj: &Self::Type) {
-            self.parent_constructed(obj);
-        }
-    }
+    impl ObjectImpl for AttachmentList {}
 
     impl ListModelImpl for AttachmentList {
         fn item_type(&self, _list_model: &Self::Type) -> glib::Type {

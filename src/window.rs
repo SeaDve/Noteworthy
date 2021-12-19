@@ -4,7 +4,6 @@ use gtk::{
     glib::{self, clone},
     prelude::*,
     subclass::prelude::*,
-    CompositeTemplate,
 };
 use once_cell::unsync::OnceCell;
 
@@ -14,6 +13,7 @@ use crate::{
 
 mod imp {
     use super::*;
+    use gtk::CompositeTemplate;
 
     #[derive(Debug, Default, CompositeTemplate)]
     #[template(resource = "/io/github/seadve/Noteworthy/ui/window.ui")]

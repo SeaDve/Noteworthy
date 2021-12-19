@@ -3,7 +3,7 @@ mod metadata;
 use gray_matter::{engine::YAML, Matter};
 use gtk::{
     gio,
-    glib::{self, clone, subclass::Signal},
+    glib::{self, clone},
     prelude::*,
     subclass::prelude::*,
 };
@@ -17,6 +17,8 @@ use crate::utils;
 
 mod imp {
     use super::*;
+    use glib::subclass::Signal;
+    use once_cell::sync::Lazy;
 
     #[derive(Debug, Default)]
     pub struct Note {
@@ -34,46 +36,7 @@ mod imp {
     }
 
     impl ObjectImpl for Note {
-        fn constructed(&self, obj: &Self::Type) {
-            self.parent_constructed(obj);
-
-            obj.set_is_saved(true);
-
-            let metadata = obj.metadata();
-
-            obj.buffer().connect_changed(clone!(@weak obj => move |_| {
-                obj.metadata().update_last_modified();
-                obj.notify("buffer"); // For some reason the subtitle doesn't get updated when the filter model is not incremental
-                obj.set_is_saved(false);
-            }));
-
-            metadata.connect_notify_local(
-                None,
-                clone!(@weak obj => move |_, _| {
-                    obj.emit_by_name("metadata-changed", &[]).unwrap();
-                    obj.set_is_saved(false);
-                }),
-            );
-
-            // TODO not sure if we need to notify metadata-changed here (same with attachment_list)
-            // Unless we want to show the tags in the sidebar
-            metadata
-                .tag_list()
-                .connect_items_changed(clone!(@weak obj => move |_, _, _, _| {
-                    obj.emit_by_name("metadata-changed", &[]).unwrap();
-                    obj.set_is_saved(false);
-                }));
-
-            metadata.attachment_list().connect_items_changed(
-                clone!(@weak obj => move |_, _, _, _| {
-                    obj.emit_by_name("metadata-changed", &[]).unwrap();
-                    obj.set_is_saved(false);
-                }),
-            );
-        }
-
         fn signals() -> &'static [Signal] {
-            use once_cell::sync::Lazy;
             static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
                 vec![Signal::builder("metadata-changed", &[], <()>::static_type().into()).build()]
             });
@@ -81,7 +44,6 @@ mod imp {
         }
 
         fn properties() -> &'static [glib::ParamSpec] {
-            use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
                     glib::ParamSpec::new_object(
@@ -114,7 +76,6 @@ mod imp {
                     ),
                 ]
             });
-
             PROPERTIES.as_ref()
         }
 
@@ -154,6 +115,44 @@ mod imp {
                 "is-saved" => obj.is_saved().to_value(),
                 _ => unimplemented!(),
             }
+        }
+
+        fn constructed(&self, obj: &Self::Type) {
+            self.parent_constructed(obj);
+
+            obj.set_is_saved(true);
+
+            let metadata = obj.metadata();
+
+            obj.buffer().connect_changed(clone!(@weak obj => move |_| {
+                obj.metadata().update_last_modified();
+                obj.notify("buffer"); // For some reason the subtitle doesn't get updated when the filter model is not incremental
+                obj.set_is_saved(false);
+            }));
+
+            metadata.connect_notify_local(
+                None,
+                clone!(@weak obj => move |_, _| {
+                    obj.emit_by_name("metadata-changed", &[]).unwrap();
+                    obj.set_is_saved(false);
+                }),
+            );
+
+            // TODO not sure if we need to notify metadata-changed here (same with attachment_list)
+            // Unless we want to show the tags in the sidebar
+            metadata
+                .tag_list()
+                .connect_items_changed(clone!(@weak obj => move |_, _, _, _| {
+                    obj.emit_by_name("metadata-changed", &[]).unwrap();
+                    obj.set_is_saved(false);
+                }));
+
+            metadata.attachment_list().connect_items_changed(
+                clone!(@weak obj => move |_, _, _, _| {
+                    obj.emit_by_name("metadata-changed", &[]).unwrap();
+                    obj.set_is_saved(false);
+                }),
+            );
         }
     }
 }

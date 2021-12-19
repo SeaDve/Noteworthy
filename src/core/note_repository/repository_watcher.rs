@@ -1,6 +1,6 @@
 use gtk::{
     gio,
-    glib::{self, clone, subclass::Signal},
+    glib::{self, clone},
     prelude::*,
     subclass::prelude::*,
 };
@@ -14,6 +14,7 @@ const DEFAULT_SLEEP_TIME_SECS: u64 = 3;
 
 mod imp {
     use super::*;
+    use glib::subclass::Signal;
 
     #[derive(Default, Debug)]
     pub struct RepositoryWatcher {
@@ -55,7 +56,6 @@ mod imp {
                     ),
                 ]
             });
-
             PROPERTIES.as_ref()
         }
 

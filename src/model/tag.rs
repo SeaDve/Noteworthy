@@ -5,6 +5,7 @@ use std::cell::RefCell;
 
 mod imp {
     use super::*;
+    use once_cell::sync::Lazy;
 
     #[derive(Debug, Default)]
     pub struct Tag {
@@ -19,12 +20,7 @@ mod imp {
     }
 
     impl ObjectImpl for Tag {
-        fn constructed(&self, obj: &Self::Type) {
-            self.parent_constructed(obj);
-        }
-
         fn properties() -> &'static [glib::ParamSpec] {
-            use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![glib::ParamSpec::new_string(
                     "name",
@@ -34,7 +30,6 @@ mod imp {
                     glib::ParamFlags::READWRITE,
                 )]
             });
-
             PROPERTIES.as_ref()
         }
 

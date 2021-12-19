@@ -8,6 +8,7 @@ use crate::core::{DateTime, FileType};
 
 mod imp {
     use super::*;
+    use once_cell::sync::Lazy;
 
     #[derive(Debug, Serialize, Deserialize)]
     #[serde(default)]
@@ -44,7 +45,6 @@ mod imp {
 
     impl ObjectImpl for Attachment {
         fn properties() -> &'static [glib::ParamSpec] {
-            use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
                     glib::ParamSpec::new_object(
@@ -70,7 +70,6 @@ mod imp {
                     ),
                 ]
             });
-
             PROPERTIES.as_ref()
         }
 

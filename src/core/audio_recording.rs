@@ -32,7 +32,6 @@ mod imp {
                     glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                 )]
             });
-
             PROPERTIES.as_ref()
         }
 

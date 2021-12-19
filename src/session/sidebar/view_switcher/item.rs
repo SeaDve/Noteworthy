@@ -7,6 +7,7 @@ use super::ItemKind;
 
 mod imp {
     use super::*;
+    use once_cell::sync::Lazy;
 
     #[derive(Debug, Default)]
     pub struct Item {
@@ -24,7 +25,6 @@ mod imp {
 
     impl ObjectImpl for Item {
         fn properties() -> &'static [glib::ParamSpec] {
-            use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
                     glib::ParamSpec::new_boxed(
@@ -50,7 +50,6 @@ mod imp {
                     ),
                 ]
             });
-
             PROPERTIES.as_ref()
         }
 

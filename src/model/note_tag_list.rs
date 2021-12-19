@@ -28,11 +28,7 @@ mod imp {
         type Interfaces = (gio::ListModel,);
     }
 
-    impl ObjectImpl for NoteTagList {
-        fn constructed(&self, obj: &Self::Type) {
-            self.parent_constructed(obj);
-        }
-    }
+    impl ObjectImpl for NoteTagList {}
 
     impl ListModelImpl for NoteTagList {
         fn item_type(&self, _list_model: &Self::Type) -> glib::Type {

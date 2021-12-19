@@ -1,13 +1,15 @@
 mod row;
 
 use adw::{prelude::*, subclass::prelude::*};
-use gtk::{glib, subclass::prelude::*, CompositeTemplate};
+use gtk::{glib, subclass::prelude::*};
 
 use self::row::Row;
 use crate::model::NoteTagList;
 
 mod imp {
     use super::*;
+    use gtk::CompositeTemplate;
+    use once_cell::sync::Lazy;
 
     #[derive(Debug, Default, CompositeTemplate)]
     #[template(resource = "/io/github/seadve/Noteworthy/ui/content-view-tag-bar.ui")]
@@ -34,7 +36,6 @@ mod imp {
 
     impl ObjectImpl for TagBar {
         fn properties() -> &'static [glib::ParamSpec] {
-            use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![glib::ParamSpec::new_object(
                     "tag-list",
@@ -44,7 +45,6 @@ mod imp {
                     glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                 )]
             });
-
             PROPERTIES.as_ref()
         }
 
@@ -62,10 +62,6 @@ mod imp {
                 }
                 _ => unimplemented!(),
             }
-        }
-
-        fn constructed(&self, obj: &Self::Type) {
-            self.parent_constructed(obj);
         }
     }
 

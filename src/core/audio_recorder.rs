@@ -4,7 +4,6 @@ use gtk::{
     glib::{self, clone},
     subclass::prelude::*,
 };
-use once_cell::sync::Lazy;
 
 use std::{
     cell::{Cell, RefCell},
@@ -20,6 +19,7 @@ struct MissingElement(&'static str);
 
 mod imp {
     use super::*;
+    use once_cell::sync::Lazy;
 
     #[derive(Debug, Default)]
     pub struct AudioRecorder {
@@ -62,7 +62,6 @@ mod imp {
                     ),
                 ]
             });
-
             PROPERTIES.as_ref()
         }
 

@@ -30,11 +30,7 @@ mod imp {
         type Interfaces = (gio::ListModel,);
     }
 
-    impl ObjectImpl for NoteList {
-        fn constructed(&self, obj: &Self::Type) {
-            self.parent_constructed(obj);
-        }
-    }
+    impl ObjectImpl for NoteList {}
 
     impl ListModelImpl for NoteList {
         fn item_type(&self, _list_model: &Self::Type) -> glib::Type {

@@ -1,7 +1,7 @@
 mod attachment_view;
 mod view;
 
-use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
+use gtk::{glib, prelude::*, subclass::prelude::*};
 
 use std::cell::{Cell, RefCell};
 
@@ -13,6 +13,8 @@ use crate::{
 
 mod imp {
     use super::*;
+    use gtk::CompositeTemplate;
+    use once_cell::sync::Lazy;
 
     #[derive(Debug, Default, CompositeTemplate)]
     #[template(resource = "/io/github/seadve/Noteworthy/ui/content.ui")]
@@ -57,39 +59,7 @@ mod imp {
     }
 
     impl ObjectImpl for Content {
-        fn constructed(&self, obj: &Self::Type) {
-            self.parent_constructed(obj);
-
-            let is_some_note_expression =
-                obj.property_expression("note").closure_expression(|args| {
-                    let note: Option<Note> = args[1].get().unwrap();
-                    note.is_some()
-                });
-
-            is_some_note_expression.bind(
-                &self.is_pinned_button.get(),
-                "visible",
-                None::<&gtk::Widget>,
-            );
-            is_some_note_expression.bind(
-                &self.is_trashed_button.get(),
-                "visible",
-                None::<&gtk::Widget>,
-            );
-            is_some_note_expression.bind(
-                &self.edit_tags_button.get(),
-                "visible",
-                None::<&gtk::Widget>,
-            );
-            is_some_note_expression.bind(
-                &self.view_flap_button.get(),
-                "visible",
-                None::<&gtk::Widget>,
-            );
-        }
-
         fn properties() -> &'static [glib::ParamSpec] {
-            use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
                     glib::ParamSpec::new_boolean(
@@ -108,7 +78,6 @@ mod imp {
                     ),
                 ]
             });
-
             PROPERTIES.as_ref()
         }
 
@@ -138,6 +107,37 @@ mod imp {
                 "note" => obj.note().to_value(),
                 _ => unimplemented!(),
             }
+        }
+
+        fn constructed(&self, obj: &Self::Type) {
+            self.parent_constructed(obj);
+
+            let is_some_note_expression =
+                obj.property_expression("note").closure_expression(|args| {
+                    let note: Option<Note> = args[1].get().unwrap();
+                    note.is_some()
+                });
+
+            is_some_note_expression.bind(
+                &self.is_pinned_button.get(),
+                "visible",
+                None::<&gtk::Widget>,
+            );
+            is_some_note_expression.bind(
+                &self.is_trashed_button.get(),
+                "visible",
+                None::<&gtk::Widget>,
+            );
+            is_some_note_expression.bind(
+                &self.edit_tags_button.get(),
+                "visible",
+                None::<&gtk::Widget>,
+            );
+            is_some_note_expression.bind(
+                &self.view_flap_button.get(),
+                "visible",
+                None::<&gtk::Widget>,
+            );
         }
 
         fn dispose(&self, obj: &Self::Type) {

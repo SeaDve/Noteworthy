@@ -1,4 +1,4 @@
-use gtk::{glib, prelude::*, subclass::prelude::*, CompositeTemplate};
+use gtk::{glib, prelude::*, subclass::prelude::*};
 
 use std::cell::Cell;
 
@@ -6,6 +6,8 @@ use crate::core::ClockTime;
 
 mod imp {
     use super::*;
+    use gtk::CompositeTemplate;
+    use once_cell::sync::Lazy;
 
     #[derive(Debug, Default, CompositeTemplate)]
     #[template(resource = "/io/github/seadve/Noteworthy/ui/time-label.ui")]
@@ -33,7 +35,6 @@ mod imp {
 
     impl ObjectImpl for TimeLabel {
         fn properties() -> &'static [glib::ParamSpec] {
-            use once_cell::sync::Lazy;
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![glib::ParamSpec::new_boxed(
                     "time",
@@ -70,6 +71,8 @@ mod imp {
         }
 
         fn constructed(&self, obj: &Self::Type) {
+            self.parent_constructed(obj);
+
             obj.reset();
         }
 

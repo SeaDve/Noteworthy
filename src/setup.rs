@@ -1,9 +1,8 @@
 use adw::prelude::*;
 use gtk::{
     gio,
-    glib::{self, clone, subclass::Signal},
+    glib::{self, clone},
     subclass::prelude::*,
-    CompositeTemplate,
 };
 use num_enum::TryFromPrimitive;
 
@@ -13,6 +12,9 @@ use crate::{core::NoteRepository, session::Session, spawn, utils};
 
 mod imp {
     use super::*;
+    use glib::subclass::Signal;
+    use gtk::CompositeTemplate;
+    use once_cell::sync::Lazy;
 
     #[repr(u8)]
     #[derive(Debug, PartialEq, TryFromPrimitive)]
@@ -118,7 +120,6 @@ mod imp {
 
     impl ObjectImpl for Setup {
         fn signals() -> &'static [Signal] {
-            use once_cell::sync::Lazy;
             static SIGNALS: Lazy<Vec<Signal>> = Lazy::new(|| {
                 vec![Signal::builder(
                     "session-setup-done",
