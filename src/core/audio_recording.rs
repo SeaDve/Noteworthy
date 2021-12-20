@@ -1,6 +1,6 @@
 use gst_pbutils::prelude::*;
 use gtk::{gio, glib, prelude::*, subclass::prelude::*};
-use once_cell::{sync::Lazy, unsync::OnceCell};
+use once_cell::unsync::OnceCell;
 
 use std::path::{Path, PathBuf};
 
@@ -8,6 +8,7 @@ use crate::utils;
 
 mod imp {
     use super::*;
+    use once_cell::sync::Lazy;
 
     #[derive(Debug, Default)]
     pub struct AudioRecording {

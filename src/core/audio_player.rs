@@ -7,7 +7,7 @@ use gtk::{
     glib::{self, clone, GEnum},
     subclass::prelude::*,
 };
-use once_cell::{sync::Lazy, unsync::OnceCell};
+use once_cell::unsync::OnceCell;
 
 use std::cell::{Cell, RefCell};
 
@@ -31,6 +31,7 @@ impl Default for PlaybackState {
 
 mod imp {
     use super::*;
+    use once_cell::sync::Lazy;
 
     #[derive(Debug, Default)]
     pub struct AudioPlayer {

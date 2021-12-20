@@ -4,7 +4,7 @@ use gtk::{
     glib::{self, clone},
     subclass::prelude::*,
 };
-use once_cell::{sync::Lazy, unsync::OnceCell};
+use once_cell::unsync::OnceCell;
 
 use crate::{
     core::AudioRecorder,
@@ -16,6 +16,7 @@ mod imp {
     use super::*;
     use glib::subclass::Signal;
     use gtk::CompositeTemplate;
+    use once_cell::sync::Lazy;
 
     #[derive(Debug, Default, CompositeTemplate)]
     #[template(

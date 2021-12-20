@@ -4,7 +4,7 @@ use gtk::{
     prelude::*,
     subclass::prelude::*,
 };
-use once_cell::{sync::Lazy, unsync::OnceCell};
+use once_cell::unsync::OnceCell;
 
 use std::{thread, time::Duration};
 
@@ -15,6 +15,7 @@ const DEFAULT_SLEEP_TIME_SECS: u64 = 3;
 mod imp {
     use super::*;
     use glib::subclass::Signal;
+    use once_cell::sync::Lazy;
 
     #[derive(Default, Debug)]
     pub struct RepositoryWatcher {
