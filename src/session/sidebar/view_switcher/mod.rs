@@ -225,7 +225,13 @@ impl ViewSwitcher {
                     if let Some(tag) = selected_item.downcast_ref::<Tag>() {
                         tag.name()
                     } else if let Some(item) = selected_item.downcast_ref::<Item>() {
-                        item.display_name().unwrap()
+                        // FIXME The selected item is set to `EditTags` temporarily
+                        // which doesn't have `display_name`, panicking.
+                        // A solution is to handle `Separator`, `Category`, and `EditTags` being
+                        // selected directly from the binding's `transform_to`, instead of handling
+                        // it when `selected_type` is called. When that is changed, replace too
+                        // `unwrap_or_default` to just `unwrap` or `expect`.
+                        item.display_name().unwrap_or_default()
                     } else {
                         unreachable!("Invalid selected item `{:?}`", selected_item);
                     }
