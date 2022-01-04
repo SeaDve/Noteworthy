@@ -34,7 +34,6 @@ desktop_file_validate = find_program('desktop-file-validate', required: false)
 appstream_util = find_program('appstream-util', required: false)
 cargo = find_program('cargo', required: true)
 cargo_script = find_program('build-aux/cargo.py')
-test_script = find_program('build-aux/cargo-test.sh')
 
 version = meson.project_version()
 version_array = version.split('.')

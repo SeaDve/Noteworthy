@@ -102,10 +102,38 @@ custom_target(
   ]
 )
 
-test(
+cargo_target_dir = meson.build_root() / 'target'
+cargo_home = meson.build_root() / 'cargo-home'
+manifest_path = meson.source_root() / 'Cargo.toml'
+
+test (
   'cargo-test',
-  test_script,
-  args: meson.build_root(),
-  workdir: meson.source_root(),
-  timeout: 3000
+  cargo,
+  args: [
+    'test',
+    '--manifest-path=@0@'.format(manifest_path),
+    '--target-dir=@0@'.format(cargo_target_dir),
+    '--',
+    '--nocapture',
+  ],
+  env: [
+    'CARGO_HOME=@0@'.format(cargo_home),
+    'PATH=/app/bin:/usr/bin:/usr/lib/sdk/rust-stable/bin',
+  ],
+  timeout: 300, # give cargo more time
+)
+
+test (
+  'cargo-clippy',
+  cargo,
+  args: [
+    'clippy',
+    '--manifest-path=@0@'.format(manifest_path),
+    '--target-dir=@0@'.format(cargo_target_dir),
+  ],
+  env: [
+    'CARGO_HOME=@0@'.format(cargo_home),
+    'PATH=/app/bin:/usr/bin:/usr/lib/sdk/rust-stable/bin',
+  ],
+  timeout: 300, # give cargo more time
 )
