@@ -75,7 +75,7 @@
                 {
                     "type" : "git",
                     "url" : "https://gitlab.gnome.org/GNOME/libadwaita.git",
-                    "branch" : "1.0.0.beta.1"
+                    "tag" : "1.0.1"
                 }
             ]
         },
