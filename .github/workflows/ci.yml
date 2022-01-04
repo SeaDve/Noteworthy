@@ -6,6 +6,17 @@ on:
 name: CI
 
 jobs:
+  codespell:
+    name: Codespell
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: codespell-project/actions-codespell@master
+        with:
+          check_filenames: true
+          ignore_words_list: "crate,ser"
+          skip: "*.svg,*.po"
+
   rustfmt:
     name: Rustfmt
     runs-on: ubuntu-20.04
