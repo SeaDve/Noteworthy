@@ -41,6 +41,8 @@ mod imp {
 
     impl ApplicationImpl for Application {
         fn activate(&self, obj: &Self::Type) {
+            self.parent_activate(obj);
+
             if let Some(window) = self.window.get() {
                 let window = window.upgrade().unwrap();
                 window.show();
