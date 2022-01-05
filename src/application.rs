@@ -116,7 +116,7 @@ impl Application {
             .authors(vec!["Dave Patrick".into()])
             // Translators: Replace "translator-credits" with your names. Put a comma between.
             .translator_credits(&gettext("translator-credits"))
-            .copyright(&gettext("Copyright 2021 Dave Patrick"))
+            .copyright(&gettext("Copyright 2022 Dave Patrick"))
             .license_type(gtk::License::Gpl30)
             .website("https://github.com/SeaDve/Noteworthy")
             .website_label(&gettext("GitHub"))
