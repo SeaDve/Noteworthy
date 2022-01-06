@@ -97,9 +97,6 @@ impl NoteList {
             // saving and loading, and perhaps reduce allocations on serializing into buffer and
             // deserializiations.
             let note = Note::deserialize(&file).await?;
-
-            println!("{}", &note);
-
             note_list.append(note);
         }
 
