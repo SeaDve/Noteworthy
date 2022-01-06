@@ -33,6 +33,7 @@ impl NoteTagLists {
         self.0.first()
     }
 
+    /// Append tag on all `NoteTagList`
     pub fn append_on_all(&self, tag: &Tag) {
         for tag_list in self.iter() {
             if tag_list.append(tag.clone()).is_err() {
@@ -44,6 +45,7 @@ impl NoteTagLists {
         }
     }
 
+    /// Remove tag on all `NoteTagList`
     pub fn remove_on_all(&self, tag: &Tag) {
         for tag_list in self.iter() {
             if tag_list.remove(tag).is_err() {

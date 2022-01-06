@@ -62,6 +62,7 @@ impl NoteList {
         glib::Object::new(&[]).expect("Failed to create NoteList.")
     }
 
+    /// Try load notes on `directory` with file type of markdown
     pub async fn load_from_dir(directory: &gio::File) -> anyhow::Result<Self> {
         let file_infos = directory
             .enumerate_children_async_future(
@@ -150,11 +151,13 @@ impl NoteList {
         imp.list.borrow().get_index_of(note_id)
     }
 
+    /// Clear and get all unsaved notes
     pub fn take_unsaved_notes(&self) -> HashSet<Note> {
         let imp = imp::NoteList::from_instance(self);
         imp.unsaved_notes.take()
     }
 
+    /// Remove tag on `TagList` of all `Note`s
     pub fn remove_tag_on_all(&self, tag: &Tag) {
         for note in self.iter() {
             let note_tag_list = note.metadata().tag_list();
