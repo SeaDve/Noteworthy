@@ -13,7 +13,7 @@ use std::{
 };
 
 use crate::{
-    core::{FileType, NoteRepository, SyncState},
+    core::{NoteRepository, SyncState},
     model::{Note, NoteId, NoteList, TagList},
     spawn,
 };
@@ -215,42 +215,7 @@ impl NoteManager {
     }
 
     async fn load_notes(&self) -> anyhow::Result<()> {
-        let directory = self.directory();
-        let file_infos = directory
-            .enumerate_children_async_future(
-                &gio::FILE_ATTRIBUTE_STANDARD_NAME,
-                gio::FileQueryInfoFlags::NONE,
-                glib::PRIORITY_HIGH_IDLE,
-            )
-            .await?;
-        let note_list = NoteList::new();
-
-        for file_info in file_infos.flatten() {
-            let file_path = {
-                let mut file_path = directory.path().unwrap();
-                file_path.push(file_info.name());
-                file_path
-            };
-
-            log::info!("Loading file `{}`", file_path.display());
-
-            let file = gio::File::for_path(&file_path);
-
-            if FileType::for_file(&file) != FileType::Markdown {
-                log::info!(
-                    "The file `{}` doesn't have an md extension, skipping...",
-                    file_path.display()
-                );
-                continue;
-            }
-
-            // TODO consider using GtkSourceFile here
-            // So we could use GtkSourceFileLoader and GtkSourceFileSaver to handle
-            // saving and loading, and perhaps reduce allocations on serializing into buffer and
-            // deserializiations.
-            let note = Note::deserialize(&file).await?;
-            note_list.append(note);
-        }
+        let note_list = NoteList::load_from_dir(&self.directory()).await?;
 
         self.set_property("note-list", note_list).unwrap();
 

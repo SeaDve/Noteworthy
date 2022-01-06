@@ -44,20 +44,7 @@ mod imp {
                 let tag = obj.tag().unwrap();
 
                 tag_list.remove(&tag).unwrap();
-
-                // FIXME make this faster
-                for note in note_list.iter() {
-                    let metadata = note.metadata();
-                    let note_tag_list = metadata.tag_list();
-                    if let Err(err) = note_tag_list.remove(&tag) {
-                        log::warn!(
-                            "Failed to remove tag with name `{}` on note with title `{}`: {}",
-                            tag.name(),
-                            metadata.title(),
-                            err
-                        );
-                    }
-                }
+                note_list.remove_tag_on_all(&tag);
             });
         }
 

@@ -174,6 +174,23 @@ impl FileImporterButton {
         error_dialog.present();
     }
 
+    fn on_accept_response(&self, files: &gio::ListModel) {
+        match Self::validify_files(files) {
+            Ok(files) => {
+                spawn!(clone!(@weak self as obj => async move {
+                    if let Err(err) = obj.import_files(files).await {
+                        obj.show_error(&err.to_string(), &gettext("Please try again."));
+                        log::error!("Error on importing files: {:#}", err);
+                    }
+                }));
+            }
+            Err(err) => {
+                self.show_error(&err.to_string(), &gettext("Please try again."));
+                log::error!("Error on validifying files: {:#}", err);
+            }
+        }
+    }
+
     fn init_file_chooser(&self) -> gtk::FileChooserNative {
         // FIXME Should not allow folders, this makes it easy to delete an attachment. Additionally,
         // an attachment should not be able to store a folder
@@ -200,23 +217,6 @@ impl FileImporterButton {
         }));
 
         chooser
-    }
-
-    fn on_accept_response(&self, files: &gio::ListModel) {
-        match Self::validify_files(files) {
-            Ok(files) => {
-                spawn!(clone!(@weak self as obj => async move {
-                    if let Err(err) = obj.import_files(files).await {
-                        obj.show_error(&err.to_string(), "Please try again.");
-                        log::error!("Error on importing files: {:#}", err);
-                    }
-                }));
-            }
-            Err(err) => {
-                self.show_error(&err.to_string(), "Please try again.");
-                log::error!("Error on validifying files: {:#}", err);
-            }
-        }
     }
 
     fn on_open_file_chooser(&self) {

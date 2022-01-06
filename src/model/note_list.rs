@@ -11,7 +11,8 @@ use std::{
     collections::HashSet,
 };
 
-use super::{Note, NoteId};
+use super::{Note, NoteId, Tag};
+use crate::core::FileType;
 
 mod imp {
     use super::*;
@@ -59,6 +60,50 @@ glib::wrapper! {
 impl NoteList {
     pub fn new() -> Self {
         glib::Object::new(&[]).expect("Failed to create NoteList.")
+    }
+
+    pub async fn load_from_dir(directory: &gio::File) -> anyhow::Result<Self> {
+        let file_infos = directory
+            .enumerate_children_async_future(
+                &gio::FILE_ATTRIBUTE_STANDARD_NAME,
+                gio::FileQueryInfoFlags::NONE,
+                glib::PRIORITY_HIGH_IDLE,
+            )
+            .await?;
+
+        let note_list = Self::new();
+
+        for file_info in file_infos.flatten() {
+            let file_path = {
+                let mut file_path = directory.path().unwrap();
+                file_path.push(file_info.name());
+                file_path
+            };
+
+            log::info!("Loading file `{}`", file_path.display());
+
+            let file = gio::File::for_path(&file_path);
+
+            if FileType::for_file(&file) != FileType::Markdown {
+                log::info!(
+                    "The file `{}` doesn't have an md extension, skipping...",
+                    file_path.display()
+                );
+                continue;
+            }
+
+            // TODO consider using GtkSourceFile here
+            // So we could use GtkSourceFileLoader and GtkSourceFileSaver to handle
+            // saving and loading, and perhaps reduce allocations on serializing into buffer and
+            // deserializiations.
+            let note = Note::deserialize(&file).await?;
+
+            println!("{}", &note);
+
+            note_list.append(note);
+        }
+
+        Ok(note_list)
     }
 
     pub fn append(&self, note: Note) {
@@ -113,6 +158,21 @@ impl NoteList {
         imp.unsaved_notes.take()
     }
 
+    pub fn remove_tag_on_all(&self, tag: &Tag) {
+        for note in self.iter() {
+            let note_tag_list = note.metadata().tag_list();
+
+            if let Err(err) = note_tag_list.remove(tag) {
+                log::warn!(
+                    "Failed to remove tag with name `{}` on `{}`: {}",
+                    tag.name(),
+                    note,
+                    err
+                );
+            }
+        }
+    }
+
     pub fn iter(&self) -> Iter {
         Iter::new(self.clone())
     }
@@ -141,5 +201,36 @@ impl Iterator for Iter {
         let item = self.model.item(index);
         self.i.set(index + 1);
         item.map(|x| x.downcast::<Note>().unwrap())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn remove_tag_on_all() {
+        // Gtk has to be initialized when Note::create_default is called since
+        // GtkSourceView requires it.
+        gtk::init().unwrap();
+
+        let note_list = NoteList::new();
+        let tag = Tag::new("A");
+
+        let note_1 = Note::create_default("/home/user");
+        let note_1_tag_list = note_1.metadata().tag_list();
+        note_1_tag_list.append(tag.clone()).unwrap();
+        assert!(note_1_tag_list.contains(&tag));
+        note_list.append(note_1);
+
+        let note_2 = Note::create_default("/home/user");
+        let note_2_tag_list = note_2.metadata().tag_list();
+        note_2_tag_list.append(tag.clone()).unwrap();
+        assert!(note_2_tag_list.contains(&tag));
+        note_list.append(note_2);
+
+        note_list.remove_tag_on_all(&tag);
+        assert!(!note_1_tag_list.contains(&tag));
+        assert!(!note_2_tag_list.contains(&tag));
     }
 }

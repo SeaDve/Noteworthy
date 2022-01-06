@@ -167,10 +167,10 @@ impl Note {
             .expect("Failed to create Note.")
     }
 
-    pub fn create_default(base_path: &Path) -> Self {
+    pub fn create_default(base_path: impl AsRef<Path>) -> Self {
         let file = {
             let file_name = utils::generate_unique_file_name("Note"); // Also the note's Id
-            let mut file_path = base_path.join(file_name);
+            let mut file_path = base_path.as_ref().join(file_name);
             file_path.set_extension("md");
             gio::File::for_path(file_path)
         };
@@ -284,11 +284,7 @@ impl Note {
 
         self.set_is_saved(true);
 
-        log::info!(
-            "Saved noted with title of `{}` and path of `{}`",
-            self.metadata().title(),
-            self.file().path().unwrap().display()
-        );
+        log::info!("Saved `{}`", self);
 
         Ok(())
     }
@@ -318,5 +314,16 @@ impl Note {
                     .unwrap(),
             )
             .build()
+    }
+}
+
+impl std::fmt::Display for Note {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Note at path `{}` with title `{}`",
+            self.file().path().unwrap().display(),
+            self.metadata().title()
+        )
     }
 }

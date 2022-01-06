@@ -181,9 +181,7 @@ impl NoteTagDialog {
         let tag_name = imp.search_entry.text();
         let new_tag = Tag::new(&tag_name);
 
-        for tag_list in self.other_tag_lists().iter() {
-            tag_list.append(new_tag.clone()).unwrap();
-        }
+        self.other_tag_lists().append_on_all(&new_tag);
 
         self.tag_list().append(new_tag).unwrap();
         // TODO new_tag should be added on top

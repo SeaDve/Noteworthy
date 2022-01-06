@@ -1,8 +1,8 @@
 use gtk::glib::{self, GSharedBoxed};
 
-use std::rc::Rc;
+use std::{rc::Rc, slice::Iter};
 
-use super::NoteTagList;
+use super::{NoteTagList, Tag};
 
 #[derive(Debug, Clone, GSharedBoxed)]
 #[gshared_boxed(type_name = "NwtyTagLists")]
@@ -21,7 +21,7 @@ impl Default for NoteTagLists {
 }
 
 impl NoteTagLists {
-    pub fn iter(&self) -> std::slice::Iter<NoteTagList> {
+    pub fn iter(&self) -> Iter<NoteTagList> {
         self.0.iter()
     }
 
@@ -31,5 +31,94 @@ impl NoteTagLists {
 
     pub fn first(&self) -> Option<&NoteTagList> {
         self.0.first()
+    }
+
+    pub fn append_on_all(&self, tag: &Tag) {
+        for tag_list in self.iter() {
+            if tag_list.append(tag.clone()).is_err() {
+                log::warn!(
+                    "Trying to append an existing tag with name `{}`",
+                    tag.name()
+                );
+            }
+        }
+    }
+
+    pub fn remove_on_all(&self, tag: &Tag) {
+        for tag_list in self.iter() {
+            if tag_list.remove(tag).is_err() {
+                log::warn!(
+                    "Trying to remove a tag with name `{}` that doesn't exist in the list",
+                    tag.name()
+                );
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn is_empty() {
+        let note_tag_list_1 = NoteTagList::new();
+        note_tag_list_1.append(Tag::new("A")).unwrap();
+        let note_tag_list_2 = NoteTagList::new();
+        note_tag_list_2.append(Tag::new("A")).unwrap();
+
+        let note_tag_lists = NoteTagLists::from(vec![note_tag_list_1, note_tag_list_2]);
+        assert!(!note_tag_lists.is_empty());
+
+        let note_tag_lists = NoteTagLists::default();
+        assert!(note_tag_lists.is_empty());
+    }
+
+    #[test]
+    fn first() {
+        let note_tag_list_1 = NoteTagList::new();
+        note_tag_list_1.append(Tag::new("A")).unwrap();
+        let note_tag_list_2 = NoteTagList::new();
+        note_tag_list_2.append(Tag::new("A")).unwrap();
+
+        let note_tag_lists = NoteTagLists::from(vec![note_tag_list_1.clone(), note_tag_list_2]);
+        assert_eq!(note_tag_lists.first(), Some(&note_tag_list_1));
+    }
+
+    #[test]
+    fn append_on_all() {
+        let note_tag_list_1 = NoteTagList::new();
+        note_tag_list_1.append(Tag::new("A")).unwrap();
+
+        let note_tag_list_2 = NoteTagList::new();
+        note_tag_list_2.append(Tag::new("A")).unwrap();
+
+        let note_tag_lists =
+            NoteTagLists::from(vec![note_tag_list_1.clone(), note_tag_list_2.clone()]);
+        let tag = Tag::new("B");
+        note_tag_lists.append_on_all(&tag);
+
+        assert!(note_tag_list_1.contains(&tag));
+        assert!(note_tag_list_2.contains(&tag));
+    }
+
+    #[test]
+    fn remove_on_all() {
+        let tag = Tag::new("B");
+
+        let note_tag_list_1 = NoteTagList::new();
+        note_tag_list_1.append(Tag::new("A")).unwrap();
+        note_tag_list_1.append(tag.clone()).unwrap();
+
+        let note_tag_list_2 = NoteTagList::new();
+        note_tag_list_2.append(Tag::new("A")).unwrap();
+        note_tag_list_2.append(tag.clone()).unwrap();
+
+        let note_tag_lists =
+            NoteTagLists::from(vec![note_tag_list_1.clone(), note_tag_list_2.clone()]);
+        note_tag_lists.remove_on_all(&tag);
+
+        assert!(!note_tag_list_1.contains(&tag));
+        assert!(!note_tag_list_2.contains(&tag));
     }
 }

@@ -177,20 +177,9 @@ impl Row {
                 imp.check_button.set_inconsistent(false);
 
                 if check_button.is_active() {
-                    for tag_list in obj.other_tag_lists().iter() {
-                        if tag_list.append(tag.clone()).is_err() {
-                            log::warn!("Trying to append an existing tag with name `{}`", tag.name());
-                        }
-                    }
+                    obj.other_tag_lists().append_on_all(&tag);
                 } else {
-                    for tag_list in obj.other_tag_lists().iter() {
-                        if tag_list.remove(&tag).is_err() {
-                            log::warn!(
-                                "Trying to remove a tag with name `{}` that doesn't exist in the list",
-                                tag.name()
-                            );
-                        }
-                    }
+                    obj.other_tag_lists().remove_on_all(&tag);
                 }
             }));
 
