@@ -1,6 +1,9 @@
 use gtk::{glib, prelude::*};
 
-use std::path::PathBuf;
+use std::{
+    ffi::OsStr,
+    path::{Path, PathBuf},
+};
 
 // Taken from fractal-next GPLv3
 // See https://gitlab.gnome.org/GNOME/fractal/-/blob/fractal-next/src/utils.rs
@@ -68,7 +71,21 @@ pub fn default_notes_dir() -> PathBuf {
     data_dir
 }
 
-pub fn generate_unique_file_name(prefix: &str) -> String {
+pub fn generate_unique_path(
+    base_path: impl AsRef<Path>,
+    prefix: &str,
+    extension: Option<impl AsRef<OsStr>>,
+) -> PathBuf {
     let formatted_time = chrono::Local::now().format("%Y-%m-%d-%H-%M-%S-%f");
-    format!("{}-{}", prefix, formatted_time)
+    let unique_file_name = format!("{}-{}", prefix, formatted_time);
+
+    let mut path = base_path.as_ref().join(unique_file_name);
+
+    if let Some(extension) = extension {
+        path.set_extension(extension);
+    }
+
+    assert!(!path.exists());
+
+    path
 }

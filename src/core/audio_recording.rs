@@ -67,12 +67,8 @@ glib::wrapper! {
 
 impl AudioRecording {
     pub fn new(base_path: &Path) -> Self {
-        let file = {
-            let file_name = utils::generate_unique_file_name("AudioRecording");
-            let mut file_path = base_path.join(file_name);
-            file_path.set_extension("ogg");
-            gio::File::for_path(&file_path)
-        };
+        let file_path = utils::generate_unique_path(base_path, "AudioRecording", Some("ogg"));
+        let file = gio::File::for_path(&file_path);
 
         glib::Object::new::<Self>(&[("file", &file)]).expect("Failed to create AudioRecording.")
     }

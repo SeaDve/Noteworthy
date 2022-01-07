@@ -168,12 +168,8 @@ impl Note {
     }
 
     pub fn create_default(base_path: impl AsRef<Path>) -> Self {
-        let file = {
-            let file_name = utils::generate_unique_file_name("Note"); // Also the note's Id
-            let mut file_path = base_path.as_ref().join(file_name);
-            file_path.set_extension("md");
-            gio::File::for_path(file_path)
-        };
+        let file_path = utils::generate_unique_path(base_path, "Note", Some("md"));
+        let file = gio::File::for_path(&file_path);
 
         Self::new(&file, &Metadata::default(), &Self::default_buffer())
     }

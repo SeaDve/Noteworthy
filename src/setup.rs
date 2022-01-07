@@ -276,9 +276,7 @@ mod test {
     }
 
     #[test]
-    #[should_panic(
-        expected = "Failed to get GitHost from u8: No discriminant in enum `GitHost` matches the value `3`"
-    )]
+    #[should_panic(expected = "Failed to get GitHost from u8: TryFromPrimitiveError { number: 3 }")]
     fn git_host_not_found() {
         use imp::GitHost;
 
@@ -287,7 +285,7 @@ mod test {
 
     #[test]
     #[should_panic(
-        expected = "Failed to get GitHost from u8: No discriminant in enum `GitHost` matches the value `255`"
+        expected = "Failed to get GitHost from u8: TryFromPrimitiveError { number: 255 }"
     )]
     fn git_host_not_found_2() {
         use imp::GitHost;

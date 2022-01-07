@@ -120,17 +120,9 @@ impl FileImporterButton {
 
     async fn import_files(&self, files: Vec<PathBuf>) -> anyhow::Result<()> {
         for source_path in files {
-            let destination_path = {
-                let mut path = utils::default_notes_dir();
-                path.push(utils::generate_unique_file_name("OtherFile"));
-
-                if let Some(extension) = source_path.extension() {
-                    path.set_extension(extension);
-                }
-
-                path
-            };
-
+            let notes_dir = utils::default_notes_dir();
+            let destination_path =
+                utils::generate_unique_path(notes_dir, "OtherFile", source_path.extension());
             let destination_file = gio::File::for_path(&destination_path);
 
             log::info!(
