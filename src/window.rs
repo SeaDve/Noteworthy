@@ -85,7 +85,7 @@ mod imp {
                 let ctx = glib::MainContext::default();
                 ctx.block_on(async move {
                     if let Err(err) = session.sync().await {
-                        log::error!("Failed to sync session: {}", err);
+                        log::error!("Failed to sync session: {:?}", err);
                     }
                 });
             }

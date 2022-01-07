@@ -57,7 +57,9 @@ mod imp {
 
             klass.install_action("session.sync", None, move |obj, _, _| {
                 spawn!(clone!(@weak obj => async move {
-                    obj.sync().await.expect("Failed to sync");
+                    if let Err(err) = obj.sync().await {
+                        log::error!("Failed to sync: {:?}", err);
+                    }
                 }));
             });
 
@@ -232,7 +234,7 @@ impl Session {
             glib::PRIORITY_DEFAULT_IDLE,
             clone!(@weak self as obj => async move {
                 if let Err(err) = obj.sync().await {
-                    log::error!("Failed to sync session: {}", err);
+                    log::error!("Failed to sync session: {:?}", err);
                 }
             })
         );

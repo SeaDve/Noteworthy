@@ -409,7 +409,7 @@ impl NoteManager {
                     log::info!("New remote changes! Syncing...");
                     spawn!(async move {
                         if let Err(err) = obj.sync().await {
-                            log::error!("Failed to sync: {}", err);
+                            log::error!("Failed to sync: {:?}", err);
                         }
                     });
                 }));
