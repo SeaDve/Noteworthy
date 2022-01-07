@@ -178,7 +178,7 @@ impl Repository {
                 log::info!("Removing file `{}`", full_path.display());
                 if let Err(err) = fs::remove_file(&full_path) {
                     log::error!(
-                        "File `{}` could not be deleted: {}",
+                        "File `{}` could not be deleted: {:?}",
                         full_path.display(),
                         err
                     );
@@ -295,7 +295,7 @@ impl Repository {
             }
             Err(err) => {
                 repo.commit(Some("HEAD"), &signature, &signature, message, &tree, &[])?;
-                log::warn!("Failed to refname_to_id: {}", err);
+                log::warn!("Failed to refname_to_id: {:?}", err);
             }
         };
 

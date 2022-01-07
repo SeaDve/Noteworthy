@@ -164,7 +164,7 @@ impl NoteList {
 
             if let Err(err) = note_tag_list.remove(tag) {
                 log::warn!(
-                    "Failed to remove tag with name `{}` on `{}`: {}",
+                    "Failed to remove tag with name `{}` on `{}`: {:?}",
                     tag.name(),
                     note,
                     err

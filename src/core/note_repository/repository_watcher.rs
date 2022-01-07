@@ -139,11 +139,11 @@ impl RepositoryWatcher {
 
                 loop {
                     repo.fetch(&remote_name).unwrap_or_else(|err| {
-                        log::error!("Failed to fetch to origin: {}", err);
+                        log::error!("Failed to fetch to origin: {:?}", err);
                     });
                     if let Ok(is_same) = repo.is_same("HEAD", "FETCH_HEAD") {
                         sender.send(is_same).unwrap_or_else(|err| {
-                            log::error!("Failed to send message to channel: {}", err);
+                            log::error!("Failed to send message to channel: {:?}", err);
                         });
                     } else {
                         log::error!("Failed to compare HEAD from FETCH_HEAD");
@@ -153,7 +153,7 @@ impl RepositoryWatcher {
             }
             Err(err) => {
                 log::error!(
-                    "Failed to open repo with path `{}`: {}",
+                    "Failed to open repo with path `{}`: {:?}",
                     base_path.display(),
                     err
                 );

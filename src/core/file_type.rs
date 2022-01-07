@@ -33,7 +33,7 @@ impl FileType {
                 }
             }
             Err(err) => {
-                log::warn!("Failed to query info for file `{}`: {}", file.uri(), err);
+                log::warn!("Failed to query info for file `{}`: {:?}", file.uri(), err);
                 Self::Unknown
             }
         }

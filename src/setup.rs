@@ -28,7 +28,7 @@ mod imp {
         pub fn from_u8(int: u8) -> Self {
             match Self::try_from(int) {
                 Ok(this) => this,
-                Err(err) => panic!("Failed to get GitHost from u8: {}", err),
+                Err(err) => panic!("Failed to get GitHost from u8: {:?}", err),
             }
         }
     }
@@ -105,7 +105,7 @@ mod imp {
             //             .clone(repo_url.to_string(), passphrase.to_string())
             //             .await
             //         {
-            //             log::error!("Failed to clone: {}", err);
+            //             log::error!("Failed to clone: {:?}", err);
             //         } else {
             //             log::info!("Successful repo clone");
             //         }

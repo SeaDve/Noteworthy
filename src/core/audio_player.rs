@@ -136,7 +136,7 @@ impl AudioPlayer {
 
     pub fn set_state(&self, state: PlaybackState) {
         if let Err(err) = self.set_state_inner(state) {
-            log::error!("Failed to set state to `{:?}`: {}", state, err);
+            log::error!("Failed to set state to `{:?}`: {:?}", state, err);
             // TODO propagate this error to show user facing errors
         }
     }
@@ -167,7 +167,7 @@ impl AudioPlayer {
 
         let flags = gst::SeekFlags::FLUSH | gst::SeekFlags::KEY_UNIT;
         if let Err(err) = self.player().seek_simple(flags, position) {
-            log::error!("Failed to seek at pos `{}`: {}", position, err);
+            log::error!("Failed to seek at pos `{}`: {:?}", position, err);
         }
     }
 

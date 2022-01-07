@@ -163,7 +163,7 @@ impl AudioRow {
                 imp.playback_duration_label.set_time(duration);
             }
             Err(err) => {
-                log::warn!("Error getting duration: {}", err);
+                log::warn!("Error getting duration: {:?}", err);
             }
         }
     }
@@ -182,7 +182,7 @@ impl AudioRow {
                 self.set_playback_position_scale_value_blocking(position.as_secs_f64());
             }
             Err(err) => {
-                log::warn!("Error querying position: {}", err);
+                log::warn!("Error querying position: {:?}", err);
             }
         }
     }

@@ -168,7 +168,7 @@ impl NoteManager {
             };
 
             if let Err(err) = res {
-                log::warn!("Failed to clone or init repo: {}", err);
+                log::warn!("Failed to clone or init repo: {:?}", err);
                 log::info!("Opening existing instead...");
                 NoteRepository::open(directory).await.unwrap()
             } else {
@@ -236,7 +236,7 @@ impl NoteManager {
             }
             Err(err) => {
                 log::warn!(
-                    "Falling back to default data, Failed to load data file: {}",
+                    "Falling back to default data, Failed to load data file: {:?}",
                     err
                 );
                 Data::default()

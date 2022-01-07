@@ -112,7 +112,7 @@ impl OtherRow {
         let res = gio::AppInfo::launch_default_for_uri(&file_uri, None::<&gio::AppLaunchContext>);
 
         if let Err(err) = res {
-            log::error!("Failed to open file at uri `{}`: {}", file_uri, err);
+            log::error!("Failed to open file at uri `{}`: {:?}", file_uri, err);
             // TODO show user facing error
         }
     }

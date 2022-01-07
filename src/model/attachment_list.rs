@@ -107,7 +107,7 @@ impl std::iter::FromIterator<Attachment> for AttachmentList {
 
         for attachment in iter {
             if let Err(err) = attachment_list.append(attachment) {
-                log::warn!("Error appending an attachment, skipping: {}", err);
+                log::warn!("Error appending an attachment, skipping: {:?}", err);
             }
         }
 

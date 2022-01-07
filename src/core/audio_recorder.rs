@@ -178,7 +178,7 @@ impl AudioRecorder {
 
         if let Some(recording) = self.cleanup_and_take_recording() {
             if let Err(err) = recording.delete().await {
-                log::warn!("Failed to delete recording: {}", err);
+                log::warn!("Failed to delete recording: {:?}", err);
             }
         }
     }
@@ -241,7 +241,7 @@ impl AudioRecorder {
                 );
                 pulsesrc.set_property("device", audio_source_name)?;
             }
-            Err(err) => log::warn!("Failed to set pulsesrc device: {}", err),
+            Err(err) => log::warn!("Failed to set pulsesrc device: {:?}", err),
         }
 
         encodebin.set_property("profile", &Self::default_encodebin_profile())?;
@@ -313,20 +313,14 @@ impl AudioRecorder {
 
                 Continue(false)
             }
-            MessageView::Error(error) => {
-                log::error!(
-                    "Error from record bus: {:?} (debug {:?})",
-                    error.error(),
-                    error
-                );
+            MessageView::Error(err) => {
+                log::error!("Error from record bus: {:?} (debug {:?})", err.error(), err);
 
                 let _recording = self.cleanup_and_take_recording();
 
                 let imp = imp::AudioRecorder::from_instance(self);
                 let sender = imp.sender.take().unwrap();
-                sender
-                    .send(Err(anyhow::anyhow!(error.error().to_string())))
-                    .unwrap();
+                sender.send(Err(err.error().into())).unwrap();
 
                 Continue(false)
             }

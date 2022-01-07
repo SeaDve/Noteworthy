@@ -77,7 +77,7 @@ mod imp {
     impl WindowImpl for Window {
         fn close_request(&self, obj: &Self::Type) -> gtk::Inhibit {
             if let Err(err) = obj.save_window_size() {
-                log::warn!("Failed to save window state, {}", &err);
+                log::warn!("Failed to save window state: {:?}", &err);
             }
 
             // TODO what if app crashed? so maybe implement autosync

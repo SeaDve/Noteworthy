@@ -143,7 +143,7 @@ impl Row {
         let other_tag_lists = self.other_tag_lists();
 
         if other_tag_lists.is_empty() {
-            // Basically impossible to get empty other_tag_lists from the ui, but just to be sure.
+            // Basically impossible to get empty other_tag_lists from the ui
             log::error!("Other tag lists found to be empty");
             imp.check_button.set_active(false);
             return;

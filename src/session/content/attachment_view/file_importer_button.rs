@@ -180,13 +180,13 @@ impl FileImporterButton {
                 spawn!(clone!(@weak self as obj => async move {
                     if let Err(err) = obj.import_files(files).await {
                         obj.show_error(&err.to_string(), &gettext("Please try again."));
-                        log::error!("Error on importing files: {:#}", err);
+                        log::error!("Error on importing files: {:?}", err);
                     }
                 }));
             }
             Err(err) => {
                 self.show_error(&err.to_string(), &gettext("Please try again."));
-                log::error!("Error on validifying files: {:#}", err);
+                log::error!("Error on validifying files: {:?}", err);
             }
         }
     }

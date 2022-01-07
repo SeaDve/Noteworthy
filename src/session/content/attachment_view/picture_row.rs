@@ -112,7 +112,7 @@ impl PictureRow {
             }
             Err(err) => {
                 log::error!(
-                    "Failed to load texture from file `{}`: {}",
+                    "Failed to load texture from file `{}`: {:?}",
                     file.path().unwrap().display(),
                     err
                 );

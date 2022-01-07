@@ -152,7 +152,7 @@ impl std::iter::FromIterator<Tag> for TagList {
 
         for tag in iter {
             if let Err(err) = tag_list.append(tag) {
-                log::warn!("Error appending a tag, skipping: {}", err);
+                log::warn!("Error appending a tag, skipping: {:?}", err);
             }
         }
 

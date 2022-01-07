@@ -81,7 +81,7 @@ mod imp {
             self.parent_constructed(obj);
 
             if let Err(err) = obj.setup_pipeline() {
-                log::error!("Failed to setup pipeline: {:#}", err);
+                log::error!("Failed to setup pipeline: {:?}", err);
                 // TODO handle this. Add UI error or something
             }
         }

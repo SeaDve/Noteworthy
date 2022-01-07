@@ -143,7 +143,7 @@ impl AudioRecorderButton {
         let recording_base_path = utils::default_notes_dir();
 
         if let Err(err) = self.recorder().start(&recording_base_path) {
-            log::error!("Failed to start recording: {:#}", err);
+            log::error!("Failed to start recording: {:?}", err);
             return;
         }
 
@@ -170,7 +170,7 @@ impl AudioRecorderButton {
                     obj.emit_by_name("record-done", &[&recording.file()]).unwrap();
                 }
                 Err(err) => {
-                    log::error!("Failed to stop recording: {:#}", err);
+                    log::error!("Failed to stop recording: {:?}", err);
                 }
             }
         }));
