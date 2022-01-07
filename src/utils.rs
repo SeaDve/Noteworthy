@@ -73,13 +73,13 @@ pub fn default_notes_dir() -> PathBuf {
 
 pub fn generate_unique_path(
     base_path: impl AsRef<Path>,
-    prefix: &str,
+    file_name_prefix: &str,
     extension: Option<impl AsRef<OsStr>>,
 ) -> PathBuf {
     let formatted_time = chrono::Local::now().format("%Y-%m-%d-%H-%M-%S-%f");
-    let unique_file_name = format!("{}-{}", prefix, formatted_time);
+    let file_name = format!("{}-{}", file_name_prefix, formatted_time);
 
-    let mut path = base_path.as_ref().join(unique_file_name);
+    let mut path = base_path.as_ref().join(file_name);
 
     if let Some(extension) = extension {
         path.set_extension(extension);
