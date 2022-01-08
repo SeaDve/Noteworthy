@@ -101,7 +101,8 @@ impl PictureRow {
 
         // TODO load lazily
         // Maybe gio::File::load_bytes_async_future then load it through
-        // gdk::Texture::from_bytes in gtk 4.6
+        // gdk::Texture::from_bytes in gtk 4.6 or just load it from another
+        // thread since gdk::Texture is now Send & Sync
         match gdk::Texture::from_file(&file) {
             Ok(ref texture) => {
                 log::info!(
