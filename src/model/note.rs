@@ -194,15 +194,6 @@ impl Note {
         imp.is_saved.get()
     }
 
-    fn set_is_saved(&self, is_saved: bool) {
-        self.set_property("is-saved", is_saved);
-    }
-
-    pub fn delete(&self) -> anyhow::Result<()> {
-        self.file().delete(gio::Cancellable::NONE)?;
-        Ok(())
-    }
-
     pub fn connect_metadata_changed<F>(&self, f: F) -> glib::SignalHandlerId
     where
         F: Fn(&Self) + 'static,
@@ -278,6 +269,10 @@ impl Note {
         log::info!("Saved `{}`", self);
 
         Ok(())
+    }
+
+    fn set_is_saved(&self, is_saved: bool) {
+        self.set_property("is-saved", is_saved);
     }
 
     fn serialize_to_bytes(&self) -> anyhow::Result<Vec<u8>> {

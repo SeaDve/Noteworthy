@@ -286,23 +286,6 @@ impl NoteManager {
         log::info!("Created note with base_path `{}`", base_path.display());
     }
 
-    pub fn delete_note(&self, note_id: &NoteId) -> anyhow::Result<()> {
-        let note_list = self.note_list();
-        note_list.remove(note_id);
-
-        let note = note_list.get(note_id).ok_or_else(|| {
-            anyhow::anyhow!(
-                "Failed to delete note: Note with id `{:?}` not found",
-                note_id
-            )
-        })?;
-        note.delete()?;
-
-        log::info!("Deleted note `{}`", note.file().path().unwrap().display());
-
-        Ok(())
-    }
-
     pub async fn load(&self) -> anyhow::Result<()> {
         self.load_data_file().await?;
         self.load_notes().await?;
