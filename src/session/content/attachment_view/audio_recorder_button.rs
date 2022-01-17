@@ -162,8 +162,8 @@ impl AudioRecorderButton {
     fn stop_recording(&self) {
         spawn!(clone!(@weak self as obj => async move {
             match obj.recorder().stop().await {
-                Ok(ref recording) => {
-                    obj.emit_by_name::<()>("record-done", &[&recording.file()]);
+                Ok(recording) => {
+                    obj.emit_by_name::<()>("record-done", &[&recording.into_file()]);
                 }
                 Err(err) => {
                     log::error!("Failed to stop recording: {:?}", err);
