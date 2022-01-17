@@ -116,11 +116,9 @@ impl Window {
     }
 
     pub fn has_page(&self, page_to_find: &impl IsA<gtk::Widget>) -> bool {
-        let pages = self.imp().main_stack.pages();
-
         // FIXME use `main_stack.page(page_to_find).is_some()`
         // but for some reason Stack::page is not nullable
-        for page in pages.snapshot() {
+        for page in self.imp().main_stack.pages().snapshot() {
             let child = page.downcast_ref::<gtk::StackPage>().unwrap().child();
 
             if &child == page_to_find.upcast_ref() {
