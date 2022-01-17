@@ -16,13 +16,12 @@ mod imp {
     impl ObjectSubclass for Tag {
         const NAME: &'static str = "NwtyTag";
         type Type = super::Tag;
-        type ParentType = glib::Object;
     }
 
     impl ObjectImpl for Tag {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_string(
+                vec![glib::ParamSpecString::new(
                     "name",
                     "Name",
                     "Name of the tag",
@@ -70,11 +69,11 @@ impl Tag {
     /// Must not be called directly if a tag is in a `TagList` or `NoteTagList`.
     /// Use `TagList::rename_tag` instead as it contains sanity checks and other handling.
     pub(super) fn set_name(&self, name: &str) {
-        self.set_property("name", name).unwrap();
+        self.set_property("name", name);
     }
 
     pub fn name(&self) -> String {
-        self.property("name").unwrap().get().unwrap()
+        self.property("name")
     }
 
     pub fn connect_name_notify<F>(&self, f: F) -> glib::SignalHandlerId

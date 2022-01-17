@@ -4,7 +4,7 @@
 
 use gst::prelude::*;
 use gtk::{
-    glib::{self, clone, GEnum},
+    glib::{self, clone},
     subclass::prelude::*,
 };
 use once_cell::unsync::OnceCell;
@@ -14,8 +14,8 @@ use std::cell::{Cell, RefCell};
 use super::ClockTime;
 use crate::spawn_blocking;
 
-#[derive(Debug, Clone, Copy, PartialEq, GEnum)]
-#[genum(type_name = "AudioPlayerPlaybackState")]
+#[derive(Debug, Clone, Copy, PartialEq, glib::Enum)]
+#[enum_type(name = "AudioPlayerPlaybackState")]
 pub enum PlaybackState {
     Stopped,
     Loading,
@@ -45,14 +45,13 @@ mod imp {
     impl ObjectSubclass for AudioPlayer {
         const NAME: &'static str = "NwtyAudioPlayer";
         type Type = super::AudioPlayer;
-        type ParentType = glib::Object;
     }
 
     impl ObjectImpl for AudioPlayer {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
-                    glib::ParamSpec::new_enum(
+                    glib::ParamSpecEnum::new(
                         "state",
                         "State",
                         "Current state of the player",
@@ -60,7 +59,7 @@ mod imp {
                         PlaybackState::default() as i32,
                         glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
-                    glib::ParamSpec::new_string(
+                    glib::ParamSpecString::new(
                         "uri",
                         "Uri",
                         "Current uri being played in the player",
@@ -147,7 +146,7 @@ impl AudioPlayer {
     }
 
     pub fn set_uri(&self, uri: &str) {
-        self.player().set_property("uri", uri).unwrap();
+        self.player().set_property("uri", uri);
 
         let imp = imp::AudioPlayer::from_instance(self);
         imp.uri.replace(uri.to_owned());

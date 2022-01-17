@@ -50,21 +50,21 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "item",
                         "Item",
                         "The item being represented by this",
                         Item::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
-                    glib::ParamSpec::new_boolean(
+                    glib::ParamSpecBoolean::new(
                         "selected",
                         "Selected",
                         "Whether this row is selected",
                         false,
                         glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "list-row",
                         "List Row",
                         "The list row to track for expander state",
@@ -190,7 +190,7 @@ impl ItemRow {
                     .bind_property("name", &imp.label_child.get(), "label")
                     .flags(glib::BindingFlags::SYNC_CREATE)
                     .build();
-                imp.binding.replace(binding);
+                imp.binding.replace(Some(binding));
                 self.insert_before_select_icon(&imp.label_child.get());
             } else {
                 unreachable!("Invalid row item `{:?}`", item);

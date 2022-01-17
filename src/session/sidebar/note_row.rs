@@ -1,6 +1,6 @@
 use adw::subclass::prelude::*;
 use gtk::{
-    glib::{self, clone},
+    glib::{self, clone, closure},
     prelude::*,
     subclass::prelude::*,
 };
@@ -8,10 +8,7 @@ use gtk::{
 use std::cell::{Cell, RefCell};
 
 use super::{Note, Selection, SelectionMode, Sidebar};
-use crate::{
-    core::DateTime,
-    utils::{ChainExpr, PropExpr},
-};
+use crate::{core::DateTime, model::note::Metadata};
 
 const MAX_SUBTITLE_LEN: usize = 100;
 const MAX_SUBTITLE_LINE: u32 = 3;
@@ -60,7 +57,7 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
-                    glib::ParamSpec::new_enum(
+                    glib::ParamSpecEnum::new(
                         "selection-mode",
                         "Selection Mode",
                         "Current selection mode",
@@ -68,14 +65,14 @@ mod imp {
                         SelectionMode::default() as i32,
                         glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
-                    glib::ParamSpec::new_boolean(
+                    glib::ParamSpecBoolean::new(
                         "is-selected",
                         "Is Checked",
                         "Whether this row is selected",
                         false,
                         glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
-                    glib::ParamSpec::new_uint(
+                    glib::ParamSpecUInt::new(
                         "position",
                         "Position",
                         "Position of the item",
@@ -84,7 +81,7 @@ mod imp {
                         gtk::INVALID_LIST_POSITION,
                         glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "note",
                         "Note",
                         "Note represented by self",
@@ -229,13 +226,11 @@ impl NoteRow {
     fn setup_expressions(&self) {
         let imp = imp::NoteRow::from_instance(self);
 
-        // Expression describing how to get subtitle label of self from buffer of note
-        let note_expression = self.property_expression("note");
+        let note_expression = Self::this_expression("note");
 
         note_expression
-            .property_expression("buffer")
-            .closure_expression(|args| {
-                let buffer: gtk_source::Buffer = args[1].get().unwrap();
+            .chain_property::<Note>("buffer")
+            .chain_closure::<String>(closure!(|_: Self, buffer: gtk_source::Buffer| {
                 let mut iter = buffer.start_iter();
                 let mut subtitle = String::from(iter.char());
 
@@ -262,18 +257,16 @@ impl NoteRow {
 
                 subtitle.truncate(last_non_empty_char_index + 1);
                 subtitle
-            })
-            .bind(&imp.subtitle_label.get(), "label", None::<&gtk::Widget>);
+            }))
+            .bind(&imp.subtitle_label.get(), "label", Some(self));
 
-        // Expression describing how to get time label of self from last_modifed of note
         note_expression
-            .property_expression("metadata")
-            .property_expression("last-modified")
-            .closure_expression(|args| {
-                let last_modified: DateTime = args[1].get().unwrap();
+            .chain_property::<Note>("metadata")
+            .chain_property::<Metadata>("last-modified")
+            .chain_closure::<String>(closure!(|_: Self, last_modified: DateTime| {
                 last_modified.fuzzy_display()
-            })
-            .bind(&imp.time_label.get(), "label", None::<&gtk::Widget>);
+            }))
+            .bind(&imp.time_label.get(), "label", Some(self));
     }
 
     fn setup_signals(&self) {

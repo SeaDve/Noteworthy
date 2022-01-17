@@ -1,10 +1,10 @@
 use chrono::Local;
-use gtk::glib::{self, GBoxed};
+use gtk::glib;
 use serde::{Deserialize, Serialize};
 
 /// A boxed [`DateTime`](chrono::DateTime<Local>)
-#[derive(Debug, Clone, GBoxed, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-#[gboxed(type_name = "NwtyDateTime")]
+#[derive(Debug, Clone, glib::Boxed, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[boxed_type(name = "NwtyDateTime")]
 #[serde(transparent)]
 pub struct DateTime(chrono::DateTime<Local>);
 

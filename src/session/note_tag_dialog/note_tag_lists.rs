@@ -1,11 +1,11 @@
-use gtk::glib::{self, GSharedBoxed};
+use gtk::glib;
 
 use std::{rc::Rc, slice::Iter};
 
 use super::{NoteTagList, Tag};
 
-#[derive(Debug, Clone, GSharedBoxed)]
-#[gshared_boxed(type_name = "NwtyTagLists")]
+#[derive(Debug, Clone, glib::SharedBoxed)]
+#[shared_boxed_type(name = "NwtyTagLists")]
 pub struct NoteTagLists(Rc<Vec<NoteTagList>>);
 
 impl From<Vec<NoteTagList>> for NoteTagLists {

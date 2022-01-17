@@ -83,7 +83,7 @@ mod imp {
             klass.install_action("setup.setup-offline-mode", None, move |obj, _, _| {
                 spawn!(clone!(@weak obj => async move {
                     let new_session = obj.setup_offline_session().await;
-                    obj.emit_by_name("session-setup-done", &[&new_session]).unwrap();
+                    obj.emit_by_name::<()>("session-setup-done", &[&new_session]);
                 }));
             });
 
@@ -183,13 +183,12 @@ impl Setup {
             f(&obj, session);
             None
         })
-        .unwrap()
     }
 
     async fn setup_offline_session(&self) -> Session {
         let notes_folder = gio::File::for_path(&utils::default_notes_dir());
         if let Err(err) = notes_folder
-            .make_directory_async_future(glib::PRIORITY_HIGH_IDLE)
+            .make_directory_future(glib::PRIORITY_HIGH_IDLE)
             .await
         {
             // TODO add user facing error dialog

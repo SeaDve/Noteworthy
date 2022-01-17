@@ -23,7 +23,6 @@ mod imp {
     impl ObjectSubclass for AttachmentList {
         const NAME: &'static str = "NwtyAttachmentList";
         type Type = super::AttachmentList;
-        type ParentType = glib::Object;
         type Interfaces = (gio::ListModel,);
     }
 

@@ -5,17 +5,14 @@ use adw::subclass::prelude::*;
 use gettextrs::gettext;
 use gtk::{
     gio,
-    glib::{self, clone},
+    glib::{self, clone, closure},
     prelude::*,
     subclass::prelude::*,
 };
 use once_cell::unsync::OnceCell;
 
 use self::{note_tag_lists::NoteTagLists, row::Row};
-use crate::{
-    model::{NoteTagList, Tag, TagList},
-    utils::PropExpr,
-};
+use crate::model::{NoteTagList, Tag, TagList};
 
 mod imp {
     use super::*;
@@ -61,14 +58,14 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "tag-list",
                         "Tag List",
                         "List of tags",
                         TagList::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
-                    glib::ParamSpec::new_boxed(
+                    glib::ParamSpecBoxed::new(
                         "other-tag-lists",
                         "List of other tag lists",
                         "The tag lists to compare with",
@@ -156,9 +153,11 @@ impl NoteTagDialog {
     fn set_tag_list(&self, tag_list: TagList) {
         let imp = imp::NoteTagDialog::from_instance(self);
 
-        let tag_name_expression =
-            gtk::ClosureExpression::new(|value| value[0].get::<Tag>().unwrap().name(), &[]);
-        let filter = gtk::StringFilterBuilder::new()
+        let tag_name_expression = gtk::ClosureExpression::new::<String, _, _>(
+            crate::EMPTY_GTK_EXPRESSIONS,
+            closure!(|tag: Tag| tag.name()),
+        );
+        let filter = gtk::StringFilter::builder()
             .match_mode(gtk::StringFilterMatchMode::Substring)
             .expression(&tag_name_expression)
             .ignore_case(true)
@@ -211,7 +210,7 @@ impl NoteTagDialog {
 
             list_item
                 .property_expression("item")
-                .bind(&tag_row, "tag", None::<&gtk::Widget>);
+                .bind(&tag_row, "tag", glib::Object::NONE);
 
             list_item.set_child(Some(&tag_row));
         }));
@@ -229,7 +228,7 @@ impl NoteTagDialog {
 
         imp.search_entry
             .connect_activate(clone!(@weak self as obj => move |_| {
-                WidgetExt::activate_action(&obj, "note-tag-dialog.create-tag", None);
+                WidgetExt::activate_action(&obj, "note-tag-dialog.create-tag", None).unwrap();
             }));
     }
 }

@@ -20,28 +20,27 @@ mod imp {
     impl ObjectSubclass for Item {
         const NAME: &'static str = "NwtySidebarViewSwitcherItem";
         type Type = super::Item;
-        type ParentType = glib::Object;
     }
 
     impl ObjectImpl for Item {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
-                    glib::ParamSpec::new_boxed(
+                    glib::ParamSpecBoxed::new(
                         "kind",
                         "Kind",
                         "Kind of this item",
                         ItemKind::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
-                    glib::ParamSpec::new_string(
+                    glib::ParamSpecString::new(
                         "display-name",
                         "Display Name",
                         "Display name of this item",
                         None,
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT,
                     ),
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "model",
                         "Model",
                         "The model of this item",
@@ -98,15 +97,15 @@ impl Item {
     }
 
     pub fn kind(&self) -> ItemKind {
-        self.property("kind").unwrap().get().unwrap()
+        self.property("kind")
     }
 
     pub fn display_name(&self) -> Option<String> {
-        self.property("display-name").unwrap().get().unwrap()
+        self.property("display-name")
     }
 
     pub fn model(&self) -> Option<gio::ListModel> {
-        self.property("model").unwrap().get().unwrap()
+        self.property("model")
     }
 }
 

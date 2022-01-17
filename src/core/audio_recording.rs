@@ -19,13 +19,12 @@ mod imp {
     impl ObjectSubclass for AudioRecording {
         const NAME: &'static str = "NwtyAudioRecording";
         type Type = super::AudioRecording;
-        type ParentType = glib::Object;
     }
 
     impl ObjectImpl for AudioRecording {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_object(
+                vec![glib::ParamSpecObject::new(
                     "file",
                     "File",
                     "File where the recording is saved",
@@ -78,12 +77,12 @@ impl AudioRecording {
     }
 
     pub fn file(&self) -> gio::File {
-        self.property("file").unwrap().get().unwrap()
+        self.property("file")
     }
 
     pub async fn delete(&self) -> anyhow::Result<()> {
         self.file()
-            .delete_async_future(glib::PRIORITY_DEFAULT_IDLE)
+            .delete_future(glib::PRIORITY_DEFAULT_IDLE)
             .await?;
 
         Ok(())

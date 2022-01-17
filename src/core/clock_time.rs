@@ -1,10 +1,10 @@
-use gtk::glib::{self, GBoxed};
+use gtk::glib;
 
 use std::time::Duration;
 
 /// A boxed [`Duration`](Duration)
-#[derive(Debug, Default, Clone, Copy, GBoxed)]
-#[gboxed(type_name = "NwtyClockTime")]
+#[derive(Debug, Default, Clone, Copy, glib::Boxed)]
+#[boxed_type(name = "NwtyClockTime")]
 pub struct ClockTime(Duration);
 
 impl ClockTime {

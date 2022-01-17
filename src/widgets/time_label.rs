@@ -36,7 +36,7 @@ mod imp {
     impl ObjectImpl for TimeLabel {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_boxed(
+                vec![glib::ParamSpecBoxed::new(
                     "time",
                     "Time",
                     "Time being shown by label",

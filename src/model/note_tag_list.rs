@@ -24,7 +24,6 @@ mod imp {
     impl ObjectSubclass for NoteTagList {
         const NAME: &'static str = "NwtyNoteTagList";
         type Type = super::NoteTagList;
-        type ParentType = glib::Object;
         type Interfaces = (gio::ListModel,);
     }
 

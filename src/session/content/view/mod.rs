@@ -2,7 +2,11 @@ mod tag_bar;
 
 use adw::subclass::prelude::*;
 use gettextrs::gettext;
-use gtk::{glib, prelude::*, subclass::prelude::*};
+use gtk::{
+    glib::{self, closure},
+    prelude::*,
+    subclass::prelude::*,
+};
 use gtk_source::prelude::*;
 
 use std::cell::RefCell;
@@ -10,8 +14,7 @@ use std::cell::RefCell;
 use self::tag_bar::TagBar;
 use crate::{
     core::DateTime,
-    model::Note,
-    utils::{ChainExpr, PropExpr},
+    model::{note::Metadata, Note},
 };
 
 mod imp {
@@ -54,7 +57,7 @@ mod imp {
     impl ObjectImpl for View {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_object(
+                vec![glib::ParamSpecObject::new(
                     "note",
                     "Note",
                     "Current note in the view",
@@ -139,15 +142,13 @@ impl View {
                 .metadata()
                 .bind_property("title", &imp.title_label.get().buffer(), "text")
                 .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
-                .build()
-                .unwrap();
+                .build();
             bindings.push(title_binding);
 
             let buffer_binding = note
                 .bind_property("buffer", &imp.source_view.get(), "buffer")
                 .flags(glib::BindingFlags::SYNC_CREATE)
-                .build()
-                .unwrap();
+                .build();
             bindings.push(buffer_binding);
         }
 
@@ -158,17 +159,12 @@ impl View {
     fn setup_expressions(&self) {
         let imp = imp::View::from_instance(self);
 
-        self.property_expression("note")
-            .property_expression("metadata")
-            .property_expression("last-modified")
-            .closure_expression(|args| {
-                let last_modified: DateTime = args[1].get().unwrap();
+        Self::this_expression("note")
+            .chain_property::<Note>("metadata")
+            .chain_property::<Metadata>("last-modified")
+            .chain_closure::<String>(closure!(|_: Self, last_modified: DateTime| {
                 gettext!("Last edited {}", last_modified.fuzzy_display())
-            })
-            .bind(
-                &imp.last_modified_label.get(),
-                "label",
-                None::<&gtk::Widget>,
-            );
+            }))
+            .bind(&imp.last_modified_label.get(), "label", Some(self));
     }
 }

@@ -56,7 +56,7 @@ mod imp {
     impl ObjectImpl for Row {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_object(
+                vec![glib::ParamSpecObject::new(
                     "tag",
                     "tag",
                     "The tag represented by this row",

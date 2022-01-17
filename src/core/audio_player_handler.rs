@@ -20,7 +20,6 @@ mod imp {
     impl ObjectSubclass for AudioPlayerHandler {
         const NAME: &'static str = "NwtyAudioPlayerHandler";
         type Type = super::AudioPlayerHandler;
-        type ParentType = glib::Object;
     }
 
     impl ObjectImpl for AudioPlayerHandler {}

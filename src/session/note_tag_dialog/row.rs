@@ -44,14 +44,14 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
-                    glib::ParamSpec::new_boxed(
+                    glib::ParamSpecBoxed::new(
                         "other-tag-lists",
                         "A list of other tag lists",
                         "The tag lists to compare with",
                         NoteTagLists::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "tag",
                         "tag",
                         "The tag represented by this row",
@@ -134,7 +134,7 @@ impl Row {
     }
 
     fn other_tag_lists(&self) -> NoteTagLists {
-        self.property("other-tag-lists").unwrap().get().unwrap()
+        self.property("other-tag-lists")
     }
 
     fn update_check_button_state(&self, tag: &Tag) {

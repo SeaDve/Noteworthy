@@ -1,15 +1,16 @@
 mod attachment_view;
 mod view;
 
-use gtk::{glib, prelude::*, subclass::prelude::*};
+use gtk::{
+    glib::{self, closure},
+    prelude::*,
+    subclass::prelude::*,
+};
 
 use std::cell::{Cell, RefCell};
 
 use self::{attachment_view::AttachmentView, view::View};
-use crate::{
-    model::Note,
-    utils::{ChainExpr, PropExpr},
-};
+use crate::model::Note;
 
 mod imp {
     use super::*;
@@ -62,14 +63,14 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
-                    glib::ParamSpec::new_boolean(
+                    glib::ParamSpecBoolean::new(
                         "compact",
                         "Compact",
                         "Whether it is compact view mode",
                         false,
                         glib::ParamFlags::READWRITE,
                     ),
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "note",
                         "Note",
                         "Current note in the view",
@@ -112,32 +113,7 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
-            let is_some_note_expression =
-                obj.property_expression("note").closure_expression(|args| {
-                    let note: Option<Note> = args[1].get().unwrap();
-                    note.is_some()
-                });
-
-            is_some_note_expression.bind(
-                &self.is_pinned_button.get(),
-                "visible",
-                None::<&gtk::Widget>,
-            );
-            is_some_note_expression.bind(
-                &self.is_trashed_button.get(),
-                "visible",
-                None::<&gtk::Widget>,
-            );
-            is_some_note_expression.bind(
-                &self.edit_tags_button.get(),
-                "visible",
-                None::<&gtk::Widget>,
-            );
-            is_some_note_expression.bind(
-                &self.view_flap_button.get(),
-                "visible",
-                None::<&gtk::Widget>,
-            );
+            obj.setup_expressions();
         }
 
         fn dispose(&self, obj: &Self::Type) {
@@ -183,15 +159,13 @@ impl Content {
             let is_pinned = note_metadata
                 .bind_property("is-pinned", &imp.is_pinned_button.get(), "active")
                 .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
-                .build()
-                .unwrap();
+                .build();
             bindings.push(is_pinned);
 
             let is_trashed = note_metadata
                 .bind_property("is-trashed", &imp.is_trashed_button.get(), "active")
                 .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
-                .build()
-                .unwrap();
+                .build();
             bindings.push(is_trashed);
 
             imp.stack.set_visible_child(&imp.view_flap.get());
@@ -201,5 +175,17 @@ impl Content {
 
         imp.note.replace(note);
         self.notify("note");
+    }
+
+    fn setup_expressions(&self) {
+        let imp = self.imp();
+
+        let is_some_note_expression = Self::this_expression("note")
+            .chain_closure::<bool>(closure!(|_: Self, note: Option<Note>| { note.is_some() }));
+
+        is_some_note_expression.bind(&imp.is_pinned_button.get(), "visible", Some(self));
+        is_some_note_expression.bind(&imp.is_trashed_button.get(), "visible", Some(self));
+        is_some_note_expression.bind(&imp.edit_tags_button.get(), "visible", Some(self));
+        is_some_note_expression.bind(&imp.view_flap_button.get(), "visible", Some(self));
     }
 }

@@ -1,4 +1,4 @@
-use gtk::{glib, prelude::*};
+use gtk::glib;
 
 use std::{
     ffi::OsStr,
@@ -26,43 +26,6 @@ macro_rules! spawn_blocking {
     ($function:expr) => {
         crate::THREAD_POOL.push_future($function).unwrap()
     };
-}
-
-pub trait PropExpr {
-    /// Create a constant expression looking up an object's property
-    fn property_expression(&self, prop_name: &str) -> gtk::Expression;
-}
-
-impl<T: IsA<glib::Object>> PropExpr for T {
-    fn property_expression(&self, prop_name: &str) -> gtk::Expression {
-        let obj_expr = gtk::ConstantExpression::new(self).upcast();
-        gtk::PropertyExpression::new(T::static_type(), Some(&obj_expr), prop_name).upcast()
-    }
-}
-
-pub trait ChainExpr {
-    /// Create an expression with `prop_name` chained from self
-    fn property_expression(&self, prop_name: &str) -> gtk::Expression;
-
-    /// Create a closure expression chained from self
-    fn closure_expression<F, T>(self, f: F) -> gtk::Expression
-    where
-        F: Fn(&[glib::Value]) -> T + 'static,
-        T: glib::value::ValueType;
-}
-
-impl ChainExpr for gtk::Expression {
-    fn property_expression(&self, prop_name: &str) -> gtk::Expression {
-        gtk::PropertyExpression::new(self.value_type(), Some(self), prop_name).upcast()
-    }
-
-    fn closure_expression<F, T>(self, f: F) -> gtk::Expression
-    where
-        F: Fn(&[glib::Value]) -> T + 'static,
-        T: glib::value::ValueType,
-    {
-        gtk::ClosureExpression::new(f, &[self]).upcast()
-    }
 }
 
 pub fn default_notes_dir() -> PathBuf {

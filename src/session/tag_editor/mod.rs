@@ -3,7 +3,7 @@ mod row;
 use adw::subclass::prelude::*;
 use gtk::{
     gio,
-    glib::{self, clone},
+    glib::{self, clone, closure},
     prelude::*,
     subclass::prelude::*,
 };
@@ -55,14 +55,14 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "tag-list",
                         "Tag List",
                         "List of tags",
                         TagList::static_type(),
                         glib::ParamFlags::WRITABLE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "note-list",
                         "Note List",
                         "List of notes",
@@ -141,9 +141,11 @@ impl TagEditor {
     fn set_tag_list(&self, tag_list: TagList) {
         let imp = imp::TagEditor::from_instance(self);
 
-        let tag_name_expression =
-            gtk::ClosureExpression::new(|value| value[0].get::<Tag>().unwrap().name(), &[]);
-        let filter = gtk::StringFilterBuilder::new()
+        let tag_name_expression = gtk::ClosureExpression::new::<String, _, _>(
+            crate::EMPTY_GTK_EXPRESSIONS,
+            closure!(|tag: Tag| tag.name()),
+        );
+        let filter = gtk::StringFilter::builder()
             .match_mode(gtk::StringFilterMatchMode::Substring)
             .expression(&tag_name_expression)
             .ignore_case(true)
@@ -194,7 +196,7 @@ impl TagEditor {
 
         imp.create_tag_entry
             .connect_activate(clone!(@weak self as obj => move |_| {
-                WidgetExt::activate_action(&obj, "tag-editor.create-tag", None);
+                WidgetExt::activate_action(&obj, "tag-editor.create-tag", None).unwrap();
             }));
     }
 }

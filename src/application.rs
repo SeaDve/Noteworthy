@@ -107,7 +107,7 @@ impl Application {
     }
 
     fn show_about_dialog(&self) {
-        let dialog = gtk::AboutDialogBuilder::new()
+        let dialog = gtk::AboutDialog::builder()
             .transient_for(&self.main_window())
             .modal(true)
             // .comments(&gettext("Elegantly record your screen"))

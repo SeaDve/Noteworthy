@@ -42,7 +42,7 @@ mod imp {
     impl ObjectImpl for OtherRow {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_object(
+                vec![glib::ParamSpecObject::new(
                     "attachment",
                     "attachment",
                     "The attachment represented by this row",
@@ -109,7 +109,7 @@ impl OtherRow {
 
     fn on_launch_file(&self) {
         let file_uri = self.attachment().file().uri();
-        let res = gio::AppInfo::launch_default_for_uri(&file_uri, None::<&gio::AppLaunchContext>);
+        let res = gio::AppInfo::launch_default_for_uri(&file_uri, gio::AppLaunchContext::NONE);
 
         if let Err(err) = res {
             log::error!("Failed to open file at uri `{}`: {:?}", file_uri, err);
@@ -120,7 +120,7 @@ impl OtherRow {
     fn setup_gesture(&self) {
         let gesture = gtk::GestureClick::new();
         gesture.connect_released(clone!(@weak self as obj => move |_, _, _, _| {
-            obj.activate_action("other-row.launch-file", None);
+            obj.activate_action("other-row.launch-file", None).unwrap();
         }));
         self.add_controller(&gesture);
     }

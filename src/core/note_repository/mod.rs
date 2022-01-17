@@ -48,21 +48,20 @@ mod imp {
     impl ObjectSubclass for NoteRepository {
         const NAME: &'static str = "NwtyNoteRepository";
         type Type = super::NoteRepository;
-        type ParentType = glib::Object;
     }
 
     impl ObjectImpl for NoteRepository {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "base-path",
                         "Base Path",
                         "Where the repository is stored locally",
                         gio::File::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
-                    glib::ParamSpec::new_enum(
+                    glib::ParamSpecEnum::new(
                         "sync-state",
                         "Sync State",
                         "Current sync state",

@@ -35,8 +35,10 @@ use once_cell::sync::Lazy;
 use self::application::Application;
 use self::config::{GETTEXT_PACKAGE, LOCALEDIR, RESOURCES_FILE};
 
+const EMPTY_GTK_EXPRESSIONS: Vec<gtk::Expression> = Vec::new();
+
 static THREAD_POOL: Lazy<glib::ThreadPool> =
-    Lazy::new(|| glib::ThreadPool::new_shared(None).expect("Unable to create thread pool"));
+    Lazy::new(|| glib::ThreadPool::shared(None).expect("Unable to create thread pool"));
 
 fn main() {
     pretty_env_logger::init_timed();

@@ -37,14 +37,13 @@ mod imp {
     impl ObjectSubclass for AudioRecorder {
         const NAME: &'static str = "NwtyAudioRecorder";
         type Type = super::AudioRecorder;
-        type ParentType = glib::Object;
     }
 
     impl ObjectImpl for AudioRecorder {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
-                    glib::ParamSpec::new_double(
+                    glib::ParamSpecDouble::new(
                         "peak",
                         "Peak",
                         "Current volume peak while recording",
@@ -53,7 +52,7 @@ mod imp {
                         0.0,
                         glib::ParamFlags::READABLE,
                     ),
-                    glib::ParamSpec::new_boxed(
+                    glib::ParamSpecBoxed::new(
                         "duration",
                         "Duration",
                         "Current duration while recording",
@@ -206,17 +205,15 @@ impl AudioRecorder {
     }
 
     fn default_encodebin_profile() -> gst_pbutils::EncodingContainerProfile {
-        let encoding_profile = gst_pbutils::EncodingAudioProfileBuilder::new()
-            .format(&gst::Caps::builder("audio/x-opus").build())
+        let audio_caps = gst::Caps::new_simple("audio/x-opus", &[]);
+        let encoding_profile = gst_pbutils::EncodingAudioProfile::builder(&audio_caps)
             .presence(1)
-            .build()
-            .unwrap();
+            .build();
 
-        gst_pbutils::EncodingContainerProfileBuilder::new()
-            .format(&gst::Caps::builder("application/ogg").build())
+        let container_caps = gst::Caps::new_simple("application/ogg", &[]);
+        gst_pbutils::EncodingContainerProfile::builder(&container_caps)
             .add_profile(&encoding_profile)
             .build()
-            .unwrap()
     }
 
     fn default_pipeline(recording_path: &Path) -> anyhow::Result<gst::Pipeline> {
@@ -239,13 +236,13 @@ impl AudioRecorder {
                     "Pipeline setup with pulsesrc device name `{}`",
                     audio_source_name
                 );
-                pulsesrc.set_property("device", audio_source_name)?;
+                pulsesrc.set_property("device", audio_source_name);
             }
             Err(err) => log::warn!("Failed to set pulsesrc device: {:?}", err),
         }
 
-        encodebin.set_property("profile", &Self::default_encodebin_profile())?;
-        filesink.set_property("location", recording_path.to_str().unwrap())?;
+        encodebin.set_property("profile", &Self::default_encodebin_profile());
+        filesink.set_property("location", recording_path.to_str().unwrap());
 
         let elements = [&pulsesrc, &audioconvert, &level, &encodebin, &filesink];
         pipeline.add_many(&elements)?;
@@ -267,7 +264,7 @@ impl AudioRecorder {
 
         if let Some(pipeline) = imp.pipeline.take() {
             if let Some(source_id) = imp.source_id.take() {
-                glib::source_remove(source_id); // TODO replace with `source_id.remove();` on gtk-rs 0.4.0
+                source_id.remove();
             }
 
             pipeline.set_state(gst::State::Null).unwrap();

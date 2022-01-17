@@ -13,7 +13,7 @@ impl FileType {
         let res = file.query_info(
             &gio::FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE,
             gio::FileQueryInfoFlags::NONE,
-            None::<&gio::Cancellable>,
+            gio::Cancellable::NONE,
         );
 
         match res {

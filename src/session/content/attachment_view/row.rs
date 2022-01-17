@@ -31,7 +31,7 @@ mod imp {
             Self::bind_template(klass);
 
             klass.install_action("row.delete-attachment", None, move |obj, _, _| {
-                obj.emit_by_name("on-delete", &[]).unwrap();
+                obj.emit_by_name::<()>("on-delete", &[]);
             });
         }
 
@@ -50,7 +50,7 @@ mod imp {
 
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_object(
+                vec![glib::ParamSpecObject::new(
                     "attachment",
                     "attachment",
                     "The attachment represented by this row",
@@ -140,7 +140,6 @@ impl Row {
             f(&obj);
             None
         })
-        .unwrap()
     }
 
     fn replace_child(&self, attachment: &Attachment) {
@@ -166,6 +165,6 @@ impl Row {
 
     fn remove_child(&self) {
         let imp = imp::Row::from_instance(self);
-        imp.content.set_child(None::<&gtk::Widget>);
+        imp.content.set_child(gtk::Widget::NONE);
     }
 }

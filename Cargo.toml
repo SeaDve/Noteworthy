@@ -9,26 +9,26 @@ edition = "2021"
 log = "0.4.14"
 pretty_env_logger = "0.4.0"
 gettext-rs = { version = "0.7.0", features = ["gettext-system"] }
-once_cell = "1.8.0"
-gtk = { package = "gtk4", version = "0.3.1", features = ["v4_4"] }
-gtk_source = { package = "sourceview5", version = "0.3.0" }
-gst = { package = "gstreamer", version = "0.17.4" }
-gst-plugin-gtk4 = { git = "https://gitlab.freedesktop.org/SeaDve/gst-plugins-rs.git", branch = "use_published_gtk" }
-gst_pbutils = { package = "gstreamer-pbutils", version = "0.17.2" }
-adw = { package = "libadwaita", version = "0.1.0-beta-1" }
+once_cell = "1.9.0"
+gtk = { package = "gtk4", version = "0.4.1", features = ["v4_4"] }
+gtk_source = { package = "sourceview5", version = "0.4.0" }
+gst = { package = "gstreamer", version = "0.18.0" }
+gst-plugin-gtk4 = "0.1.0"
+gst_pbutils = { package = "gstreamer-pbutils", version = "0.18.0" }
+adw = { package = "libadwaita", version = "0.1.0" }
 
-anyhow = "1.0.51"
-indexmap = { version = "1.7.0", features = ["serde"] }
+anyhow = "1.0.52"
+indexmap = { version = "1.8.0", features = ["serde"] }
 chrono = { version = "0.4.19", features = ["serde"] }
-serde = { version = "1.0.131", features = ["derive"] }
-serde_yaml = "0.8.21"
+serde = { version = "1.0.133", features = ["derive"] }
+serde_yaml = "0.8.23"
 gray_matter = "0.2.1"
 
 openssl = "0.10.38"
 git2 = "0.13.25"
 regex = "1.5.4"
-num_enum = "0.5.4"
+num_enum = "0.5.6"
 
 pulsectl-rs = "0.3.2"
-futures-channel = "0.3.18"
+futures-channel = "0.3.19"
 thiserror = "1.0.30"

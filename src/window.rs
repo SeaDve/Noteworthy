@@ -119,9 +119,20 @@ impl Window {
         imp.main_stack.add_child(page);
     }
 
-    pub fn has_page(&self, page: &impl IsA<gtk::Widget>) -> bool {
+    pub fn has_page(&self, page_to_find: &impl IsA<gtk::Widget>) -> bool {
         let imp = imp::Window::from_instance(self);
-        imp.main_stack.page(page).is_some()
+        let pages = imp.main_stack.pages();
+
+        // FIXME use `main_stack.page(page_to_find).is_some()`
+        // but for some reason Stack::page is not nullable
+        for page in pages.upcast::<gio::ListModel>().into_iter() {
+            if &page.downcast_ref::<gtk::StackPage>().unwrap().child() == page_to_find.upcast_ref()
+            {
+                return true;
+            }
+        }
+
+        false
     }
 
     pub fn remove_page(&self, page: &impl IsA<gtk::Widget>) {

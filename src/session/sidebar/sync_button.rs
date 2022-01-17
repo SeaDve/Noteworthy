@@ -36,14 +36,14 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
-                    glib::ParamSpec::new_string(
+                    glib::ParamSpecString::new(
                         "action-name",
                         "Action Name",
                         "The action to be called when clicked",
                         None,
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT,
                     ),
-                    glib::ParamSpec::new_boolean(
+                    glib::ParamSpecBoolean::new(
                         "is-spinning",
                         "Is Spinning",
                         "The action to be called when clicked",

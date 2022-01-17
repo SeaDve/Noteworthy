@@ -21,7 +21,6 @@ use crate::{
     core::{AudioPlayerHandler, DateTime},
     model::{Attachment, AttachmentList},
     spawn,
-    utils::PropExpr,
 };
 
 mod imp {
@@ -64,7 +63,7 @@ mod imp {
     impl ObjectImpl for AttachmentView {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_object(
+                vec![glib::ParamSpecObject::new(
                     "attachment-list",
                     "Attachment List",
                     "List containing the attachments",
@@ -159,7 +158,7 @@ impl AttachmentView {
 
             list_item
                 .property_expression("item")
-                .bind(&attachment_row, "attachment", None::<&gtk::Widget>);
+                .bind(&attachment_row, "attachment", glib::Object::NONE);
 
             list_item.set_child(Some(&attachment_row));
             list_item.set_activatable(false);

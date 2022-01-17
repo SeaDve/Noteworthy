@@ -4,15 +4,15 @@
 
 use gtk::{
     gio,
-    glib::{self, clone, GEnum},
+    glib::{self, clone},
     prelude::*,
     subclass::prelude::*,
 };
 
 use std::cell::{Cell, RefCell};
 
-#[derive(Debug, Clone, Copy, PartialEq, GEnum)]
-#[genum(type_name = "SidebarSelectionMode")]
+#[derive(Debug, Clone, Copy, PartialEq, glib::Enum)]
+#[enum_type(name = "SidebarSelectionMode")]
 pub enum SelectionMode {
     Single,
     Multi,
@@ -45,7 +45,6 @@ mod imp {
     impl ObjectSubclass for Selection {
         const NAME: &'static str = "NwtySidebarSelection";
         type Type = super::Selection;
-        type ParentType = glib::Object;
         type Interfaces = (gio::ListModel, gtk::SelectionModel);
 
         fn new() -> Self {
@@ -60,14 +59,14 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "model",
                         "Model",
                         "The model being managed",
                         gio::ListModel::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
-                    glib::ParamSpec::new_uint(
+                    glib::ParamSpecUInt::new(
                         "selected",
                         "Selected",
                         "The position of the selected item",
@@ -76,14 +75,14 @@ mod imp {
                         gtk::INVALID_LIST_POSITION,
                         glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "selected-item",
                         "Selected Item",
                         "The selected item",
                         glib::Object::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
-                    glib::ParamSpec::new_enum(
+                    glib::ParamSpecEnum::new(
                         "selection-mode",
                         "Selection Mode",
                         "Current selection mode",

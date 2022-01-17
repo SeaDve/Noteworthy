@@ -40,28 +40,27 @@ mod imp {
     impl ObjectSubclass for Attachment {
         const NAME: &'static str = "NwtyAttachment";
         type Type = super::Attachment;
-        type ParentType = glib::Object;
     }
 
     impl ObjectImpl for Attachment {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "file",
                         "File",
                         "File representing where the attachment is stored",
                         gio::File::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
-                    glib::ParamSpec::new_boxed(
+                    glib::ParamSpecBoxed::new(
                         "created",
                         "Created",
                         "The date when the attachment is created",
                         DateTime::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
-                    glib::ParamSpec::new_string(
+                    glib::ParamSpecString::new(
                         "title",
                         "Title",
                         "Title of the attachment",
@@ -130,19 +129,19 @@ impl Attachment {
     }
 
     pub fn file(&self) -> gio::File {
-        self.property("file").unwrap().get().unwrap()
+        self.property("file")
     }
 
     pub fn created(&self) -> DateTime {
-        self.property("created").unwrap().get().unwrap()
+        self.property("created")
     }
 
     pub fn title(&self) -> String {
-        self.property("title").unwrap().get().unwrap()
+        self.property("title")
     }
 
     pub fn set_title(&self, title: &str) {
-        self.set_property("title", title).unwrap();
+        self.set_property("title", title);
     }
 
     pub fn connect_title_notify<F>(&self, f: F) -> glib::SignalHandlerId
@@ -155,7 +154,7 @@ impl Attachment {
     pub async fn delete(&self) {
         let file = self.file();
 
-        if let Err(err) = file.delete_async_future(glib::PRIORITY_DEFAULT_IDLE).await {
+        if let Err(err) = file.delete_future(glib::PRIORITY_DEFAULT_IDLE).await {
             log::error!("Failed to delete attachment: {:?}", err);
         } else {
             log::info!("Successfully deleted attachment at `{}`", file.uri());

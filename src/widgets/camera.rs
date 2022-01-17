@@ -119,7 +119,6 @@ impl Camera {
             f(&obj, texture);
             None
         })
-        .unwrap()
     }
 
     pub fn connect_on_exit<F>(&self, f: F) -> glib::SignalHandlerId
@@ -131,7 +130,6 @@ impl Camera {
             f(&obj);
             None
         })
-        .unwrap()
     }
 
     pub fn start(&self) -> anyhow::Result<()> {
@@ -180,13 +178,10 @@ impl Camera {
         let snapshot = gtk::Snapshot::new();
         paintable.snapshot(snapshot.upcast_ref(), width as f64, height as f64);
 
-        let node = snapshot.free_to_node().unwrap();
-
-        let native = self.native().unwrap();
-        let renderer = native.renderer().unwrap();
+        let renderer = self.native().unwrap().renderer();
 
         let bounds = graphene::Rect::new(0.0, 0.0, width as f32, height as f32);
-        renderer.render_texture(&node, Some(&bounds)).unwrap()
+        renderer.render_texture(&snapshot.to_node(), Some(&bounds))
     }
 
     fn enable_capture(&self) {
@@ -224,11 +219,7 @@ impl Camera {
         let imp = imp::Camera::from_instance(self);
         imp.pipeline.set(pipeline).unwrap();
 
-        let paintable = sink
-            .property("paintable")
-            .unwrap()
-            .get::<gdk::Paintable>()
-            .unwrap();
+        let paintable = sink.property::<gdk::Paintable>("paintable");
         imp.picture.set_paintable(Some(&paintable));
 
         Ok(())
@@ -289,12 +280,12 @@ impl Camera {
     }
 
     fn on_exit(&self) {
-        self.emit_by_name("on-exit", &[]).unwrap();
+        self.emit_by_name::<()>("on-exit", &[]);
     }
 
     fn on_capture_accept(&self) {
         let texture = self.save_current_frame_to_texture();
-        self.emit_by_name("capture-accept", &[&texture]).unwrap();
+        self.emit_by_name::<()>("capture-accept", &[&texture]);
         self.on_exit();
     }
 

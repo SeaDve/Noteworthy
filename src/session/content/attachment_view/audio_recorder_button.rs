@@ -108,7 +108,6 @@ impl AudioRecorderButton {
             f(&obj);
             None
         })
-        .unwrap()
     }
 
     pub fn connect_record_done<F>(&self, f: F) -> glib::SignalHandlerId
@@ -121,7 +120,6 @@ impl AudioRecorderButton {
             f(&obj, &file);
             None
         })
-        .unwrap()
     }
 
     fn visualizer(&self) -> &AudioVisualizer {
@@ -147,7 +145,7 @@ impl AudioRecorderButton {
             return;
         }
 
-        self.emit_by_name("on-record", &[]).unwrap();
+        self.emit_by_name::<()>("on-record", &[]);
 
         log::info!("Started recording");
     }
@@ -167,7 +165,7 @@ impl AudioRecorderButton {
         spawn!(clone!(@weak self as obj => async move {
             match obj.recorder().stop().await {
                 Ok(ref recording) => {
-                    obj.emit_by_name("record-done", &[&recording.file()]).unwrap();
+                    obj.emit_by_name::<()>("record-done", &[&recording.file()]);
                 }
                 Err(err) => {
                     log::error!("Failed to stop recording: {:?}", err);

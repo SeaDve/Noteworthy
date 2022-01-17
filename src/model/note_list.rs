@@ -27,7 +27,6 @@ mod imp {
     impl ObjectSubclass for NoteList {
         const NAME: &'static str = "NwtyNoteList";
         type Type = super::NoteList;
-        type ParentType = glib::Object;
         type Interfaces = (gio::ListModel,);
     }
 
@@ -65,7 +64,7 @@ impl NoteList {
     /// Try load notes on `directory` with file type of markdown
     pub async fn load_from_dir(directory: &gio::File) -> anyhow::Result<Self> {
         let file_infos = directory
-            .enumerate_children_async_future(
+            .enumerate_children_future(
                 &gio::FILE_ATTRIBUTE_STANDARD_NAME,
                 gio::FileQueryInfoFlags::NONE,
                 glib::PRIORITY_HIGH_IDLE,

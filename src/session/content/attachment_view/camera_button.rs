@@ -87,7 +87,6 @@ impl CameraButton {
             f(&obj);
             None
         })
-        .unwrap()
     }
 
     pub fn connect_capture_done<F>(&self, f: F) -> glib::SignalHandlerId
@@ -100,7 +99,6 @@ impl CameraButton {
             f(&obj, &file);
             None
         })
-        .unwrap()
     }
 
     fn setup_signals(&self) {
@@ -111,8 +109,11 @@ impl CameraButton {
                 let notes_dir = utils::default_notes_dir();
                 let file_path = utils::generate_unique_path(notes_dir, "Camera", Some("png"));
 
-                texture.save_to_png(&file_path);
-                obj.emit_by_name("capture-done", &[&gio::File::for_path(&file_path)]).unwrap();
+                if let Err(err) = texture.save_to_png(&file_path) {
+                    log::error!("Failed to save texture to png: {}", err);
+                }
+
+                obj.emit_by_name::<()>("capture-done", &[&gio::File::for_path(&file_path)]);
             }));
 
         imp.camera
@@ -134,7 +135,7 @@ impl CameraButton {
     }
 
     fn on_launch(&self) {
-        self.emit_by_name("on-launch", &[]).unwrap();
+        self.emit_by_name::<()>("on-launch", &[]);
 
         let imp = imp::CameraButton::from_instance(self);
 

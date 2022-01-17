@@ -32,49 +32,48 @@ mod imp {
     impl ObjectSubclass for Metadata {
         const NAME: &'static str = "NwtyNoteMetadata";
         type Type = super::Metadata;
-        type ParentType = glib::Object;
     }
 
     impl ObjectImpl for Metadata {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
-                    glib::ParamSpec::new_string(
+                    glib::ParamSpecString::new(
                         "title",
                         "Title",
                         "Title of the note",
                         None,
                         glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "tag-list",
                         "Tag List",
                         "List containing the tags of the note",
                         NoteTagList::static_type(),
                         glib::ParamFlags::READWRITE,
                     ),
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "attachment-list",
                         "Attachment List",
                         "List containing the attachments of the note",
                         AttachmentList::static_type(),
                         glib::ParamFlags::READWRITE,
                     ),
-                    glib::ParamSpec::new_boxed(
+                    glib::ParamSpecBoxed::new(
                         "last-modified",
                         "Last Modified",
                         "Last modified datetime of the note",
                         DateTime::static_type(),
                         glib::ParamFlags::READWRITE,
                     ),
-                    glib::ParamSpec::new_boolean(
+                    glib::ParamSpecBoolean::new(
                         "is-pinned",
                         "Is Pinned",
                         "Whether the note is pinned",
                         false,
                         glib::ParamFlags::READWRITE,
                     ),
-                    glib::ParamSpec::new_boolean(
+                    glib::ParamSpecBoolean::new(
                         "is-trashed",
                         "Is Trashed",
                         "Whether the note is in trash",
@@ -153,52 +152,51 @@ impl Metadata {
     }
 
     pub fn set_title(&self, title: &str) {
-        self.set_property("title", title).unwrap();
+        self.set_property("title", title);
     }
 
     pub fn title(&self) -> String {
-        self.property("title").unwrap().get().unwrap()
+        self.property("title")
     }
 
     pub fn set_tag_list(&self, tag_list: NoteTagList) {
-        self.set_property("tag-list", tag_list).unwrap();
+        self.set_property("tag-list", tag_list);
     }
 
     pub fn tag_list(&self) -> NoteTagList {
-        self.property("tag-list").unwrap().get().unwrap()
+        self.property("tag-list")
     }
 
     pub fn set_attachment_list(&self, attachment_list: AttachmentList) {
-        self.set_property("attachment-list", attachment_list)
-            .unwrap();
+        self.set_property("attachment-list", attachment_list);
     }
 
     pub fn attachment_list(&self) -> AttachmentList {
-        self.property("attachment-list").unwrap().get().unwrap()
+        self.property("attachment-list")
     }
 
     pub fn set_last_modified(&self, last_modified: &DateTime) {
-        self.set_property("last-modified", last_modified).unwrap();
+        self.set_property("last-modified", last_modified);
     }
 
     pub fn last_modified(&self) -> DateTime {
-        self.property("last-modified").unwrap().get().unwrap()
+        self.property("last-modified")
     }
 
     pub fn set_is_pinned(&self, is_pinned: bool) {
-        self.set_property("is-pinned", is_pinned).unwrap();
+        self.set_property("is-pinned", is_pinned);
     }
 
     pub fn is_pinned(&self) -> bool {
-        self.property("is-pinned").unwrap().get().unwrap()
+        self.property("is-pinned")
     }
 
     pub fn set_is_trashed(&self, is_trashed: bool) {
-        self.set_property("is-trashed", is_trashed).unwrap();
+        self.set_property("is-trashed", is_trashed);
     }
 
     pub fn is_trashed(&self) -> bool {
-        self.property("is-trashed").unwrap().get().unwrap()
+        self.property("is-trashed")
     }
 
     pub fn update_last_modified(&self) {

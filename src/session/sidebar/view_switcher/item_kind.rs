@@ -1,9 +1,9 @@
-use gtk::glib::{self, GBoxed};
+use gtk::glib;
 
 use super::Tag;
 
-#[derive(Debug, Clone, GBoxed, PartialEq)]
-#[gboxed(type_name = "NwtySidebarViewSwitcherType")]
+#[derive(Debug, Clone, glib::Boxed, PartialEq)]
+#[boxed_type(name = "NwtySidebarViewSwitcherType")]
 pub enum ItemKind {
     Separator,
     Category,

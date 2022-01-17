@@ -5,7 +5,7 @@ mod view_switcher;
 
 use gettextrs::gettext;
 use gtk::{
-    glib::{self, clone},
+    glib::{self, clone, closure_local},
     prelude::*,
     subclass::prelude::*,
 };
@@ -18,10 +18,7 @@ use self::{
     sync_button::SyncButton,
     view_switcher::{ItemKind, ViewSwitcher},
 };
-use crate::{
-    model::{Note, NoteList, TagList},
-    utils::PropExpr,
-};
+use crate::model::{Note, NoteList, TagList};
 
 mod imp {
     use super::*;
@@ -96,14 +93,14 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
-                    glib::ParamSpec::new_boolean(
+                    glib::ParamSpecBoolean::new(
                         "compact",
                         "Compact",
                         "Whether it is compact view mode",
                         false,
                         glib::ParamFlags::READWRITE,
                     ),
-                    glib::ParamSpec::new_enum(
+                    glib::ParamSpecEnum::new(
                         "selection-mode",
                         "Selection Mode",
                         "Current selection mode",
@@ -111,21 +108,21 @@ mod imp {
                         SelectionMode::default() as i32,
                         glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "note-list",
                         "Note List",
                         "Note list represented by self",
                         NoteList::static_type(),
                         glib::ParamFlags::WRITABLE,
                     ),
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "selected-note",
                         "Selected Note",
                         "The selected note in this sidebar",
                         Note::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
-                    glib::ParamSpec::new_boolean(
+                    glib::ParamSpecBoolean::new(
                         "is-syncing",
                         "Is Syncing",
                         "Whether the session is currently syncing",
@@ -334,9 +331,15 @@ impl Sidebar {
     }
 
     fn note_filter(&self) -> gtk::BoolFilter {
-        let filter_expression = gtk::ClosureExpression::new(
-            clone!(@weak self as obj => @default-return true, move |value| {
-                let note = value[0].get::<Note>().unwrap().metadata();
+        let filter_expression = gtk::ClosureExpression::new::<bool, _, _>(
+            crate::EMPTY_GTK_EXPRESSIONS,
+            closure_local!(@weak-allow-none self as obj => move |note: Note| {
+                let obj = match obj {
+                    Some(obj) => obj,
+                    None => return true,
+                };
+
+                let note = note.metadata();
 
                 let imp = imp::Sidebar::from_instance(&obj);
 
@@ -351,10 +354,9 @@ impl Sidebar {
                     }
                 }
             }),
-            &[],
         );
 
-        gtk::BoolFilterBuilder::new()
+        gtk::BoolFilter::builder()
             .expression(&filter_expression)
             .build()
     }
@@ -449,15 +451,15 @@ impl Sidebar {
 
             list_item
                 .property_expression("item")
-                .bind(&note_row, "note", None::<&gtk::Widget>);
+                .bind(&note_row, "note", glib::Object::NONE);
 
             list_item
                 .property_expression("selected")
-                .bind(&note_row, "is-selected", None::<&gtk::Widget>);
+                .bind(&note_row, "is-selected", glib::Object::NONE);
 
             list_item
                 .property_expression("position")
-                .bind(&note_row, "position", None::<&gtk::Widget>);
+                .bind(&note_row, "position", glib::Object::NONE);
 
             list_item.set_child(Some(&note_row));
         }));

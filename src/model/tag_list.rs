@@ -23,7 +23,6 @@ mod imp {
     impl ObjectSubclass for TagList {
         const NAME: &'static str = "NwtyTagList";
         type Type = super::TagList;
-        type ParentType = glib::Object;
         type Interfaces = (gio::ListModel,);
     }
 

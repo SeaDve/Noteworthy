@@ -11,7 +11,7 @@ use once_cell::unsync::OnceCell;
 
 use std::{cell::Cell, path::Path};
 
-use self::metadata::Metadata;
+pub use self::metadata::Metadata;
 use super::NoteId;
 use crate::utils;
 
@@ -32,7 +32,6 @@ mod imp {
     impl ObjectSubclass for Note {
         const NAME: &'static str = "NwtyNote";
         type Type = super::Note;
-        type ParentType = glib::Object;
     }
 
     impl ObjectImpl for Note {
@@ -46,28 +45,28 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "file",
                         "File",
                         "File representing where the note is stored",
                         gio::File::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "metadata",
                         "Metadata",
                         "Metadata containing info of note",
                         Metadata::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "buffer",
                         "Buffer",
                         "The buffer containing note text content",
                         gtk_source::Buffer::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
-                    glib::ParamSpec::new_boolean(
+                    glib::ParamSpecBoolean::new(
                         "is-saved",
                         "Is Saved",
                         "Whether the note is already saved to file",
@@ -133,7 +132,7 @@ mod imp {
             metadata.connect_notify_local(
                 None,
                 clone!(@weak obj => move |_, _| {
-                    obj.emit_by_name("metadata-changed", &[]).unwrap();
+                    obj.emit_by_name::<()>("metadata-changed", &[]);
                     obj.set_is_saved(false);
                 }),
             );
@@ -143,13 +142,13 @@ mod imp {
             metadata
                 .tag_list()
                 .connect_items_changed(clone!(@weak obj => move |_, _, _, _| {
-                    obj.emit_by_name("metadata-changed", &[]).unwrap();
+                    obj.emit_by_name::<()>("metadata-changed", &[]);
                     obj.set_is_saved(false);
                 }));
 
             metadata.attachment_list().connect_items_changed(
                 clone!(@weak obj => move |_, _, _, _| {
-                    obj.emit_by_name("metadata-changed", &[]).unwrap();
+                    obj.emit_by_name::<()>("metadata-changed", &[]);
                     obj.set_is_saved(false);
                 }),
             );
@@ -199,11 +198,11 @@ impl Note {
     }
 
     fn set_is_saved(&self, is_saved: bool) {
-        self.set_property("is-saved", is_saved).unwrap();
+        self.set_property("is-saved", is_saved);
     }
 
     pub fn delete(&self) -> anyhow::Result<()> {
-        self.file().delete(None::<&gio::Cancellable>)?;
+        self.file().delete(gio::Cancellable::NONE)?;
         Ok(())
     }
 
@@ -216,7 +215,6 @@ impl Note {
             f(&obj);
             None
         })
-        .unwrap()
     }
 
     pub fn connect_is_saved_notify<F>(&self, f: F) -> glib::SignalHandlerId
@@ -227,7 +225,7 @@ impl Note {
     }
 
     pub async fn update(&self) -> anyhow::Result<()> {
-        let (file_content, _) = self.file().load_contents_async_future().await?;
+        let (file_content, _) = self.file().load_contents_future().await?;
         let file_content = std::str::from_utf8(&file_content)?;
         let parsed_entity = Matter::<YAML>::new().parse(file_content);
 
@@ -248,7 +246,7 @@ impl Note {
     }
 
     pub async fn deserialize(file: &gio::File) -> anyhow::Result<Self> {
-        let (file_content, _) = file.load_contents_async_future().await?;
+        let (file_content, _) = file.load_contents_future().await?;
         let file_content = std::str::from_utf8(&file_content)?;
         let parsed_entity = Matter::<YAML>::new().parse(file_content);
 
@@ -274,7 +272,7 @@ impl Note {
 
         let bytes = self.serialize_to_bytes()?;
         self.file()
-            .replace_contents_async_future(bytes, None, false, gio::FileCreateFlags::NONE)
+            .replace_contents_future(bytes, None, false, gio::FileCreateFlags::NONE)
             .await
             .map_err(|err| err.1)?;
 
@@ -302,11 +300,11 @@ impl Note {
 
     fn default_buffer() -> gtk_source::Buffer {
         // FIXME not following AdwStyleManager::is-dark
-        gtk_source::BufferBuilder::new()
+        gtk_source::Buffer::builder()
             .highlight_matching_brackets(false)
             .language(
                 &gtk_source::LanguageManager::default()
-                    .and_then(|lm| lm.language("markdown"))
+                    .language("markdown")
                     .unwrap(),
             )
             .build()

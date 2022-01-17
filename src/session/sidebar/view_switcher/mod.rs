@@ -4,16 +4,18 @@ mod item_row;
 
 use adw::subclass::prelude::*;
 use gettextrs::gettext;
-use gtk::{gio, glib, prelude::*, subclass::prelude::*};
+use gtk::{
+    gio,
+    glib::{self, closure},
+    prelude::*,
+    subclass::prelude::*,
+};
 
 use std::cell::RefCell;
 
 pub use self::item_kind::ItemKind;
 use self::{item::Item, item_row::ItemRow};
-use crate::{
-    model::{Tag, TagList},
-    utils::{ChainExpr, PropExpr},
-};
+use crate::model::{Tag, TagList};
 
 mod imp {
     use super::*;
@@ -50,21 +52,21 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "selected-item",
                         "Selected-item",
                         "The selected item in popover",
                         glib::Object::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
-                    glib::ParamSpec::new_boxed(
+                    glib::ParamSpecBoxed::new(
                         "selected-type",
                         "Selected-type",
                         "The selected type in the switcher",
                         ItemKind::static_type(),
                         glib::ParamFlags::READABLE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "tag-list",
                         "Tag List",
                         "The tag list in the view switcher",
@@ -129,7 +131,7 @@ impl ViewSwitcher {
     pub fn set_tag_list(&self, tag_list: &TagList) {
         let imp = imp::ViewSwitcher::from_instance(self);
 
-        let items = &[
+        let items: &[glib::Object; 6] = &[
             Item::builder(ItemKind::AllNotes)
                 .display_name(&gettext("All Notes"))
                 .build()
@@ -217,10 +219,8 @@ impl ViewSwitcher {
     fn setup_expressions(&self) {
         let imp = imp::ViewSwitcher::from_instance(self);
 
-        self.property_expression("selected-item")
-            .closure_expression(|args| {
-                let selected_item: Option<glib::Object> = args[1].get().unwrap();
-
+        Self::this_expression("selected-item")
+            .chain_closure::<String>(closure!(|_: Self, selected_item: Option<glib::Object>| {
                 selected_item.map_or(String::new(), |selected_item| {
                     if let Some(tag) = selected_item.downcast_ref::<Tag>() {
                         tag.name()
@@ -236,8 +236,8 @@ impl ViewSwitcher {
                         unreachable!("Invalid selected item `{:?}`", selected_item);
                     }
                 })
-            })
-            .bind(&imp.menu_button.get(), "label", None::<&gtk::Widget>);
+            }))
+            .bind(&imp.menu_button.get(), "label", Some(self));
     }
 
     fn setup_list_view(&self) {
@@ -249,12 +249,12 @@ impl ViewSwitcher {
 
             list_item
                 .property_expression("item")
-                .bind(&item_row, "list-row", None::<&gtk::Widget>);
+                .bind(&item_row, "list-row", glib::Object::NONE);
 
             list_item.property_expression("selected").bind(
                 &item_row,
                 "selected",
-                None::<&gtk::Widget>,
+                glib::Object::NONE,
             );
 
             list_item.set_child(Some(&item_row));

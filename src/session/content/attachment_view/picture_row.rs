@@ -36,7 +36,7 @@ mod imp {
     impl ObjectImpl for PictureRow {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_object(
+                vec![glib::ParamSpecObject::new(
                     "attachment",
                     "attachment",
                     "The attachment represented by this row",
@@ -100,7 +100,7 @@ impl PictureRow {
         let file = attachment.file();
 
         // TODO load lazily
-        // Maybe gio::File::load_bytes_async_future then load it through
+        // Maybe gio::File::load_bytes_future then load it through
         // gdk::Texture::from_bytes in gtk 4.6 or just load it from another
         // thread since gdk::Texture is now Send & Sync
         match gdk::Texture::from_file(&file) {

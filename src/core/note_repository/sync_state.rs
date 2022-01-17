@@ -1,7 +1,7 @@
-use gtk::glib::{self, GEnum};
+use gtk::glib;
 
-#[derive(Debug, Clone, Copy, PartialEq, GEnum)]
-#[genum(type_name = "NwtyNoteRepositorySyncState")]
+#[derive(Debug, Clone, Copy, PartialEq, glib::Enum)]
+#[enum_type(name = "NwtyNoteRepositorySyncState")]
 pub enum SyncState {
     Syncing,
     Pulling,

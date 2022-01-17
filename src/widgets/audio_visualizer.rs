@@ -8,12 +8,6 @@ use std::{cell::RefCell, collections::VecDeque};
 
 const GUTTER: f32 = 6.0;
 const WIDTH: f32 = 2.0;
-const COLOR: gdk::RGBA = gdk::RGBA {
-    red: 0.1,
-    green: 0.45,
-    blue: 0.8,
-    alpha: 1.0,
-};
 
 mod imp {
     use super::*;
@@ -101,8 +95,8 @@ impl AudioVisualizer {
             let rect_b = graphene::Rect::new(pointer_b, top_point, WIDTH, this_height);
 
             // Add feathering on both sides
-            let mut color = COLOR;
-            color.alpha = 1.0 - (index as f32 / peaks_len as f32);
+            let alpha = 1.0 - (index as f32 / peaks_len as f32);
+            let color = gdk::RGBA::new(0.1, 0.45, 0.8, alpha);
 
             snapshot.append_color(&color, &rect_a);
             snapshot.append_color(&color, &rect_b);

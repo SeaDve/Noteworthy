@@ -64,7 +64,7 @@ mod imp {
     impl ObjectImpl for AudioRow {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
-                vec![glib::ParamSpec::new_object(
+                vec![glib::ParamSpecObject::new(
                     "attachment",
                     "attachment",
                     "The attachment represented by this row",
@@ -218,7 +218,7 @@ impl AudioRow {
         // Cancel the seek when the value changed again within 20ms. So, it
         // will only seek when the value is stabilized within that span.
         if let Some(source_id) = imp.seek_timeout_id.take() {
-            glib::source_remove(source_id); // TODO replace with `source_id.remove();` on gtk-rs 0.4.0
+            source_id.remove();
         }
 
         let value = scale.value();

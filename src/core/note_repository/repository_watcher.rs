@@ -27,7 +27,6 @@ mod imp {
     impl ObjectSubclass for RepositoryWatcher {
         const NAME: &'static str = "NwtyRepositoryWatcher";
         type Type = super::RepositoryWatcher;
-        type ParentType = glib::Object;
     }
 
     impl ObjectImpl for RepositoryWatcher {
@@ -41,14 +40,14 @@ mod imp {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "base-path",
                         "Base Path",
                         "Where the repository is stored locally",
                         gio::File::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
-                    glib::ParamSpec::new_string(
+                    glib::ParamSpecString::new(
                         "remote-name",
                         "Remote Name",
                         "Remote name where the repo will be stored (e.g. origin)",
@@ -115,15 +114,14 @@ impl RepositoryWatcher {
             f(&obj);
             None
         })
-        .unwrap()
     }
 
     fn base_path(&self) -> gio::File {
-        self.property("base-path").unwrap().get().unwrap()
+        self.property("base-path")
     }
 
     fn remote_name(&self) -> String {
-        self.property("remote-name").unwrap().get().unwrap()
+        self.property("remote-name")
     }
 
     fn setup(&self) {
@@ -164,7 +162,7 @@ impl RepositoryWatcher {
             None,
             clone!(@weak self as obj => @default-return Continue(false), move |is_same| {
                 if !is_same {
-                    obj.emit_by_name("remote-changed", &[]).unwrap();
+                    obj.emit_by_name::<()>("remote-changed", &[]);
                 }
                 Continue(true)
             }),

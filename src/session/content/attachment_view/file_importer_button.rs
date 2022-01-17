@@ -90,7 +90,6 @@ impl FileImporterButton {
             f(&obj, &file);
             None
         })
-        .unwrap()
     }
 
     /// Make sures that the files are less than `MAX_BYTES_FILE_SIZE`
@@ -140,15 +139,14 @@ impl FileImporterButton {
             )
             .await?;
 
-            self.emit_by_name("new-import", &[&destination_file])
-                .unwrap();
+            self.emit_by_name::<()>("new-import", &[&destination_file]);
         }
 
         Ok(())
     }
 
     fn show_error(&self, text: &str, secondary_text: &str) {
-        let error_dialog = gtk::MessageDialogBuilder::new()
+        let error_dialog = gtk::MessageDialog::builder()
             .text(text)
             .secondary_text(secondary_text)
             .buttons(gtk::ButtonsType::Ok)
@@ -187,7 +185,7 @@ impl FileImporterButton {
         // FIXME Should not allow folders, this makes it easy to delete an attachment. Additionally,
         // an attachment should not be able to store a folder
 
-        let chooser = gtk::FileChooserNativeBuilder::new()
+        let chooser = gtk::FileChooserNative::builder()
             .accept_label(&gettext("Select"))
             .cancel_label(&gettext("Cancel"))
             .title(&gettext("Select Files to Import"))
@@ -204,7 +202,7 @@ impl FileImporterButton {
 
         chooser.connect_response(clone!(@weak self as obj => move |chooser, response| {
             if response == gtk::ResponseType::Accept {
-                obj.on_accept_response(&chooser.files().unwrap());
+                obj.on_accept_response(&chooser.files());
             }
         }));
 

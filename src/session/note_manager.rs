@@ -42,49 +42,48 @@ mod imp {
     impl ObjectSubclass for NoteManager {
         const NAME: &'static str = "NwtyNoteManager";
         type Type = super::NoteManager;
-        type ParentType = glib::Object;
     }
 
     impl ObjectImpl for NoteManager {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "directory",
                         "Directory",
                         "Directory where the notes are stored",
                         gio::File::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "repository",
                         "Repository",
                         "Repository where the notes are stored",
                         NoteRepository::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "note-list",
                         "Note List",
                         "List of notes",
                         NoteList::static_type(),
                         glib::ParamFlags::READWRITE,
                     ),
-                    glib::ParamSpec::new_object(
+                    glib::ParamSpecObject::new(
                         "tag-list",
                         "Tag List",
                         "List of tags",
                         TagList::static_type(),
                         glib::ParamFlags::READWRITE,
                     ),
-                    glib::ParamSpec::new_boolean(
+                    glib::ParamSpecBoolean::new(
                         "is-syncing",
                         "Is Syncing",
                         "Whether the session is currently syncing",
                         false,
                         glib::ParamFlags::READWRITE,
                     ),
-                    glib::ParamSpec::new_boolean(
+                    glib::ParamSpecBoolean::new(
                         "is-offline-mode",
                         "Is Offline Mode",
                         "Whether the repo syncs to a remote repo",
@@ -211,13 +210,13 @@ impl NoteManager {
     }
 
     pub fn is_offline_mode(&self) -> bool {
-        self.property("is-offline-mode").unwrap().get().unwrap()
+        self.property("is-offline-mode")
     }
 
     async fn load_notes(&self) -> anyhow::Result<()> {
         let note_list = NoteList::load_from_dir(&self.directory()).await?;
 
-        self.set_property("note-list", note_list).unwrap();
+        self.set_property("note-list", note_list);
 
         Ok(())
     }
@@ -226,7 +225,7 @@ impl NoteManager {
         let data_file_path = self.data_file_path();
         let file = gio::File::for_path(&data_file_path);
 
-        let data: Data = match file.load_contents_async_future().await {
+        let data: Data = match file.load_contents_future().await {
             Ok((file_content, _)) => {
                 log::info!(
                     "Data file found at `{}` is loaded successfully",
@@ -243,7 +242,7 @@ impl NoteManager {
             }
         };
 
-        self.set_property("tag-list", data.tag_list).unwrap();
+        self.set_property("tag-list", data.tag_list);
 
         Ok(())
     }
@@ -270,7 +269,7 @@ impl NoteManager {
 
         // FIXME consider making backup on all replace_contents
         gio::File::for_path(self.data_file_path())
-            .replace_contents_async_future(data_bytes, None, false, gio::FileCreateFlags::NONE)
+            .replace_contents_future(data_bytes, None, false, gio::FileCreateFlags::NONE)
             .await
             .map_err(|err| err.1)?;
 
