@@ -35,8 +35,6 @@ impl AudioPlayerHandler {
     }
 
     pub fn append(&self, audio_player: AudioPlayer) {
-        let imp = imp::AudioPlayerHandler::from_instance(self);
-
         let handler_id =
             audio_player.connect_state_notify(clone!(@weak self as obj => move |audio_player| {
                 if audio_player.state() == PlaybackState::Playing {
@@ -45,13 +43,15 @@ impl AudioPlayerHandler {
                 }
             }));
 
-        imp.list.borrow_mut().insert(audio_player, handler_id);
+        self.imp()
+            .list
+            .borrow_mut()
+            .insert(audio_player, handler_id);
     }
 
     pub fn remove(&self, audio_player: &AudioPlayer) {
-        let imp = imp::AudioPlayerHandler::from_instance(self);
-
-        let handler_id = imp
+        let handler_id = self
+            .imp()
             .list
             .borrow_mut()
             .remove(audio_player)
@@ -61,17 +61,13 @@ impl AudioPlayerHandler {
     }
 
     pub fn stop_all(&self) {
-        let imp = imp::AudioPlayerHandler::from_instance(self);
-
-        for audio_player in imp.list.borrow().keys() {
+        for audio_player in self.imp().list.borrow().keys() {
             audio_player.set_state(PlaybackState::Stopped);
         }
     }
 
     fn stop_all_except(&self, exception: &AudioPlayer) {
-        let imp = imp::AudioPlayerHandler::from_instance(self);
-
-        for audio_player in imp.list.borrow().keys() {
+        for audio_player in self.imp().list.borrow().keys() {
             if audio_player != exception {
                 audio_player.set_state(PlaybackState::Stopped);
             }

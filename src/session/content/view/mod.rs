@@ -122,12 +122,11 @@ impl View {
     }
 
     pub fn note(&self) -> Option<Note> {
-        let imp = imp::View::from_instance(self);
-        imp.note.borrow().clone()
+        self.imp().note.borrow().clone()
     }
 
     pub fn set_note(&self, note: Option<Note>) {
-        let imp = imp::View::from_instance(self);
+        let imp = self.imp();
 
         for binding in imp.bindings.borrow_mut().drain(..) {
             binding.unbind();
@@ -157,14 +156,12 @@ impl View {
     }
 
     fn setup_expressions(&self) {
-        let imp = imp::View::from_instance(self);
-
         Self::this_expression("note")
             .chain_property::<Note>("metadata")
             .chain_property::<NoteMetadata>("last-modified")
             .chain_closure::<String>(closure!(|_: Self, last_modified: DateTime| {
                 gettext!("Last edited {}", last_modified.fuzzy_display())
             }))
-            .bind(&imp.last_modified_label.get(), "label", Some(self));
+            .bind(&self.imp().last_modified_label.get(), "label", Some(self));
     }
 }

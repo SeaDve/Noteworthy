@@ -119,9 +119,8 @@ impl Attachment {
 
     // TODO maybe include this to the serialized data, so just deserialize it when loading
     pub fn file_type(&self) -> FileType {
-        let imp = imp::Attachment::from_instance(self);
-
-        let file_type = imp
+        let file_type = self
+            .imp()
             .file_type
             .get_or_init(|| FileType::for_file(&self.file()));
 
@@ -172,8 +171,7 @@ impl Default for Attachment {
 // It is helpful for caching the duration of an audio or save the peaks to show visualization later
 impl Serialize for Attachment {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let imp = imp::Attachment::from_instance(self);
-        imp.inner.serialize(serializer)
+        self.imp().inner.serialize(serializer)
     }
 }
 

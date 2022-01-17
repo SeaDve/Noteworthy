@@ -58,8 +58,6 @@ impl TagList {
     }
 
     pub fn append(&self, tag: Tag) -> anyhow::Result<()> {
-        let imp = imp::TagList::from_instance(self);
-
         let tag_name = tag.name();
 
         anyhow::ensure!(!tag_name.is_empty(), "Tag name cannot be empty");
@@ -73,7 +71,7 @@ impl TagList {
             }
         }));
 
-        let is_name_appended = imp.list.borrow_mut().insert(tag_name, tag).is_none();
+        let is_name_appended = self.imp().list.borrow_mut().insert(tag_name, tag).is_none();
 
         anyhow::ensure!(is_name_appended, "Cannot append existing tag name");
 
@@ -83,11 +81,9 @@ impl TagList {
     }
 
     pub fn remove(&self, tag: &Tag) -> anyhow::Result<()> {
-        let imp = imp::TagList::from_instance(self);
-
         let tag_name = tag.name();
 
-        let removed = imp.list.borrow_mut().shift_remove_full(&tag_name);
+        let removed = self.imp().list.borrow_mut().shift_remove_full(&tag_name);
 
         if let Some((position, _, _)) = removed {
             self.items_changed(position as u32, 1, 0);
@@ -104,11 +100,10 @@ impl TagList {
         );
         anyhow::ensure!(!new_name.is_empty(), "Tag name cannot be empty");
 
-        let imp = imp::TagList::from_instance(self);
         let previous_name = tag.name();
 
         {
-            let mut list = imp.list.borrow_mut();
+            let mut list = self.imp().list.borrow_mut();
             // Put new name at the end
             assert!(list.insert(new_name.to_string(), tag.clone()).is_none());
             // Remove the old name at the list and replace it with name from the end
@@ -126,13 +121,11 @@ impl TagList {
     }
 
     pub fn contains_with_name(&self, name: &str) -> bool {
-        let imp = imp::TagList::from_instance(self);
-        imp.list.borrow().contains_key(name)
+        self.imp().list.borrow().contains_key(name)
     }
 
     pub fn get_with_name(&self, name: &str) -> Option<Tag> {
-        let imp = imp::TagList::from_instance(self);
-        imp.list.borrow().get(name).cloned()
+        self.imp().list.borrow().get(name).cloned()
     }
 
     pub fn is_valid_name(&self, name: &str) -> bool {
@@ -140,8 +133,7 @@ impl TagList {
     }
 
     fn get_index_of(&self, tag: &Tag) -> Option<usize> {
-        let imp = imp::TagList::from_instance(self);
-        imp.list.borrow().get_index_of(&tag.name())
+        self.imp().list.borrow().get_index_of(&tag.name())
     }
 }
 
@@ -161,8 +153,7 @@ impl std::iter::FromIterator<Tag> for TagList {
 
 impl Serialize for TagList {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let imp = imp::TagList::from_instance(self);
-        serializer.collect_seq(imp.list.borrow().keys())
+        serializer.collect_seq(self.imp().list.borrow().keys())
     }
 }
 

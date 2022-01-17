@@ -129,8 +129,6 @@ impl ViewSwitcher {
     }
 
     pub fn set_tag_list(&self, tag_list: &TagList) {
-        let imp = imp::ViewSwitcher::from_instance(self);
-
         let items: &[glib::Object; 6] = &[
             Item::builder(ItemKind::AllNotes)
                 .display_name(&gettext("All Notes"))
@@ -169,7 +167,7 @@ impl ViewSwitcher {
             .flags(glib::BindingFlags::SYNC_CREATE)
             .build();
 
-        imp.list_view.set_model(Some(&selection_model));
+        self.imp().list_view.set_model(Some(&selection_model));
         self.notify("tag-list");
     }
 
@@ -186,9 +184,8 @@ impl ViewSwitcher {
                 if let Some(item) = selected_item.downcast_ref::<Item>() {
                     match item.kind() {
                         ItemKind::Separator | ItemKind::Category | ItemKind::EditTags => {
-                            let imp = imp::ViewSwitcher::from_instance(self);
                             let model: gtk::SingleSelection =
-                                imp.list_view.model().unwrap().downcast().unwrap();
+                                self.imp().list_view.model().unwrap().downcast().unwrap();
                             // These three get selected when trying to delete an item that was selected.
                             // Therefore, select the first item, AllNotes, instead. Maybe a GTK bug?
                             model.set_selected(0);
@@ -205,20 +202,16 @@ impl ViewSwitcher {
     }
 
     fn set_selected_item(&self, selected_item: Option<glib::Object>) {
-        let imp = imp::ViewSwitcher::from_instance(self);
-        imp.selected_item.replace(selected_item);
+        self.imp().selected_item.replace(selected_item);
         self.notify("selected-item");
         self.notify("selected-type");
     }
 
     fn selected_item(&self) -> Option<glib::Object> {
-        let imp = imp::ViewSwitcher::from_instance(self);
-        imp.selected_item.borrow().clone()
+        self.imp().selected_item.borrow().clone()
     }
 
     fn setup_expressions(&self) {
-        let imp = imp::ViewSwitcher::from_instance(self);
-
         Self::this_expression("selected-item")
             .chain_closure::<String>(closure!(|_: Self, selected_item: Option<glib::Object>| {
                 selected_item.map_or(String::new(), |selected_item| {
@@ -237,12 +230,10 @@ impl ViewSwitcher {
                     }
                 })
             }))
-            .bind(&imp.menu_button.get(), "label", Some(self));
+            .bind(&self.imp().menu_button.get(), "label", Some(self));
     }
 
     fn setup_list_view(&self) {
-        let imp = imp::ViewSwitcher::from_instance(self);
-
         let factory = gtk::SignalListItemFactory::new();
         factory.connect_setup(|_, list_item| {
             let item_row = ItemRow::new();
@@ -279,7 +270,7 @@ impl ViewSwitcher {
             }
         });
 
-        imp.list_view.set_factory(Some(&factory));
+        self.imp().list_view.set_factory(Some(&factory));
 
         // FIXME popdown this popover when something is clicked
     }

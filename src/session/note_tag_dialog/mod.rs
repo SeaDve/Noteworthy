@@ -136,22 +136,19 @@ impl NoteTagDialog {
     }
 
     fn other_tag_lists(&self) -> NoteTagLists {
-        let imp = imp::NoteTagDialog::from_instance(self);
-        imp.other_tag_lists.get().unwrap().clone()
+        self.imp().other_tag_lists.get().unwrap().clone()
     }
 
     fn set_other_tag_lists(&self, other_tag_list: NoteTagLists) {
-        let imp = imp::NoteTagDialog::from_instance(self);
-        imp.other_tag_lists.set(other_tag_list).unwrap();
+        self.imp().other_tag_lists.set(other_tag_list).unwrap();
     }
 
     fn tag_list(&self) -> TagList {
-        let imp = imp::NoteTagDialog::from_instance(self);
-        imp.tag_list.get().unwrap().clone()
+        self.imp().tag_list.get().unwrap().clone()
     }
 
     fn set_tag_list(&self, tag_list: TagList) {
-        let imp = imp::NoteTagDialog::from_instance(self);
+        let imp = self.imp();
 
         let tag_name_expression = gtk::ClosureExpression::new::<String, _, _>(
             crate::EMPTY_GTK_EXPRESSIONS,
@@ -176,7 +173,7 @@ impl NoteTagDialog {
     }
 
     fn on_create_tag(&self) {
-        let imp = imp::NoteTagDialog::from_instance(self);
+        let imp = self.imp();
         let tag_name = imp.search_entry.text();
         let new_tag = Tag::new(&tag_name);
 
@@ -194,7 +191,7 @@ impl NoteTagDialog {
         let is_create_tag_enabled = !does_contain_tag && !tag_name.is_empty();
         self.action_set_enabled("note-tag-dialog.create-tag", is_create_tag_enabled);
 
-        let imp = imp::NoteTagDialog::from_instance(self);
+        let imp = self.imp();
         imp.create_tag_button_revealer
             .set_reveal_child(is_create_tag_enabled);
         imp.create_tag_button_label
@@ -202,8 +199,6 @@ impl NoteTagDialog {
     }
 
     fn setup_list_view(&self) {
-        let imp = imp::NoteTagDialog::from_instance(self);
-
         let factory = gtk::SignalListItemFactory::new();
         factory.connect_setup(clone!(@weak self as obj => move |_, list_item| {
             let tag_row = Row::new(&obj.other_tag_lists());
@@ -215,11 +210,11 @@ impl NoteTagDialog {
             list_item.set_child(Some(&tag_row));
         }));
 
-        imp.list_view.set_factory(Some(&factory));
+        self.imp().list_view.set_factory(Some(&factory));
     }
 
     fn setup_signals(&self) {
-        let imp = imp::NoteTagDialog::from_instance(self);
+        let imp = self.imp();
 
         imp.search_entry
             .connect_text_notify(clone!(@weak self as obj => move |search_entry| {

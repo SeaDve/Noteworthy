@@ -5,7 +5,7 @@ mod view_switcher;
 
 use gettextrs::gettext;
 use gtk::{
-    glib::{self, clone, closure_local},
+    glib::{self, clone, closure},
     prelude::*,
     subclass::prelude::*,
 };
@@ -204,7 +204,7 @@ impl Sidebar {
     }
 
     pub fn set_note_list(&self, note_list: &NoteList) {
-        let imp = imp::Sidebar::from_instance(self);
+        let imp = self.imp();
 
         let filter = self.note_filter();
         let filter_model = gtk::FilterListModel::new(Some(note_list), Some(&filter));
@@ -255,28 +255,24 @@ impl Sidebar {
             return;
         }
 
-        let imp = imp::Sidebar::from_instance(self);
-        imp.selected_note.replace(selected_note);
+        self.imp().selected_note.replace(selected_note);
         self.notify("selected-note");
     }
 
     pub fn selected_note(&self) -> Option<Note> {
-        let imp = imp::Sidebar::from_instance(self);
-        imp.selected_note.borrow().clone()
+        self.imp().selected_note.borrow().clone()
     }
 
     pub fn set_tag_list(&self, tag_list: &TagList) {
-        let imp = imp::Sidebar::from_instance(self);
-        imp.view_switcher.set_tag_list(tag_list);
+        self.imp().view_switcher.set_tag_list(tag_list);
     }
 
     pub fn selection_mode(&self) -> SelectionMode {
-        let imp = imp::Sidebar::from_instance(self);
-        imp.selection_mode.get()
+        self.imp().selection_mode.get()
     }
 
     pub fn set_selection_mode(&self, selection_mode: SelectionMode) {
-        let imp = imp::Sidebar::from_instance(self);
+        let imp = self.imp();
 
         match selection_mode {
             SelectionMode::Single => {
@@ -304,8 +300,8 @@ impl Sidebar {
     }
 
     pub fn selection_model(&self) -> Selection {
-        let imp = imp::Sidebar::from_instance(self);
-        imp.list_view
+        self.imp()
+            .list_view
             .model()
             .expect("List view model not set")
             .downcast()
@@ -331,26 +327,24 @@ impl Sidebar {
     }
 
     fn note_filter(&self) -> gtk::BoolFilter {
-        let filter_expression = gtk::ClosureExpression::new::<bool, _, _>(
-            crate::EMPTY_GTK_EXPRESSIONS,
-            closure_local!(@weak-allow-none self as obj => move |note: Note| {
-                let obj = match obj {
-                    Some(obj) => obj,
-                    None => return true,
-                };
+        let selected_type_expression = self
+            .imp()
+            .view_switcher
+            .property_expression("selected-type");
 
+        let filter_expression = gtk::ClosureExpression::new::<bool, _, _>(
+            &[selected_type_expression],
+            closure!(|note: Note, selected_type: ItemKind| {
                 let note = note.metadata();
 
-                let imp = imp::Sidebar::from_instance(&obj);
-
-                match imp.view_switcher.selected_type() {
+                match selected_type {
                     ItemKind::AllNotes => !note.is_trashed(),
                     ItemKind::Trash => note.is_trashed(),
-                    ItemKind::Tag(ref tag) => {
-                        note.tag_list().contains(tag) && !note.is_trashed()
-                    }
+                    ItemKind::Tag(ref tag) => note.tag_list().contains(tag) && !note.is_trashed(),
                     ItemKind::Separator | ItemKind::Category | ItemKind::EditTags => {
-                        unreachable!("ItemKind of type Separator, Category, or EditTags cannot be selected.");
+                        unreachable!(
+                            "ItemKind of type Separator, Category, or EditTags cannot be selected."
+                        );
                     }
                 }
             }),
@@ -380,24 +374,24 @@ impl Sidebar {
     fn update_action_bar_sensitivity(&self, n_selected_items: u64) {
         let is_selection_empty = n_selected_items == 0;
 
-        let imp = imp::Sidebar::from_instance(self);
+        let imp = self.imp();
         imp.tag_button.set_sensitive(!is_selection_empty);
         imp.trash_button.set_sensitive(!is_selection_empty);
         imp.pin_button.set_sensitive(!is_selection_empty);
     }
 
     fn update_selection_menu_button_label(&self, n_selected_items: u64) {
-        let imp = imp::Sidebar::from_instance(self);
         let label = if n_selected_items == 0 {
             gettext("No Selected")
         } else {
             gettext!("{} Selected", n_selected_items)
         };
-        imp.selection_menu_button.set_label(&label);
+
+        self.imp().selection_menu_button.set_label(&label);
     }
 
     fn update_action_bar(&self, n_selected_items: u64) {
-        let imp = imp::Sidebar::from_instance(self);
+        let imp = self.imp();
 
         let is_all_pinned_in_selected_notes = {
             // Just check the last selected note to short circuit faster
@@ -419,7 +413,7 @@ impl Sidebar {
     }
 
     fn setup_signals(&self) {
-        let imp = imp::Sidebar::from_instance(self);
+        let imp = self.imp();
 
         imp.trash_button
             .connect_clicked(clone!(@weak self as obj => move |button| {
@@ -439,7 +433,7 @@ impl Sidebar {
     }
 
     fn setup_list_view(&self) {
-        let imp = imp::Sidebar::from_instance(self);
+        let imp = self.imp();
 
         let factory = gtk::SignalListItemFactory::new();
         factory.connect_setup(clone!(@weak self as obj => move |_, list_item| {

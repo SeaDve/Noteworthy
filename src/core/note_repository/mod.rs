@@ -144,8 +144,7 @@ impl NoteRepository {
     }
 
     pub fn sync_state(&self) -> SyncState {
-        let imp = imp::NoteRepository::from_instance(self);
-        imp.sync_state.get()
+        self.imp().sync_state.get()
     }
 
     pub fn connect_remote_changed<F>(&self, f: F) -> glib::SignalHandlerId
@@ -156,8 +155,8 @@ impl NoteRepository {
             assert!(!obj.is_offline_mode().await, "Trying to connect remote change even it is offline mode");
         }));
 
-        let imp = imp::NoteRepository::from_instance(self);
-        let watcher = imp
+        let watcher = self
+            .imp()
             .watcher
             .get_or_init(|| RepositoryWatcher::new(&self.base_path(), DEFAULT_REMOTE_NAME));
 
@@ -303,25 +302,22 @@ impl NoteRepository {
     }
 
     fn repository(&self) -> Arc<Mutex<Repository>> {
-        let imp = imp::NoteRepository::from_instance(self);
-        Arc::clone(imp.repository.get().unwrap())
+        Arc::clone(self.imp().repository.get().unwrap())
     }
 
     fn set_repository(&self, repository: Repository) {
-        let imp = imp::NoteRepository::from_instance(self);
-        imp.repository
+        self.imp()
+            .repository
             .set(Arc::new(Mutex::new(repository)))
             .unwrap();
     }
 
     fn base_path(&self) -> gio::File {
-        let imp = imp::NoteRepository::from_instance(self);
-        imp.base_path.get().unwrap().clone()
+        self.imp().base_path.get().unwrap().clone()
     }
 
     fn set_sync_state(&self, sync_state: SyncState) {
-        let imp = imp::NoteRepository::from_instance(self);
-        imp.sync_state.set(sync_state);
+        self.imp().sync_state.set(sync_state);
         self.notify("sync-state");
     }
 }

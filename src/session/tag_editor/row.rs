@@ -111,7 +111,7 @@ impl Row {
     }
 
     fn set_tag(&self, tag: Option<Tag>) {
-        let imp = imp::Row::from_instance(self);
+        let imp = self.imp();
 
         if let Some(binding) = imp.binding.take() {
             binding.unbind();
@@ -138,7 +138,6 @@ impl Row {
     }
 
     fn tag(&self) -> Option<Tag> {
-        let imp = imp::Row::from_instance(self);
-        imp.tag.borrow().clone()
+        self.imp().tag.borrow().clone()
     }
 }

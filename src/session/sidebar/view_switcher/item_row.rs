@@ -126,14 +126,12 @@ impl ItemRow {
     }
 
     pub fn selected(&self) -> bool {
-        let imp = imp::ItemRow::from_instance(self);
-        imp.selected.get()
+        self.imp().selected.get()
     }
 
     pub fn set_selected(&self, selected: bool) {
-        let imp = imp::ItemRow::from_instance(self);
+        let imp = self.imp();
         imp.select_icon.set_visible(selected);
-
         imp.selected.set(selected);
         self.notify("selected");
     }
@@ -143,12 +141,11 @@ impl ItemRow {
     }
 
     pub fn list_row(&self) -> Option<gtk::TreeListRow> {
-        let imp = imp::ItemRow::from_instance(self);
-        imp.list_row.borrow().clone()
+        self.imp().list_row.borrow().clone()
     }
 
     pub fn set_list_row(&self, list_row: Option<gtk::TreeListRow>) {
-        let imp = imp::ItemRow::from_instance(self);
+        let imp = self.imp();
 
         if self.list_row() == list_row {
             return;
@@ -202,7 +199,6 @@ impl ItemRow {
     }
 
     fn insert_before_select_icon(&self, widget: &impl IsA<gtk::Widget>) {
-        let imp = imp::ItemRow::from_instance(self);
-        widget.insert_before(self, Some(&imp.select_icon.get()));
+        widget.insert_before(self, Some(&self.imp().select_icon.get()));
     }
 }

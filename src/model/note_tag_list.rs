@@ -59,15 +59,13 @@ impl NoteTagList {
     }
 
     pub fn append(&self, tag: Tag) -> anyhow::Result<()> {
-        let imp = imp::NoteTagList::from_instance(self);
-
         tag.connect_name_notify(clone!(@weak self as obj => move |tag| {
             if let Some(position) = obj.get_index_of(tag) {
                 obj.items_changed(position as u32, 1, 1);
             }
         }));
 
-        let is_list_appended = imp.list.borrow_mut().insert(tag);
+        let is_list_appended = self.imp().list.borrow_mut().insert(tag);
 
         anyhow::ensure!(is_list_appended, "Cannot append existing object tag");
 
@@ -77,9 +75,7 @@ impl NoteTagList {
     }
 
     pub fn remove(&self, tag: &Tag) -> anyhow::Result<()> {
-        let imp = imp::NoteTagList::from_instance(self);
-
-        let removed = imp.list.borrow_mut().shift_remove_full(tag);
+        let removed = self.imp().list.borrow_mut().shift_remove_full(tag);
 
         if let Some((position, _)) = removed {
             self.items_changed(position as u32, 1, 0);
@@ -91,26 +87,22 @@ impl NoteTagList {
     }
 
     pub fn contains(&self, tag: &Tag) -> bool {
-        let imp = imp::NoteTagList::from_instance(self);
-        imp.list.borrow().contains(tag)
+        self.imp().list.borrow().contains(tag)
     }
 
     pub fn is_empty(&self) -> bool {
-        let imp = imp::NoteTagList::from_instance(self);
-        imp.list.borrow().is_empty()
+        self.imp().list.borrow().is_empty()
     }
 
     fn get_index_of(&self, tag: &Tag) -> Option<usize> {
-        let imp = imp::NoteTagList::from_instance(self);
-        imp.list.borrow().get_index_of(tag)
+        self.imp().list.borrow().get_index_of(tag)
     }
 }
 
 // FIXME better ser & de
 impl Serialize for NoteTagList {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let imp = imp::NoteTagList::from_instance(self);
-        imp.list.serialize(serializer)
+        self.imp().list.serialize(serializer)
     }
 }
 

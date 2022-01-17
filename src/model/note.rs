@@ -171,18 +171,15 @@ impl Note {
     }
 
     pub fn file(&self) -> gio::File {
-        let imp = imp::Note::from_instance(self);
-        imp.file.get().unwrap().clone()
+        self.imp().file.get().unwrap().clone()
     }
 
     pub fn metadata(&self) -> NoteMetadata {
-        let imp = imp::Note::from_instance(self);
-        imp.metadata.get().unwrap().clone()
+        self.imp().metadata.get().unwrap().clone()
     }
 
     pub fn buffer(&self) -> gtk_source::Buffer {
-        let imp = imp::Note::from_instance(self);
-        imp.buffer.get().unwrap().clone()
+        self.imp().buffer.get().unwrap().clone()
     }
 
     pub fn id(&self) -> NoteId {
@@ -190,8 +187,7 @@ impl Note {
     }
 
     pub fn is_saved(&self) -> bool {
-        let imp = imp::Note::from_instance(self);
-        imp.is_saved.get()
+        self.imp().is_saved.get()
     }
 
     pub fn connect_metadata_changed<F>(&self, f: F) -> glib::SignalHandlerId
@@ -222,7 +218,7 @@ impl Note {
             .and_then(|p| p.deserialize().ok())
             .unwrap_or_default();
 
-        let imp = imp::Note::from_instance(self);
+        let imp = self.imp();
 
         let metadata = imp.metadata.get().unwrap();
         metadata.update(&new_metadata);

@@ -118,14 +118,15 @@ impl AttachmentView {
     }
 
     pub fn set_attachment_list(&self, attachment_list: Option<&AttachmentList>) {
-        let imp = imp::AttachmentView::from_instance(self);
-        imp.selection.set_model(attachment_list);
+        self.imp().selection.set_model(attachment_list);
         self.notify("attachment-list");
     }
 
     fn attachment_list(&self) -> Option<AttachmentList> {
-        let imp = imp::AttachmentView::from_instance(self);
-        imp.selection.model().map(|model| model.downcast().unwrap())
+        self.imp()
+            .selection
+            .model()
+            .map(|model| model.downcast().unwrap())
     }
 
     fn append_attachment(&self, attachment: Attachment) {
@@ -168,8 +169,7 @@ impl AttachmentView {
             let attachment_row: Row = list_item.child().unwrap().downcast().unwrap();
 
             if let Some(ref audio_row) = attachment_row.inner_row::<AudioRow>() {
-                let imp = imp::AttachmentView::from_instance(&obj);
-                imp.audio_player_handler.append(audio_row.audio_player().clone());
+                obj.imp().audio_player_handler.append(audio_row.audio_player().clone());
             }
         }));
 
@@ -177,22 +177,19 @@ impl AttachmentView {
             let attachment_row: Row = list_item.child().unwrap().downcast().unwrap();
 
             if let Some(ref audio_row) = attachment_row.inner_row::<AudioRow>() {
-                let imp = imp::AttachmentView::from_instance(&obj);
-                imp.audio_player_handler.remove(audio_row.audio_player());
+                obj.imp().audio_player_handler.remove(audio_row.audio_player());
             }
         }));
 
-        let imp = imp::AttachmentView::from_instance(self);
-        imp.list_view.set_factory(Some(&factory));
+        self.imp().list_view.set_factory(Some(&factory));
     }
 
     fn setup_signals(&self) {
-        let imp = imp::AttachmentView::from_instance(self);
+        let imp = self.imp();
 
         imp.audio_recorder_button
             .connect_on_record(clone!(@weak self as obj => move |_| {
-                let imp = imp::AttachmentView::from_instance(&obj);
-                imp.audio_player_handler.stop_all();
+                obj.imp().audio_player_handler.stop_all();
             }));
 
         imp.audio_recorder_button
@@ -203,8 +200,7 @@ impl AttachmentView {
 
         imp.camera_button
             .connect_on_launch(clone!(@weak self as obj => move |_| {
-                let imp = imp::AttachmentView::from_instance(&obj);
-                imp.audio_player_handler.stop_all();
+                obj.imp().audio_player_handler.stop_all();
             }));
 
         imp.camera_button

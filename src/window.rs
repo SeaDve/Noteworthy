@@ -108,18 +108,15 @@ impl Window {
     }
 
     pub fn session(&self) -> &Session {
-        let imp = imp::Window::from_instance(self);
-        imp.session.get().expect("Call load_session first")
+        self.imp().session.get().expect("Call load_session first")
     }
 
     pub fn add_page(&self, page: &impl IsA<gtk::Widget>) {
-        let imp = imp::Window::from_instance(self);
-        imp.main_stack.add_child(page);
+        self.imp().main_stack.add_child(page);
     }
 
     pub fn has_page(&self, page_to_find: &impl IsA<gtk::Widget>) -> bool {
-        let imp = imp::Window::from_instance(self);
-        let pages = imp.main_stack.pages();
+        let pages = self.imp().main_stack.pages();
 
         // FIXME use `main_stack.page(page_to_find).is_some()`
         // but for some reason Stack::page is not nullable
@@ -134,13 +131,11 @@ impl Window {
     }
 
     pub fn remove_page(&self, page: &impl IsA<gtk::Widget>) {
-        let imp = imp::Window::from_instance(self);
-        imp.main_stack.remove(page);
+        self.imp().main_stack.remove(page);
     }
 
     pub fn set_visible_page(&self, page: &impl IsA<gtk::Widget>) {
-        let imp = imp::Window::from_instance(self);
-        imp.main_stack.set_visible_child(page);
+        self.imp().main_stack.set_visible_child(page);
     }
 
     pub fn switch_to_session_page(&self) {
@@ -148,12 +143,11 @@ impl Window {
     }
 
     fn switch_to_loading_page(&self) {
-        let imp = imp::Window::from_instance(self);
-        self.set_visible_page(&imp.loading.get());
+        self.set_visible_page(&self.imp().loading.get());
     }
 
     async fn load_session(&self, session: Session) -> anyhow::Result<()> {
-        let imp = imp::Window::from_instance(self);
+        let imp = self.imp();
         imp.main_stack.add_child(&session);
         imp.session.set(session).unwrap();
 

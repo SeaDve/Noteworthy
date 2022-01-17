@@ -184,26 +184,24 @@ impl NoteManager {
     }
 
     pub fn directory(&self) -> gio::File {
-        let imp = imp::NoteManager::from_instance(self);
-        imp.directory.get().unwrap().clone()
+        self.imp().directory.get().unwrap().clone()
     }
 
     pub fn repository(&self) -> NoteRepository {
-        let imp = imp::NoteManager::from_instance(self);
-        Clone::clone(imp.repository.get().unwrap())
+        Clone::clone(self.imp().repository.get().unwrap())
     }
 
     pub fn note_list(&self) -> NoteList {
-        let imp = imp::NoteManager::from_instance(self);
-        imp.note_list
+        self.imp()
+            .note_list
             .get()
             .expect("Please call `load_notes` first")
             .clone()
     }
 
     pub fn tag_list(&self) -> TagList {
-        let imp = imp::NoteManager::from_instance(self);
-        imp.tag_list
+        self.imp()
+            .tag_list
             .borrow()
             .clone()
             .expect("Please call `load_data_file` first")

@@ -58,15 +58,13 @@ impl AttachmentList {
     }
 
     pub fn append(&self, attachment: Attachment) -> anyhow::Result<()> {
-        let imp = imp::AttachmentList::from_instance(self);
-
         attachment.connect_title_notify(clone!(@weak self as obj => move |attachment| {
             if let Some(position) = obj.get_index_of(attachment) {
                 obj.items_changed(position as u32, 1, 1);
             }
         }));
 
-        let is_list_appended = imp.list.borrow_mut().insert(attachment);
+        let is_list_appended = self.imp().list.borrow_mut().insert(attachment);
 
         anyhow::ensure!(is_list_appended, "Cannot append existing object attachment");
 
@@ -76,9 +74,7 @@ impl AttachmentList {
     }
 
     pub fn remove(&self, attachment: &Attachment) -> anyhow::Result<()> {
-        let imp = imp::AttachmentList::from_instance(self);
-
-        let removed = imp.list.borrow_mut().shift_remove_full(attachment);
+        let removed = self.imp().list.borrow_mut().shift_remove_full(attachment);
 
         if let Some((position, _)) = removed {
             self.items_changed(position as u32, 1, 0);
@@ -90,13 +86,11 @@ impl AttachmentList {
     }
 
     pub fn is_empty(&self) -> bool {
-        let imp = imp::AttachmentList::from_instance(self);
-        imp.list.borrow().is_empty()
+        self.imp().list.borrow().is_empty()
     }
 
     fn get_index_of(&self, attachment: &Attachment) -> Option<usize> {
-        let imp = imp::AttachmentList::from_instance(self);
-        imp.list.borrow().get_index_of(attachment)
+        self.imp().list.borrow().get_index_of(attachment)
     }
 }
 
@@ -116,8 +110,7 @@ impl std::iter::FromIterator<Attachment> for AttachmentList {
 
 impl Serialize for AttachmentList {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let imp = imp::AttachmentList::from_instance(self);
-        imp.list.serialize(serializer)
+        self.imp().list.serialize(serializer)
     }
 }
 

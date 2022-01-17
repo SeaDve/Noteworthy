@@ -95,7 +95,7 @@ impl TimeLabel {
     }
 
     pub fn set_time(&self, time: ClockTime) {
-        let imp = imp::TimeLabel::from_instance(self);
+        let imp = self.imp();
 
         let seconds = time.as_secs();
         let seconds_display = seconds % 60;
@@ -108,8 +108,7 @@ impl TimeLabel {
     }
 
     pub fn time(&self) -> ClockTime {
-        let imp = imp::TimeLabel::from_instance(self);
-        imp.time.get()
+        self.imp().time.get()
     }
 
     pub fn reset(&self) {

@@ -54,8 +54,7 @@ mod imp {
             Self::bind_template(klass);
 
             klass.install_action("session.navigate-back", None, move |obj, _, _| {
-                let imp = imp::Session::from_instance(obj);
-                imp.leaflet.navigate(adw::NavigationDirection::Back);
+                obj.imp().leaflet.navigate(adw::NavigationDirection::Back);
             });
 
             klass.install_action("session.sync", None, move |obj, _, _| {
@@ -86,7 +85,7 @@ mod imp {
             });
 
             klass.install_action("session.edit-selected-note-tags", None, move |obj, _, _| {
-                let imp = imp::Session::from_instance(obj);
+                let imp = obj.imp();
                 let tag_list = imp.note_manager.get().unwrap().tag_list();
                 let selected_note_tag_list =
                     imp.sidebar.selected_note().unwrap().metadata().tag_list();
@@ -105,7 +104,7 @@ mod imp {
                 "session.edit-multi-selected-note-tags",
                 None,
                 move |obj, _, _| {
-                    let imp = imp::Session::from_instance(obj);
+                    let imp = obj.imp();
                     let tag_list = imp.note_manager.get().unwrap().tag_list();
                     let other_tag_lists = imp
                         .sidebar
@@ -226,8 +225,7 @@ impl Session {
     }
 
     pub fn selected_note(&self) -> Option<Note> {
-        let imp = imp::Session::from_instance(self);
-        imp.selected_note.borrow().clone()
+        self.imp().selected_note.borrow().clone()
     }
 
     pub fn set_selected_note(&self, selected_note: Option<Note>) {
@@ -246,7 +244,7 @@ impl Session {
             })
         );
 
-        let imp = imp::Session::from_instance(self);
+        let imp = self.imp();
 
         if selected_note.is_some() {
             imp.leaflet.navigate(adw::NavigationDirection::Forward);
@@ -257,15 +255,14 @@ impl Session {
     }
 
     pub fn note_manager(&self) -> &NoteManager {
-        let imp = imp::Session::from_instance(self);
-        imp.note_manager.get().unwrap()
+        self.imp().note_manager.get().unwrap()
     }
 
     pub async fn load(&self) -> anyhow::Result<()> {
         let note_manager = self.note_manager();
         note_manager.load().await?;
 
-        let imp = imp::Session::from_instance(self);
+        let imp = self.imp();
         imp.sidebar.set_note_list(&note_manager.note_list());
         imp.sidebar.set_tag_list(&note_manager.tag_list());
 
@@ -279,8 +276,7 @@ impl Session {
     }
 
     fn set_note_manager(&self, note_manager: NoteManager) {
-        let imp = imp::Session::from_instance(self);
-        imp.note_manager.set(note_manager).unwrap();
+        self.imp().note_manager.set(note_manager).unwrap();
     }
 
     fn setup_signals(&self) {
@@ -289,14 +285,10 @@ impl Session {
             .flags(glib::BindingFlags::SYNC_CREATE)
             .build();
 
-        let imp = imp::Session::from_instance(self);
-
-        imp.leaflet.connect_child_transition_running_notify(
+        self.imp().leaflet.connect_child_transition_running_notify(
             clone!(@weak self as obj => move |leaflet| {
-                let imp = imp::Session::from_instance(&obj);
-
                 // Only deselect the note when the content is fully hidden
-                let is_sidebar_visible = leaflet.visible_child().unwrap() == imp.sidebar.get();
+                let is_sidebar_visible = leaflet.visible_child().unwrap() == obj.imp().sidebar.get();
                 if !leaflet.is_child_transition_running() && is_sidebar_visible  {
                     obj.set_selected_note(None);
                 }

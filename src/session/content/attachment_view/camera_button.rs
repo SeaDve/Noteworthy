@@ -102,7 +102,7 @@ impl CameraButton {
     }
 
     fn setup_signals(&self) {
-        let imp = imp::CameraButton::from_instance(self);
+        let imp = self.imp();
 
         imp.camera
             .connect_capture_accept(clone!(@weak self as obj => move |_, texture| {
@@ -137,7 +137,7 @@ impl CameraButton {
     fn on_launch(&self) {
         self.emit_by_name::<()>("on-launch", &[]);
 
-        let imp = imp::CameraButton::from_instance(self);
+        let imp = self.imp();
 
         let main_window = Application::default().main_window();
 

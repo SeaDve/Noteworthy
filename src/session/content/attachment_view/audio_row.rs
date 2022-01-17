@@ -137,25 +137,22 @@ impl AudioRow {
             })
         );
 
-        let imp = imp::AudioRow::from_instance(self);
-        imp.attachment.replace(attachment);
+        self.imp().attachment.replace(attachment);
         self.notify("attachment");
     }
 
     pub fn attachment(&self) -> Attachment {
-        let imp = imp::AudioRow::from_instance(self);
-        imp.attachment.borrow().clone()
+        self.imp().attachment.borrow().clone()
     }
 
     pub fn audio_player(&self) -> &AudioPlayer {
-        let imp = imp::AudioRow::from_instance(self);
-        &imp.audio_player
+        &self.imp().audio_player
     }
 
     async fn update_playback_duration_label(&self) {
         match self.audio_player().duration().await {
             Ok(duration) => {
-                let imp = imp::AudioRow::from_instance(self);
+                let imp = self.imp();
 
                 let seconds = duration.as_secs_f64();
                 imp.playback_position_scale.set_range(0.0, seconds);
@@ -169,7 +166,7 @@ impl AudioRow {
     }
 
     fn set_playback_position_scale_value_blocking(&self, value: f64) {
-        let imp = imp::AudioRow::from_instance(self);
+        let imp = self.imp();
         let scale_handler_id = imp.scale_handler_id.get().unwrap();
         imp.playback_position_scale.block_signal(scale_handler_id);
         imp.playback_position_scale.set_value(value);
@@ -188,7 +185,7 @@ impl AudioRow {
     }
 
     fn on_audio_player_state_changed(&self, state: PlaybackState) {
-        let imp = imp::AudioRow::from_instance(self);
+        let imp = self.imp();
 
         match state {
             PlaybackState::Stopped | PlaybackState::Loading => {
@@ -213,7 +210,7 @@ impl AudioRow {
     }
 
     fn on_playback_position_scale_value_changed(&self, scale: &gtk::Scale) {
-        let imp = imp::AudioRow::from_instance(self);
+        let imp = self.imp();
 
         // Cancel the seek when the value changed again within 20ms. So, it
         // will only seek when the value is stabilized within that span.
@@ -227,16 +224,15 @@ impl AudioRow {
             .replace(Some(glib::timeout_add_local_once(
                 Duration::from_millis(20),
                 clone!(@weak self as obj => move || {
-                    let imp = imp::AudioRow::from_instance(&obj);
-                    imp.seek_timeout_id.replace(None);
-
+                    obj.imp().seek_timeout_id.replace(None);
                     obj.audio_player().seek(ClockTime::from_secs_f64(value));
                 }),
             )));
     }
 
     fn setup_signals(&self) {
-        let imp = imp::AudioRow::from_instance(self);
+        let imp = self.imp();
+
         let scale_handler_id = imp.playback_position_scale.connect_value_changed(
             clone!(@weak self as obj => move |scale| {
                 obj.on_playback_position_scale_value_changed(scale);

@@ -215,8 +215,7 @@ impl NoteMetadata {
 
 impl Serialize for NoteMetadata {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let imp = imp::NoteMetadata::from_instance(self);
-        imp.inner.serialize(serializer)
+        self.imp().inner.serialize(serializer)
     }
 }
 
@@ -225,8 +224,7 @@ impl<'de> Deserialize<'de> for NoteMetadata {
         let inner = imp::NoteMetadataInner::deserialize(deserializer)?;
 
         let metadata = Self::new();
-        let imp = imp::NoteMetadata::from_instance(&metadata);
-        imp.inner.replace(inner);
+        metadata.imp().inner.replace(inner);
 
         Ok(metadata)
     }

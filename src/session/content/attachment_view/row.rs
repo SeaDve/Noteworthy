@@ -105,8 +105,7 @@ impl Row {
     }
 
     pub fn attachment(&self) -> Option<Attachment> {
-        let imp = imp::Row::from_instance(self);
-        imp.attachment.borrow().clone()
+        self.imp().attachment.borrow().clone()
     }
 
     pub fn set_attachment(&self, attachment: Option<Attachment>) {
@@ -114,21 +113,21 @@ impl Row {
             return;
         }
 
-        let imp = imp::Row::from_instance(self);
-
         if let Some(ref attachment) = attachment {
             self.replace_child(attachment);
         } else {
             self.remove_child();
         }
 
-        imp.attachment.replace(attachment);
+        self.imp().attachment.replace(attachment);
         self.notify("attachment");
     }
 
     pub fn inner_row<T: IsA<gtk::Widget>>(&self) -> Option<T> {
-        let imp = imp::Row::from_instance(self);
-        imp.content.child().and_then(|w| w.downcast::<T>().ok())
+        self.imp()
+            .content
+            .child()
+            .and_then(|w| w.downcast::<T>().ok())
     }
 
     pub fn connect_on_delete<F>(&self, f: F) -> glib::SignalHandlerId
@@ -159,12 +158,10 @@ impl Row {
             }
         };
 
-        let imp = imp::Row::from_instance(self);
-        imp.content.set_child(Some(&child));
+        self.imp().content.set_child(Some(&child));
     }
 
     fn remove_child(&self) {
-        let imp = imp::Row::from_instance(self);
-        imp.content.set_child(gtk::Widget::NONE);
+        self.imp().content.set_child(gtk::Widget::NONE);
     }
 }

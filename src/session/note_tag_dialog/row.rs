@@ -118,18 +118,15 @@ impl Row {
     }
 
     pub fn tag(&self) -> Option<Tag> {
-        let imp = imp::Row::from_instance(self);
-        imp.tag.borrow().clone()
+        self.imp().tag.borrow().clone()
     }
 
     pub fn set_tag(&self, tag: Option<Tag>) {
-        let imp = imp::Row::from_instance(self);
-
         if let Some(ref tag) = tag {
             self.update_check_button_state(tag);
         }
 
-        imp.tag.replace(tag);
+        self.imp().tag.replace(tag);
         self.notify("tag");
     }
 
@@ -138,7 +135,7 @@ impl Row {
     }
 
     fn update_check_button_state(&self, tag: &Tag) {
-        let imp = imp::Row::from_instance(self);
+        let imp = self.imp();
 
         let other_tag_lists = self.other_tag_lists();
 
@@ -162,33 +159,31 @@ impl Row {
     }
 
     fn setup_signals(&self) {
-        let imp = imp::Row::from_instance(self);
-
         // FIXME This get activated on first launch which makes it try to append an
         // existing tag
-        imp.check_button
-            .connect_active_notify(clone!(@weak self as obj => move |check_button| {
+        self.imp().check_button.connect_active_notify(
+            clone!(@weak self as obj => move |check_button| {
                 let tag = match obj.tag() {
                     Some(tag) => tag,
                     None => return,
                 };
 
-                let imp = imp::Row::from_instance(&obj);
-                imp.check_button.set_inconsistent(false);
+                obj.imp().check_button.set_inconsistent(false);
 
                 if check_button.is_active() {
                     obj.other_tag_lists().append_on_all(&tag);
                 } else {
                     obj.other_tag_lists().remove_on_all(&tag);
                 }
-            }));
+            }),
+        );
 
         // TODO Implement this so clicking the row activates the checkbutton
         // Works well when clicking the row but when you click the button it gets activated
         // twice, Idk how to not let the click pass through both widgets
         // let gesture = gtk::GestureClick::new();
         // gesture.connect_pressed(clone!(@weak self as obj => move |_, _, _, _| {
-        //     let imp = imp::Row::from_instance(&obj);
+        //     obj.imp();
         //     imp.check_button.activate();
         // }));
         // self.add_controller(&gesture);

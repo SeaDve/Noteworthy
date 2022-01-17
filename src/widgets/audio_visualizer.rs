@@ -62,13 +62,11 @@ impl AudioVisualizer {
     }
 
     fn peaks(&self) -> std::cell::Ref<VecDeque<f32>> {
-        let imp = imp::AudioVisualizer::from_instance(self);
-        imp.peaks.borrow()
+        self.imp().peaks.borrow()
     }
 
     fn peaks_mut(&self) -> std::cell::RefMut<VecDeque<f32>> {
-        let imp = imp::AudioVisualizer::from_instance(self);
-        imp.peaks.borrow_mut()
+        self.imp().peaks.borrow_mut()
     }
 
     fn on_snapshot(&self, snapshot: &gtk::Snapshot) {

@@ -103,8 +103,7 @@ impl OtherRow {
     }
 
     fn attachment(&self) -> Attachment {
-        let imp = imp::OtherRow::from_instance(self);
-        imp.attachment.borrow().clone()
+        self.imp().attachment.borrow().clone()
     }
 
     fn on_launch_file(&self) {

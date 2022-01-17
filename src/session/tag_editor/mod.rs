@@ -129,17 +129,15 @@ impl TagEditor {
     }
 
     pub fn tag_list(&self) -> TagList {
-        let imp = imp::TagEditor::from_instance(self);
-        imp.tag_list.get().unwrap().clone()
+        self.imp().tag_list.get().unwrap().clone()
     }
 
     pub fn note_list(&self) -> NoteList {
-        let imp = imp::TagEditor::from_instance(self);
-        imp.note_list.get().unwrap().clone()
+        self.imp().note_list.get().unwrap().clone()
     }
 
     fn set_tag_list(&self, tag_list: TagList) {
-        let imp = imp::TagEditor::from_instance(self);
+        let imp = self.imp();
 
         let tag_name_expression = gtk::ClosureExpression::new::<String, _, _>(
             crate::EMPTY_GTK_EXPRESSIONS,
@@ -164,12 +162,11 @@ impl TagEditor {
     }
 
     fn set_note_list(&self, note_list: NoteList) {
-        let imp = imp::TagEditor::from_instance(self);
-        imp.note_list.set(note_list).unwrap();
+        self.imp().note_list.set(note_list).unwrap();
     }
 
     fn on_create_tag(&self) {
-        let imp = imp::TagEditor::from_instance(self);
+        let imp = self.imp();
         let name = imp.create_tag_entry.text();
 
         let tag_list = self.tag_list();
@@ -179,11 +176,11 @@ impl TagEditor {
     }
 
     fn setup_signals(&self) {
-        let imp = imp::TagEditor::from_instance(self);
+        let imp = self.imp();
 
         imp.create_tag_entry
             .connect_text_notify(clone!(@weak self as obj => move |entry| {
-                let imp = imp::TagEditor::from_instance(&obj);
+                let imp = obj.imp();
 
                 if obj.tag_list().is_valid_name(&entry.text()) {
                     obj.action_set_enabled("tag-editor.create-tag", true);

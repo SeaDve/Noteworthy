@@ -133,8 +133,7 @@ impl Camera {
     }
 
     pub fn start(&self) -> anyhow::Result<()> {
-        let imp = imp::Camera::from_instance(self);
-        let pipeline = imp.pipeline.get().unwrap();
+        let pipeline = self.imp().pipeline.get().unwrap();
 
         let bus = pipeline.bus().unwrap();
         bus.add_watch_local(
@@ -158,8 +157,7 @@ impl Camera {
     }
 
     pub fn stop(&self) -> anyhow::Result<()> {
-        let imp = imp::Camera::from_instance(self);
-        let pipeline = imp.pipeline.get().unwrap();
+        let pipeline = self.imp().pipeline.get().unwrap();
 
         pipeline.set_state(gst::State::Null)?;
         let bus = pipeline.bus().unwrap();
@@ -169,8 +167,7 @@ impl Camera {
     }
 
     fn save_current_frame_to_texture(&self) -> gdk::Texture {
-        let imp = imp::Camera::from_instance(self);
-        let paintable = imp.picture.paintable().unwrap();
+        let paintable = self.imp().picture.paintable().unwrap();
 
         let width = paintable.intrinsic_width();
         let height = paintable.intrinsic_height();
@@ -216,7 +213,7 @@ impl Camera {
             e.sync_state_with_parent()?;
         }
 
-        let imp = imp::Camera::from_instance(self);
+        let imp = self.imp();
         imp.pipeline.set(pipeline).unwrap();
 
         let paintable = sink.property::<gdk::Paintable>("paintable");
@@ -232,8 +229,7 @@ impl Camera {
 
     //     let fd = proxy.open_pipe_wire_remote().await?;
 
-    //     let imp = imp::Camera::from_instance(self);
-    //     imp.paintable.start(0)?;
+    //     self.imp().paintable.start(0)?;
 
     //     Ok(())
     // }
@@ -256,8 +252,7 @@ impl Camera {
                 Continue(false)
             }
             MessageView::StateChanged(sc) => {
-                let imp = imp::Camera::from_instance(self);
-                let pipeline = imp.pipeline.get().unwrap();
+                let pipeline = self.imp().pipeline.get().unwrap();
 
                 if message.src().as_ref() == Some(pipeline.upcast_ref::<gst::Object>()) {
                     log::info!(
@@ -275,7 +270,7 @@ impl Camera {
     fn on_capture(&self) {
         self.stop().unwrap();
 
-        let imp = imp::Camera::from_instance(self);
+        let imp = self.imp();
         imp.stack.set_visible_child(&imp.preview_control_box.get());
     }
 
@@ -292,7 +287,7 @@ impl Camera {
     fn on_capture_discard(&self) {
         self.start().unwrap();
 
-        let imp = imp::Camera::from_instance(self);
+        let imp = self.imp();
         imp.stack.set_visible_child(&imp.main_control_box.get());
     }
 }

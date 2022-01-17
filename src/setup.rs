@@ -89,12 +89,11 @@ mod imp {
 
             // TODO consider changing these action names
             klass.install_action("setup.setup-git-host", None, move |obj, _, _| {
-                let imp = imp::Setup::from_instance(obj);
-                imp.content.set_visible_child_name("select-provider");
+                obj.imp().content.set_visible_child_name("select-provider");
             });
 
             // klass.install_action("setup.enter-repo-url", None, move |obj, _, _| {
-            //     let imp = imp::Setup::from_instance(obj);
+            //     let imp = obj.imp();
             //     let repo_url = imp.repo_url_entry.text();
             //     let passphrase = imp.passphrase_entry.text();
 
@@ -136,16 +135,15 @@ mod imp {
 
             self.content
                 .connect_visible_child_notify(clone!(@weak obj => move |content| {
-                    let imp = imp::Setup::from_instance(&obj);
                     let is_main_page = content.visible_child_name().unwrap().as_str() == "welcome";
+                    let imp = obj.imp();
                     imp.navigate_back_button.set_visible(!is_main_page);
                     imp.navigate_forward_button.set_visible(!is_main_page);
                 }));
 
             self.clone_url_entry
                 .connect_text_notify(clone!(@weak obj => move |entry| {
-                    let imp = imp::Setup::from_instance(&obj);
-                    if imp.content.visible_child_name().unwrap().as_str() == "create-repo" {
+                    if obj.imp().content.visible_child_name().unwrap().as_str() == "create-repo" {
                         let entry_text = entry.text();
                         let is_valid = NoteRepository::validate_remote_url(&entry_text);
                         obj.action_set_enabled("setup.navigate-forward", is_valid);
@@ -199,7 +197,7 @@ impl Setup {
     }
 
     fn navigate_forward(&self) {
-        let imp = imp::Setup::from_instance(self);
+        let imp = self.imp();
         let visible_page_name = imp.content.visible_child_name().unwrap();
 
         match visible_page_name.as_str() {
@@ -217,7 +215,7 @@ impl Setup {
     }
 
     fn navigate_back(&self) {
-        let imp = imp::Setup::from_instance(self);
+        let imp = self.imp();
         let visible_page_name = imp.content.visible_child_name().unwrap();
 
         match visible_page_name.as_str() {
@@ -234,7 +232,7 @@ impl Setup {
     }
 
     fn select_provider(&self) {
-        let imp = imp::Setup::from_instance(self);
+        let imp = self.imp();
         let mut config = imp.config.borrow_mut();
 
         dbg!(&config);
@@ -249,7 +247,7 @@ impl Setup {
     }
 
     fn create_repo(&self) {
-        let imp = imp::Setup::from_instance(self);
+        let imp = self.imp();
         let mut config = imp.config.borrow_mut();
 
         let clone_url = imp.clone_url_entry.text();

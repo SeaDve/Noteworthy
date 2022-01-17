@@ -81,11 +81,8 @@ impl TagBar {
     }
 
     pub fn set_tag_list(&self, tag_list: &NoteTagList) {
-        let imp = imp::TagBar::from_instance(self);
-
         let selection_model = gtk::NoSelection::new(Some(tag_list));
-        imp.list_view.set_model(Some(&selection_model));
-
+        self.imp().list_view.set_model(Some(&selection_model));
         self.notify("tag-list");
     }
 }

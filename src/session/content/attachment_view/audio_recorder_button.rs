@@ -49,7 +49,7 @@ mod imp {
             klass.install_action("audio-recorder-button.record-ok", None, move |obj, _, _| {
                 obj.stop_recording();
 
-                let imp = AudioRecorderButton::from_instance(obj);
+                let imp = obj.imp();
                 let popover_closed_handler_id = imp.popover_closed_handler_id.get().unwrap();
                 imp.popover.block_signal(popover_closed_handler_id);
                 imp.menu_button.popdown();
@@ -124,18 +124,15 @@ impl AudioRecorderButton {
     }
 
     fn visualizer(&self) -> &AudioVisualizer {
-        let imp = imp::AudioRecorderButton::from_instance(self);
-        &imp.visualizer
+        &self.imp().visualizer
     }
 
     fn duration_label(&self) -> &TimeLabel {
-        let imp = imp::AudioRecorderButton::from_instance(self);
-        &imp.duration_label
+        &self.imp().duration_label
     }
 
     fn recorder(&self) -> &AudioRecorder {
-        let imp = imp::AudioRecorderButton::from_instance(self);
-        &imp.recorder
+        &self.imp().recorder
     }
 
     fn start_recording(&self) {
@@ -181,7 +178,7 @@ impl AudioRecorderButton {
     }
 
     fn setup_signals(&self) {
-        let imp = imp::AudioRecorderButton::from_instance(self);
+        let imp = self.imp();
 
         imp.recorder
             .connect_peak_notify(clone!(@weak self as obj => move |recorder| {

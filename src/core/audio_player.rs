@@ -141,22 +141,19 @@ impl AudioPlayer {
     }
 
     pub fn state(&self) -> PlaybackState {
-        let imp = imp::AudioPlayer::from_instance(self);
-        imp.state.get()
+        self.imp().state.get()
     }
 
     pub fn set_uri(&self, uri: &str) {
         self.player().set_property("uri", uri);
 
-        let imp = imp::AudioPlayer::from_instance(self);
-        imp.uri.replace(uri.to_owned());
+        self.imp().uri.replace(uri.to_owned());
 
         self.notify("uri");
     }
 
     pub fn uri(&self) -> String {
-        let imp = imp::AudioPlayer::from_instance(self);
-        imp.uri.borrow().clone()
+        self.imp().uri.borrow().clone()
     }
 
     pub fn seek(&self, position: ClockTime) {
@@ -202,8 +199,7 @@ impl AudioPlayer {
 
                 // Changing the state to NULL flushes the pipeline.
                 // Thus, the change message never arrives.
-                let imp = imp::AudioPlayer::from_instance(self);
-                imp.state.set(state);
+                self.imp().state.set(state);
                 self.notify("state");
             }
             PlaybackState::Loading => {
@@ -221,13 +217,10 @@ impl AudioPlayer {
     }
 
     fn player(&self) -> gst::Pipeline {
-        let imp = imp::AudioPlayer::from_instance(self);
-        imp.player.get().expect("Player not setup").clone()
+        self.imp().player.get().expect("Player not setup").clone()
     }
 
     fn setup_player(&self) {
-        let imp = imp::AudioPlayer::from_instance(self);
-
         let player = gst::ElementFactory::make("playbin3", None)
             .unwrap()
             .downcast::<gst::Pipeline>()
@@ -241,7 +234,7 @@ impl AudioPlayer {
         )
         .unwrap();
 
-        imp.player.set(player).unwrap();
+        self.imp().player.set(player).unwrap();
     }
 
     fn handle_bus_message(&self, message: &gst::Message) -> Continue {
@@ -302,8 +295,7 @@ impl AudioPlayer {
             _ => return,
         };
 
-        let imp = imp::AudioPlayer::from_instance(self);
-        imp.state.set(state);
+        self.imp().state.set(state);
         self.notify("state");
     }
 }

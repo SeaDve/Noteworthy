@@ -210,9 +210,9 @@ impl FileImporterButton {
     }
 
     fn on_open_file_chooser(&self) {
-        let imp = imp::FileImporterButton::from_instance(self);
-
-        let chooser = imp.file_chooser.get_or_init(|| self.init_file_chooser());
-        chooser.show();
+        self.imp()
+            .file_chooser
+            .get_or_init(|| self.init_file_chooser())
+            .show();
     }
 }

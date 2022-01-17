@@ -200,28 +200,23 @@ impl Selection {
     }
 
     pub fn model(&self) -> Option<gio::ListModel> {
-        let imp = imp::Selection::from_instance(self);
-        imp.model.borrow().clone()
+        self.imp().model.borrow().clone()
     }
 
     pub fn selected(&self) -> u32 {
-        let imp = imp::Selection::from_instance(self);
-        imp.selected.get()
+        self.imp().selected.get()
     }
 
     pub fn selected_item(&self) -> Option<glib::Object> {
-        let imp = imp::Selection::from_instance(self);
-        imp.selected_item.borrow().clone()
+        self.imp().selected_item.borrow().clone()
     }
 
     pub fn selection_mode(&self) -> SelectionMode {
-        let imp = imp::Selection::from_instance(self);
-        imp.selection_mode.get()
+        self.imp().selection_mode.get()
     }
 
     pub fn set_selection_mode(&self, selection_mode: SelectionMode) {
-        let imp = imp::Selection::from_instance(self);
-        imp.selection_mode.set(selection_mode);
+        self.imp().selection_mode.set(selection_mode);
         self.notify("selection-mode");
 
         let selected = self.selected();
@@ -239,7 +234,7 @@ impl Selection {
     }
 
     pub fn set_model(&self, model: Option<&impl IsA<gio::ListModel>>) {
-        let imp = imp::Selection::from_instance(self);
+        let imp = self.imp();
 
         let _guard = self.freeze_notify();
 
@@ -323,7 +318,7 @@ impl Selection {
     }
 
     pub fn set_selected(&self, position: u32) {
-        let imp = imp::Selection::from_instance(self);
+        let imp = self.imp();
 
         let old_selected = self.selected();
         if old_selected == position {
@@ -360,8 +355,8 @@ impl Selection {
     }
 
     fn multi_selection_model(&self) -> gtk::MultiSelection {
-        let imp = imp::Selection::from_instance(self);
-        imp.multi_selection_model
+        self.imp()
+            .multi_selection_model
             .borrow()
             .as_ref()
             .expect("Multi selection model not set")
@@ -369,7 +364,7 @@ impl Selection {
     }
 
     fn set_selected_item(&self, item: Option<glib::Object>) {
-        let imp = imp::Selection::from_instance(self);
+        let imp = self.imp();
 
         let selected_item = self.selected_item();
         if selected_item == item {
@@ -413,7 +408,7 @@ impl Selection {
     }
 
     fn items_changed_cb(&self, model: &gio::ListModel, position: u32, removed: u32, added: u32) {
-        let imp = imp::Selection::from_instance(self);
+        let imp = self.imp();
 
         let _guard = self.freeze_notify();
 

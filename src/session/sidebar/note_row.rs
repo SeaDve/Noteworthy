@@ -159,35 +159,31 @@ impl NoteRow {
     }
 
     pub fn is_selected(&self) -> bool {
-        let imp = imp::NoteRow::from_instance(self);
-        imp.is_selected.get()
+        self.imp().is_selected.get()
     }
 
     pub fn set_is_selected(&self, is_selected: bool) {
-        let imp = imp::NoteRow::from_instance(self);
+        let imp = self.imp();
         imp.check_button.set_active(is_selected);
         imp.is_selected.set(is_selected);
         self.notify("is-selected");
     }
 
     pub fn position(&self) -> u32 {
-        let imp = imp::NoteRow::from_instance(self);
-        imp.position.get()
+        self.imp().position.get()
     }
 
     pub fn set_position(&self, position: u32) {
-        let imp = imp::NoteRow::from_instance(self);
-        imp.position.set(position);
+        self.imp().position.set(position);
         self.notify("position");
     }
 
     pub fn selection_mode(&self) -> SelectionMode {
-        let imp = imp::NoteRow::from_instance(self);
-        imp.selection_mode.get()
+        self.imp().selection_mode.get()
     }
 
     pub fn set_selection_mode(&self, selection_mode: SelectionMode) {
-        let imp = imp::NoteRow::from_instance(self);
+        let imp = self.imp();
 
         match selection_mode {
             SelectionMode::Single => {
@@ -203,13 +199,11 @@ impl NoteRow {
     }
 
     pub fn note(&self) -> Option<Note> {
-        let imp = imp::NoteRow::from_instance(self);
-        imp.note.borrow().clone()
+        self.imp().note.borrow().clone()
     }
 
     pub fn set_note(&self, note: Option<Note>) {
-        let imp = imp::NoteRow::from_instance(self);
-        imp.note.replace(note);
+        self.imp().note.replace(note);
         self.notify("note");
     }
 
@@ -224,7 +218,7 @@ impl NoteRow {
     }
 
     fn setup_expressions(&self) {
-        let imp = imp::NoteRow::from_instance(self);
+        let imp = self.imp();
 
         let note_expression = Self::this_expression("note");
 
@@ -270,9 +264,8 @@ impl NoteRow {
     }
 
     fn setup_signals(&self) {
-        let imp = imp::NoteRow::from_instance(self);
-        imp.check_button
-            .connect_active_notify(clone!(@weak self as obj => move |check_button| {
+        self.imp().check_button.connect_active_notify(
+            clone!(@weak self as obj => move |check_button| {
                 if obj.selection_mode() != SelectionMode::Multi {
                     return;
                 }
@@ -284,7 +277,8 @@ impl NoteRow {
                 } else {
                     model.unselect_item(obj.position());
                 }
-            }));
+            }),
+        );
 
         let gesture_click = gtk::GestureClick::new();
         gesture_click.set_button(3);

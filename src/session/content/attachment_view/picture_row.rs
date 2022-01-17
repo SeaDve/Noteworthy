@@ -95,7 +95,7 @@ impl PictureRow {
             return;
         }
 
-        let imp = imp::PictureRow::from_instance(self);
+        let imp = self.imp();
 
         let file = attachment.file();
 
@@ -125,7 +125,6 @@ impl PictureRow {
     }
 
     fn attachment(&self) -> Attachment {
-        let imp = imp::PictureRow::from_instance(self);
-        imp.attachment.borrow().clone()
+        self.imp().attachment.borrow().clone()
     }
 }

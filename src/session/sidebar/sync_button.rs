@@ -99,7 +99,7 @@ impl SyncButton {
     }
 
     pub fn set_is_spinning(&self, is_spinning: bool) {
-        let imp = imp::SyncButton::from_instance(self);
+        let imp = self.imp();
 
         if is_spinning {
             imp.inner_button.add_css_class("spinning");

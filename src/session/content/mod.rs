@@ -137,8 +137,7 @@ impl Content {
     }
 
     pub fn note(&self) -> Option<Note> {
-        let imp = imp::Content::from_instance(self);
-        imp.note.borrow().clone()
+        self.imp().note.borrow().clone()
     }
 
     pub fn set_note(&self, note: Option<Note>) {
@@ -146,7 +145,7 @@ impl Content {
             return;
         }
 
-        let imp = imp::Content::from_instance(self);
+        let imp = self.imp();
 
         for binding in imp.bindings.borrow_mut().drain(..) {
             binding.unbind();

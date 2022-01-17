@@ -86,8 +86,7 @@ impl Tag {
 
 impl Serialize for Tag {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let imp = imp::Tag::from_instance(self);
-        imp.name.serialize(serializer)
+        self.imp().name.serialize(serializer)
     }
 }
 

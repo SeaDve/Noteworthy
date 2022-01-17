@@ -104,8 +104,6 @@ impl NoteList {
     }
 
     pub fn append(&self, note: Note) {
-        let imp = imp::NoteList::from_instance(self);
-
         note.connect_metadata_changed(clone!(@weak self as obj => move |note| {
             if let Some(position) = obj.get_index_of(&note.id()) {
                 obj.items_changed(position as u32, 1, 1);
@@ -113,8 +111,7 @@ impl NoteList {
         }));
 
         note.connect_is_saved_notify(clone!(@weak self as obj => move |note| {
-            let imp = imp::NoteList::from_instance(&obj);
-            let mut unsaved_notes = imp.unsaved_notes.borrow_mut();
+            let mut unsaved_notes = obj.imp().unsaved_notes.borrow_mut();
 
             if note.is_saved() {
                 let res = unsaved_notes.remove(note);
@@ -125,15 +122,13 @@ impl NoteList {
             }
         }));
 
-        imp.list.borrow_mut().insert(note.id(), note);
+        self.imp().list.borrow_mut().insert(note.id(), note);
 
         self.items_changed(self.n_items() - 1, 0, 1);
     }
 
     pub fn remove(&self, note_id: &NoteId) {
-        let imp = imp::NoteList::from_instance(self);
-
-        let removed = imp.list.borrow_mut().shift_remove_full(note_id);
+        let removed = self.imp().list.borrow_mut().shift_remove_full(note_id);
 
         if let Some((position, _, _)) = removed {
             self.items_changed(position as u32, 1, 0);
@@ -141,19 +136,16 @@ impl NoteList {
     }
 
     pub fn get(&self, note_id: &NoteId) -> Option<Note> {
-        let imp = imp::NoteList::from_instance(self);
-        imp.list.borrow().get(note_id).cloned()
+        self.imp().list.borrow().get(note_id).cloned()
     }
 
     pub fn get_index_of(&self, note_id: &NoteId) -> Option<usize> {
-        let imp = imp::NoteList::from_instance(self);
-        imp.list.borrow().get_index_of(note_id)
+        self.imp().list.borrow().get_index_of(note_id)
     }
 
     /// Clear and get all unsaved notes
     pub fn take_unsaved_notes(&self) -> HashSet<Note> {
-        let imp = imp::NoteList::from_instance(self);
-        imp.unsaved_notes.take()
+        self.imp().unsaved_notes.take()
     }
 
     /// Remove tag on `TagList` of all `Note`s

@@ -98,13 +98,11 @@ impl AudioRecorder {
     }
 
     pub fn peak(&self) -> f64 {
-        let imp = imp::AudioRecorder::from_instance(self);
-        imp.peak.get()
+        self.imp().peak.get()
     }
 
     pub fn duration(&self) -> ClockTime {
-        let imp = imp::AudioRecorder::from_instance(self);
-        imp.duration.get()
+        self.imp().duration.get()
     }
 
     pub fn start(&self, base_path: &Path) -> anyhow::Result<()> {
@@ -119,7 +117,7 @@ impl AudioRecorder {
         )
         .unwrap();
 
-        let imp = imp::AudioRecorder::from_instance(self);
+        let imp = self.imp();
         imp.pipeline.replace(Some(pipeline));
         imp.recording.replace(Some(new_recording));
 
@@ -135,7 +133,8 @@ impl AudioRecorder {
         imp.source_id.replace(Some(glib::timeout_add_local(
             Duration::from_millis(100),
             clone!(@weak self as obj => @default-return Continue(false), move || {
-                let imp = imp::AudioRecorder::from_instance(&obj);
+                let imp = obj.imp();
+
                 let pipeline = imp.pipeline.borrow();
 
                 match pipeline.as_ref().unwrap().query_position::<gst::ClockTime>() {
@@ -165,13 +164,12 @@ impl AudioRecorder {
         log::info!("Sending EOS event to pipeline");
         self.pipeline().send_event(gst::event::Eos::new());
 
-        let imp = imp::AudioRecorder::from_instance(self);
-        let receiver = imp.receiver.take().unwrap();
+        let receiver = self.imp().receiver.take().unwrap();
         receiver.await.unwrap()
     }
 
     pub async fn cancel(&self) {
-        let imp = imp::AudioRecorder::from_instance(self);
+        let imp = self.imp();
         imp.sender.replace(None);
         imp.receiver.replace(None);
 
@@ -188,8 +186,8 @@ impl AudioRecorder {
     }
 
     fn pipeline(&self) -> gst::Pipeline {
-        let imp = imp::AudioRecorder::from_instance(self);
-        imp.pipeline
+        self.imp()
+            .pipeline
             .borrow()
             .as_ref()
             .cloned()
@@ -260,7 +258,7 @@ impl AudioRecorder {
     }
 
     fn cleanup_and_take_recording(&self) -> Option<AudioRecording> {
-        let imp = imp::AudioRecorder::from_instance(self);
+        let imp = self.imp();
 
         if let Some(pipeline) = imp.pipeline.take() {
             if let Some(source_id) = imp.source_id.take() {
@@ -293,8 +291,7 @@ impl AudioRecorder {
                     .get::<f64>()
                     .unwrap();
 
-                let imp = imp::AudioRecorder::from_instance(self);
-                imp.peak.set(peak);
+                self.imp().peak.set(peak);
                 self.notify("peak");
 
                 Continue(true)
@@ -304,8 +301,7 @@ impl AudioRecorder {
 
                 let recording = self.cleanup_and_take_recording();
 
-                let imp = imp::AudioRecorder::from_instance(self);
-                let sender = imp.sender.take().unwrap();
+                let sender = self.imp().sender.take().unwrap();
                 sender.send(Ok(recording.unwrap())).unwrap();
 
                 Continue(false)
@@ -315,8 +311,7 @@ impl AudioRecorder {
 
                 let _recording = self.cleanup_and_take_recording();
 
-                let imp = imp::AudioRecorder::from_instance(self);
-                let sender = imp.sender.take().unwrap();
+                let sender = self.imp().sender.take().unwrap();
                 sender.send(Err(err.error().into())).unwrap();
 
                 Continue(false)
