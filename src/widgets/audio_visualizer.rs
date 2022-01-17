@@ -2,7 +2,7 @@
 // Modified to be bidirectional and use snapshots instead of cairo
 // See https://gitlab.gnome.org/GNOME/gnome-sound-recorder/-/blob/master/src/waveform.js
 
-use gtk::{gdk, glib, graphene, prelude::*, subclass::prelude::*};
+use gtk::{glib, graphene, prelude::*, subclass::prelude::*};
 
 use std::{cell::RefCell, collections::VecDeque};
 

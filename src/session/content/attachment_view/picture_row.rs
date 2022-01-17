@@ -1,8 +1,13 @@
-use gtk::{gdk, glib, prelude::*, subclass::prelude::*};
+use gtk::{
+    gdk, gio,
+    glib::{self, clone},
+    prelude::*,
+    subclass::prelude::*,
+};
 
 use std::cell::RefCell;
 
-use crate::model::Attachment;
+use crate::{model::Attachment, spawn, spawn_blocking};
 
 mod imp {
     use super::*;
@@ -95,36 +100,33 @@ impl PictureRow {
             return;
         }
 
-        let imp = self.imp();
-
         let file = attachment.file();
+        let path = file.path().unwrap();
 
-        // TODO load lazily
-        // Maybe gio::File::load_bytes_future then load it through
-        // gdk::Texture::from_bytes in gtk 4.6 or just load it from another
-        // thread since gdk::Texture is now Send & Sync
-        match gdk::Texture::from_file(&file) {
-            Ok(ref texture) => {
-                log::info!(
-                    "Successfully loaded texture from file `{}`",
-                    file.path().unwrap().display()
-                );
-                imp.picture.set_paintable(Some(texture));
+        spawn!(clone!(@weak self as obj => async move {
+            match obj.load_texture_from_file(file).await {
+                Ok(ref texture) => {
+                    obj.imp().picture.set_paintable(Some(texture));
+                }
+                Err(err) => {
+                    log::error!(
+                        "Failed to load texture from file `{}`: {:?}",
+                        path.display(),
+                        err
+                    );
+                }
             }
-            Err(err) => {
-                log::error!(
-                    "Failed to load texture from file `{}`: {:?}",
-                    file.path().unwrap().display(),
-                    err
-                );
-            }
-        }
+        }));
 
-        imp.attachment.replace(attachment);
+        self.imp().attachment.replace(attachment);
         self.notify("attachment");
     }
 
     fn attachment(&self) -> Attachment {
         self.imp().attachment.borrow().clone()
+    }
+
+    async fn load_texture_from_file(&self, file: gio::File) -> Result<gdk::Texture, glib::Error> {
+        spawn_blocking!(move || gdk::Texture::from_file(&file)).await
     }
 }
