@@ -110,7 +110,7 @@ impl CameraButton {
                 let file_path = utils::generate_unique_path(notes_dir, "Camera", Some("png"));
 
                 if let Err(err) = texture.save_to_png(&file_path) {
-                    log::error!("Failed to save texture to png: {}", err);
+                    log::error!("Failed to save texture to png: {:?}", err);
                 }
 
                 obj.emit_by_name::<()>("capture-done", &[&gio::File::for_path(&file_path)]);
