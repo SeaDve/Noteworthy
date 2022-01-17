@@ -180,7 +180,7 @@ impl Content {
         let imp = self.imp();
 
         let is_some_note_expression = Self::this_expression("note")
-            .chain_closure::<bool>(closure!(|_: Self, note: Option<Note>| { note.is_some() }));
+            .chain_closure::<bool>(closure!(|_: Self, note: Option<Note>| note.is_some()));
 
         is_some_note_expression.bind(&imp.is_pinned_button.get(), "visible", Some(self));
         is_some_note_expression.bind(&imp.is_trashed_button.get(), "visible", Some(self));
