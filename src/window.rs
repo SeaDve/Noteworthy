@@ -120,9 +120,10 @@ impl Window {
 
         // FIXME use `main_stack.page(page_to_find).is_some()`
         // but for some reason Stack::page is not nullable
-        for page in pages.upcast::<gio::ListModel>().into_iter() {
-            if &page.downcast_ref::<gtk::StackPage>().unwrap().child() == page_to_find.upcast_ref()
-            {
+        for page in pages.snapshot() {
+            let child = page.downcast_ref::<gtk::StackPage>().unwrap().child();
+
+            if &child == page_to_find.upcast_ref() {
                 return true;
             }
         }
