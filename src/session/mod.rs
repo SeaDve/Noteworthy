@@ -13,13 +13,16 @@ use gtk::{
 };
 use once_cell::unsync::OnceCell;
 
-use std::cell::{Cell, RefCell};
+use std::{
+    cell::{Cell, RefCell},
+    path::PathBuf,
+};
 
 use self::{
     content::Content, note_manager::NoteManager, note_tag_dialog::NoteTagDialog, sidebar::Sidebar,
     tag_editor::TagEditor,
 };
-use crate::{model::Note, spawn};
+use crate::{model::Note, spawn, Application};
 
 mod imp {
     use super::*;
@@ -218,6 +221,10 @@ impl Session {
         glib::Object::new(&[("note-manager", &note_manager)]).expect("Failed to create Session.")
     }
 
+    pub fn directory(&self) -> PathBuf {
+        self.note_manager().directory().path().unwrap()
+    }
+
     pub fn selected_note(&self) -> Option<Note> {
         let imp = imp::Session::from_instance(self);
         imp.selected_note.borrow().clone()
@@ -295,5 +302,11 @@ impl Session {
                 }
             }),
         );
+    }
+}
+
+impl Default for Session {
+    fn default() -> Self {
+        Application::default().main_window().session().clone()
     }
 }

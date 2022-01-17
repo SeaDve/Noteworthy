@@ -8,7 +8,8 @@ use once_cell::unsync::OnceCell;
 
 use crate::{
     core::AudioRecorder,
-    spawn, utils,
+    session::Session,
+    spawn,
     widgets::{AudioVisualizer, TimeLabel},
 };
 
@@ -138,7 +139,7 @@ impl AudioRecorderButton {
     }
 
     fn start_recording(&self) {
-        let recording_base_path = utils::default_notes_dir();
+        let recording_base_path = Session::default().directory();
 
         if let Err(err) = self.recorder().start(&recording_base_path) {
             log::error!("Failed to start recording: {:?}", err);

@@ -10,7 +10,7 @@ use once_cell::unsync::OnceCell;
 
 use std::{fs, path::PathBuf};
 
-use crate::{spawn, spawn_blocking, utils};
+use crate::{session::Session, spawn, spawn_blocking, utils};
 
 const MAX_BYTES_FILE_SIZE: u64 = 20_000_000;
 
@@ -119,7 +119,7 @@ impl FileImporterButton {
 
     async fn import_files(&self, files: Vec<PathBuf>) -> anyhow::Result<()> {
         for source_path in files {
-            let notes_dir = utils::default_notes_dir();
+            let notes_dir = Session::default().directory();
             let destination_path =
                 utils::generate_unique_path(notes_dir, "OtherFile", source_path.extension());
             let destination_file = gio::File::for_path(&destination_path);

@@ -5,7 +5,7 @@ use gtk::{
     subclass::prelude::*,
 };
 
-use crate::{utils, widgets::Camera, Application};
+use crate::{session::Session, utils, widgets::Camera, Application};
 
 mod imp {
     use super::*;
@@ -106,7 +106,7 @@ impl CameraButton {
 
         imp.camera
             .connect_capture_accept(clone!(@weak self as obj => move |_, texture| {
-                let notes_dir = utils::default_notes_dir();
+                let notes_dir = Session::default().directory();
                 let file_path = utils::generate_unique_path(notes_dir, "Camera", Some("png"));
 
                 if let Err(err) = texture.save_to_png(&file_path) {

@@ -7,9 +7,7 @@ use gtk::{
 };
 use once_cell::unsync::OnceCell;
 
-use crate::{
-    application::Application, config::PROFILE, session::Session, setup::Setup, spawn, utils,
-};
+use crate::{config::PROFILE, session::Session, setup::Setup, spawn, utils, Application};
 
 mod imp {
     use super::*;
