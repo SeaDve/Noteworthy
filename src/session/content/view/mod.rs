@@ -14,7 +14,7 @@ use std::cell::RefCell;
 use self::tag_bar::TagBar;
 use crate::{
     core::DateTime,
-    model::{note::Metadata, Note},
+    model::{Note, NoteMetadata},
 };
 
 mod imp {
@@ -161,7 +161,7 @@ impl View {
 
         Self::this_expression("note")
             .chain_property::<Note>("metadata")
-            .chain_property::<Metadata>("last-modified")
+            .chain_property::<NoteMetadata>("last-modified")
             .chain_closure::<String>(closure!(|_: Self, last_modified: DateTime| {
                 gettext!("Last edited {}", last_modified.fuzzy_display())
             }))

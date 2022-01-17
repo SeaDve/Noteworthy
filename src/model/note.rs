@@ -1,5 +1,3 @@
-mod metadata;
-
 use gray_matter::{engine::YAML, Matter};
 use gtk::{
     gio,
@@ -11,8 +9,7 @@ use once_cell::unsync::OnceCell;
 
 use std::{cell::Cell, path::Path};
 
-pub use self::metadata::Metadata;
-use super::NoteId;
+use super::{NoteId, NoteMetadata};
 use crate::utils;
 
 mod imp {
@@ -24,7 +21,7 @@ mod imp {
     pub struct Note {
         pub file: OnceCell<gio::File>,
         pub is_saved: Cell<bool>,
-        pub metadata: OnceCell<Metadata>,
+        pub metadata: OnceCell<NoteMetadata>,
         pub buffer: OnceCell<gtk_source::Buffer>,
     }
 
@@ -56,7 +53,7 @@ mod imp {
                         "metadata",
                         "Metadata",
                         "Metadata containing info of note",
-                        Metadata::static_type(),
+                        NoteMetadata::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
                     glib::ParamSpecObject::new(
@@ -161,7 +158,7 @@ glib::wrapper! {
 }
 
 impl Note {
-    pub fn new(file: &gio::File, metadata: &Metadata, buffer: &gtk_source::Buffer) -> Self {
+    pub fn new(file: &gio::File, metadata: &NoteMetadata, buffer: &gtk_source::Buffer) -> Self {
         glib::Object::new::<Self>(&[("file", file), ("metadata", metadata), ("buffer", buffer)])
             .expect("Failed to create Note.")
     }
@@ -170,7 +167,7 @@ impl Note {
         let file_path = utils::generate_unique_path(base_path, "Note", Some("md"));
         let file = gio::File::for_path(&file_path);
 
-        Self::new(&file, &Metadata::default(), &Self::default_buffer())
+        Self::new(&file, &NoteMetadata::default(), &Self::default_buffer())
     }
 
     pub fn file(&self) -> gio::File {
@@ -178,7 +175,7 @@ impl Note {
         imp.file.get().unwrap().clone()
     }
 
-    pub fn metadata(&self) -> Metadata {
+    pub fn metadata(&self) -> NoteMetadata {
         let imp = imp::Note::from_instance(self);
         imp.metadata.get().unwrap().clone()
     }
@@ -229,7 +226,7 @@ impl Note {
         let file_content = std::str::from_utf8(&file_content)?;
         let parsed_entity = Matter::<YAML>::new().parse(file_content);
 
-        let new_metadata: Metadata = parsed_entity
+        let new_metadata: NoteMetadata = parsed_entity
             .data
             .and_then(|p| p.deserialize().ok())
             .unwrap_or_default();
@@ -250,7 +247,7 @@ impl Note {
         let file_content = std::str::from_utf8(&file_content)?;
         let parsed_entity = Matter::<YAML>::new().parse(file_content);
 
-        let metadata: Metadata = parsed_entity
+        let metadata: NoteMetadata = parsed_entity
             .data
             .and_then(|p| p.deserialize().ok())
             .unwrap_or_default();

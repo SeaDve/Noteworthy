@@ -14,7 +14,7 @@ mod imp {
 
     #[derive(Debug, Default, Serialize, Deserialize)]
     #[serde(default)]
-    pub struct MetadataInner {
+    pub struct NoteMetadataInner {
         pub title: String,
         pub tag_list: NoteTagList,
         pub attachment_list: AttachmentList,
@@ -24,17 +24,17 @@ mod imp {
     }
 
     #[derive(Debug, Default)]
-    pub struct Metadata {
-        pub inner: RefCell<MetadataInner>,
+    pub struct NoteMetadata {
+        pub inner: RefCell<NoteMetadataInner>,
     }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for Metadata {
+    impl ObjectSubclass for NoteMetadata {
         const NAME: &'static str = "NwtyNoteMetadata";
-        type Type = super::Metadata;
+        type Type = super::NoteMetadata;
     }
 
-    impl ObjectImpl for Metadata {
+    impl ObjectImpl for NoteMetadata {
         fn properties() -> &'static [glib::ParamSpec] {
             static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
                 vec![
@@ -143,12 +143,12 @@ mod imp {
 }
 
 glib::wrapper! {
-    pub struct Metadata(ObjectSubclass<imp::Metadata>);
+    pub struct NoteMetadata(ObjectSubclass<imp::NoteMetadata>);
 }
 
-impl Metadata {
+impl NoteMetadata {
     pub fn new() -> Self {
-        glib::Object::new::<Self>(&[]).expect("Failed to create Metadata.")
+        glib::Object::new::<Self>(&[]).expect("Failed to create NoteMetadata.")
     }
 
     pub fn set_title(&self, title: &str) {
@@ -213,26 +213,26 @@ impl Metadata {
     }
 }
 
-impl Serialize for Metadata {
+impl Serialize for NoteMetadata {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let imp = imp::Metadata::from_instance(self);
+        let imp = imp::NoteMetadata::from_instance(self);
         imp.inner.serialize(serializer)
     }
 }
 
-impl<'de> Deserialize<'de> for Metadata {
+impl<'de> Deserialize<'de> for NoteMetadata {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let inner = imp::MetadataInner::deserialize(deserializer)?;
+        let inner = imp::NoteMetadataInner::deserialize(deserializer)?;
 
         let metadata = Self::new();
-        let imp = imp::Metadata::from_instance(&metadata);
+        let imp = imp::NoteMetadata::from_instance(&metadata);
         imp.inner.replace(inner);
 
         Ok(metadata)
     }
 }
 
-impl Default for Metadata {
+impl Default for NoteMetadata {
     fn default() -> Self {
         Self::new()
     }
@@ -246,7 +246,7 @@ mod test {
 
     #[test]
     fn title() {
-        let metadata = Metadata::new();
+        let metadata = NoteMetadata::new();
         assert_eq!(metadata.title(), "");
         metadata.set_title("A Title");
         assert_eq!(metadata.title(), "A Title");
@@ -254,7 +254,7 @@ mod test {
 
     #[test]
     fn title_did_not_changed() {
-        let metadata = Metadata::new();
+        let metadata = NoteMetadata::new();
         metadata.set_title("Title");
         let old_last_modified = metadata.last_modified();
         metadata.set_title("Title");
@@ -264,7 +264,7 @@ mod test {
 
     #[test]
     fn title_did_changed() {
-        let metadata = Metadata::new();
+        let metadata = NoteMetadata::new();
         metadata.set_title("Title");
         let old_last_modified = metadata.last_modified();
         metadata.set_title("New Title");
@@ -274,7 +274,7 @@ mod test {
 
     #[test]
     fn tag_list() {
-        let metadata = Metadata::new();
+        let metadata = NoteMetadata::new();
         assert!(metadata.tag_list().is_empty());
 
         let new_tag_list = NoteTagList::new();
@@ -287,7 +287,7 @@ mod test {
 
     #[test]
     fn attachment_list() {
-        let metadata = Metadata::new();
+        let metadata = NoteMetadata::new();
         assert!(metadata.attachment_list().is_empty());
 
         let new_attachment_list = AttachmentList::new();
@@ -305,7 +305,7 @@ mod test {
 
     #[test]
     fn last_modified() {
-        let metadata = Metadata::new();
+        let metadata = NoteMetadata::new();
         assert_eq!(metadata.title(), "");
         metadata.set_title("A Title");
         assert_eq!(metadata.title(), "A Title");
@@ -313,7 +313,7 @@ mod test {
 
     #[test]
     fn update_last_modified() {
-        let metadata = Metadata::new();
+        let metadata = NoteMetadata::new();
         let old_last_modified = metadata.last_modified();
         metadata.update_last_modified();
         assert!(old_last_modified < metadata.last_modified());
@@ -321,7 +321,7 @@ mod test {
 
     #[test]
     fn is_pinned() {
-        let metadata = Metadata::new();
+        let metadata = NoteMetadata::new();
         assert!(!metadata.is_pinned());
         metadata.set_is_pinned(true);
         assert!(metadata.is_pinned());
@@ -329,7 +329,7 @@ mod test {
 
     #[test]
     fn is_trashed() {
-        let metadata = Metadata::new();
+        let metadata = NoteMetadata::new();
         assert!(!metadata.is_trashed());
         metadata.set_is_trashed(true);
         assert!(metadata.is_trashed());
@@ -337,14 +337,14 @@ mod test {
 
     #[test]
     fn update() {
-        let metadata = Metadata::new();
+        let metadata = NoteMetadata::new();
         assert_eq!(metadata.title(), "");
         assert!(metadata.tag_list().is_empty());
         assert!(metadata.attachment_list().is_empty());
         assert!(!metadata.is_pinned());
         assert!(!metadata.is_trashed());
 
-        let other_metadata = Metadata::new();
+        let other_metadata = NoteMetadata::new();
         other_metadata.set_title("Title");
 
         let tag_list = NoteTagList::new();

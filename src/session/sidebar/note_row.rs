@@ -8,7 +8,7 @@ use gtk::{
 use std::cell::{Cell, RefCell};
 
 use super::{Note, Selection, SelectionMode, Sidebar};
-use crate::{core::DateTime, model::note::Metadata};
+use crate::{core::DateTime, model::NoteMetadata};
 
 const MAX_SUBTITLE_LEN: usize = 100;
 const MAX_SUBTITLE_LINE: u32 = 3;
@@ -262,7 +262,7 @@ impl NoteRow {
 
         note_expression
             .chain_property::<Note>("metadata")
-            .chain_property::<Metadata>("last-modified")
+            .chain_property::<NoteMetadata>("last-modified")
             .chain_closure::<String>(closure!(|_: Self, last_modified: DateTime| {
                 last_modified.fuzzy_display()
             }))
