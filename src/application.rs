@@ -45,7 +45,6 @@ mod imp {
 
             if let Some(window) = self.window.get() {
                 let window = window.upgrade().unwrap();
-                window.show();
                 window.present();
                 return;
             }
@@ -120,7 +119,7 @@ impl Application {
             .website_label(&gettext("GitHub"))
             .build();
 
-        dialog.show();
+        dialog.present();
     }
 
     fn setup_gactions(&self) {
