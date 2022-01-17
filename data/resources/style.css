@@ -1,3 +1,7 @@
+audiovisualizer {
+  color: @accent_color;
+}
+
 .spinning > image {
   animation-name: spin;
   animation-duration: 1s;

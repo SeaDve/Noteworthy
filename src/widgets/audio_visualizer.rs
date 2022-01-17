@@ -22,6 +22,10 @@ mod imp {
         const NAME: &'static str = "NwtyAudioVisualizer";
         type Type = super::AudioVisualizer;
         type ParentType = gtk::Widget;
+
+        fn class_init(klass: &mut Self::Class) {
+            klass.set_css_name("audiovisualizer");
+        }
     }
 
     impl ObjectImpl for AudioVisualizer {}
@@ -92,9 +96,10 @@ impl AudioVisualizer {
             let rect_a = graphene::Rect::new(pointer_a, top_point, WIDTH, this_height);
             let rect_b = graphene::Rect::new(pointer_b, top_point, WIDTH, this_height);
 
+            let mut color = self.style_context().color();
+
             // Add feathering on both sides
-            let alpha = 1.0 - (index as f32 / peaks_len as f32);
-            let color = gdk::RGBA::new(0.1, 0.45, 0.8, alpha);
+            color.set_alpha(1.0 - (index as f32 / peaks_len as f32));
 
             snapshot.append_color(&color, &rect_a);
             snapshot.append_color(&color, &rect_b);
