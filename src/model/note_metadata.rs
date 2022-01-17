@@ -50,35 +50,35 @@ mod imp {
                         "Tag List",
                         "List containing the tags of the note",
                         NoteTagList::static_type(),
-                        glib::ParamFlags::READWRITE,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
                     glib::ParamSpecObject::new(
                         "attachment-list",
                         "Attachment List",
                         "List containing the attachments of the note",
                         AttachmentList::static_type(),
-                        glib::ParamFlags::READWRITE,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
                     glib::ParamSpecBoxed::new(
                         "last-modified",
                         "Last Modified",
                         "Last modified datetime of the note",
                         DateTime::static_type(),
-                        glib::ParamFlags::READWRITE,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
                     glib::ParamSpecBoolean::new(
                         "is-pinned",
                         "Is Pinned",
                         "Whether the note is pinned",
                         false,
-                        glib::ParamFlags::READWRITE,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
                     glib::ParamSpecBoolean::new(
                         "is-trashed",
                         "Is Trashed",
                         "Whether the note is in trash",
                         false,
-                        glib::ParamFlags::READWRITE,
+                        glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
                 ]
             });
@@ -95,47 +95,40 @@ mod imp {
             match pspec.name() {
                 "title" => {
                     let title = value.get().unwrap();
-
-                    if title == obj.title() {
-                        return;
-                    }
-
-                    obj.update_last_modified();
-                    self.inner.borrow_mut().title = title;
-                    obj.notify("title");
+                    obj.set_title(title);
                 }
                 "tag-list" => {
                     let tag_list = value.get().unwrap();
-                    self.inner.borrow_mut().tag_list = tag_list;
+                    obj.set_tag_list(tag_list);
                 }
                 "attachment-list" => {
                     let attachment_list = value.get().unwrap();
-                    self.inner.borrow_mut().attachment_list = attachment_list;
+                    obj.set_attachment_list(attachment_list);
                 }
                 "last-modified" => {
                     let last_modified = value.get().unwrap();
-                    self.inner.borrow_mut().last_modified = last_modified;
+                    obj.set_last_modified(last_modified);
                 }
                 "is-pinned" => {
                     let is_pinned = value.get().unwrap();
-                    self.inner.borrow_mut().is_pinned = is_pinned;
+                    obj.set_is_pinned(is_pinned);
                 }
                 "is-trashed" => {
                     let is_trashed = value.get().unwrap();
-                    self.inner.borrow_mut().is_trashed = is_trashed;
+                    obj.set_is_trashed(is_trashed);
                 }
                 _ => unimplemented!(),
             }
         }
 
-        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+        fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "title" => self.inner.borrow().title.to_value(),
-                "tag-list" => self.inner.borrow().tag_list.to_value(),
-                "attachment-list" => self.inner.borrow().attachment_list.to_value(),
-                "last-modified" => self.inner.borrow().last_modified.to_value(),
-                "is-pinned" => self.inner.borrow().is_pinned.to_value(),
-                "is-trashed" => self.inner.borrow().is_trashed.to_value(),
+                "title" => obj.title().to_value(),
+                "tag-list" => obj.tag_list().to_value(),
+                "attachment-list" => obj.attachment_list().to_value(),
+                "last-modified" => obj.last_modified().to_value(),
+                "is-pinned" => obj.is_pinned().to_value(),
+                "is-trashed" => obj.is_trashed().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -152,51 +145,83 @@ impl NoteMetadata {
     }
 
     pub fn set_title(&self, title: &str) {
-        self.set_property("title", title);
+        if title == self.title() {
+            return;
+        }
+
+        self.imp().inner.borrow_mut().title = title.to_string();
+        self.notify("title");
+
+        self.update_last_modified();
     }
 
     pub fn title(&self) -> String {
-        self.property("title")
+        self.imp().inner.borrow().title.clone()
     }
 
     pub fn set_tag_list(&self, tag_list: NoteTagList) {
-        self.set_property("tag-list", tag_list);
+        if tag_list == self.tag_list() {
+            return;
+        }
+
+        self.imp().inner.borrow_mut().tag_list = tag_list;
+        self.notify("tag-list");
     }
 
     pub fn tag_list(&self) -> NoteTagList {
-        self.property("tag-list")
+        self.imp().inner.borrow().tag_list.clone()
     }
 
     pub fn set_attachment_list(&self, attachment_list: AttachmentList) {
-        self.set_property("attachment-list", attachment_list);
+        if attachment_list == self.attachment_list() {
+            return;
+        }
+
+        self.imp().inner.borrow_mut().attachment_list = attachment_list;
+        self.notify("attachment-list");
     }
 
     pub fn attachment_list(&self) -> AttachmentList {
-        self.property("attachment-list")
+        self.imp().inner.borrow().attachment_list.clone()
     }
 
     pub fn set_last_modified(&self, last_modified: &DateTime) {
-        self.set_property("last-modified", last_modified);
+        if last_modified == &self.last_modified() {
+            return;
+        }
+
+        self.imp().inner.borrow_mut().last_modified = *last_modified;
+        self.notify("last-modified");
     }
 
     pub fn last_modified(&self) -> DateTime {
-        self.property("last-modified")
+        self.imp().inner.borrow().last_modified
     }
 
     pub fn set_is_pinned(&self, is_pinned: bool) {
-        self.set_property("is-pinned", is_pinned);
+        if is_pinned == self.is_pinned() {
+            return;
+        }
+
+        self.imp().inner.borrow_mut().is_pinned = is_pinned;
+        self.notify("is-pinned");
     }
 
     pub fn is_pinned(&self) -> bool {
-        self.property("is-pinned")
+        self.imp().inner.borrow().is_pinned
     }
 
     pub fn set_is_trashed(&self, is_trashed: bool) {
-        self.set_property("is-trashed", is_trashed);
+        if is_trashed == self.is_trashed() {
+            return;
+        }
+
+        self.imp().inner.borrow_mut().is_trashed = is_trashed;
+        self.notify("is-trashed");
     }
 
     pub fn is_trashed(&self) -> bool {
-        self.property("is-trashed")
+        self.imp().inner.borrow().is_trashed
     }
 
     pub fn update_last_modified(&self) {
