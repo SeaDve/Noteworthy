@@ -150,8 +150,8 @@ impl NoteTagDialog {
     fn set_tag_list(&self, tag_list: TagList) {
         let imp = self.imp();
 
-        let tag_name_expression = gtk::ClosureExpression::new::<String, _, _>(
-            crate::EMPTY_GTK_EXPRESSIONS,
+        let tag_name_expression = gtk::ClosureExpression::new::<String, &[gtk::Expression], _>(
+            &[],
             closure!(|tag: Tag| tag.name()),
         );
         let filter = gtk::StringFilter::builder()
