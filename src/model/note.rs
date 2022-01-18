@@ -7,9 +7,10 @@ use gtk::{
 };
 use once_cell::unsync::OnceCell;
 
-use std::cell::Cell;
+use std::{cell::Cell, path::Path};
 
 use super::{NoteId, NoteMetadata};
+use crate::utils;
 
 mod imp {
     use super::*;
@@ -59,7 +60,7 @@ mod imp {
                     glib::ParamSpecObject::new(
                         "buffer",
                         "Buffer",
-                        "Contains content fo Self",
+                        "Contains content of Self",
                         gtk_source::Buffer::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
@@ -103,6 +104,7 @@ mod imp {
             match pspec.name() {
                 "file" => obj.file().to_value(),
                 "metadata" => obj.metadata().to_value(),
+                "buffer" => obj.metadata().to_value(),
                 "is-saved" => obj.is_saved().to_value(),
                 _ => unimplemented!(),
             }
@@ -122,9 +124,11 @@ glib::wrapper! {
 }
 
 impl Note {
-    pub fn new(file: &gio::File) -> Self {
+    pub fn new(base_path: impl AsRef<Path>) -> Self {
+        let full_path = utils::generate_unique_path(base_path.as_ref(), "Note", Some("md"));
+
         glib::Object::new(&[
-            ("file", &file),
+            ("file", &gio::File::for_path(full_path)),
             ("metadata", &NoteMetadata::default()),
             ("buffer", &Self::default_buffer()),
         ])
@@ -147,7 +151,7 @@ impl Note {
 
     pub async fn save(&self) -> anyhow::Result<()> {
         if self.is_saved() {
-            log::warn!("Note is already saved, trying to save again");
+            log::warn!("Note is already saved. Skipped saving.");
             return Ok(());
         }
 

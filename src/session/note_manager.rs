@@ -278,8 +278,7 @@ impl NoteManager {
 
     pub fn create_note(&self) {
         let base_path = self.directory().path().unwrap();
-        let new_note_path = utils::generate_unique_path(base_path, "Note", Some("md"));
-        let new_note = Note::new(&gio::File::for_path(new_note_path));
+        let new_note = Note::new(base_path);
 
         log::info!("Created note `{}`", new_note);
 

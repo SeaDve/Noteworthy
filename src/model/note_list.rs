@@ -208,13 +208,13 @@ mod test {
         let note_list = NoteList::new();
         let tag = Tag::new("A");
 
-        let note_1 = Note::new(&gio::File::for_path("/home/user/note_1"));
+        let note_1 = Note::new("/home/user");
         let note_1_tag_list = note_1.metadata().tag_list();
         note_1_tag_list.append(tag.clone()).unwrap();
         assert!(note_1_tag_list.contains(&tag));
         note_list.append(note_1);
 
-        let note_2 = Note::new(&gio::File::for_path("/home/user/note_2"));
+        let note_2 = Note::new("/home/user");
         let note_2_tag_list = note_2.metadata().tag_list();
         note_2_tag_list.append(tag.clone()).unwrap();
         assert!(note_2_tag_list.contains(&tag));
