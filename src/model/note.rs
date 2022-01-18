@@ -124,6 +124,9 @@ glib::wrapper! {
 }
 
 impl Note {
+    /// Create a new note at `base_path` with extension of `md` and unique name.
+    ///
+    /// This doesn't create an actual file unless `save` is called.
     pub fn new(base_path: impl AsRef<Path>) -> Self {
         let full_path = utils::generate_unique_path(base_path.as_ref(), "Note", Some("md"));
 
@@ -135,6 +138,7 @@ impl Note {
         .expect("Failed to create Note.")
     }
 
+    /// Load a note from file
     pub async fn load(file: &gio::File) -> anyhow::Result<Self> {
         let (metadata, content) = Self::load_metadata_and_content(file).await?;
 
@@ -149,6 +153,7 @@ impl Note {
         .expect("Failed to create Note."))
     }
 
+    /// Save the metadata and content of note to file
     pub async fn save(&self) -> anyhow::Result<()> {
         if self.is_saved() {
             log::warn!("Note is already saved. Skipped saving.");
@@ -214,6 +219,7 @@ impl Note {
         })
     }
 
+    /// Load file then update metadata and content based on the new file content
     pub async fn update(&self) -> anyhow::Result<()> {
         let (metadata, content) = Self::load_metadata_and_content(self.file()).await?;
 
