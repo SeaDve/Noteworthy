@@ -235,18 +235,13 @@ impl Note {
     async fn load_metadata_and_content(file: &gio::File) -> anyhow::Result<(NoteMetadata, String)> {
         let (file_content, _) = file.load_contents_future().await?;
         let file_content = std::str::from_utf8(&file_content)?;
+
         let parsed_entity = Matter::<YAML>::new().parse(file_content);
-
-        let metadata: NoteMetadata = parsed_entity
+        let pod = parsed_entity
             .data
-            .and_then(|p| {
-                p.deserialize()
-                    .map_err(|err| log::warn!("Failed to deserialize data: {:?}", err))
-                    .ok()
-            })
-            .unwrap_or_default();
+            .ok_or_else(|| anyhow::anyhow!("ParsedEntity.data not found in `{}`", file_content))?;
 
-        Ok((metadata, parsed_entity.content))
+        Ok((pod.deserialize()?, parsed_entity.content))
     }
 
     fn default_buffer() -> gtk_source::Buffer {

@@ -15,7 +15,7 @@ use std::{
 use crate::{
     core::{NoteRepository, SyncState},
     model::{Note, NoteId, NoteList, TagList},
-    spawn, utils,
+    spawn,
 };
 
 #[derive(Debug, Default, Serialize, Deserialize)]

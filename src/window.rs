@@ -54,7 +54,9 @@ mod imp {
             self.setup
                 .connect_session_setup_done(clone!(@weak obj => move |_, session| {
                     spawn!(async move {
-                        obj.load_session(session).await.expect("Failed to load session");
+                        if let Err(err) = obj.load_session(session).await {
+                            log::error!("Failed to load session: {:?}", err);
+                        }
                     });
                 }));
 
@@ -64,7 +66,9 @@ mod imp {
                 spawn!(clone!(@weak obj => async move {
                     // FIXME detect if it is offline mode or online
                     let existing_session = Session::new_offline(&notes_folder).await;
-                    obj.load_session(existing_session).await.expect("Failed to load session");
+                    if let Err(err) = obj.load_session(existing_session).await {
+                        log::error!("Failed to load session: {:?}", err);
+                    }
                 }));
             }
         }
