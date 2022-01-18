@@ -7,10 +7,9 @@ use gtk::{
 };
 use once_cell::unsync::OnceCell;
 
-use std::{cell::Cell, path::Path};
+use std::cell::Cell;
 
 use super::{NoteId, NoteMetadata};
-use crate::utils;
 
 mod imp {
     use super::*;
@@ -20,9 +19,10 @@ mod imp {
     #[derive(Debug, Default)]
     pub struct Note {
         pub file: OnceCell<gio::File>,
-        pub is_saved: Cell<bool>,
         pub metadata: OnceCell<NoteMetadata>,
         pub buffer: OnceCell<gtk_source::Buffer>,
+        pub is_saved: Cell<bool>,
+        pub id: OnceCell<NoteId>,
     }
 
     #[glib::object_subclass]
@@ -45,30 +45,30 @@ mod imp {
                     glib::ParamSpecObject::new(
                         "file",
                         "File",
-                        "File representing where the note is stored",
+                        "File where Self is stored",
                         gio::File::static_type(),
-                        glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
+                        glib::ParamFlags::WRITABLE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
                     glib::ParamSpecObject::new(
                         "metadata",
                         "Metadata",
-                        "Metadata containing info of note",
+                        "Contains information about Self",
                         NoteMetadata::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
                     glib::ParamSpecObject::new(
                         "buffer",
                         "Buffer",
-                        "The buffer containing note text content",
+                        "Contains content fo Self",
                         gtk_source::Buffer::static_type(),
                         glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
                     ),
                     glib::ParamSpecBoolean::new(
                         "is-saved",
                         "Is Saved",
-                        "Whether the note is already saved to file",
+                        "Whether the content is saved to file",
                         false,
-                        glib::ParamFlags::READWRITE,
+                        glib::ParamFlags::READABLE,
                     ),
                 ]
             });
@@ -95,10 +95,6 @@ mod imp {
                     let buffer = value.get().unwrap();
                     self.buffer.set(buffer).unwrap();
                 }
-                "is-saved" => {
-                    let is_saved = value.get().unwrap();
-                    self.is_saved.set(is_saved);
-                }
                 _ => unimplemented!(),
             }
         }
@@ -107,7 +103,6 @@ mod imp {
             match pspec.name() {
                 "file" => obj.file().to_value(),
                 "metadata" => obj.metadata().to_value(),
-                "buffer" => obj.buffer().to_value(),
                 "is-saved" => obj.is_saved().to_value(),
                 _ => unimplemented!(),
             }
@@ -116,39 +111,8 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
+            obj.setup_signals();
             obj.set_is_saved(true);
-
-            let metadata = obj.metadata();
-
-            obj.buffer().connect_changed(clone!(@weak obj => move |_| {
-                obj.metadata().update_last_modified();
-                obj.notify("buffer"); // For some reason the subtitle doesn't get updated when the filter model is not incremental
-                obj.set_is_saved(false);
-            }));
-
-            metadata.connect_notify_local(
-                None,
-                clone!(@weak obj => move |_, _| {
-                    obj.emit_by_name::<()>("metadata-changed", &[]);
-                    obj.set_is_saved(false);
-                }),
-            );
-
-            // TODO not sure if we need to notify metadata-changed here (same with attachment_list)
-            // Unless we want to show the tags in the sidebar
-            metadata
-                .tag_list()
-                .connect_items_changed(clone!(@weak obj => move |_, _, _, _| {
-                    obj.emit_by_name::<()>("metadata-changed", &[]);
-                    obj.set_is_saved(false);
-                }));
-
-            metadata.attachment_list().connect_items_changed(
-                clone!(@weak obj => move |_, _, _, _| {
-                    obj.emit_by_name::<()>("metadata-changed", &[]);
-                    obj.set_is_saved(false);
-                }),
-            );
         }
     }
 }
@@ -158,36 +122,81 @@ glib::wrapper! {
 }
 
 impl Note {
-    pub fn new(file: &gio::File, metadata: &NoteMetadata, buffer: &gtk_source::Buffer) -> Self {
-        glib::Object::new::<Self>(&[("file", file), ("metadata", metadata), ("buffer", buffer)])
-            .expect("Failed to create Note.")
+    pub fn new(file: &gio::File) -> Self {
+        glib::Object::new(&[
+            ("file", &file),
+            ("metadata", &NoteMetadata::default()),
+            ("buffer", &Self::default_buffer()),
+        ])
+        .expect("Failed to create Note.")
     }
 
-    pub fn create_default(base_path: impl AsRef<Path>) -> Self {
-        let file_path = utils::generate_unique_path(base_path, "Note", Some("md"));
-        let file = gio::File::for_path(&file_path);
+    pub async fn load(file: &gio::File) -> anyhow::Result<Self> {
+        let (metadata, content) = Self::load_metadata_and_content(file).await?;
 
-        Self::new(&file, &NoteMetadata::default(), &Self::default_buffer())
+        let buffer = Self::default_buffer();
+        buffer.set_text(&content);
+
+        Ok(glib::Object::new(&[
+            ("file", &file),
+            ("metadata", &metadata),
+            ("buffer", &buffer),
+        ])
+        .expect("Failed to create Note."))
     }
 
-    pub fn file(&self) -> gio::File {
-        self.imp().file.get().unwrap().clone()
+    pub async fn save(&self) -> anyhow::Result<()> {
+        if self.is_saved() {
+            log::warn!("Note is already saved, trying to save again");
+            return Ok(());
+        }
+
+        // FIXME replace with non hacky implementation
+        let mut bytes = serde_yaml::to_vec(&self.metadata())?;
+
+        let delimiter = "---\n";
+        bytes.append(&mut delimiter.into());
+
+        let buffer = self.buffer();
+        let (start_iter, end_iter) = buffer.bounds();
+        let buffer_text = buffer.text(&start_iter, &end_iter, true).to_string();
+        bytes.append(&mut buffer_text.into_bytes());
+
+        self.file()
+            .replace_contents_future(bytes, None, false, gio::FileCreateFlags::NONE)
+            .await
+            .map_err(|err| err.1)?;
+
+        self.set_is_saved(true);
+
+        log::info!("Saved `{}`", self);
+
+        Ok(())
     }
 
-    pub fn metadata(&self) -> NoteMetadata {
-        self.imp().metadata.get().unwrap().clone()
+    pub fn metadata(&self) -> &NoteMetadata {
+        self.imp().metadata.get().unwrap()
     }
 
-    pub fn buffer(&self) -> gtk_source::Buffer {
-        self.imp().buffer.get().unwrap().clone()
+    pub fn buffer(&self) -> &gtk_source::Buffer {
+        self.imp().buffer.get().unwrap()
     }
 
-    pub fn id(&self) -> NoteId {
-        NoteId::from_path(&self.file().path().unwrap())
+    pub fn id(&self) -> &NoteId {
+        self.imp()
+            .id
+            .get_or_init(|| NoteId::from_path(&self.file().path().unwrap()))
     }
 
     pub fn is_saved(&self) -> bool {
         self.imp().is_saved.get()
+    }
+
+    pub fn connect_is_saved_notify<F>(&self, f: F) -> glib::SignalHandlerId
+    where
+        F: Fn(&Self) + 'static,
+    {
+        self.connect_notify_local(Some("is-saved"), move |obj, _| f(obj))
     }
 
     pub fn connect_metadata_changed<F>(&self, f: F) -> glib::SignalHandlerId
@@ -201,89 +210,39 @@ impl Note {
         })
     }
 
-    pub fn connect_is_saved_notify<F>(&self, f: F) -> glib::SignalHandlerId
-    where
-        F: Fn(&Self) + 'static,
-    {
-        self.connect_notify_local(Some("is-saved"), move |obj, _| f(obj))
-    }
-
     pub async fn update(&self) -> anyhow::Result<()> {
-        let (file_content, _) = self.file().load_contents_future().await?;
-        let file_content = std::str::from_utf8(&file_content)?;
-        let parsed_entity = Matter::<YAML>::new().parse(file_content);
+        let (metadata, content) = Self::load_metadata_and_content(self.file()).await?;
 
-        let new_metadata: NoteMetadata = parsed_entity
-            .data
-            .and_then(|p| p.deserialize().ok())
-            .unwrap_or_default();
-
-        let imp = self.imp();
-
-        let metadata = imp.metadata.get().unwrap();
-        metadata.update(&new_metadata);
-
-        let buffer = imp.buffer.get().unwrap();
-        buffer.set_text(&parsed_entity.content);
+        self.metadata().update(&metadata);
+        self.buffer().set_text(&content);
 
         Ok(())
     }
 
-    pub async fn deserialize(file: &gio::File) -> anyhow::Result<Self> {
+    fn set_is_saved(&self, is_saved: bool) {
+        self.imp().is_saved.set(is_saved);
+        self.notify("is-saved");
+    }
+
+    fn file(&self) -> &gio::File {
+        self.imp().file.get().unwrap()
+    }
+
+    async fn load_metadata_and_content(file: &gio::File) -> anyhow::Result<(NoteMetadata, String)> {
         let (file_content, _) = file.load_contents_future().await?;
         let file_content = std::str::from_utf8(&file_content)?;
         let parsed_entity = Matter::<YAML>::new().parse(file_content);
 
         let metadata: NoteMetadata = parsed_entity
             .data
-            .and_then(|p| p.deserialize().ok())
+            .and_then(|p| {
+                p.deserialize()
+                    .map_err(|err| log::warn!("Failed to deserialize data: {:?}", err))
+                    .ok()
+            })
             .unwrap_or_default();
 
-        let buffer = Self::default_buffer();
-        buffer.set_text(&parsed_entity.content);
-
-        log::info!("File `{}` is loaded", file.path().unwrap().display());
-
-        Ok(Self::new(file, &metadata, &buffer))
-    }
-
-    pub async fn serialize(&self) -> anyhow::Result<()> {
-        if self.is_saved() {
-            // TODO consider removing this
-            log::error!("Note is already saved, trying to save again");
-            return Ok(());
-        }
-
-        let bytes = self.serialize_to_bytes()?;
-        self.file()
-            .replace_contents_future(bytes, None, false, gio::FileCreateFlags::NONE)
-            .await
-            .map_err(|err| err.1)?;
-
-        self.set_is_saved(true);
-
-        log::info!("Saved `{}`", self);
-
-        Ok(())
-    }
-
-    fn set_is_saved(&self, is_saved: bool) {
-        self.set_property("is-saved", is_saved);
-    }
-
-    fn serialize_to_bytes(&self) -> anyhow::Result<Vec<u8>> {
-        // FIXME replace with not hacky implementation
-        let mut bytes = serde_yaml::to_vec(&self.metadata())?;
-
-        let delimiter = "---\n".to_string();
-        bytes.append(&mut delimiter.into_bytes());
-
-        let buffer = self.buffer();
-        let (start_iter, end_iter) = buffer.bounds();
-        let buffer_text = buffer.text(&start_iter, &end_iter, true).to_string();
-        bytes.append(&mut buffer_text.into_bytes());
-
-        Ok(bytes)
+        Ok((metadata, parsed_entity.content))
     }
 
     fn default_buffer() -> gtk_source::Buffer {
@@ -296,6 +255,40 @@ impl Note {
                     .unwrap(),
             )
             .build()
+    }
+
+    fn setup_signals(&self) {
+        self.buffer()
+            .connect_changed(clone!(@weak self as obj => move |_| {
+                obj.metadata().update_last_modified();
+                obj.set_is_saved(false);
+            }));
+
+        let metadata = self.metadata();
+
+        metadata.connect_notify_local(
+            None,
+            clone!(@weak self as obj => move |_, _| {
+                obj.emit_by_name::<()>("metadata-changed", &[]);
+                obj.set_is_saved(false);
+            }),
+        );
+
+        // TODO not sure if we need to notify metadata-changed here (same with attachment_list)
+        // Unless we want to show the tags in the sidebar
+        metadata
+            .tag_list()
+            .connect_items_changed(clone!(@weak self as obj => move |_, _, _, _| {
+                obj.emit_by_name::<()>("metadata-changed", &[]);
+                obj.set_is_saved(false);
+            }));
+
+        metadata.attachment_list().connect_items_changed(
+            clone!(@weak self as obj => move |_, _, _, _| {
+                obj.emit_by_name::<()>("metadata-changed", &[]);
+                obj.set_is_saved(false);
+            }),
+        );
     }
 }
 

@@ -145,6 +145,6 @@ impl ItemBuilder {
             properties.push(("model", model));
         }
 
-        glib::Object::new::<Item>(&properties).expect("Failed to create an instance of Item")
+        glib::Object::new(&properties).expect("Failed to create an instance of Item")
     }
 }

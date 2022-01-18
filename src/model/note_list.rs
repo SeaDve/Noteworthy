@@ -96,7 +96,7 @@ impl NoteList {
             // So we could use GtkSourceFileLoader and GtkSourceFileSaver to handle
             // saving and loading, and perhaps reduce allocations on serializing into buffer and
             // deserializiations.
-            let note = Note::deserialize(&file).await?;
+            let note = Note::load(&file).await?;
             note_list.append(note);
         }
 
@@ -105,7 +105,7 @@ impl NoteList {
 
     pub fn append(&self, note: Note) {
         note.connect_metadata_changed(clone!(@weak self as obj => move |note| {
-            if let Some(position) = obj.get_index_of(&note.id()) {
+            if let Some(position) = obj.get_index_of(note.id()) {
                 obj.items_changed(position as u32, 1, 1);
             }
         }));
@@ -122,7 +122,7 @@ impl NoteList {
             }
         }));
 
-        self.imp().list.borrow_mut().insert(note.id(), note);
+        self.imp().list.borrow_mut().insert(note.id().clone(), note);
 
         self.items_changed(self.n_items() - 1, 0, 1);
     }
@@ -201,20 +201,20 @@ mod test {
 
     #[test]
     fn remove_tag_on_all() {
-        // Gtk has to be initialized when Note::create_default is called since
+        // Gtk has to be initialized when a note is constructed since
         // GtkSourceView requires it.
         gtk::init().unwrap();
 
         let note_list = NoteList::new();
         let tag = Tag::new("A");
 
-        let note_1 = Note::create_default("/home/user");
+        let note_1 = Note::new(&gio::File::for_path("/home/user/note_1"));
         let note_1_tag_list = note_1.metadata().tag_list();
         note_1_tag_list.append(tag.clone()).unwrap();
         assert!(note_1_tag_list.contains(&tag));
         note_list.append(note_1);
 
-        let note_2 = Note::create_default("/home/user");
+        let note_2 = Note::new(&gio::File::for_path("/home/user/note_2"));
         let note_2_tag_list = note_2.metadata().tag_list();
         note_2_tag_list.append(tag.clone()).unwrap();
         assert!(note_2_tag_list.contains(&tag));

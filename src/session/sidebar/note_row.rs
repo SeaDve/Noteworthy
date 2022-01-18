@@ -36,6 +36,8 @@ mod imp {
         pub is_selected: Cell<bool>,
         pub position: Cell<u32>,
         pub note: RefCell<Option<Note>>,
+
+        pub buffer_changed_handler_id: RefCell<Option<glib::SignalHandlerId>>,
     }
 
     #[glib::object_subclass]
@@ -203,8 +205,21 @@ impl NoteRow {
     }
 
     pub fn set_note(&self, note: Option<Note>) {
-        self.imp().note.replace(note);
+        let imp = self.imp();
+
+        if let Some(ref note) = note {
+            imp.buffer_changed_handler_id
+                .replace(Some(note.buffer().connect_changed(
+                    clone!(@weak self as obj => move |_| {
+                        obj.update_subtitle_label();
+                    }),
+                )));
+        }
+
+        imp.note.replace(note);
         self.notify("note");
+
+        self.update_subtitle_label();
     }
 
     // TODO remove this, maybe just emit a signal from NoteRow and let sidebar handle changing
@@ -217,50 +232,52 @@ impl NoteRow {
             .selection_model()
     }
 
+    fn update_subtitle_label(&self) {
+        let note = match self.note() {
+            Some(note) => note,
+            None => return,
+        };
+
+        let mut iter = note.buffer().start_iter();
+        let mut subtitle = String::from(iter.char());
+
+        let mut line_count = 0;
+        let mut last_non_empty_char_index = 0;
+
+        while iter.forward_char() {
+            if subtitle.len() >= MAX_SUBTITLE_LEN || line_count >= MAX_SUBTITLE_LINE {
+                break;
+            }
+
+            let character = iter.char();
+
+            if character == '\n' {
+                line_count += 1;
+            }
+
+            subtitle.push(character);
+
+            if !character.is_whitespace() {
+                last_non_empty_char_index = subtitle.len() - 1;
+            }
+        }
+
+        subtitle.truncate(last_non_empty_char_index + 1);
+
+        // Panicking when subtitle contains `\u{0}`
+        let trimmed_subtitle = subtitle.trim_matches(char::from(0));
+
+        self.imp().subtitle_label.set_label(trimmed_subtitle);
+    }
+
     fn setup_expressions(&self) {
-        let imp = self.imp();
-
-        let note_expression = Self::this_expression("note");
-
-        note_expression
-            .chain_property::<Note>("buffer")
-            .chain_closure::<String>(closure!(|_: Self, buffer: gtk_source::Buffer| {
-                let mut iter = buffer.start_iter();
-                let mut subtitle = String::from(iter.char());
-
-                let mut line_count = 0;
-                let mut last_non_empty_char_index = 0;
-
-                while iter.forward_char() {
-                    if subtitle.len() >= MAX_SUBTITLE_LEN || line_count >= MAX_SUBTITLE_LINE {
-                        break;
-                    }
-
-                    let character = iter.char();
-
-                    if character == '\n' {
-                        line_count += 1;
-                    }
-
-                    subtitle.push(character);
-
-                    if !character.is_whitespace() {
-                        last_non_empty_char_index = subtitle.len() - 1;
-                    }
-                }
-
-                subtitle.truncate(last_non_empty_char_index + 1);
-                subtitle
-            }))
-            .bind(&imp.subtitle_label.get(), "label", Some(self));
-
-        note_expression
+        Self::this_expression("note")
             .chain_property::<Note>("metadata")
             .chain_property::<NoteMetadata>("last-modified")
             .chain_closure::<String>(closure!(|_: Self, last_modified: DateTime| {
                 last_modified.fuzzy_display()
             }))
-            .bind(&imp.time_label.get(), "label", Some(self));
+            .bind(&self.imp().time_label.get(), "label", Some(self));
     }
 
     fn setup_signals(&self) {

@@ -101,7 +101,7 @@ glib::wrapper! {
 
 impl RepositoryWatcher {
     pub fn new(base_path: &gio::File, remote_name: &str) -> Self {
-        glib::Object::new::<Self>(&[("base-path", &base_path), ("remote-name", &remote_name)])
+        glib::Object::new(&[("base-path", &base_path), ("remote-name", &remote_name)])
             .expect("Failed to create RepositoryWatcher.")
     }
 

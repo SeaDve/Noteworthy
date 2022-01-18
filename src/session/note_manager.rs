@@ -15,7 +15,7 @@ use std::{
 use crate::{
     core::{NoteRepository, SyncState},
     model::{Note, NoteId, NoteList, TagList},
-    spawn,
+    spawn, utils,
 };
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -175,7 +175,7 @@ impl NoteManager {
             }
         };
 
-        glib::Object::new::<Self>(&[
+        glib::Object::new(&[
             ("directory", directory),
             ("repository", &repository),
             ("is-offline-mode", &is_offline_mode),
@@ -253,7 +253,7 @@ impl NoteManager {
         }
 
         for note in &unsaved_notes {
-            note.serialize().await?;
+            note.save().await?;
         }
 
         Ok(())
@@ -278,10 +278,12 @@ impl NoteManager {
 
     pub fn create_note(&self) {
         let base_path = self.directory().path().unwrap();
-        let new_note = Note::create_default(&base_path);
-        self.note_list().append(new_note);
+        let new_note_path = utils::generate_unique_path(base_path, "Note", Some("md"));
+        let new_note = Note::new(&gio::File::for_path(new_note_path));
 
-        log::info!("Created note with base_path `{}`", base_path.display());
+        log::info!("Created note `{}`", new_note);
+
+        self.note_list().append(new_note);
     }
 
     pub async fn load(&self) -> anyhow::Result<()> {
@@ -334,7 +336,7 @@ impl NoteManager {
                 git2::Delta::Added => {
                     log::info!("Sync: Found added files `{}`; appending...", path.display());
                     let file = gio::File::for_path(&path);
-                    let added_note = Note::deserialize(&file).await?;
+                    let added_note = Note::load(&file).await?;
                     note_list.append(added_note);
                 }
                 git2::Delta::Deleted => {

@@ -80,7 +80,7 @@ glib::wrapper! {
 
 impl AudioRecorder {
     pub fn new() -> Self {
-        glib::Object::new::<Self>(&[]).expect("Failed to create AudioRecorder.")
+        glib::Object::new(&[]).expect("Failed to create AudioRecorder.")
     }
 
     pub fn connect_peak_notify<F>(&self, f: F) -> glib::SignalHandlerId

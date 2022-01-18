@@ -123,7 +123,7 @@ glib::wrapper! {
 
 impl AudioPlayer {
     pub fn new() -> Self {
-        glib::Object::new::<Self>(&[]).expect("Failed to create AudioPlayer.")
+        glib::Object::new(&[]).expect("Failed to create AudioPlayer.")
     }
 
     pub fn connect_state_notify<F>(&self, f: F) -> glib::SignalHandlerId

@@ -63,7 +63,7 @@ glib::wrapper! {
 
 impl Tag {
     pub fn new(name: &str) -> Self {
-        glib::Object::new::<Self>(&[("name", &name.to_string())]).expect("Failed to create Tag.")
+        glib::Object::new(&[("name", &name.to_string())]).expect("Failed to create Tag.")
     }
 
     /// Must not be called directly if a tag is in a `TagList` or `NoteTagList`.

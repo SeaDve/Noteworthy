@@ -143,13 +143,10 @@ impl View {
                 .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
                 .build();
             bindings.push(title_binding);
-
-            let buffer_binding = note
-                .bind_property("buffer", &imp.source_view.get(), "buffer")
-                .flags(glib::BindingFlags::SYNC_CREATE)
-                .build();
-            bindings.push(buffer_binding);
         }
+
+        imp.source_view
+            .set_buffer(note.as_ref().map(|note| note.buffer()));
 
         imp.note.replace(note);
         self.notify("note");

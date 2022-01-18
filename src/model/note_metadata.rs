@@ -141,7 +141,7 @@ glib::wrapper! {
 
 impl NoteMetadata {
     pub fn new() -> Self {
-        glib::Object::new::<Self>(&[]).expect("Failed to create NoteMetadata.")
+        glib::Object::new(&[]).expect("Failed to create NoteMetadata.")
     }
 
     pub fn set_title(&self, title: &str) {

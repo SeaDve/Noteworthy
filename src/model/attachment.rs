@@ -113,7 +113,7 @@ glib::wrapper! {
 
 impl Attachment {
     pub fn new(file: &gio::File, created: &DateTime) -> Self {
-        glib::Object::new::<Self>(&[("file", file), ("created", created)])
+        glib::Object::new(&[("file", file), ("created", created)])
             .expect("Failed to create Attachment.")
     }
 

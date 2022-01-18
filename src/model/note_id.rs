@@ -1,7 +1,7 @@
 use std::{ffi::OsStr, path::Path};
 
 // TODO optimize this (Reduce size of id in generating unique file name in utils.rs)
-#[derive(Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct NoteId {
     id: Box<OsStr>,
 }
