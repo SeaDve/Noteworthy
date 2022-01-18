@@ -71,9 +71,17 @@ impl NoteList {
             )
             .await?;
 
-        let note_list = Self::new();
+        let mut notes = Vec::new();
 
-        for file_info in file_infos.flatten() {
+        for file_info in file_infos {
+            let file_info = match file_info {
+                Ok(file_info) => file_info,
+                Err(err) => {
+                    log::warn!("Failed to load file info: {:?}", err);
+                    continue;
+                }
+            };
+
             let file_path = {
                 let mut file_path = directory.path().unwrap();
                 file_path.push(file_info.name());
@@ -97,38 +105,67 @@ impl NoteList {
             // saving and loading, and perhaps reduce allocations on serializing into buffer and
             // deserializiations.
             let note = Note::load(&file).await?;
-            note_list.append(note);
+            notes.push(note);
+        }
+
+        let note_list = NoteList::new();
+
+        if !note_list.append_many(notes) {
+            log::warn!("Failed to append all notes");
         }
 
         Ok(note_list)
     }
 
-    pub fn append(&self, note: Note) {
-        note.connect_metadata_changed(clone!(@weak self as obj => move |note| {
-            if let Some(position) = obj.get_index_of(note.id()) {
-                obj.items_changed(position as u32, 1, 1);
+    /// If an equivalent [`Note`] already exists in the list, it returns false leaving the original
+    /// value in the list. Otherwise, it inserts the new [`Note`] and returns true.
+    ///
+    /// The equivalence of the [`Note`] depends on its [`NoteId`]
+    pub fn append(&self, note: Note) -> bool {
+        let is_appended = self.append_inner(note);
+
+        if is_appended {
+            self.items_changed(self.n_items() - 1, 0, 1);
+        }
+
+        is_appended
+    }
+
+    /// It tries to append all [`Note`]s. When any of the note already exist, it returns false
+    /// leaving the original value of the existing [`Note`]s. If all [`Note`]s are unique, it
+    /// returns true.
+    ///
+    /// This is more efficient than [`NoteList::append`] since it emits `items-changed` only once
+    pub fn append_many(&self, notes: Vec<Note>) -> bool {
+        let initial_notes_len = notes.len();
+
+        let mut n_appended = 0;
+
+        {
+            for note in notes {
+                if self.append_inner(note) {
+                    n_appended += 1;
+                }
             }
-        }));
+        }
 
-        note.connect_is_saved_notify(clone!(@weak self as obj => move |note| {
-            let mut unsaved_notes = obj.imp().unsaved_notes.borrow_mut();
+        if n_appended > 0 {
+            self.items_changed(self.n_items() - 1, 0, n_appended);
+        }
 
-            if note.is_saved() {
-                let res = unsaved_notes.remove(note);
-                log::info!("Removed unsaved note with ret `{}`", res);
-            } else {
-                let res = unsaved_notes.insert(note.clone());
-                log::info!("Inserted unsaved note with ret `{}`", res);
-            }
-        }));
-
-        self.imp().list.borrow_mut().insert(note.id().clone(), note);
-
-        self.items_changed(self.n_items() - 1, 0, 1);
+        n_appended as usize == initial_notes_len
     }
 
     pub fn remove(&self, note_id: &NoteId) {
-        let removed = self.imp().list.borrow_mut().shift_remove_full(note_id);
+        let imp = self.imp();
+
+        imp.unsaved_notes.borrow_mut().remove(
+            &self
+                .get(note_id)
+                .expect("Trying to remove a note that doesn't exist"),
+        );
+
+        let removed = imp.list.borrow_mut().shift_remove_full(note_id);
 
         if let Some((position, _, _)) = removed {
             self.items_changed(position as u32, 1, 0);
@@ -166,6 +203,32 @@ impl NoteList {
 
     pub fn iter(&self) -> Iter {
         Iter::new(self.clone())
+    }
+
+    fn append_inner(&self, note: Note) -> bool {
+        note.connect_metadata_changed(clone!(@weak self as obj => move |note| {
+            if let Some(position) = obj.get_index_of(note.id()) {
+                obj.items_changed(position as u32, 1, 1);
+            }
+        }));
+
+        note.connect_is_saved_notify(clone!(@weak self as obj => move |note| {
+            let mut unsaved_notes = obj.imp().unsaved_notes.borrow_mut();
+
+            if note.is_saved() {
+                let res = unsaved_notes.remove(note);
+                log::info!("Removed unsaved note with ret `{}`", res);
+            } else {
+                let res = unsaved_notes.insert(note.clone());
+                log::info!("Inserted unsaved note with ret `{}`", res);
+            }
+        }));
+
+        self.imp()
+            .list
+            .borrow_mut()
+            .insert(note.id().clone(), note)
+            .is_none()
     }
 }
 
