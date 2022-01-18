@@ -2,12 +2,13 @@
 // Modified to be bidirectional and use snapshots instead of cairo
 // See https://gitlab.gnome.org/GNOME/gnome-sound-recorder/-/blob/master/src/waveform.js
 
-use gtk::{glib, graphene, prelude::*, subclass::prelude::*};
+use gtk::{gdk, glib, graphene, gsk, prelude::*, subclass::prelude::*};
 
 use std::{cell::RefCell, collections::VecDeque};
 
-const GUTTER: f32 = 6.0;
-const WIDTH: f32 = 2.0;
+const GUTTER: f32 = 9.0;
+const WIDTH: f32 = 3.0;
+const RADIUS: f32 = 8.0;
 
 mod imp {
     use super::*;
@@ -74,21 +75,23 @@ impl AudioVisualizer {
     }
 
     fn on_snapshot(&self, snapshot: &gtk::Snapshot) {
-        let max_height = self.allocated_height() as f32;
-        let v_center = max_height / 2.0;
-        let h_center = self.allocated_width() as f32 / 2.0;
+        let width = self.width() as f32;
+        let height = self.height() as f32;
+
+        let h_center = width as f32 / 2.0;
+        let v_center = height / 2.0;
 
         let mut pointer_a = h_center;
         let mut pointer_b = h_center;
 
-        let peaks = self.peaks();
-        let peaks_len = peaks.len();
+        let clear = gdk::RGBA::new(0.0, 0.0, 0.0, 0.0);
+        let color = self.style_context().color();
 
-        for (index, peak) in peaks.iter().rev().enumerate() {
+        for (index, peak) in self.peaks().iter().rev().enumerate() {
             // This makes both sides decrease logarithmically.
             // Starts at index 2 because log0 is undefined and log1 is 0.
-            // Multiply by 6.0 to compensate on log.
-            let peak_max_height = max_height.log(index as f32 + 2.0) * peak * 6.0;
+            // Multiply by 2.5 to compensate on log.
+            let peak_max_height = height.log(index as f32 + 2.0) * peak * 2.5;
 
             let top_point = v_center + peak_max_height;
             let this_height = -2.0 * peak_max_height;
@@ -96,16 +99,32 @@ impl AudioVisualizer {
             let rect_a = graphene::Rect::new(pointer_a, top_point, WIDTH, this_height);
             let rect_b = graphene::Rect::new(pointer_b, top_point, WIDTH, this_height);
 
-            let mut color = self.style_context().color();
+            pointer_a -= GUTTER;
+            pointer_b += GUTTER;
 
-            // Add feathering on both sides
-            color.set_alpha(1.0 - (index as f32 / peaks_len as f32));
+            snapshot.push_rounded_clip(&gsk::RoundedRect::from_rect(rect_a, RADIUS));
+            snapshot.append_linear_gradient(
+                &graphene::Rect::new(0.0, 0.0, h_center, height),
+                &graphene::Point::new(0.0, v_center),
+                &graphene::Point::new(h_center, v_center),
+                &[
+                    gsk::ColorStop::new(0.0, clear),
+                    gsk::ColorStop::new(1.0, color),
+                ],
+            );
+            snapshot.pop();
 
-            snapshot.append_color(&color, &rect_a);
-            snapshot.append_color(&color, &rect_b);
-
-            pointer_a += GUTTER;
-            pointer_b -= GUTTER;
+            snapshot.push_rounded_clip(&gsk::RoundedRect::from_rect(rect_b, RADIUS));
+            snapshot.append_linear_gradient(
+                &graphene::Rect::new(h_center, 0.0, h_center, height),
+                &graphene::Point::new(width, v_center),
+                &graphene::Point::new(h_center, v_center),
+                &[
+                    gsk::ColorStop::new(0.0, clear),
+                    gsk::ColorStop::new(1.0, color),
+                ],
+            );
+            snapshot.pop();
         }
     }
 }
