@@ -6,7 +6,7 @@ use gtk::{gdk, glib, graphene, gsk, prelude::*, subclass::prelude::*};
 
 use std::{cell::RefCell, collections::VecDeque};
 
-const GUTTER: f32 = 9.0;
+const GUTTER: f32 = 6.0;
 const WIDTH: f32 = 3.0;
 const RADIUS: f32 = 8.0;
 
@@ -91,7 +91,7 @@ impl AudioVisualizer {
             // This makes both sides decrease logarithmically.
             // Starts at index 2 because log0 is undefined and log1 is 0.
             // Multiply by 2.5 to compensate on log.
-            let peak_max_height = height.log(index as f32 + 2.0) * peak * 2.5;
+            let peak_max_height = height.log(index as f32 + 2.0) * peak * 2.8;
 
             let top_point = v_center + peak_max_height;
             let this_height = -2.0 * peak_max_height;
