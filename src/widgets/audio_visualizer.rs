@@ -7,8 +7,8 @@ use gtk::{gdk, glib, graphene, gsk, prelude::*, subclass::prelude::*};
 use std::{cell::RefCell, collections::VecDeque};
 
 const GUTTER: f32 = 6.0;
-const WIDTH: f32 = 3.0;
-const RADIUS: f32 = 8.0;
+const LINE_WIDTH: f32 = 3.0;
+const LINE_RADIUS: f32 = 8.0;
 
 mod imp {
     use super::*;
@@ -96,13 +96,13 @@ impl AudioVisualizer {
             let top_point = v_center + peak_max_height;
             let this_height = -2.0 * peak_max_height;
 
-            let rect_a = graphene::Rect::new(pointer_a, top_point, WIDTH, this_height);
-            let rect_b = graphene::Rect::new(pointer_b, top_point, WIDTH, this_height);
+            let rect_a = graphene::Rect::new(pointer_a, top_point, LINE_WIDTH, this_height);
+            let rect_b = graphene::Rect::new(pointer_b, top_point, LINE_WIDTH, this_height);
 
             pointer_a -= GUTTER;
             pointer_b += GUTTER;
 
-            snapshot.push_rounded_clip(&gsk::RoundedRect::from_rect(rect_a, RADIUS));
+            snapshot.push_rounded_clip(&gsk::RoundedRect::from_rect(rect_a, LINE_RADIUS));
             snapshot.append_linear_gradient(
                 &graphene::Rect::new(0.0, 0.0, h_center, height),
                 &graphene::Point::new(0.0, v_center),
@@ -114,7 +114,7 @@ impl AudioVisualizer {
             );
             snapshot.pop();
 
-            snapshot.push_rounded_clip(&gsk::RoundedRect::from_rect(rect_b, RADIUS));
+            snapshot.push_rounded_clip(&gsk::RoundedRect::from_rect(rect_b, LINE_RADIUS));
             snapshot.append_linear_gradient(
                 &graphene::Rect::new(h_center, 0.0, h_center, height),
                 &graphene::Point::new(width, v_center),
