@@ -87,11 +87,12 @@ impl AudioVisualizer {
         let clear = gdk::RGBA::new(0.0, 0.0, 0.0, 0.0);
         let color = self.style_context().color();
 
-        for (index, peak) in self.peaks().iter().rev().enumerate() {
-            // This makes both sides decrease logarithmically.
-            // Starts at index 2 because log0 is undefined and log1 is 0.
-            // Multiply by 2.5 to compensate on log.
-            let peak_max_height = height.log(index as f32 + 2.0) * peak * 2.8;
+        let peaks = self.peaks();
+        let peaks_len = peaks.len();
+
+        for (index, peak) in self.peaks().iter().enumerate().rev() {
+            let peak_max_height =
+                ease_in_out_quad(index as f32 / peaks_len as f32) * (*peak) * v_center;
 
             let top_point = v_center + peak_max_height;
             let this_height = -2.0 * peak_max_height;
@@ -126,5 +127,13 @@ impl AudioVisualizer {
             );
             snapshot.pop();
         }
+    }
+}
+
+fn ease_in_out_quad(x: f32) -> f32 {
+    if x < 0.5 {
+        2.0 * x * x
+    } else {
+        (-2.0 * x * x) + x.mul_add(4.0, -1.0)
     }
 }
