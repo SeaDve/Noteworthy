@@ -26,7 +26,7 @@ mod imp {
                     "Name",
                     "Name of the tag",
                     None,
-                    glib::ParamFlags::READWRITE,
+                    glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                 )]
             });
             PROPERTIES.as_ref()
@@ -34,7 +34,7 @@ mod imp {
 
         fn set_property(
             &self,
-            _obj: &Self::Type,
+            obj: &Self::Type,
             _id: usize,
             value: &glib::Value,
             pspec: &glib::ParamSpec,
@@ -42,15 +42,15 @@ mod imp {
             match pspec.name() {
                 "name" => {
                     let name = value.get().unwrap();
-                    self.name.replace(name);
+                    obj.set_name(name);
                 }
                 _ => unimplemented!(),
             }
         }
 
-        fn property(&self, _obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+        fn property(&self, obj: &Self::Type, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             match pspec.name() {
-                "name" => self.name.borrow().to_value(),
+                "name" => obj.name().to_value(),
                 _ => unimplemented!(),
             }
         }
@@ -69,11 +69,12 @@ impl Tag {
     /// Must not be called directly if a tag is in a `TagList` or `NoteTagList`.
     /// Use `TagList::rename_tag` instead as it contains sanity checks and other handling.
     pub(super) fn set_name(&self, name: &str) {
-        self.set_property("name", name);
+        self.imp().name.replace(name.to_string());
+        self.notify("name");
     }
 
     pub fn name(&self) -> String {
-        self.property("name")
+        self.imp().name.borrow().clone()
     }
 
     pub fn connect_name_notify<F>(&self, f: F) -> glib::SignalHandlerId
@@ -94,5 +95,31 @@ impl<'de> Deserialize<'de> for Tag {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let name = String::deserialize(deserializer)?;
         Ok(Self::new(&name))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn name() {
+        let tag = Tag::new("Tag 1");
+        assert_eq!(tag.name(), "Tag 1");
+
+        tag.set_name("New name");
+        assert_eq!(tag.name(), "New name");
+    }
+
+    #[test]
+    fn serialize() {
+        let tag = Tag::new("A tag");
+        assert_eq!(serde_yaml::to_string(&tag).unwrap(), "---\nA tag\n");
+    }
+
+    #[test]
+    fn deserialize() {
+        let tag: Tag = serde_yaml::from_str("A tag").unwrap();
+        assert_eq!(tag.name(), "A tag");
     }
 }
