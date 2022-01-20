@@ -18,95 +18,45 @@ run_command(
   check: true
 )
 
-rust_sources = files(
-  'core/note_repository/mod.rs',
-  'core/note_repository/repository.rs',
-  'core/note_repository/repository_watcher.rs',
-  'core/note_repository/sync_state.rs',
-  'core/audio_player.rs',
-  'core/audio_player_handler.rs',
-  'core/audio_recorder.rs',
-  'core/audio_recording.rs',
-  'core/clock_time.rs',
-  'core/date_time.rs',
-  'core/file_type.rs',
-  'core/mod.rs',
-  'core/ssh_key.rs',
-  'model/attachment.rs',
-  'model/attachment_list.rs',
-  'model/mod.rs',
-  'model/note.rs',
-  'model/note_id.rs',
-  'model/note_list.rs',
-  'model/note_metadata.rs',
-  'model/note_tag_list.rs',
-  'model/tag.rs',
-  'model/tag_list.rs',
-  'session/content/attachment_view/audio_recorder_button.rs',
-  'session/content/attachment_view/audio_row.rs',
-  'session/content/attachment_view/camera_button.rs',
-  'session/content/attachment_view/file_importer_button.rs',
-  'session/content/attachment_view/mod.rs',
-  'session/content/attachment_view/other_row.rs',
-  'session/content/attachment_view/picture_row.rs',
-  'session/content/attachment_view/row.rs',
-  'session/content/view/tag_bar/mod.rs',
-  'session/content/view/tag_bar/row.rs',
-  'session/content/view/mod.rs',
-  'session/content/mod.rs',
-  'session/note_tag_dialog/mod.rs',
-  'session/note_tag_dialog/note_tag_lists.rs',
-  'session/note_tag_dialog/row.rs',
-  'session/sidebar/view_switcher/item.rs',
-  'session/sidebar/view_switcher/item_kind.rs',
-  'session/sidebar/view_switcher/item_row.rs',
-  'session/sidebar/view_switcher/mod.rs',
-  'session/sidebar/mod.rs',
-  'session/sidebar/note_row.rs',
-  'session/sidebar/selection.rs',
-  'session/sidebar/sync_button.rs',
-  'session/tag_editor/mod.rs',
-  'session/tag_editor/row.rs',
-  'session/mod.rs',
-  'session/note_manager.rs',
-  'widgets/audio_visualizer.rs',
-  'widgets/camera.rs',
-  'widgets/mod.rs',
-  'widgets/time_label.rs',
-  'application.rs',
-  'config.rs',
-  'main.rs',
-  'setup.rs',
-  'utils.rs',
-  'window.rs',
-)
+manifest_path = meson.source_root() / 'Cargo.toml'
+cargo_home = meson.build_root() / 'cargo-home'
 
-sources = [rust_sources, cargo_sources]
+cargo_options = [ '--manifest-path', manifest_path ]
+cargo_options += [ '--target-dir', meson.build_root() / 'src' ]
 
-custom_target(
+if get_option('profile') == 'default'
+  cargo_options += [ '--release' ]
+  rust_target = 'release'
+  message('Building in release mode')
+else
+  rust_target = 'debug'
+  message('Building in debug mode')
+endif
+
+cargo_env = [ 'CARGO_HOME=' + cargo_home ]
+
+cargo_build = custom_target(
   'cargo-build',
   build_by_default: true,
-  input: sources,
+  build_always_stale: true,
   output: meson.project_name(),
   console: true,
   install: true,
   install_dir: bindir,
   depends: resources,
   command: [
-    cargo_script,
-    meson.build_root(),
-    meson.source_root(),
-    '@OUTPUT@',
-    profile,
-    meson.project_name(),
+    'env',
+    cargo_env,
+    cargo, 'build',
+    cargo_options,
+    '&&',
+    'cp', 'src' / rust_target / meson.project_name(), '@OUTPUT@',
   ]
 )
 
 cargo_target_dir = meson.build_root() / 'target'
-cargo_home = meson.build_root() / 'cargo-home'
-manifest_path = meson.source_root() / 'Cargo.toml'
 
-test (
+test(
   'cargo-test',
   cargo,
   args: [
@@ -123,7 +73,7 @@ test (
   timeout: 300, # give cargo more time
 )
 
-test (
+test(
   'cargo-clippy',
   cargo,
   args: [

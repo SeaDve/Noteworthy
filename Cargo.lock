@@ -241,9 +241,9 @@ dependencies = [
 
 [[package]]
 name = "gdk4"
-version = "0.4.2"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "228384db1fd6539f51152c97e59fbf29b6293988ee89bc915ebff229eb5cda58"
+checksum = "319c74160dbe3e29cc1bf36ae4a08b9072f352b751e9e3e5501b3aa3ca633f66"
 dependencies = [
  "bitflags",
  "cairo-rs",
@@ -432,9 +432,9 @@ dependencies = [
 
 [[package]]
 name = "gsk4"
-version = "0.4.2"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc7de6ca62027aea1d3ab5d4a6bb2db24a296f56473d8a9a4d7ee33042745ff3"
+checksum = "0672c63e4101e19d5e9cb4a0aed8b3278e9573529bd0b6a86d9c748c71bd9882"
 dependencies = [
  "bitflags",
  "cairo-rs",
@@ -488,9 +488,9 @@ dependencies = [
 
 [[package]]
 name = "gstreamer"
-version = "0.18.0"
+version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "939fd4f8afd09be887d05bb7ced532f215f21401837bf59f9fd2f68608e1e285"
+checksum = "8050dd478c50f1796595275eb8f21b2e1c2604f7797fcd2cc513c7af710bb4ac"
 dependencies = [
  "bitflags",
  "cfg-if",
@@ -595,9 +595,9 @@ dependencies = [
 
 [[package]]
 name = "gstreamer-video"
-version = "0.18.0"
+version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c5f4d1bdccb60be70c63001d331e4945d9b61bf77610e33584525df10633917"
+checksum = "410c72d885a67aeb7dbfa49c347e6c85d60f54e1cdaf6aadf8b5364892451261"
 dependencies = [
  "bitflags",
  "cfg-if",
@@ -627,9 +627,9 @@ dependencies = [
 
 [[package]]
 name = "gtk4"
-version = "0.4.2"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8622c50f55cbe83e78335cf95850ccefa99e8eac3335ef7d17473312402d7e89"
+checksum = "b5020aeb559e0431930d66d85b8f16fc453fc0863466b13b7e1e1b800cf1a47b"
 dependencies = [
  "bitflags",
  "cairo-rs",
@@ -650,9 +650,9 @@ dependencies = [
 
 [[package]]
 name = "gtk4-macros"
-version = "0.4.2"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c666e9d310431da43cb9d24995b247e5e24d11972d19bcd8b40e1663d25d0f51"
+checksum = "573db42bb64973a4d5f718b73caa7204285a1a665308a23b11723d0ee56ec305"
 dependencies = [
  "anyhow",
  "proc-macro-crate",
