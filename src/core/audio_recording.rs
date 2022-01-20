@@ -25,7 +25,7 @@ impl AudioRecording {
         self.file.path().unwrap()
     }
 
-    pub async fn delete(&self) -> Result<(), glib::Error> {
+    pub async fn delete(self) -> Result<(), glib::Error> {
         self.file.delete_future(glib::PRIORITY_DEFAULT_IDLE).await
     }
 
