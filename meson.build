@@ -14,16 +14,8 @@ base_id = 'io.github.seadve.Noteworthy'
 dependency('glib-2.0', version: '>= 2.66')
 dependency('gio-2.0', version: '>= 2.66')
 dependency('gtk4', version: '>= 4.5.0')
-dependency(
-  'libadwaita-1', version: '>= 1.0.0.beta.1',
-  fallback: ['libadwaita', 'libadwaita_dep'],
-  default_options: ['tests=false', 'examples=false', 'vapi=false']
-)
-dependency(
-  'gtksourceview-5', version: '>= 5.0.0',
-  fallback: ['gtksourceview', 'gtksource_dep'],
-  default_options: ['gtk_doc=false', 'sysprof=false', 'gir=false', 'vapi=false', 'install_tests=false']
-)
+dependency('libadwaita-1', version: '>= 1.0.0')
+dependency('gtksourceview-5', version: '>= 5.0.0')
 dependency('gstreamer-1.0', version: '>= 1.18')
 dependency('gstreamer-base-1.0', version: '>= 1.18')
 dependency('gstreamer-plugins-base-1.0', version: '>= 1.18')
