@@ -7,7 +7,7 @@ import sys
 import time
 from argparse import Namespace
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from xml.etree import ElementTree
 
 ERR = "\033[1;31m"
@@ -122,13 +122,52 @@ class Typos(Check):
         return self.version() is not None
 
 
-class Potfiles(Check):
-    """Check if files in po/POTFILES.in are correct.
+class PotfilesAlphabetically(Check):
+    """Check if files in POTFILES are sorted alphabetically
 
-    This checks, in that order:
-        - All files exist
-        - All files with translatable strings are present and only those
-        - Files are sorted alphabetically
+    This assumes the following:
+        - POTFILES is located at 'po/POTFILES.in'
+    """
+
+    def subject(self):
+        return "po/POTFILES.in alphabetical order"
+
+    def run(self):
+        files = self._get_files()
+
+        for file, sorted_file in zip(files, sorted(files)):
+            if file != sorted_file:
+                raise FailedCheckError(
+                    error_message=f"Found file `{file}` before `{sorted_file}` in POTFILES.in"
+                )
+
+    def _get_files(self) -> List[str]:
+        with open("po/POTFILES.in") as potfiles:
+            return [line.strip() for line in potfiles.readlines()]
+
+
+class PotfilesExist(Check):
+    """Check if all files in POTFILES exist
+
+    This assumes the following:
+        - POTFILES is located at 'po/POTFILES.in'
+    """
+
+    def subject(self):
+        return "po/POTFILES.in all files exist"
+
+    def run(self):
+        with open("po/POTFILES.in") as potfiles:
+            for line in potfiles.readlines():
+                file = Path(line.strip())
+                if not file.exists():
+                    raise FailedCheckError(
+                        error_message=f"File `{file}` does not exist"
+                    )
+
+
+class PotfilesSanity(Check):
+    """Check if all files with translatable strings are present and only those.
 
     This assumes the following:
         - POTFILES is located at 'po/POTFILES.in'
@@ -136,36 +175,17 @@ class Potfiles(Check):
         - Rust files are located in 'src' and use '*gettext' methods or macros
     """
 
-    _all_potfiles: List[Path] = []
-
-    _rust_potfiles: List[Path] = []
-    _ui_potfiles: List[Path] = []
-
-    def __init__(self):
-        with open("po/POTFILES.in") as potfiles:
-            for line in potfiles.readlines():
-                file = Path(line.strip())
-
-                self._all_potfiles.append(file)
-
-                if file.suffix == ".ui":
-                    self._ui_potfiles.append(file)
-                elif file.suffix == ".rs":
-                    self._rust_potfiles.append(file)
-
     def subject(self):
-        return "po/POTFILES.in"
+        return "po/POTFILES.in sanity"
 
     def run(self):
-        for file in self._all_potfiles:
-            if not file.exists():
-                raise FailedCheckError(error_message=f"File `{file}` does not exist")
+        (ui_potfiles, rust_potfiles) = self._get_potfiles()
 
         ui_potfiles, ui_files = self._remove_common_files(
-            self._ui_potfiles, self._ui_files_with_translatable_yes()
+            ui_potfiles, self._get_ui_files()
         )
         rust_potfiles, rust_files = self._remove_common_files(
-            self._rust_potfiles, self._rust_files_with_gettext()
+            rust_potfiles, self._get_rust_files()
         )
 
         n_potfiles = len(rust_potfiles) + len(ui_potfiles)
@@ -196,12 +216,6 @@ class Potfiles(Check):
 
             raise FailedCheckError(error_message="\n".join(message))
 
-        for file, sorted_file in zip(self._all_potfiles, sorted(self._all_potfiles)):
-            if file != sorted_file:
-                raise FailedCheckError(
-                    error_message=f"Found file `{file}` before `{sorted_file}` in POTFILES.in"
-                )
-
     def _remove_common_files(self, set_a: List[Path], set_b: List[Path]):
         for file_a in list(set_a):
             for file_b in list(set_b):
@@ -210,19 +224,38 @@ class Potfiles(Check):
                     set_b.remove(file_b)
         return set_a, set_b
 
-    def _ui_files_with_translatable_yes(self) -> List[Path]:
+    def _get_potfiles(self) -> Tuple[List[Path], List[Path]]:
+        ui_potfiles = []
+        rust_potfiles = []
+
+        with open("po/POTFILES.in") as potfiles:
+            for line in potfiles.readlines():
+                file = Path(line.strip())
+
+                if file.suffix == ".ui":
+                    ui_potfiles.append(file)
+                elif file.suffix == ".rs":
+                    rust_potfiles.append(file)
+
+        return (ui_potfiles, rust_potfiles)
+
+    def _get_ui_files(self) -> List[Path]:
         output = get_output(
             "grep -lIr 'translatable=\"yes\"' data/resources/ui/*", shell=True
         )
         return list(map(lambda s: Path(s), output.splitlines()))
 
-    def _rust_files_with_gettext(self) -> List[Path]:
+    def _get_rust_files(self) -> List[Path]:
         output = get_output(r"grep -lIrE 'gettext[!]?\(' src/*", shell=True)
         return list(map(lambda s: Path(s), output.splitlines()))
 
 
 class Resources(Check):
-    """Check if files in data/resources/resources.gresource.xml are sorted alphabetically."""
+    """Check if files in data/resources/resources.gresource.xml are sorted alphabetically.
+
+    This assumes the following:
+        - gresource file is located in `data/resources/resources.gresource.xml`
+    """
 
     def subject(self):
         return "data/resources/resources.gresource.xml"
@@ -347,7 +380,9 @@ def main(args: Namespace):
     if not args.skip_typos:
         runner.add(Typos())
 
-    runner.add(Potfiles())
+    runner.add(PotfilesExist())
+    runner.add(PotfilesSanity())
+    runner.add(PotfilesAlphabetically())
     runner.add(Resources())
 
     if runner.run_all():
