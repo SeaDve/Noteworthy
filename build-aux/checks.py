@@ -271,6 +271,7 @@ class Resources(Check):
 
     This assumes the following:
         - gresource file is located in `data/resources/resources.gresource.xml`
+        - only one gresource in the file
     """
 
     def subject(self):
