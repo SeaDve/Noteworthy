@@ -81,12 +81,14 @@ class Rustfmt(Check):
         return "code style"
 
     def run(self):
-        if self.version is None:
+        try:
+            return_code = run(["cargo", "fmt", "--all", "--", "--check"])
+        except FileNotFoundError:
             raise MissingDependencyError(
                 "cargo fmt", install_command="rustup component add rustfmt"
             )
 
-        if run(["cargo", "fmt", "--all", "--", "--check"]) != 0:
+        if return_code != 0:
             raise FailedCheckError(
                 suggestion_message="either manually or by running `cargo fmt --all`"
             )
@@ -105,12 +107,14 @@ class Typos(Check):
         return "spelling mistakes"
 
     def run(self):
-        if self.version() is None:
+        try:
+            return_code = run(["typos", "--color", "always"])
+        except FileNotFoundError:
             raise MissingDependencyError(
                 "typos", install_command="cargo install typos-cli"
             )
 
-        if run(["typos", "--color", "always"]) != 0:
+        if return_code != 0:
             raise FailedCheckError(
                 suggestion_message="either manually or by running `typos -w`"
             )
