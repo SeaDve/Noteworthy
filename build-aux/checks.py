@@ -67,6 +67,9 @@ class Check:
     def __init__(self, prerequisite_checks: List[Check] = []):
         self._prerequisite_checks = prerequisite_checks
 
+    def __repr__(self):
+        return self.__class__.__name__
+
     def get_prerequisite_checks(self) -> List[Check]:
         return self._prerequisite_checks
 
@@ -329,17 +332,20 @@ class Runner:
         """Returns true if all are successful"""
 
         n_checks = len(self._checks)
+        n_skipped = 0
+        n_failed = 0
 
         print(f"running {n_checks} checks")
 
         start_time = time.time()
 
         for check in self._checks:
-            if not self._can_run(check):
+            if not self._has_complete_prerequisite(check):
+                n_skipped += 1
                 self._print_check(
                     check.subject(),
                     check.version() if args.verbose else None,
-                    SKIPPED,
+                    f"{SKIPPED} (requires {check.get_prerequisite_checks()})",
                 )
                 continue
 
@@ -347,6 +353,7 @@ class Runner:
                 check.run()
             except FailedCheckError as e:
                 remark = FAILED
+                n_failed += 1
 
                 if e.message() is not None:
                     print("")
@@ -357,6 +364,8 @@ class Runner:
                 print("")
             except MissingDependencyError as e:
                 remark = FAILED
+                n_failed += 1
+
                 print("")
                 print(e)
                 print("")
@@ -374,29 +383,29 @@ class Runner:
         n_successful_checks = len(self._successful_checks)
 
         print("")
-        self._print_result(n_checks, n_successful_checks, check_duration)
+        self._print_result(
+            n_checks, n_successful_checks, n_failed, n_skipped, check_duration
+        )
 
         return n_successful_checks == n_checks
 
-    def _can_run(self, check: Check) -> bool:
-        """Returns True if all checks that `check` depends on are successful; otherwise, it returns False"""
-
+    def _has_complete_prerequisite(self, check: Check) -> bool:
         for prerequisite_check in check.get_prerequisite_checks():
             if prerequisite_check not in self._successful_checks:
                 return False
         return True
 
     @staticmethod
-    def _print_result(total: int, n_successful: int, duration: float):
-        n_failed = total - n_successful
-
+    def _print_result(
+        total: int, n_successful: int, n_failed: int, n_skipped: int, duration: float
+    ):
         if total == n_successful:
             result = OK
         else:
             result = FAILED
 
         print(
-            f"test result: {result}. {n_successful} passed; {n_failed} failed; finished in {duration:.2f}s"
+            f"test result: {result}. {n_successful} passed; {n_failed} failed; {n_skipped} skipped; finished in {duration:.2f}s"
         )
 
     @staticmethod
