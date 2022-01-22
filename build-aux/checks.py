@@ -251,6 +251,83 @@ class Resources(Check):
                 )
 
 
+class Runner:
+
+    _checks: List[Check] = []
+
+    def add(self, check: Check):
+        self._checks.append(check)
+
+    def run_all(self) -> bool:
+        """Returns true if all are successful"""
+
+        n_checks = len(self._checks)
+
+        print(f"running {n_checks} checks")
+
+        start_time = time.time()
+        successful_checks = []
+
+        for check in self._checks:
+            try:
+                check.run()
+            except FailedCheckError as e:
+                remark = FAILED
+
+                if e.message() is not None:
+                    print("")
+                    print(e.message())
+
+                print("")
+                print(e.suggestion())
+                print("")
+            except MissingDependencyError as e:
+                remark = FAILED
+                print("")
+                print(e)
+                print("")
+                print(e.suggestion())
+                print("")
+            else:
+                remark = OK
+                successful_checks.append(check)
+
+            self._print_check(
+                check.subject(), check.version() if args.verbose else None, remark
+            )
+
+        check_duration = time.time() - start_time
+        n_successful_checks = len(successful_checks)
+
+        print("")
+        self._print_result(n_checks, n_successful_checks, check_duration)
+
+        return n_successful_checks == n_checks
+
+    def _print_result(self, total: int, n_successful: int, duration: float):
+        n_failed = total - n_successful
+
+        if total == n_successful:
+            result = OK
+        else:
+            result = FAILED
+
+        print(
+            f"test result: {result}. {n_successful} passed; {n_failed} failed; finished in {duration:.2f}s"
+        )
+
+    def _print_check(self, subject: str, version: Optional[str], remark: str):
+        messages = ["check", subject]
+
+        if version is not None:
+            messages.append(f"({version})")
+
+        messages.append("...")
+        messages.append(remark)
+
+        print(" ".join(messages))
+
+
 def run(args: List[str], **kwargs) -> int:
     process = subprocess.run(args, **kwargs)
     return process.returncode
@@ -261,83 +338,19 @@ def get_output(*args, **kwargs) -> str:
     return process.stdout.decode("utf-8").strip()
 
 
-def print_check(subject: str, version: Optional[str], remark: str):
-    messages = ["check", subject]
-
-    if version is not None:
-        messages.append(f"({version})")
-
-    messages.append("...")
-    messages.append(remark)
-
-    print(" ".join(messages))
-
-
-def print_result(total: int, n_successful: int, duration: float):
-    n_failed = total - n_successful
-
-    if total == n_successful:
-        result = OK
-    else:
-        result = FAILED
-
-    print(
-        f"test result: {result}. {n_successful} passed; {n_failed} failed; finished in {duration:.2f}s"
-    )
-
-
 def main(args: Namespace):
-    checks = [
-        Potfiles(),
-        Resources(),
-    ]
+    runner = Runner()
 
     if not args.skip_rustfmt:
-        checks.append(Rustfmt())
+        runner.add(Rustfmt())
 
     if not args.skip_typos:
-        checks.append(Typos())
+        runner.add(Typos())
 
-    n_checks = len(checks)
+    runner.add(Potfiles())
+    runner.add(Resources())
 
-    print(f"running {n_checks} checks")
-
-    start_time = time.time()
-
-    successful_checks = []
-
-    for check in checks:
-        try:
-            check.run()
-        except FailedCheckError as e:
-            remark = FAILED
-
-            if e.message() is not None:
-                print("")
-                print(e.message())
-
-            print("")
-            print(e.suggestion())
-            print("")
-        except MissingDependencyError as e:
-            remark = FAILED
-            print("")
-            print(e)
-            print("")
-            print(e.suggestion())
-            print("")
-        else:
-            remark = OK
-            successful_checks.append(check)
-
-        print_check(check.subject(), check.version() if args.verbose else None, remark)
-
-    check_duration = time.time() - start_time
-
-    print("")
-    print_result(n_checks, len(successful_checks), check_duration)
-
-    if len(successful_checks) == n_checks:
+    if runner.run_all():
         sys.exit(os.EX_OK)
     else:
         sys.exit(1)
