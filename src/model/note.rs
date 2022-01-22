@@ -194,7 +194,7 @@ impl Note {
     pub fn id(&self) -> &NoteId {
         self.imp()
             .id
-            .get_or_init(|| NoteId::from_path(&self.file().path().unwrap()))
+            .get_or_init(|| NoteId::for_path(&self.file().path().unwrap()))
     }
 
     pub fn is_saved(&self) -> bool {

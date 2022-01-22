@@ -343,7 +343,7 @@ impl NoteManager {
                         "Sync: Found removed files `{}`; removing...",
                         path.display()
                     );
-                    let note_id = NoteId::from_path(path);
+                    let note_id = NoteId::for_path(path);
                     note_list.remove(&note_id);
                 }
                 git2::Delta::Modified => {
@@ -351,7 +351,7 @@ impl NoteManager {
                         "Sync: Found modified files `{}`; updating...",
                         path.display()
                     );
-                    let note_id = NoteId::from_path(path);
+                    let note_id = NoteId::for_path(path);
                     let note = note_list.get(&note_id).unwrap();
                     note.update().await?;
                 }
