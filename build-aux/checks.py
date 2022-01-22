@@ -288,11 +288,15 @@ def print_result(total: int, n_successful: int, duration: float):
 
 def main(args: Namespace):
     checks = [
-        Rustfmt(),
-        Typos(),
         Potfiles(),
         Resources(),
     ]
+
+    if not args.skip_rustfmt:
+        checks.append(Rustfmt())
+
+    if not args.skip_typos:
+        checks.append(Typos())
 
     n_checks = len(checks)
 
@@ -347,6 +351,15 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Use verbose output"
+    )
+    parser.add_argument(
+        "-sr",
+        "--skip-rustfmt",
+        action="store_true",
+        help="Whether to skip running cargo fmt",
+    )
+    parser.add_argument(
+        "-st", "--skip-typos", action="store_true", help="Whether to skip running typos"
     )
     args = parser.parse_args()
 

@@ -11,17 +11,32 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
+      - name: Run checks.py
+        run: python build-aux/checks.py --verbose --skip-rustfmt --skip-typos
+
+  rustfmt:
+    name: Rustfmt
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: stable
           override: true
           components: rustfmt
-      - uses: crate-ci/typos@v1.0.4
       - name: Create blank versions of configured file
         run: echo -e "" >> src/config.rs
-      - name: Run checks.py
-        run: python build-aux/checks.py --verbose
+      - name: Run rustfmt
+        run: cargo fmt --all -- --check
+
+  typos:
+    name: Typos
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Check for typos
+        uses: crate-ci/typos@master
 
   codespell:
     name: Codespell
