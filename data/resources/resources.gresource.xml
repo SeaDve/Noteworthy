@@ -5,6 +5,7 @@
     <file compressed="true" preprocess="xml-stripblanks">icons/scalable/status/external-link-symbolic.svg</file>
     <file compressed="true" preprocess="xml-stripblanks">icons/scalable/status/sidebar-toggle-right-symbolic.svg</file>
     <file compressed="true" preprocess="xml-stripblanks">icons/scalable/status/tag-symbolic.svg</file>
+    <file compressed="true">style.css</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/camera.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/content.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/content-attachment-view.ui</file>
@@ -32,6 +33,5 @@
     <file compressed="true" preprocess="xml-stripblanks">ui/tag-editor-row.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/time-label.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/window.ui</file>
-    <file compressed="true">style.css</file>
   </gresource>
 </gresources>
