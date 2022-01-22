@@ -6,6 +6,14 @@ on:
 name: CI
 
 jobs:
+  checks:
+    name: Checks
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run checks.py
+        run: python build-aux/checks.py --verbose --skip-rustfmt
+
   codespell:
     name: Codespell
     runs-on: ubuntu-20.04
@@ -28,9 +36,9 @@ jobs:
           toolchain: stable
           override: true
           components: rustfmt
-      - name: "Create blank versions of configured file"
+      - name: Create blank versions of configured file
         run: echo -e "" >> src/config.rs
-      - name: "Run rustfmt"
+      - name: Run rustfmt
         run: cargo fmt --all -- --check
 
   flatpak:
