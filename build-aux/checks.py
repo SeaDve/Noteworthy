@@ -157,13 +157,29 @@ class PotfilesExist(Check):
         return "po/POTFILES.in all files exist"
 
     def run(self):
+        files = self._get_non_existent_files()
+        n_files = len(files)
+
+        if n_files > 0:
+            message = [
+                f"Found {n_files} file{'s'[:n_files^1]} in POTFILES.in that does not exist:"
+            ]
+
+            for file in files:
+                message.append(str(file))
+
+            raise FailedCheckError(error_message="\n".join(message))
+
+    def _get_non_existent_files(self) -> List[Path]:
+        files = []
+
         with open("po/POTFILES.in") as potfiles:
             for line in potfiles.readlines():
                 file = Path(line.strip())
                 if not file.exists():
-                    raise FailedCheckError(
-                        error_message=f"File `{file}` does not exist"
-                    )
+                    files.append(file)
+
+        return files
 
 
 class PotfilesSanity(Check):
@@ -205,7 +221,7 @@ class PotfilesSanity(Check):
         n_files = len(rust_files) + len(ui_files)
         if n_files != 0:
             message = [
-                f"Found {n_files} file{'s'[:n_potfiles^1]} with translatable strings not present in POTFILES.in:"
+                f"Found {n_files} file{'s'[:n_files^1]} with translatable strings not present in POTFILES.in:"
             ]
 
             for file in rust_files:
