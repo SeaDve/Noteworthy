@@ -394,7 +394,7 @@ def get_output(*args, **kwargs) -> str:
     return process.stdout.decode("utf-8").strip()
 
 
-def main(args: Namespace):
+def main(args: Namespace) -> int:
     runner = Runner()
 
     if not args.skip_rustfmt:
@@ -409,9 +409,9 @@ def main(args: Namespace):
     runner.add(Resources())
 
     if runner.run_all():
-        sys.exit(os.EX_OK)
+        return os.EX_OK
     else:
-        sys.exit(1)
+        return 1
 
 
 if __name__ == "__main__":
@@ -434,4 +434,4 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    main(args)
+    sys.exit(main(args))
