@@ -62,13 +62,13 @@ class FailedCheckError(Exception):
 
 class Check:
 
-    _depends_on: List[Check] = []
+    _prerequisite_checks: List[Check] = []
 
-    def __init__(self, depends_on: List[Check] = []):
-        self._depends_on = depends_on
+    def __init__(self, prerequisite_checks: List[Check] = []):
+        self._prerequisite_checks = prerequisite_checks
 
-    def get_depends_on(self) -> List[Check]:
-        return self._depends_on
+    def get_prerequisite_checks(self) -> List[Check]:
+        return self._prerequisite_checks
 
     def version(self) -> Optional[str]:
         return None
@@ -381,8 +381,8 @@ class Runner:
     def _can_run(self, check: Check) -> bool:
         """Returns True if all checks that `check` depends on are successful; otherwise, it returns False"""
 
-        for depend_on in check.get_depends_on():
-            if depend_on not in self._successful_checks:
+        for prerequisite_check in check.get_prerequisite_checks():
+            if prerequisite_check not in self._successful_checks:
                 return False
         return True
 
@@ -433,7 +433,7 @@ def main(args: Namespace) -> int:
 
     potfiles_exist = PotfilesExist()
     runner.add(potfiles_exist)
-    runner.add(PotfilesSanity(depends_on=[potfiles_exist]))
+    runner.add(PotfilesSanity(prerequisite_checks=[potfiles_exist]))
 
     runner.add(PotfilesAlphabetically())
     runner.add(Resources())
