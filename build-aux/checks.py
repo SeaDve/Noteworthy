@@ -121,7 +121,7 @@ class Typos(Check):
 
 
 class PotfilesAlphabetically(Check):
-    """Check if files in POTFILES are sorted alphabetically
+    """Check if files in POTFILES are sorted alphabetically.
 
     This assumes the following:
         - POTFILES is located at 'po/POTFILES.in'
@@ -146,7 +146,7 @@ class PotfilesAlphabetically(Check):
 
 
 class PotfilesExist(Check):
-    """Check if all files in POTFILES exist
+    """Check if all files in POTFILES exist.
 
     This assumes the following:
         - POTFILES is located at 'po/POTFILES.in'
