@@ -3,10 +3,7 @@
 # Source: https://gitlab.gnome.org/GNOME/fractal/blob/master/hooks/pre-commit.hook
 
 # Style helpers
-act="\e[1;32m"
 err="\e[1;31m"
-pos="\e[32m"
-neg="\e[31m"
 res="\e[0m"
 
 echo "-- Pre-commit checks --"
