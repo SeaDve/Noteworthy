@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Source: https://gitlab.gnome.org/GNOME/fractal/blob/master/hooks/pre-commit.hook
+from __future__ import annotations
 
 import os
 import subprocess
@@ -11,13 +12,15 @@ from typing import List, Optional, Tuple
 from xml.etree import ElementTree
 
 ERR = "\033[1;31m"
-POS = "\033[32m"
+WARN = "\033[1;33m"
 NEG = "\033[31m"
+POS = "\033[32m"
 ENDC = "\033[0m"
 
 FAILED = f"{ERR}FAILED{ENDC}"
 OK = f"{POS}ok{ENDC}"
 ERROR = f"{NEG}error{ENDC}"
+SKIPPED = f"{WARN}SKIPPED{ENDC}"
 
 
 class MissingDependencyError(Exception):
@@ -58,6 +61,15 @@ class FailedCheckError(Exception):
 
 
 class Check:
+
+    _depends_on: List[Check] = []
+
+    def __init__(self, depends_on: List[Check] = []):
+        self._depends_on = depends_on
+
+    def get_depends_on(self) -> List[Check]:
+        return self._depends_on
+
     def version(self) -> Optional[str]:
         return None
 
@@ -308,6 +320,7 @@ class Resources(Check):
 class Runner:
 
     _checks: List[Check] = []
+    _successful_checks: List[Check] = []
 
     def add(self, check: Check):
         self._checks.append(check)
@@ -320,9 +333,16 @@ class Runner:
         print(f"running {n_checks} checks")
 
         start_time = time.time()
-        successful_checks = []
 
         for check in self._checks:
+            if not self._can_run(check):
+                self._print_check(
+                    check.subject(),
+                    check.version() if args.verbose else None,
+                    SKIPPED,
+                )
+                continue
+
             try:
                 check.run()
             except FailedCheckError as e:
@@ -344,19 +364,27 @@ class Runner:
                 print("")
             else:
                 remark = OK
-                successful_checks.append(check)
+                self._successful_checks.append(check)
 
             self._print_check(
                 check.subject(), check.version() if args.verbose else None, remark
             )
 
         check_duration = time.time() - start_time
-        n_successful_checks = len(successful_checks)
+        n_successful_checks = len(self._successful_checks)
 
         print("")
         self._print_result(n_checks, n_successful_checks, check_duration)
 
         return n_successful_checks == n_checks
+
+    def _can_run(self, check: Check) -> bool:
+        """Returns True if all checks that `check` depends on are successful; otherwise, it returns False"""
+
+        for depend_on in check.get_depends_on():
+            if depend_on not in self._successful_checks:
+                return False
+        return True
 
     @staticmethod
     def _print_result(total: int, n_successful: int, duration: float):
@@ -403,8 +431,10 @@ def main(args: Namespace) -> int:
     if not args.skip_typos:
         runner.add(Typos())
 
-    runner.add(PotfilesExist())
-    runner.add(PotfilesSanity())
+    potfiles_exist = PotfilesExist()
+    runner.add(potfiles_exist)
+    runner.add(PotfilesSanity(depends_on=[potfiles_exist]))
+
     runner.add(PotfilesAlphabetically())
     runner.add(Resources())
 
