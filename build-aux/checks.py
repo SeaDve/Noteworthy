@@ -135,7 +135,8 @@ class PotfilesAlphabetically(Check):
                     error_message=f"Found file `{file}` before `{sorted_file}` in POTFILES.in"
                 )
 
-    def _get_files(self) -> List[str]:
+    @staticmethod
+    def _get_files() -> List[str]:
         with open("po/POTFILES.in") as potfiles:
             return [line.strip() for line in potfiles.readlines()]
 
@@ -164,7 +165,8 @@ class PotfilesExist(Check):
 
             raise FailedCheckError(error_message="\n".join(message))
 
-    def _get_non_existent_files(self) -> List[Path]:
+    @staticmethod
+    def _get_non_existent_files() -> List[Path]:
         files = []
 
         with open("po/POTFILES.in") as potfiles:
@@ -226,7 +228,8 @@ class PotfilesSanity(Check):
 
             raise FailedCheckError(error_message="\n".join(message))
 
-    def _remove_common_files(self, set_a: List[Path], set_b: List[Path]):
+    @staticmethod
+    def _remove_common_files(set_a: List[Path], set_b: List[Path]):
         for file_a in list(set_a):
             for file_b in list(set_b):
                 if file_a == file_b:
@@ -234,7 +237,8 @@ class PotfilesSanity(Check):
                     set_b.remove(file_b)
         return set_a, set_b
 
-    def _get_potfiles(self) -> Tuple[List[Path], List[Path]]:
+    @staticmethod
+    def _get_potfiles() -> Tuple[List[Path], List[Path]]:
         ui_potfiles = []
         rust_potfiles = []
 
@@ -249,13 +253,15 @@ class PotfilesSanity(Check):
 
         return (ui_potfiles, rust_potfiles)
 
-    def _get_ui_files(self) -> List[Path]:
+    @staticmethod
+    def _get_ui_files() -> List[Path]:
         output = get_output(
             "grep -lIr 'translatable=\"yes\"' data/resources/ui/*", shell=True
         )
         return list(map(lambda s: Path(s), output.splitlines()))
 
-    def _get_rust_files(self) -> List[Path]:
+    @staticmethod
+    def _get_rust_files() -> List[Path]:
         output = get_output(r"grep -lIrE 'gettext[!]?\(' src/*", shell=True)
         return list(map(lambda s: Path(s), output.splitlines()))
 
@@ -348,7 +354,8 @@ class Runner:
 
         return n_successful_checks == n_checks
 
-    def _print_result(self, total: int, n_successful: int, duration: float):
+    @staticmethod
+    def _print_result(total: int, n_successful: int, duration: float):
         n_failed = total - n_successful
 
         if total == n_successful:
@@ -360,7 +367,8 @@ class Runner:
             f"test result: {result}. {n_successful} passed; {n_failed} failed; finished in {duration:.2f}s"
         )
 
-    def _print_check(self, subject: str, version: Optional[str], remark: str):
+    @staticmethod
+    def _print_check(subject: str, version: Optional[str], remark: str):
         messages = ["check", subject]
 
         if version is not None:
