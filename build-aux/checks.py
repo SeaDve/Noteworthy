@@ -81,7 +81,7 @@ class Rustfmt(Check):
         return "code style"
 
     def run(self):
-        if not self._does_cargo_fmt_exist():
+        if self.version is None:
             raise MissingDependencyError(
                 "cargo fmt", install_command="rustup component add rustfmt"
             )
@@ -90,9 +90,6 @@ class Rustfmt(Check):
             raise FailedCheckError(
                 suggestion_message="either manually or by running `cargo fmt --all`"
             )
-
-    def _does_cargo_fmt_exist(self) -> bool:
-        return self.version() is not None
 
 
 class Typos(Check):
@@ -108,7 +105,7 @@ class Typos(Check):
         return "spelling mistakes"
 
     def run(self):
-        if not self._does_typos_exist():
+        if self.version() is None:
             raise MissingDependencyError(
                 "typos", install_command="cargo install typos-cli"
             )
@@ -117,9 +114,6 @@ class Typos(Check):
             raise FailedCheckError(
                 suggestion_message="either manually or by running `typos -w`"
             )
-
-    def _does_typos_exist(self) -> bool:
-        return self.version() is not None
 
 
 class PotfilesAlphabetically(Check):
