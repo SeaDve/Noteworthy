@@ -22,37 +22,37 @@ ERROR = f"{NEG}error{ENDC}"
 
 class MissingDependencyError(Exception):
     def __init__(self, whats_missing: str, install_command=None):
-        self.whats_missing = whats_missing
-        self.install_command = install_command
+        self._whats_missing = whats_missing
+        self._install_command = install_command
 
     def __str__(self):
-        return f"{ERROR}: Missing dependency `{self.whats_missing}`"
+        return f"{ERROR}: Missing dependency `{self._whats_missing}`"
 
     def suggestion(self) -> str:
-        message = f"Please install `{self.whats_missing}` first "
+        message = f"Please install `{self._whats_missing}` first "
 
-        if self.install_command is not None:
-            message += f"by running `{self.install_command}`"
+        if self._install_command is not None:
+            message += f"by running `{self._install_command}`"
 
         return message
 
 
 class FailedCheckError(Exception):
     def __init__(self, error_message=None, suggestion_message=None):
-        self.error_message = error_message
-        self.suggestion_message = suggestion_message
+        self._error_message = error_message
+        self._suggestion_message = suggestion_message
 
     def message(self) -> Optional[str]:
-        if self.error_message is not None:
-            return f"{ERROR}: {self.error_message}"
+        if self._error_message is not None:
+            return f"{ERROR}: {self._error_message}"
         else:
             return None
 
     def suggestion(self) -> str:
         message = "Please fix the above issues"
 
-        if self.suggestion_message is not None:
-            message += f", {self.suggestion_message}"
+        if self._suggestion_message is not None:
+            message += f", {self._suggestion_message}"
 
         return message
 
@@ -72,7 +72,10 @@ class Rustfmt(Check):
     """Run rustfmt to enforce code style."""
 
     def version(self):
-        return get_output(["cargo", "fmt", "--version"])
+        try:
+            return get_output(["cargo", "fmt", "--version"])
+        except FileNotFoundError:
+            return None
 
     def subject(self):
         return "code style"
@@ -89,19 +92,17 @@ class Rustfmt(Check):
             )
 
     def _does_cargo_fmt_exist(self) -> bool:
-        try:
-            run(["cargo", "fmt", "--version"], capture_output=True)
-        except FileNotFoundError:
-            return False
-        else:
-            return True
+        return self.version() is not None
 
 
 class Typos(Check):
     """Run typos to check for spelling mistakes."""
 
     def version(self):
-        return get_output(["typos", "--version"])
+        try:
+            return get_output(["typos", "--version"])
+        except FileNotFoundError:
+            return None
 
     def subject(self):
         return "spelling mistakes"
@@ -118,12 +119,7 @@ class Typos(Check):
             )
 
     def _does_typos_exist(self) -> bool:
-        try:
-            run(["typos", "--version"], capture_output=True)
-        except FileNotFoundError:
-            return False
-        else:
-            return True
+        return self.version() is not None
 
 
 class Potfiles(Check):
@@ -140,36 +136,36 @@ class Potfiles(Check):
         - Rust files are located in 'src' and use '*gettext' methods or macros
     """
 
-    all_potfiles: List[Path] = []
+    _all_potfiles: List[Path] = []
 
-    rust_potfiles: List[Path] = []
-    ui_potfiles: List[Path] = []
+    _rust_potfiles: List[Path] = []
+    _ui_potfiles: List[Path] = []
 
     def __init__(self):
         with open("po/POTFILES.in") as potfiles:
             for line in potfiles.readlines():
                 file = Path(line.strip())
 
-                self.all_potfiles.append(file)
+                self._all_potfiles.append(file)
 
                 if file.suffix == ".ui":
-                    self.ui_potfiles.append(file)
+                    self._ui_potfiles.append(file)
                 elif file.suffix == ".rs":
-                    self.rust_potfiles.append(file)
+                    self._rust_potfiles.append(file)
 
     def subject(self):
         return "po/POTFILES.in"
 
     def run(self):
-        for file in self.all_potfiles:
+        for file in self._all_potfiles:
             if not file.exists():
                 raise FailedCheckError(error_message=f"File `{file}` does not exist")
 
         ui_potfiles, ui_files = self._remove_common_files(
-            self.ui_potfiles, self._ui_files_with_translatable_yes()
+            self._ui_potfiles, self._ui_files_with_translatable_yes()
         )
         rust_potfiles, rust_files = self._remove_common_files(
-            self.rust_potfiles, self._rust_files_with_gettext()
+            self._rust_potfiles, self._rust_files_with_gettext()
         )
 
         n_potfiles = len(rust_potfiles) + len(ui_potfiles)
@@ -200,7 +196,7 @@ class Potfiles(Check):
 
             raise FailedCheckError(error_message="\n".join(message))
 
-        for file, sorted_file in zip(self.all_potfiles, sorted(self.all_potfiles)):
+        for file, sorted_file in zip(self._all_potfiles, sorted(self._all_potfiles)):
             if file != sorted_file:
                 raise FailedCheckError(
                     error_message=f"Found file `{file}` before `{sorted_file}` in POTFILES.in"
@@ -235,13 +231,13 @@ class Resources(Check):
         # Do not consider path suffix on sorting
         class File:
             def __init__(self, path: str):
-                self.path = Path(path)
+                self._path = Path(path)
 
             def __str__(self):
-                return self.path.__str__()
+                return self._path.__str__()
 
             def __lt__(self, other):
-                return self.path.with_suffix("") < other.path.with_suffix("")
+                return self._path.with_suffix("") < other._path.with_suffix("")
 
         tree = ElementTree.parse("data/resources/resources.gresource.xml")
         gresource = tree.find("gresource")
