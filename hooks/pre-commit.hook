@@ -13,6 +13,7 @@ echo "-- Pre-commit checks --"
 echo "To ignore these checks next time, run: git commit --no-verify"
 echo ""
 if ! build-aux/checks.py; then
+    echo ""
     echo -e "  ${err}Aborting${res} commit"
     exit 1
 fi
