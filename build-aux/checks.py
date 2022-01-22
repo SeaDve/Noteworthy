@@ -20,13 +20,33 @@ OK = f"{POS}ok{ENDC}"
 ERROR = f"{NEG}error{ENDC}"
 
 
+class MissingDependencyError(Exception):
+    def __init__(self, whats_missing: str, install_command=None):
+        self.whats_missing = whats_missing
+        self.install_command = install_command
+
+    def __str__(self):
+        return f"{ERROR}: Missing dependency `{self.whats_missing}`"
+
+    def suggestion(self) -> str:
+        message = f"Please install `{self.whats_missing}` first "
+
+        if self.install_command is not None:
+            message += f"by running `{self.install_command}`"
+
+        return message
+
+
 class FailedCheckError(Exception):
-    def __init__(self, error_message="", suggestion_message=None):
+    def __init__(self, error_message=None, suggestion_message=None):
         self.error_message = error_message
         self.suggestion_message = suggestion_message
 
-    def __str__(self):
-        return f"{ERROR}: {self.error_message}"
+    def message(self) -> Optional[str]:
+        if self.error_message is not None:
+            return f"{ERROR}: {self.error_message}"
+        else:
+            return None
 
     def suggestion(self) -> str:
         message = "Please fix the above issues"
@@ -58,10 +78,23 @@ class Rustfmt(Check):
         return "code style"
 
     def run(self):
+        if not self._does_cargo_fmt_exist():
+            raise MissingDependencyError(
+                "cargo fmt", install_command="rustup component add rustfmt"
+            )
+
         if run(["cargo", "fmt", "--all", "--", "--check"]) != 0:
             raise FailedCheckError(
                 suggestion_message="either manually or by running `cargo fmt --all`"
             )
+
+    def _does_cargo_fmt_exist(self) -> bool:
+        try:
+            run(["cargo", "fmt", "--version"], capture_output=True)
+        except FileNotFoundError:
+            return False
+        else:
+            return True
 
 
 class Typos(Check):
@@ -74,10 +107,23 @@ class Typos(Check):
         return "spelling mistakes"
 
     def run(self):
+        if not self._does_typos_exist():
+            raise MissingDependencyError(
+                "typos", install_command="cargo install typos-cli"
+            )
+
         if run(["typos", "--color", "always"]) != 0:
             raise FailedCheckError(
                 suggestion_message="either manually or by running `typos -w`"
             )
+
+    def _does_typos_exist(self) -> bool:
+        try:
+            run(["typos", "--version"], capture_output=True)
+        except FileNotFoundError:
+            return False
+        else:
+            return True
 
 
 class Potfiles(Check):
@@ -209,13 +255,13 @@ class Resources(Check):
                 )
 
 
-def run(args: List[str]) -> int:
-    process = subprocess.run(args)
+def run(args: List[str], **kwargs) -> int:
+    process = subprocess.run(args, **kwargs)
     return process.returncode
 
 
 def get_output(*args, **kwargs) -> str:
-    process = subprocess.run(args, capture_output=True, **kwargs)
+    process = subprocess.run(*args, capture_output=True, **kwargs)
     return process.stdout.decode("utf-8").strip()
 
 
@@ -265,6 +311,16 @@ def main(args: Namespace):
             check.run()
         except FailedCheckError as e:
             remark = FAILED
+
+            if e.message() is not None:
+                print("")
+                print(e.message())
+
+            print("")
+            print(e.suggestion())
+            print("")
+        except MissingDependencyError as e:
+            remark = FAILED
             print("")
             print(e)
             print("")
@@ -292,12 +348,6 @@ if __name__ == "__main__":
 
     parser = ArgumentParser(
         description="Run conformity checks on the current Rust project"
-    )
-    parser.add_argument(
-        "-f",
-        "--force-install",
-        action="store_true",
-        help="Install missing dependencies without asking",
     )
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Use verbose output"
