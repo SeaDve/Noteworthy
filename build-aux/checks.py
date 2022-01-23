@@ -329,7 +329,7 @@ class Runner:
 
         for check in self._checks:
             if not self._has_complete_prerequisite(check):
-                n_failed += 1
+                n_skipped += 1
                 self._print_has_incomplete_prerequisite(check)
                 continue
 
@@ -394,7 +394,7 @@ class Runner:
 
         self._print_result(
             check,
-            f"{FAILED} (requires: {requires_message})",
+            f"{SKIPPED} (requires: {requires_message})",
         )
 
     @staticmethod
