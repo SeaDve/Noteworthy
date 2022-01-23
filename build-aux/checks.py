@@ -63,11 +63,15 @@ class FailedCheckError(Exception):
 class Check:
     _prerequisite_checks: List[Check] = []
 
-    def __init__(self, prerequisite_checks: List[Check] = []):
+    def __init__(self, prerequisite_checks: List[Check] = [], skip: bool = False):
         self._prerequisite_checks = prerequisite_checks
+        self._skip = skip
 
     def get_prerequisite_checks(self) -> List[Check]:
         return self._prerequisite_checks
+
+    def get_should_be_skipped(self) -> bool:
+        return self._skip
 
     def version(self) -> Optional[str]:
         return None
@@ -325,6 +329,11 @@ class Runner:
 
         for check in self._checks:
             if not self._has_complete_prerequisite(check):
+                n_failed += 1
+                self._print_has_incomplete_prerequisite(check)
+                continue
+
+            if check.get_should_be_skipped():
                 n_skipped += 1
                 self._print_skipped(check)
                 continue
@@ -367,7 +376,7 @@ class Runner:
             n_checks, n_successful_checks, n_failed, n_skipped, check_duration
         )
 
-        return n_successful_checks == n_checks
+        return n_failed == 0
 
     def _has_complete_prerequisite(self, check: Check) -> bool:
         for prerequisite_check in check.get_prerequisite_checks():
@@ -375,7 +384,7 @@ class Runner:
                 return False
         return True
 
-    def _print_skipped(self, check: Check):
+    def _print_has_incomplete_prerequisite(self, check: Check):
         prerequisites_to_print = [
             prerequisite.subject()
             for prerequisite in check.get_prerequisite_checks()
@@ -390,14 +399,21 @@ class Runner:
         self._print_check(
             check.subject(),
             check.version() if args.verbose else None,
-            f"{SKIPPED} (requires: {requires_message})",
+            f"{FAILED} (requires: {requires_message})",
+        )
+
+    def _print_skipped(self, check: Check):
+        self._print_check(
+            check.subject(),
+            check.version() if args.verbose else None,
+            f"{SKIPPED} (via command flag)",
         )
 
     @staticmethod
     def _print_result(
         total: int, n_successful: int, n_failed: int, n_skipped: int, duration: float
     ):
-        if total == n_successful:
+        if n_failed == 0:
             result = OK
         else:
             result = FAILED
@@ -431,12 +447,8 @@ def get_output(*args, **kwargs) -> str:
 
 def main(args: Namespace) -> int:
     runner = Runner()
-
-    if not args.skip_rustfmt:
-        runner.add(Rustfmt())
-
-    if not args.skip_typos:
-        runner.add(Typos())
+    runner.add(Rustfmt(skip=args.skip_rustfmt))
+    runner.add(Typos(skip=args.skip_typos))
 
     potfiles_exist = PotfilesExist()
     potfiles_sanity = PotfilesSanity(prerequisite_checks=[potfiles_exist])
