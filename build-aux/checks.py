@@ -293,21 +293,10 @@ class Resources(Check):
         return "data/resources/resources.gresource.xml"
 
     def run(self):
-        # Do not consider path suffix on sorting
-        class File:
-            def __init__(self, path: str):
-                self._path = Path(path)
-
-            def __str__(self):
-                return self._path.__str__()
-
-            def __lt__(self, other):
-                return self._path.with_suffix("") < other._path.with_suffix("")
-
         tree = ElementTree.parse("data/resources/resources.gresource.xml")
         gresource = tree.find("gresource")
-        files = [File(element.text) for element in gresource.findall("file")]
-        sorted_files = sorted(files)
+        files = [element.text for element in gresource.findall("file")]
+        sorted_files = sorted(files, key=lambda f: Path(f).with_suffix(""))
 
         for file, sorted_file in zip(files, sorted_files):
             if file != sorted_file:
