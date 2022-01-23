@@ -335,15 +335,12 @@ class Runner:
 
             if check.get_should_be_skipped():
                 n_skipped += 1
-                self._print_skipped(check)
+                self._print_result(check, f"{SKIPPED} (via command flag)")
                 continue
 
             try:
                 check.run()
             except FailedCheckError as e:
-                remark = FAILED
-                n_failed += 1
-
                 if e.message() is not None:
                     print("")
                     print(e.message())
@@ -351,28 +348,27 @@ class Runner:
                 print("")
                 print(e.suggestion())
                 print("")
-            except MissingDependencyError as e:
-                remark = FAILED
-                n_failed += 1
 
+                n_failed += 1
+                self._print_result(check, FAILED)
+            except MissingDependencyError as e:
                 print("")
                 print(e)
                 print("")
                 print(e.suggestion())
                 print("")
-            else:
-                remark = OK
-                self._successful_checks.append(check)
 
-            self._print_check(
-                check.subject(), check.version() if args.verbose else None, remark
-            )
+                n_failed += 1
+                self._print_result(check, FAILED)
+            else:
+                self._successful_checks.append(check)
+                self._print_result(check, OK)
 
         check_duration = time.time() - start_time
         n_successful_checks = len(self._successful_checks)
 
         print("")
-        self._print_result(
+        self._print_final_result(
             n_checks, n_successful_checks, n_failed, n_skipped, check_duration
         )
 
@@ -396,36 +392,16 @@ class Runner:
         else:
             requires_message = ", ".join(prerequisites_to_print)
 
-        self._print_check(
-            check.subject(),
-            check.version() if args.verbose else None,
+        self._print_result(
+            check,
             f"{FAILED} (requires: {requires_message})",
         )
 
-    def _print_skipped(self, check: Check):
-        self._print_check(
-            check.subject(),
-            check.version() if args.verbose else None,
-            f"{SKIPPED} (via command flag)",
-        )
-
     @staticmethod
-    def _print_result(
-        total: int, n_successful: int, n_failed: int, n_skipped: int, duration: float
-    ):
-        if n_failed == 0:
-            result = OK
-        else:
-            result = FAILED
+    def _print_result(check: Check, remark: str):
+        messages = ["check", check.subject()]
 
-        print(
-            f"test result: {result}. {n_successful} passed; {n_failed} failed; {n_skipped} skipped; finished in {duration:.2f}s"
-        )
-
-    @staticmethod
-    def _print_check(subject: str, version: Optional[str], remark: str):
-        messages = ["check", subject]
-
+        version = check.version() if args.verbose else None
         if version is not None:
             messages.append(f"({version})")
 
@@ -433,6 +409,16 @@ class Runner:
         messages.append(remark)
 
         print(" ".join(messages))
+
+    @staticmethod
+    def _print_final_result(
+        total: int, n_successful: int, n_failed: int, n_skipped: int, duration: float
+    ):
+        result = OK if n_failed == 0 else FAILED
+
+        print(
+            f"test result: {result}. {n_successful} passed; {n_failed} failed; {n_skipped} skipped; finished in {duration:.2f}s"
+        )
 
 
 def run(args: List[str], **kwargs) -> int:
