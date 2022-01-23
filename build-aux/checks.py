@@ -66,9 +66,6 @@ class Check:
     def __init__(self, prerequisite_checks: List[Check] = []):
         self._prerequisite_checks = prerequisite_checks
 
-    def __repr__(self):
-        return self.__class__.__name__
-
     def get_prerequisite_checks(self) -> List[Check]:
         return self._prerequisite_checks
 
@@ -340,11 +337,7 @@ class Runner:
         for check in self._checks:
             if not self._has_complete_prerequisite(check):
                 n_skipped += 1
-                self._print_check(
-                    check.subject(),
-                    check.version() if args.verbose else None,
-                    f"{SKIPPED} (requires {check.get_prerequisite_checks()})",
-                )
+                self._print_skipped(check)
                 continue
 
             try:
@@ -393,6 +386,24 @@ class Runner:
                 return False
         return True
 
+    def _print_skipped(self, check: Check):
+        prerequisites_to_print = [
+            prerequisite.subject()
+            for prerequisite in check.get_prerequisite_checks()
+            if prerequisite not in self._successful_checks
+        ]
+
+        if len(prerequisites_to_print) == 1:
+            requires_message = prerequisites_to_print[0]
+        else:
+            requires_message = ", ".join(prerequisites_to_print)
+
+        self._print_check(
+            check.subject(),
+            check.version() if args.verbose else None,
+            f"{SKIPPED} (requires: {requires_message})",
+        )
+
     @staticmethod
     def _print_result(
         total: int, n_successful: int, n_failed: int, n_skipped: int, duration: float
@@ -439,10 +450,14 @@ def main(args: Namespace) -> int:
         runner.add(Typos())
 
     potfiles_exist = PotfilesExist()
+    potfiles_sanity = PotfilesSanity(prerequisite_checks=[potfiles_exist])
+    potfiles_alphabetically = PotfilesAlphabetically(
+        prerequisite_checks=[potfiles_exist, potfiles_sanity]
+    )
     runner.add(potfiles_exist)
-    runner.add(PotfilesSanity(prerequisite_checks=[potfiles_exist]))
+    runner.add(potfiles_sanity)
+    runner.add(potfiles_alphabetically)
 
-    runner.add(PotfilesAlphabetically())
     runner.add(Resources())
 
     if runner.run_all():
