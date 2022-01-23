@@ -61,7 +61,6 @@ class FailedCheckError(Exception):
 
 
 class Check:
-
     _prerequisite_checks: List[Check] = []
 
     def __init__(self, prerequisite_checks: List[Check] = []):
@@ -225,10 +224,10 @@ class PotfilesSanity(Check):
                 f"Found {n_potfiles} file{'s'[:n_potfiles^1]} in POTFILES.in without translatable strings:"
             ]
 
-            for file in rust_potfiles:
+            for file in ui_potfiles:
                 message.append(str(file))
 
-            for file in ui_potfiles:
+            for file in rust_potfiles:
                 message.append(str(file))
 
             raise FailedCheckError(error_message="\n".join(message))
@@ -239,10 +238,10 @@ class PotfilesSanity(Check):
                 f"Found {n_files} file{'s'[:n_files^1]} with translatable strings not present in POTFILES.in:"
             ]
 
-            for file in rust_files:
+            for file in ui_files:
                 message.append(str(file))
 
-            for file in ui_files:
+            for file in rust_files:
                 message.append(str(file))
 
             raise FailedCheckError(error_message="\n".join(message))
@@ -321,7 +320,6 @@ class Resources(Check):
 
 
 class Runner:
-
     _checks: List[Check] = []
     _successful_checks: List[Check] = []
 
