@@ -11,16 +11,16 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 from xml.etree import ElementTree
 
-ERR = "\033[1;31m"
-WARN = "\033[1;33m"
-NEG = "\033[31m"
-POS = "\033[32m"
+B_RED = "\033[1;31m"
+B_YELLOW = "\033[1;33m"
+RED = "\033[31m"
+GREEN = "\033[32m"
 ENDC = "\033[0m"
 
-FAILED = f"{ERR}FAILED{ENDC}"
-OK = f"{POS}ok{ENDC}"
-ERROR = f"{NEG}error{ENDC}"
-SKIPPED = f"{WARN}SKIPPED{ENDC}"
+FAILED = f"{B_RED}FAILED{ENDC}"
+OK = f"{GREEN}ok{ENDC}"
+ERROR = f"{RED}error{ENDC}"
+SKIPPED = f"{B_YELLOW}SKIPPED{ENDC}"
 
 
 class MissingDependencyError(Exception):
