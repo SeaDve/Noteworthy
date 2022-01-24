@@ -34,10 +34,10 @@ class MissingDependencyError(Exception):
         return f"{ERROR}: Missing dependency `{self._whats_missing}`"
 
     def suggestion(self) -> str:
-        message = f"Please install `{self._whats_missing}` first "
+        message = f"Please install `{self._whats_missing}` first"
 
         if self._install_command is not None:
-            message += f"by running `{self._install_command}`"
+            message += f" by running `{self._install_command}`"
 
         return message
 
