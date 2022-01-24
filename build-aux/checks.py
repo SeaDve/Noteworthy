@@ -154,8 +154,8 @@ class PotfilesAlphabetically(Check):
 
     @staticmethod
     def _get_files() -> List[str]:
-        with open("po/POTFILES.in") as potfiles:
-            return [line.strip() for line in potfiles.readlines()]
+        with open("po/POTFILES.in") as potfiles_file:
+            return [line.strip() for line in potfiles_file.readlines()]
 
 
 class PotfilesExist(Check):
@@ -186,8 +186,8 @@ class PotfilesExist(Check):
     def _get_non_existent_files() -> List[Path]:
         files = []
 
-        with open("po/POTFILES.in") as potfiles:
-            for line in potfiles.readlines():
+        with open("po/POTFILES.in") as potfiles_file:
+            for line in potfiles_file.readlines():
                 file = Path(line.strip())
                 if not file.exists():
                     files.append(file)
@@ -197,6 +197,9 @@ class PotfilesExist(Check):
 
 class PotfilesSanity(Check):
     """Check if all files with translatable strings are present and only those.
+
+    The limitations are the following:
+        - Only detects UI (Glade) or Rust files
 
     This assumes the following:
         - POTFILES is located at 'po/POTFILES.in'
@@ -208,67 +211,58 @@ class PotfilesSanity(Check):
         return "po/POTFILES.in sanity"
 
     def run(self):
-        (ui_potfiles, rust_potfiles) = self._get_potfiles()
+        potfiles = self._get_rust_or_ui_potfiles()
+        files_with_translatable = self._get_ui_files() + self._get_rust_files()
 
-        ui_potfiles, ui_files = self._remove_common_files(
-            ui_potfiles, self._get_ui_files()
-        )
-        rust_potfiles, rust_files = self._remove_common_files(
-            rust_potfiles, self._get_rust_files()
-        )
+        potfiles_without_translatable = []
+        for potfile in potfiles:
+            if potfile not in files_with_translatable:
+                potfiles_without_translatable.append(potfile)
 
-        n_potfiles = len(rust_potfiles) + len(ui_potfiles)
-        if n_potfiles != 0:
-            message = [
-                f"{ERROR}: Found {n_potfiles} file{'s'[:n_potfiles^1]} in POTFILES.in without translatable strings:"
-            ]
+        files_that_should_be_potfile = []
+        for file in files_with_translatable:
+            if file not in potfiles:
+                files_that_should_be_potfile.append(file)
 
-            for file in ui_potfiles:
+        message = []
+
+        n_potfiles_without_translatable = len(potfiles_without_translatable)
+        n_files_that_should_be_potfile = len(files_that_should_be_potfile)
+
+        if n_potfiles_without_translatable > 0:
+            message.append(
+                f"{ERROR}: Found {n_potfiles_without_translatable} file{'s'[:n_potfiles_without_translatable^1]} in POTFILES.in without translatable strings:"
+            )
+
+            for potfile in potfiles_without_translatable:
+                message.append(str(potfile))
+
+        if n_potfiles_without_translatable > 0 and n_files_that_should_be_potfile > 0:
+            message.append("")
+
+        if n_files_that_should_be_potfile > 0:
+            message.append(
+                f"{ERROR}: Found {n_files_that_should_be_potfile} file{'s'[:n_files_that_should_be_potfile^1]} with translatable strings not present in POTFILES.in:"
+            )
+
+            for file in files_that_should_be_potfile:
                 message.append(str(file))
 
-            for file in rust_potfiles:
-                message.append(str(file))
-
-            raise FailedCheckError(error_message="\n".join(message))
-
-        n_files = len(rust_files) + len(ui_files)
-        if n_files != 0:
-            message = [
-                f"{ERROR}: Found {n_files} file{'s'[:n_files^1]} with translatable strings not present in POTFILES.in:"
-            ]
-
-            for file in ui_files:
-                message.append(str(file))
-
-            for file in rust_files:
-                message.append(str(file))
-
+        if n_potfiles_without_translatable > 0 or n_files_that_should_be_potfile > 0:
             raise FailedCheckError(error_message="\n".join(message))
 
     @staticmethod
-    def _remove_common_files(set_a: List[Path], set_b: List[Path]):
-        for file_a in list(set_a):
-            for file_b in list(set_b):
-                if file_a == file_b:
-                    set_a.remove(file_b)
-                    set_b.remove(file_b)
-        return set_a, set_b
+    def _get_rust_or_ui_potfiles() -> List[Path]:
+        potfiles = []
 
-    @staticmethod
-    def _get_potfiles() -> Tuple[List[Path], List[Path]]:
-        ui_potfiles = []
-        rust_potfiles = []
-
-        with open("po/POTFILES.in") as potfiles:
-            for line in potfiles.readlines():
+        with open("po/POTFILES.in") as potfiles_file:
+            for line in potfiles_file.readlines():
                 file = Path(line.strip())
 
-                if file.suffix == ".ui":
-                    ui_potfiles.append(file)
-                elif file.suffix == ".rs":
-                    rust_potfiles.append(file)
+                if file.suffix in [".ui", ".rs"]:
+                    potfiles.append(file)
 
-        return (ui_potfiles, rust_potfiles)
+        return potfiles
 
     @staticmethod
     def _get_ui_files() -> List[Path]:
