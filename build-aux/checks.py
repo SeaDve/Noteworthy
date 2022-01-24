@@ -12,15 +12,17 @@ from typing import List, Optional, Tuple
 from xml.etree import ElementTree
 
 B_RED = "\033[1;31m"
+B_GREEN = "\033[1;32m"
 B_YELLOW = "\033[1;33m"
 RED = "\033[31m"
 GREEN = "\033[32m"
 ENDC = "\033[0m"
 
-FAILED = f"{B_RED}FAILED{ENDC}"
 OK = f"{GREEN}ok{ENDC}"
-ERROR = f"{RED}error{ENDC}"
+FAILED = f"{B_RED}FAILED{ENDC}"
 SKIPPED = f"{B_YELLOW}SKIPPED{ENDC}"
+RUNNING = f"{B_GREEN}RUNNING{ENDC}"
+ERROR = f"{RED}error{ENDC}"
 
 
 class MissingDependencyError(Exception):
@@ -28,7 +30,7 @@ class MissingDependencyError(Exception):
         self._whats_missing = whats_missing
         self._install_command = install_command
 
-    def __str__(self):
+    def message(self) -> str:
         return f"{ERROR}: Missing dependency `{self._whats_missing}`"
 
     def suggestion(self) -> str:
@@ -46,18 +48,10 @@ class FailedCheckError(Exception):
         self._suggestion_message = suggestion_message
 
     def message(self) -> Optional[str]:
-        if self._error_message is not None:
-            return f"{ERROR}: {self._error_message}"
-        else:
-            return None
+        return self._error_message
 
-    def suggestion(self) -> str:
-        message = "Please fix the above issues"
-
-        if self._suggestion_message is not None:
-            message += f", {self._suggestion_message}"
-
-        return message
+    def suggestion(self) -> Optional[str]:
+        return self._suggestion_message
 
 
 class Check:
@@ -97,7 +91,9 @@ class Rustfmt(Check):
 
     def run(self):
         try:
-            return_code = run(["cargo", "fmt", "--all", "--", "--check"])
+            return_code, output = run_and_get_output(
+                ["cargo", "fmt", "--all", "--", "--check"]
+            )
         except FileNotFoundError:
             raise MissingDependencyError(
                 "cargo fmt", install_command="rustup component add rustfmt"
@@ -105,7 +101,8 @@ class Rustfmt(Check):
 
         if return_code != 0:
             raise FailedCheckError(
-                suggestion_message="either manually or by running `cargo fmt --all`"
+                error_message=output,
+                suggestion_message="Try running `cargo fmt --all`",
             )
 
 
@@ -123,7 +120,7 @@ class Typos(Check):
 
     def run(self):
         try:
-            return_code = run(["typos", "--color", "always"])
+            return_code, output = run_and_get_output(["typos", "--color", "always"])
         except FileNotFoundError:
             raise MissingDependencyError(
                 "typos", install_command="cargo install typos-cli"
@@ -131,7 +128,8 @@ class Typos(Check):
 
         if return_code != 0:
             raise FailedCheckError(
-                suggestion_message="either manually or by running `typos -w`"
+                error_message=output,
+                suggestion_message="Try running `typos -w`",
             )
 
 
@@ -151,7 +149,7 @@ class PotfilesAlphabetically(Check):
         for file, sorted_file in zip(files, sorted(files)):
             if file != sorted_file:
                 raise FailedCheckError(
-                    error_message=f"Found file `{file}` before `{sorted_file}` in POTFILES.in"
+                    error_message=f"{ERROR}: Found file `{file}` before `{sorted_file}` in POTFILES.in"
                 )
 
     @staticmethod
@@ -176,7 +174,7 @@ class PotfilesExist(Check):
 
         if n_files > 0:
             message = [
-                f"Found {n_files} file{'s'[:n_files^1]} in POTFILES.in that does not exist:"
+                f"{ERROR}: Found {n_files} file{'s'[:n_files^1]} in POTFILES.in that does not exist:"
             ]
 
             for file in files:
@@ -222,7 +220,7 @@ class PotfilesSanity(Check):
         n_potfiles = len(rust_potfiles) + len(ui_potfiles)
         if n_potfiles != 0:
             message = [
-                f"Found {n_potfiles} file{'s'[:n_potfiles^1]} in POTFILES.in without translatable strings:"
+                f"{ERROR}: Found {n_potfiles} file{'s'[:n_potfiles^1]} in POTFILES.in without translatable strings:"
             ]
 
             for file in ui_potfiles:
@@ -236,7 +234,7 @@ class PotfilesSanity(Check):
         n_files = len(rust_files) + len(ui_files)
         if n_files != 0:
             message = [
-                f"Found {n_files} file{'s'[:n_files^1]} with translatable strings not present in POTFILES.in:"
+                f"{ERROR}: Found {n_files} file{'s'[:n_files^1]} with translatable strings not present in POTFILES.in:"
             ]
 
             for file in ui_files:
@@ -305,13 +303,14 @@ class Resources(Check):
         for file, sorted_file in zip(files, sorted_files):
             if file != sorted_file:
                 raise FailedCheckError(
-                    error_message=f"Found file `{file}` before `{sorted_file}` in resources.gresource.xml"
+                    error_message=f"{ERROR}: Found file `{file}` before `{sorted_file}` in resources.gresource.xml"
                 )
 
 
 class Runner:
     _checks: List[Check] = []
     _successful_checks: List[Check] = []
+    _failed_checks: List[Tuple[Check, Exception]] = []
 
     def add(self, check: Check):
         self._checks.append(check)
@@ -320,11 +319,12 @@ class Runner:
         """Returns true if all are successful"""
 
         n_checks = len(self._checks)
-        n_skipped = 0
-        n_failed = 0
 
+        print(f"  {RUNNING} checks at {os.getcwd()}")
+        print("")
         print(f"running {n_checks} checks")
 
+        n_skipped = 0
         start_time = time.time()
 
         for check in self._checks:
@@ -341,24 +341,10 @@ class Runner:
             try:
                 check.run()
             except FailedCheckError as e:
-                if e.message() is not None:
-                    print("")
-                    print(e.message())
-
-                print("")
-                print(e.suggestion())
-                print("")
-
-                n_failed += 1
+                self._failed_checks.append((check, e))
                 self._print_result(check, FAILED)
             except MissingDependencyError as e:
-                print("")
-                print(e)
-                print("")
-                print(e.suggestion())
-                print("")
-
-                n_failed += 1
+                self._failed_checks.append((check, e))
                 self._print_result(check, FAILED)
             else:
                 self._successful_checks.append(check)
@@ -366,6 +352,11 @@ class Runner:
 
         check_duration = time.time() - start_time
         n_successful_checks = len(self._successful_checks)
+        n_failed = len(self._failed_checks)
+
+        if n_failed > 0:
+            print("")
+            self._print_failures()
 
         print("")
         self._print_final_result(
@@ -397,6 +388,28 @@ class Runner:
             f"{SKIPPED} (requires: {requires_message})",
         )
 
+    def _print_failures(self):
+        print("failures:")
+        print("")
+
+        for (check, error) in self._failed_checks:
+            print(f"---- {check.subject()} message ----")
+            message = error.message()
+            if message is not None:
+                print(message)
+                print("")
+
+            suggestion = error.suggestion()
+            if suggestion is not None:
+                print(suggestion)
+                print("")
+
+        print("")
+        print("failures:")
+
+        for (check, _) in self._failed_checks:
+            print(f"    {check.subject()}")
+
     @staticmethod
     def _print_result(check: Check, remark: str):
         messages = ["check", check.subject()]
@@ -421,9 +434,10 @@ class Runner:
         )
 
 
-def run(args: List[str], **kwargs) -> int:
-    process = subprocess.run(args, **kwargs)
-    return process.returncode
+def run_and_get_output(args: List[str]) -> Tuple[int, str]:
+    process = subprocess.run(args, capture_output=True)
+    output = process.stdout.decode("utf-8").strip()
+    return (process.returncode, output)
 
 
 def get_output(*args, **kwargs) -> str:
