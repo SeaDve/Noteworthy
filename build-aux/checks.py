@@ -21,7 +21,7 @@ ENDC = "\033[0m"
 OK = f"{GREEN}ok{ENDC}"
 FAILED = f"{B_RED}FAILED{ENDC}"
 SKIPPED = f"{B_YELLOW}SKIPPED{ENDC}"
-RUNNING = f"{B_GREEN}RUNNING{ENDC}"
+RUNNING = f"   {B_GREEN}RUNNING{ENDC}"
 ERROR = f"{RED}error{ENDC}"
 
 
@@ -320,7 +320,7 @@ class Runner:
 
         n_checks = len(self._checks)
 
-        print(f"  {RUNNING} checks at {os.getcwd()}")
+        print(f"{RUNNING} checks at {os.getcwd()}")
         print("")
         print(f"running {n_checks} checks")
 

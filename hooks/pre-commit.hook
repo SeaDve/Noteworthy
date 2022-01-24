@@ -8,7 +8,7 @@ b_green="\e[1;32m"
 endc="\e[0m"
 
 aborting="  ${b_red}ABORTING${endc}"
-running="  ${b_green}RUNNING${endc}"
+ running="   ${b_green}RUNNING${endc}"
 creating="  ${b_green}CREATING${endc}"
 
 echo -e "${running} pre-commit hook (To ignore, run: git commit --no-verify)"
