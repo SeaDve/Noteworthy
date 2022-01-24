@@ -328,14 +328,14 @@ class Runner:
         start_time = time.time()
 
         for check in self._checks:
-            if not self._has_complete_prerequisite(check):
-                n_skipped += 1
-                self._print_has_incomplete_prerequisite(check)
-                continue
-
             if check.get_should_be_skipped():
                 n_skipped += 1
                 self._print_result(check, f"{SKIPPED} (via command flag)")
+                continue
+
+            if not self._has_complete_prerequisite(check):
+                n_skipped += 1
+                self._print_has_incomplete_prerequisite(check)
                 continue
 
             try:
