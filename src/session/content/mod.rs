@@ -33,10 +33,10 @@ mod imp {
         #[template_child]
         pub view_flap_button: TemplateChild<gtk::ToggleButton>,
 
-        pub bindings: RefCell<Vec<glib::Binding>>,
-
         pub compact: Cell<bool>,
         pub note: RefCell<Option<Note>>,
+
+        pub bindings: RefCell<Vec<glib::Binding>>,
     }
 
     #[glib::object_subclass]
