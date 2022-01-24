@@ -393,13 +393,16 @@ class Runner:
         print("")
 
         for (check, error) in self._failed_checks:
-            print(f"---- {check.subject()} message ----")
             message = error.message()
+            suggestion = error.suggestion()
+
+            if message is not None or suggestion is not None:
+                print(f"---- {check.subject()} message ----")
+
             if message is not None:
                 print(message)
                 print("")
 
-            suggestion = error.suggestion()
             if suggestion is not None:
                 print(suggestion)
                 print("")
