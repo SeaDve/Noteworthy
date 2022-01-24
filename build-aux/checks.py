@@ -231,7 +231,7 @@ class PotfilesSanity(Check):
                 f"{ERROR}: Found {n_potfiles_without_translatable} file{'s'[:n_potfiles_without_translatable^1]} in POTFILES.in without translatable strings:"
             )
 
-            for potfile in potfiles_without_translatable:
+            for potfile in sorted(potfiles_without_translatable):
                 message.append(str(potfile))
 
         if n_potfiles_without_translatable > 0 and n_files_that_should_be_potfile > 0:
@@ -242,7 +242,7 @@ class PotfilesSanity(Check):
                 f"{ERROR}: Found {n_files_that_should_be_potfile} file{'s'[:n_files_that_should_be_potfile^1]} with translatable strings not present in POTFILES.in:"
             )
 
-            for file in files_that_should_be_potfile:
+            for file in sorted(files_that_should_be_potfile):
                 message.append(str(file))
 
         if n_potfiles_without_translatable > 0 or n_files_that_should_be_potfile > 0:
