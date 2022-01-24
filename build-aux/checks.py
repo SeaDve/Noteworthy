@@ -391,7 +391,7 @@ class Runner:
             suggestion = error.suggestion()
 
             if message is not None or suggestion is not None:
-                print(f"---- {check.subject()} message ----")
+                print(f"---- {check.subject()} ----")
 
             if message is not None:
                 print(message)
