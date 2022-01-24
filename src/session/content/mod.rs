@@ -1,11 +1,7 @@
 mod attachment_view;
 mod view;
 
-use gtk::{
-    glib::{self, closure},
-    prelude::*,
-    subclass::prelude::*,
-};
+use gtk::{glib, prelude::*, subclass::prelude::*};
 
 use std::cell::{Cell, RefCell};
 
@@ -113,7 +109,8 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
-            obj.setup_expressions();
+            obj.update_buttons_visibility();
+            obj.update_stack();
         }
 
         fn dispose(&self, obj: &Self::Type) {
@@ -166,25 +163,32 @@ impl Content {
                 .flags(glib::BindingFlags::SYNC_CREATE | glib::BindingFlags::BIDIRECTIONAL)
                 .build();
             bindings.push(is_trashed);
-
-            imp.stack.set_visible_child(&imp.view_flap.get());
-        } else {
-            imp.stack.set_visible_child(&imp.no_selected_view.get());
         }
 
         imp.note.replace(note);
         self.notify("note");
+
+        self.update_buttons_visibility();
+        self.update_stack();
     }
 
-    fn setup_expressions(&self) {
+    fn update_stack(&self) {
         let imp = self.imp();
 
-        let is_some_note_expression = Self::this_expression("note")
-            .chain_closure::<bool>(closure!(|_: Self, note: Option<Note>| note.is_some()));
+        if self.note().is_some() {
+            imp.stack.set_visible_child(&imp.view_flap.get());
+        } else {
+            imp.stack.set_visible_child(&imp.no_selected_view.get());
+        }
+    }
 
-        is_some_note_expression.bind(&imp.is_pinned_button.get(), "visible", Some(self));
-        is_some_note_expression.bind(&imp.is_trashed_button.get(), "visible", Some(self));
-        is_some_note_expression.bind(&imp.edit_tags_button.get(), "visible", Some(self));
-        is_some_note_expression.bind(&imp.view_flap_button.get(), "visible", Some(self));
+    fn update_buttons_visibility(&self) {
+        let imp = self.imp();
+        let has_note = self.note().is_some();
+
+        imp.is_pinned_button.set_visible(has_note);
+        imp.is_trashed_button.set_visible(has_note);
+        imp.edit_tags_button.set_visible(has_note);
+        imp.view_flap_button.set_visible(has_note);
     }
 }
