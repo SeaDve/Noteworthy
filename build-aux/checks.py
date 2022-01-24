@@ -436,8 +436,9 @@ class Runner:
 
 def run_and_get_output(args: List[str]) -> Tuple[int, str]:
     process = subprocess.run(args, capture_output=True)
-    output = process.stdout.decode("utf-8").strip()
-    return (process.returncode, output)
+    stdout = process.stdout.decode("utf-8").strip()
+    stderr = process.stderr.decode("utf-8").strip()
+    return (process.returncode, "\n".join([stdout, stderr]).strip())
 
 
 def get_output(*args, **kwargs) -> str:
