@@ -11,17 +11,17 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 from xml.etree import ElementTree
 
-B_RED = "\033[1;31m"
-B_GREEN = "\033[1;32m"
-B_YELLOW = "\033[1;33m"
+BOLD_RED = "\033[1;31m"
+BOLD_GREEN = "\033[1;32m"
+BOLD_YELLOW = "\033[1;33m"
 RED = "\033[31m"
 GREEN = "\033[32m"
 ENDC = "\033[0m"
 
 OK = f"{GREEN}ok{ENDC}"
-FAILED = f"{B_RED}FAILED{ENDC}"
-SKIPPED = f"{B_YELLOW}SKIPPED{ENDC}"
-RUNNING = f"   {B_GREEN}RUNNING{ENDC}"
+FAILED = f"{BOLD_RED}FAILED{ENDC}"
+SKIPPED = f"{BOLD_YELLOW}SKIPPED{ENDC}"
+RUNNING = f"   {BOLD_GREEN}RUNNING{ENDC}"
 ERROR = f"{RED}error{ENDC}"
 
 
