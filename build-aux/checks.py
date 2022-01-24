@@ -214,20 +214,17 @@ class PotfilesSanity(Check):
         potfiles = self._get_rust_or_ui_potfiles()
         files_with_translatable = self._get_ui_files() + self._get_rust_files()
 
-        potfiles_without_translatable = []
-        for potfile in potfiles:
-            if potfile not in files_with_translatable:
-                potfiles_without_translatable.append(potfile)
-
-        files_that_should_be_potfile = []
-        for file in files_with_translatable:
-            if file not in potfiles:
-                files_that_should_be_potfile.append(file)
-
-        message = []
+        potfiles_without_translatable = [
+            potfile for potfile in potfiles if potfile not in files_with_translatable
+        ]
+        files_that_should_be_potfile = [
+            file for file in files_with_translatable if file not in potfiles
+        ]
 
         n_potfiles_without_translatable = len(potfiles_without_translatable)
         n_files_that_should_be_potfile = len(files_that_should_be_potfile)
+
+        message = []
 
         if n_potfiles_without_translatable > 0:
             message.append(
