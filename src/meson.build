@@ -13,14 +13,14 @@ config = configure_file(
 # Copy the config.rs output to the source directory.
 run_command(
   'cp',
-  meson.build_root() / 'src' / 'config.rs',
-  meson.source_root() / 'src' / 'config.rs',
+  meson.project_build_root() / 'src' / 'config.rs',
+  meson.project_source_root() / 'src' / 'config.rs',
   check: true
 )
 
-manifest_path = meson.source_root() / 'Cargo.toml'
-cargo_home = meson.build_root() / 'cargo-home'
-cargo_target_dir = meson.build_root() / 'src'
+manifest_path = meson.project_source_root() / 'Cargo.toml'
+cargo_home = meson.project_build_root() / 'cargo-home'
+cargo_target_dir = meson.project_build_root() / 'src'
 
 cargo_options = [ '--manifest-path', manifest_path ]
 cargo_options += [ '--target-dir', cargo_target_dir ]
