@@ -175,10 +175,11 @@ impl Camera {
         let snapshot = gtk::Snapshot::new();
         paintable.snapshot(snapshot.upcast_ref(), width as f64, height as f64);
 
+        let node = snapshot.to_node().unwrap();
         let renderer = self.native().unwrap().renderer();
 
         let bounds = graphene::Rect::new(0.0, 0.0, width as f32, height as f32);
-        renderer.render_texture(&snapshot.to_node(), Some(&bounds))
+        renderer.render_texture(&node, Some(&bounds))
     }
 
     fn enable_capture(&self) {
