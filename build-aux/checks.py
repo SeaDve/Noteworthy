@@ -266,12 +266,12 @@ class PotfilesSanity(Check):
         output = get_output(
             "grep -lIr 'translatable=\"yes\"' data/resources/ui/*", shell=True
         )
-        return list(map(lambda s: Path(s), output.splitlines()))
+        return [Path(line) for line in output.splitlines()]
 
     @staticmethod
     def _get_rust_files() -> List[Path]:
         output = get_output(r"grep -lIrE 'gettext[!]?\(' src/*", shell=True)
-        return list(map(lambda s: Path(s), output.splitlines()))
+        return [Path(line) for line in output.splitlines()]
 
 
 class Resources(Check):
