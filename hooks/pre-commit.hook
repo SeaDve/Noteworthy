@@ -1,22 +1,33 @@
-#!/bin/sh
+#!/usr/bin/env python3
 # Depends on: build-aux/checks.py
-# Source: https://gitlab.gnome.org/GNOME/fractal/blob/master/hooks/pre-commit.hook
 
-# Style helpers
-b_red="\e[1;31m"
-b_green="\e[1;32m"
-endc="\e[0m"
+import sys
 
-aborting="  ${b_red}ABORTING${endc}"
-running="   ${b_green}RUNNING${endc}"
-creating="  ${b_green}CREATING${endc}"
+sys.path.append("./build-aux")
 
-echo -e "${running} pre-commit hook (To ignore, run: git commit --no-verify)"
-if build-aux/checks.py; then
-    echo ""
-    echo -e "${creating} commit"
-else
-    echo ""
-    echo -e "${aborting} commit, please fix the above issues. To ignore, rerun commit with '--no-verify'"
-    exit 1
-fi
+import checks  # noqa: E402
+from checks import BOLD_GREEN, BOLD_RED, ENDC, RUNNING  # noqa: E402
+
+CREATING = f"  {BOLD_GREEN}CREATING{ENDC}"
+ABORTING = f"  {BOLD_RED}ABORTING{ENDC}"
+
+
+def main() -> int:
+    print(f"{RUNNING} pre-commit hook (To ignore, run `git commit --no-verify`")
+
+    ret = checks.main(None)
+
+    if ret == 0:
+        print("")
+        print(f"{CREATING} commit")
+    else:
+        print("")
+        print(
+            f"{ABORTING} commit, please fix the above issues. To ignore, rerun commit with '--no-verify'"
+        )
+
+    return ret
+
+
+if __name__ == "__main__":
+    sys.exit(main())

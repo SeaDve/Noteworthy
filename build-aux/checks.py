@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# Source: https://gitlab.gnome.org/GNOME/fractal/blob/master/hooks/pre-commit.hook
 from __future__ import annotations
 
 import os
@@ -303,6 +302,9 @@ class Runner:
     _successful_checks: List[Check] = []
     _failed_checks: List[Tuple[Check, Exception]] = []
 
+    def __init__(self, verbose=False):
+        self._verbose = verbose
+
     def add(self, check: Check):
         self._checks.append(check)
 
@@ -401,11 +403,10 @@ class Runner:
         for (check, _) in self._failed_checks:
             print(f"    {check.subject()}")
 
-    @staticmethod
-    def _print_result(check: Check, remark: str):
+    def _print_result(self, check: Check, remark: str):
         messages = ["check", check.subject()]
 
-        version = check.version() if args.verbose else None
+        version = check.version() if self._verbose else None
         if version is not None:
             messages.append(f"({version})")
 
@@ -437,10 +438,10 @@ def get_output(*args, **kwargs) -> str:
     return process.stdout.decode("utf-8").strip()
 
 
-def main(args: Namespace) -> int:
-    runner = Runner()
-    runner.add(Rustfmt(skip=args.skip_rustfmt))
-    runner.add(Typos(skip=args.skip_typos))
+def main(args: Optional[Namespace]) -> int:
+    runner = Runner(verbose=args.verbose if args else False)
+    runner.add(Rustfmt(skip=args.skip_rustfmt if args else False))
+    runner.add(Typos(skip=args.skip_typos if args else False))
 
     potfiles_exist = PotfilesExist()
     potfiles_sanity = PotfilesSanity(prerequisite_checks=[potfiles_exist])
