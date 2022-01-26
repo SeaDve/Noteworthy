@@ -307,7 +307,7 @@ class Runner:
         self._checks.append(check)
 
     def run_all(self) -> bool:
-        """Returns true if all are successful"""
+        """Returns true if there are no failed checks. There should be only skipped or successful checks."""
 
         n_checks = len(self._checks)
 
