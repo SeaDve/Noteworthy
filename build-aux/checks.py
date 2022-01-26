@@ -369,10 +369,7 @@ class Runner:
             if prerequisite not in self._successful_checks
         ]
 
-        if len(prerequisites_to_print) == 1:
-            requires_message = prerequisites_to_print[0]
-        else:
-            requires_message = ", ".join(prerequisites_to_print)
+        requires_message = ", ".join(prerequisites_to_print)
 
         self._print_result(
             check,
