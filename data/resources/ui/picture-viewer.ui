@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="NwtyPictureViewer" parent="AdwBin">
+    <child>
+      <object class="AdwFlap" id="flap">
+        <property name="orientation">vertical</property>
+        <child type="flap">
+          <object class="AdwHeaderBar">
+            <property name="title-widget">
+              <object class="AdwWindowTitle">
+                <binding name="title">
+                  <lookup name="title">
+                    <lookup name="attachment">NwtyPictureViewer</lookup>
+                  </lookup>
+                </binding>
+              </object>
+            </property>
+            <child type="start">
+              <object class="GtkButton">
+                <property name="icon-name">go-previous-symbolic</property>
+                <property name="action-name">picture-viewer.exit</property>
+              </object>
+            </child>
+            <child type="end">
+              <object class="GtkButton" id="fullscreen_button">
+                <property name="action-name">win.toggle-fullscreen</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkPicture" id="picture">
+            <property name="valign">center</property>
+            <property name="vexpand">true</property>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkEventControllerMotion">
+        <signal name="motion" handler="on_motion" swapped="yes"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkGestureClick">
+        <property name="touch-only">true</property>
+        <signal name="pressed" handler="on_touch" swapped="yes"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkGestureClick">
+        <signal name="pressed" handler="on_click" swapped="yes"/>
+      </object>
+    </child>
+  </template>
+</interface>
+

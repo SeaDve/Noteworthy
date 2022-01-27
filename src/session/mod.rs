@@ -22,7 +22,13 @@ use self::{
     content::Content, note_manager::NoteManager, note_tag_dialog::NoteTagDialog, sidebar::Sidebar,
     tag_editor::TagEditor,
 };
-use crate::{model::Note, spawn, Application};
+use crate::{
+    core::FileType,
+    model::{Attachment, Note},
+    spawn,
+    widgets::PictureViewer,
+    Application,
+};
 
 mod imp {
     use super::*;
@@ -33,11 +39,15 @@ mod imp {
     #[template(resource = "/io/github/seadve/Noteworthy/ui/session.ui")]
     pub struct Session {
         #[template_child]
+        pub stack: TemplateChild<gtk::Stack>,
+        #[template_child]
         pub leaflet: TemplateChild<adw::Leaflet>,
         #[template_child]
         pub sidebar: TemplateChild<Sidebar>,
         #[template_child]
         pub content: TemplateChild<Content>,
+        #[template_child]
+        pub picture_viewer: TemplateChild<PictureViewer>,
 
         pub note_manager: OnceCell<NoteManager>,
         pub selected_note: RefCell<Option<Note>>,
@@ -197,6 +207,7 @@ mod imp {
             self.parent_constructed(obj);
 
             obj.setup_signals();
+            obj.setup_picture_viewer();
         }
     }
 
@@ -275,6 +286,20 @@ impl Session {
         Ok(())
     }
 
+    pub fn show_attachment(&self, attachment: Attachment) {
+        let imp = self.imp();
+
+        match attachment.file_type() {
+            FileType::Bitmap => {
+                imp.picture_viewer.set_attachment(Some(attachment));
+                imp.stack.set_visible_child(&imp.picture_viewer.get());
+            }
+            FileType::Audio | FileType::Markdown | FileType::Unknown => {
+                log::error!("Session current only supports showing file of type `Bitmap`");
+            }
+        }
+    }
+
     fn set_note_manager(&self, note_manager: NoteManager) {
         self.imp().note_manager.set(note_manager).unwrap();
     }
@@ -294,6 +319,31 @@ impl Session {
                 }
             }),
         );
+    }
+
+    fn setup_picture_viewer(&self) {
+        self.connect_root_notify(|obj| {
+            if let Some(window) = obj
+                .root()
+                .and_then(|root| root.downcast::<gtk::Window>().ok())
+            {
+                window
+                    .bind_property(
+                        "fullscreened",
+                        &obj.imp().picture_viewer.get(),
+                        "fullscreened",
+                    )
+                    .flags(glib::BindingFlags::SYNC_CREATE)
+                    .build();
+            }
+        });
+
+        self.imp()
+            .picture_viewer
+            .connect_on_exit(clone!(@weak self as obj => move |_| {
+                let imp = obj.imp();
+                imp.stack.set_visible_child(&imp.leaflet.get());
+            }));
     }
 }
 

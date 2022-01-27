@@ -2,21 +2,29 @@
 <interface>
   <template class="NwtySession" parent="AdwBin">
     <property name="child">
-      <object class="AdwLeaflet" id="leaflet">
-        <property name="can-navigate-back">True</property>
+      <object class="GtkStack" id="stack">
+        <property name="transition-type">slide-left-right</property>
         <child>
-          <object class="NwtySidebar" id="sidebar">
-            <property name="compact" bind-source="leaflet" bind-property="folded" bind-flags="sync-create"/>
-            <property name="selected-note" bind-source="NwtySession" bind-property="selected-note" bind-flags="sync-create | bidirectional"/>
-            <property name="is-syncing" bind-source="NwtySession" bind-property="is-syncing" bind-flags="sync-create"/>
+          <object class="AdwLeaflet" id="leaflet">
+            <property name="can-navigate-back">True</property>
+            <child>
+              <object class="NwtySidebar" id="sidebar">
+                <property name="compact" bind-source="leaflet" bind-property="folded" bind-flags="sync-create"/>
+                <property name="selected-note" bind-source="NwtySession" bind-property="selected-note" bind-flags="sync-create | bidirectional"/>
+                <property name="is-syncing" bind-source="NwtySession" bind-property="is-syncing" bind-flags="sync-create"/>
+              </object>
+            </child>
+            <child>
+              <object class="NwtyContent" id="content">
+                <property name="hexpand">True</property>
+                <property name="compact" bind-source="leaflet" bind-property="folded" bind-flags="sync-create"/>
+                <property name="note" bind-source="NwtySession" bind-property="selected-note" bind-flags="sync-create | bidirectional"/>
+              </object>
+            </child>
           </object>
         </child>
         <child>
-          <object class="NwtyContent" id="content">
-            <property name="hexpand">True</property>
-            <property name="compact" bind-source="leaflet" bind-property="folded" bind-flags="sync-create"/>
-            <property name="note" bind-source="NwtySession" bind-property="selected-note" bind-flags="sync-create | bidirectional"/>
-          </object>
+          <object class="NwtyPictureViewer" id="picture_viewer"/>
         </child>
       </object>
     </property>

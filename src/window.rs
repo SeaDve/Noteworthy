@@ -34,6 +34,10 @@ mod imp {
 
         fn class_init(klass: &mut Self::Class) {
             Self::bind_template(klass);
+
+            klass.install_action("win.toggle-fullscreen", None, move |obj, _, _| {
+                obj.on_toggle_fullscreen();
+            });
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
@@ -188,6 +192,14 @@ impl Window {
 
         if is_maximized {
             self.maximize();
+        }
+    }
+
+    fn on_toggle_fullscreen(&self) {
+        if self.is_fullscreened() {
+            self.unfullscreen();
+        } else {
+            self.fullscreen();
         }
     }
 }

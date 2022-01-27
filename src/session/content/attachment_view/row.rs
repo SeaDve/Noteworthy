@@ -149,7 +149,7 @@ impl Row {
                 AudioRow::new(attachment).upcast()
             }
             FileType::Bitmap => {
-                self.remove_css_class("activatable");
+                self.add_css_class("activatable");
                 PictureRow::new(attachment).upcast()
             }
             FileType::Markdown | FileType::Unknown => {

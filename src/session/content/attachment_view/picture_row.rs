@@ -7,7 +7,7 @@ use gtk::{
 
 use std::cell::RefCell;
 
-use crate::{model::Attachment, spawn, spawn_blocking};
+use crate::{model::Attachment, session::Session, spawn, spawn_blocking};
 
 mod imp {
     use super::*;
@@ -75,6 +75,12 @@ mod imp {
             }
         }
 
+        fn constructed(&self, obj: &Self::Type) {
+            self.parent_constructed(obj);
+
+            obj.setup_gesture();
+        }
+
         fn dispose(&self, obj: &Self::Type) {
             while let Some(child) = obj.first_child() {
                 child.unparent();
@@ -128,5 +134,13 @@ impl PictureRow {
 
     async fn load_texture_from_file(&self, file: gio::File) -> Result<gdk::Texture, glib::Error> {
         spawn_blocking!(move || gdk::Texture::from_file(&file)).await
+    }
+
+    fn setup_gesture(&self) {
+        let gesture = gtk::GestureClick::new();
+        gesture.connect_released(clone!(@weak self as obj => move |_, _, _, _| {
+            Session::default().show_attachment(obj.attachment());
+        }));
+        self.add_controller(&gesture);
     }
 }
