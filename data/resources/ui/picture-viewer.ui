@@ -29,9 +29,15 @@
           </object>
         </child>
         <child>
-          <object class="GtkPicture" id="picture">
-            <property name="valign">center</property>
-            <property name="vexpand">true</property>
+          <object class="GtkScrolledWindow">
+            <property name="hexpand">True</property>
+            <property name="vexpand">True</property>
+            <property name="child">
+              <object class="NwtyScrollablePicture" id="picture">
+                <property name="valign">center</property>
+                <property name="vexpand">True</property>
+              </object>
+            </property>
           </object>
         </child>
       </object>
@@ -54,4 +60,3 @@
     </child>
   </template>
 </interface>
-

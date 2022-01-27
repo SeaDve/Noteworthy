@@ -8,6 +8,7 @@ use gtk::{
 
 use std::cell::{Cell, RefCell};
 
+use super::ScrollablePicture;
 use crate::{core::FileType, model::Attachment, spawn, spawn_blocking};
 
 mod imp {
@@ -22,7 +23,7 @@ mod imp {
         #[template_child]
         pub flap: TemplateChild<adw::Flap>,
         #[template_child]
-        pub picture: TemplateChild<gtk::Picture>,
+        pub picture: TemplateChild<ScrollablePicture>,
         #[template_child]
         pub fullscreen_button: TemplateChild<gtk::Button>,
 
