@@ -21,8 +21,7 @@ mod imp {
 
     #[derive(Debug, Default)]
     pub struct ScrollablePicture {
-        pub picture: gtk::Picture,
-
+        pub paintable: RefCell<Option<gdk::Paintable>>,
         pub zoom_level: Cell<f64>,
         pub hscroll_policy: Cell<Option<gtk::ScrollablePolicy>>,
         pub hadjustment: RefCell<Option<gtk::Adjustment>>,
@@ -177,17 +176,18 @@ impl ScrollablePicture {
 
     pub fn set_paintable(&self, paintable: Option<&impl IsA<gdk::Paintable>>) {
         let imp = self.imp();
-        imp.picture.set_paintable(paintable);
+        imp.paintable
+            .replace(paintable.map(|paintable| paintable.clone().upcast()));
 
-        imp.queued_scroll.replace(Some((0.0, 0.0)));
         self.set_zoom_level(DEFAULT_ZOOM_LEVEL);
+        imp.queued_scroll.replace(Some((0.0, 0.0)));
         self.queue_allocate();
 
         self.notify("paintable");
     }
 
     pub fn paintable(&self) -> Option<gdk::Paintable> {
-        self.imp().picture.paintable()
+        self.imp().paintable.borrow().clone()
     }
 
     pub fn set_zoom_level(&self, zoom_level: f64) {
@@ -206,16 +206,6 @@ impl ScrollablePicture {
 
     pub fn zoom_level(&self) -> f64 {
         self.imp().zoom_level.get()
-    }
-
-    fn bounds(&self) -> graphene::Rect {
-        let paintable = self.paintable().unwrap();
-        graphene::Rect::new(
-            0.0,
-            0.0,
-            paintable.intrinsic_width() as f32,
-            paintable.intrinsic_height() as f32,
-        )
     }
 
     fn effective_zoom_level(&self) -> f64 {
@@ -366,15 +356,12 @@ impl ScrollablePicture {
     }
 
     fn on_snapshot(&self, snapshot: &gtk::Snapshot) {
-        if let Some(texture) = self
-            .paintable()
-            .and_then(|paintable| paintable.downcast::<gdk::Texture>().ok())
-        {
+        if let Some(paintable) = self.paintable() {
             let hadj = self.hadjustment().unwrap();
             let vadj = self.vadjustment().unwrap();
             let zoom = self.effective_zoom_level() as f32;
             let (translate_x, translate_y) =
-                translate(self.width() as f32, self.height() as f32, &texture, zoom);
+                translate(self.width() as f32, self.height() as f32, &paintable, zoom);
 
             snapshot.save();
             snapshot.translate(&graphene::Point::new(
@@ -383,7 +370,11 @@ impl ScrollablePicture {
             ));
             snapshot.scale(zoom, zoom);
 
-            snapshot.append_texture(&texture, &self.bounds());
+            paintable.snapshot(
+                snapshot.upcast_ref::<gdk::Snapshot>(),
+                paintable.intrinsic_width() as f64,
+                paintable.intrinsic_height() as f64,
+            );
             snapshot.restore();
         }
     }
@@ -490,12 +481,7 @@ impl Default for ScrollablePicture {
     }
 }
 
-fn translate(
-    width: f32,
-    height: f32,
-    paintable: &impl IsA<gdk::Paintable>,
-    zoom: f32,
-) -> (f32, f32) {
+fn translate(width: f32, height: f32, paintable: &gdk::Paintable, zoom: f32) -> (f32, f32) {
     let (mut translate_x, mut translate_y) = (0.0, 0.0);
     let paintable_width = paintable.intrinsic_width() as f32 * zoom;
     let paintable_height = paintable.intrinsic_height() as f32 * zoom;
