@@ -190,14 +190,12 @@ impl PictureViewer {
 
         if is_fullscreened {
             imp.flap.set_fold_policy(adw::FlapFoldPolicy::Always);
-            imp.picture.set_halign(gtk::Align::Fill);
 
             imp.fullscreen_button.set_icon_name("view-restore-symbolic");
             imp.fullscreen_button
                 .set_tooltip_text(Some(&gettext("Leave fullscreen mode")));
         } else {
             imp.flap.set_fold_policy(adw::FlapFoldPolicy::Never);
-            imp.picture.set_halign(gtk::Align::Center);
 
             imp.fullscreen_button
                 .set_icon_name("view-fullscreen-symbolic");

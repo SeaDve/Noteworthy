@@ -11,6 +11,10 @@ use gtk::{
 
 use std::cell::{Cell, RefCell};
 
+const DEFAULT_ZOOM_LEVEL: f64 = 1.0;
+const MIN_ZOOM_LEVEL: f64 = 0.1;
+const MAX_ZOOM_LEVEL: f64 = 8.0;
+
 mod imp {
     use super::*;
     use once_cell::sync::Lazy;
@@ -43,8 +47,9 @@ mod imp {
 
         fn new() -> Self {
             Self {
+                zoom_level: Cell::new(DEFAULT_ZOOM_LEVEL),
                 scale_factor: Cell::new(1),
-                initial_zoom: Cell::new(1.0),
+                initial_zoom: Cell::new(DEFAULT_ZOOM_LEVEL),
                 ..Default::default()
             }
         }
@@ -65,9 +70,9 @@ mod imp {
                         "zoom-level",
                         "Zoom Level",
                         "Current zoom level",
-                        0.0,
-                        f64::MAX,
-                        1.0,
+                        MIN_ZOOM_LEVEL,
+                        MAX_ZOOM_LEVEL,
+                        DEFAULT_ZOOM_LEVEL,
                         glib::ParamFlags::READWRITE | glib::ParamFlags::EXPLICIT_NOTIFY,
                     ),
                     glib::ParamSpecOverride::for_interface::<gtk::Scrollable>("hscroll-policy"),
@@ -130,8 +135,7 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
-            obj.set_hexpand(true);
-            obj.set_vexpand(true);
+            obj.set_overflow(gtk::Overflow::Hidden);
 
             obj.setup_signals();
             obj.setup_gestures();
@@ -176,8 +180,8 @@ impl ScrollablePicture {
         imp.picture.set_paintable(paintable);
 
         imp.queued_scroll.replace(Some((0.0, 0.0)));
+        self.set_zoom_level(DEFAULT_ZOOM_LEVEL);
         self.queue_allocate();
-        self.set_zoom_level(0.5);
 
         self.notify("paintable");
     }
@@ -192,8 +196,6 @@ impl ScrollablePicture {
             self.set_zoom_at_center(zoom_level, pos);
             return;
         }
-
-        dbg!("TRYING TO SET ZOOM LEVEL!!");
 
         let width = self.width();
         let height = self.height();
@@ -240,7 +242,8 @@ impl ScrollablePicture {
         let zoom = self.zoom_level();
         self.imp()
             .zoom_level
-            .set(new_zoom.clamp((0.1_f64).min(zoom), (8.0_f64).max(zoom)));
+            .set(new_zoom.clamp((MIN_ZOOM_LEVEL).min(zoom), (MAX_ZOOM_LEVEL).max(zoom)));
+        dbg!(self.imp().zoom_level.get());
         self.notify("zoom-level");
 
         let hadj = self.hadjustment().unwrap();
@@ -424,6 +427,7 @@ impl ScrollablePicture {
 
             let change = obj.scale_factor() as f64 / imp.scale_factor.get() as f64;
             imp.zoom_level.set(obj.zoom_level() * change);
+            dbg!(obj.imp().zoom_level.get());
             obj.notify("zoom-level");
 
             let hadj = obj.hadjustment().unwrap();
@@ -440,9 +444,6 @@ impl ScrollablePicture {
     fn setup_gestures(&self) {
         let gesture_zoom = gtk::GestureZoom::new();
         gesture_zoom.connect_begin(clone!(@weak self as obj => move |gesture, _| {
-
-            dbg!("ZOOMM!");
-
             let view_center = gesture.bounding_box_center().unwrap();
             obj.begin_zoom(view_center);
 
@@ -456,9 +457,6 @@ impl ScrollablePicture {
 
         let motion_controller = gtk::EventControllerMotion::new();
         motion_controller.connect_enter(clone!(@weak self as obj => move |_, x, y| {
-
-            dbg!("ENTER!");
-
             obj.imp().pointer_position.replace(Some((x, y)));
         }));
         motion_controller.connect_motion(clone!(@weak self as obj => move |_, x, y| {
