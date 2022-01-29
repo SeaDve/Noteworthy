@@ -175,6 +175,10 @@ impl ScrollablePicture {
     }
 
     pub fn set_paintable(&self, paintable: Option<&impl IsA<gdk::Paintable>>) {
+        if paintable.map(|paintable| paintable.upcast_ref()) == self.paintable().as_ref() {
+            return;
+        }
+
         let imp = self.imp();
         imp.paintable
             .replace(paintable.map(|paintable| paintable.clone().upcast()));
@@ -394,15 +398,15 @@ impl ScrollablePicture {
         if let Some(paintable) = self.paintable() {
             let zoom = self.effective_zoom_level();
 
-            let hadjustment = self.hadjustment().unwrap();
-            let vadjustment = self.vadjustment().unwrap();
+            let hadj = self.hadjustment().unwrap();
+            let vadj = self.vadjustment().unwrap();
 
             let (x, y) = imp
                 .queued_scroll
                 .take()
-                .unwrap_or((hadjustment.value(), vadjustment.value()));
+                .unwrap_or((hadj.value(), vadj.value()));
 
-            hadjustment.configure(
+            hadj.configure(
                 x,
                 0.0,
                 (width as f64).max(paintable.intrinsic_width() as f64 * zoom),
@@ -410,7 +414,7 @@ impl ScrollablePicture {
                 0.9 * width as f64,
                 width as f64,
             );
-            vadjustment.configure(
+            vadj.configure(
                 y,
                 0.0,
                 (height as f64).max(paintable.intrinsic_height() as f64 * zoom),
