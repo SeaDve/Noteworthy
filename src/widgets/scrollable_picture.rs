@@ -208,6 +208,16 @@ impl ScrollablePicture {
         self.imp().zoom_level.get()
     }
 
+    pub fn is_image_movable(&self) -> bool {
+        let hadj = self.hadjustment().unwrap();
+        let vadj = self.vadjustment().unwrap();
+
+        let hmovable = hadj.page_size() < hadj.upper();
+        let vmovable = vadj.page_size() < vadj.upper();
+
+        hmovable || vmovable
+    }
+
     fn effective_zoom_level(&self) -> f64 {
         self.zoom_level() / self.scale_factor() as f64
     }
@@ -233,7 +243,6 @@ impl ScrollablePicture {
         self.imp()
             .zoom_level
             .set(new_zoom.clamp((MIN_ZOOM_LEVEL).min(zoom), (MAX_ZOOM_LEVEL).max(zoom)));
-        dbg!(self.imp().zoom_level.get());
         self.notify("zoom-level");
 
         let hadj = self.hadjustment().unwrap();
@@ -418,7 +427,6 @@ impl ScrollablePicture {
 
             let change = obj.scale_factor() as f64 / imp.scale_factor.get() as f64;
             imp.zoom_level.set(obj.zoom_level() * change);
-            dbg!(obj.imp().zoom_level.get());
             obj.notify("zoom-level");
 
             let hadj = obj.hadjustment().unwrap();
@@ -445,6 +453,25 @@ impl ScrollablePicture {
             obj.set_zoom_at_center(obj.imp().initial_zoom.get() * scale, view_center);
         }));
         self.add_controller(&gesture_zoom);
+
+        let gesture_drag = gtk::GestureDrag::new();
+        gesture_drag.connect_drag_begin(clone!(@weak self as obj => move |_, _, _| {
+            if obj.is_image_movable() {
+                if let Some(cursor) = gdk::Cursor::from_name("move", None) {
+                    obj.set_cursor(Some(&cursor));
+                }
+            }
+        }));
+        gesture_drag.connect_drag_update(
+            clone!(@weak self as obj => move |_, offset_x, offset_y| {
+                obj.imp().queued_scroll.replace(Some((-offset_x, -offset_y)));
+                obj.queue_allocate();
+            }),
+        );
+        gesture_drag.connect_drag_end(clone!(@weak self as obj => move |_, _, _| {
+            obj.set_cursor(None);
+        }));
+        self.add_controller(&gesture_drag);
 
         let motion_controller = gtk::EventControllerMotion::new();
         motion_controller.connect_enter(clone!(@weak self as obj => move |_, x, y| {
