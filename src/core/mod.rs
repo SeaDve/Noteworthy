@@ -6,6 +6,7 @@ mod clock_time;
 mod date_time;
 mod file_type;
 mod note_repository;
+mod point;
 mod ssh_key;
 
 pub use self::{
@@ -17,5 +18,6 @@ pub use self::{
     date_time::DateTime,
     file_type::FileType,
     note_repository::{NoteRepository, SyncState},
+    point::Point,
     ssh_key::SshKey,
 };
