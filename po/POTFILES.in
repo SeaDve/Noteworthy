@@ -15,6 +15,6 @@ src/main.rs
 src/session/content/attachment_view/file_importer_button.rs
 src/session/content/view/mod.rs
 src/session/note_tag_dialog/mod.rs
+src/session/picture_viewer.rs
 src/session/sidebar/mod.rs
 src/session/sidebar/view_switcher/mod.rs
-src/widgets/picture_viewer.rs

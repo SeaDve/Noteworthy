@@ -8,8 +8,7 @@ use gtk::{
 
 use std::cell::{Cell, RefCell};
 
-use super::ScrollablePicture;
-use crate::{core::FileType, model::Attachment, spawn, spawn_blocking};
+use crate::{core::FileType, model::Attachment, spawn, spawn_blocking, widgets::ScrollablePicture};
 
 mod imp {
     use super::*;

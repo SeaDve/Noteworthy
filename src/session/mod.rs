@@ -1,6 +1,7 @@
 mod content;
 mod note_manager;
 mod note_tag_dialog;
+mod picture_viewer;
 mod sidebar;
 mod tag_editor;
 
@@ -19,15 +20,13 @@ use std::{
 };
 
 use self::{
-    content::Content, note_manager::NoteManager, note_tag_dialog::NoteTagDialog, sidebar::Sidebar,
-    tag_editor::TagEditor,
+    content::Content, note_manager::NoteManager, note_tag_dialog::NoteTagDialog,
+    picture_viewer::PictureViewer, sidebar::Sidebar, tag_editor::TagEditor,
 };
 use crate::{
     core::FileType,
     model::{Attachment, Note},
-    spawn,
-    widgets::PictureViewer,
-    Application,
+    spawn, Application,
 };
 
 mod imp {
