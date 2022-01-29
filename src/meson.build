@@ -79,6 +79,9 @@ test(
     'clippy',
     '--manifest-path=@0@'.format(manifest_path),
     '--target-dir=@0@'.format(cargo_target_dir),
+    '--',
+    '-D',
+    'warnings',
   ],
   env: [
     'CARGO_HOME=@0@'.format(cargo_home),
