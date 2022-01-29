@@ -7,7 +7,6 @@ mod date_time;
 mod file_type;
 mod note_repository;
 mod point;
-mod ssh_key;
 
 pub use self::{
     audio_player::{AudioPlayer, PlaybackState},
@@ -19,5 +18,4 @@ pub use self::{
     file_type::FileType,
     note_repository::{NoteRepository, SyncState},
     point::Point,
-    ssh_key::SshKey,
 };
