@@ -185,7 +185,7 @@ impl ScrollablePicture {
         imp.paintable
             .replace(paintable.map(|paintable| paintable.clone().upcast()));
 
-        self.set_zoom_level(DEFAULT_ZOOM_LEVEL);
+        self.reset_zoom_level();
         imp.queued_scroll.set(Some(Point::ZERO));
         self.queue_allocate();
 
@@ -211,7 +211,30 @@ impl ScrollablePicture {
         self.imp().zoom_level.get()
     }
 
-    pub fn is_image_movable(&self) -> bool {
+    pub fn connect_zoom_level_notify<F>(&self, f: F) -> glib::SignalHandlerId
+    where
+        F: Fn(&Self) + 'static,
+    {
+        self.connect_notify_local(Some("zoom-level"), move |obj, _| f(obj))
+    }
+
+    pub fn reset_zoom_level(&self) {
+        self.set_zoom_level(DEFAULT_ZOOM_LEVEL);
+    }
+
+    pub fn can_zoom_out(&self) -> bool {
+        self.zoom_level() > MIN_ZOOM_LEVEL
+    }
+
+    pub fn can_zoom_in(&self) -> bool {
+        self.zoom_level() < MAX_ZOOM_LEVEL
+    }
+
+    pub fn has_default_zoom_level(&self) -> bool {
+        self.zoom_level() == DEFAULT_ZOOM_LEVEL
+    }
+
+    fn is_image_movable(&self) -> bool {
         let hadj = self.hadjustment().unwrap();
         let vadj = self.vadjustment().unwrap();
 

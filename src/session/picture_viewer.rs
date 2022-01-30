@@ -24,6 +24,8 @@ mod imp {
         #[template_child]
         pub picture: TemplateChild<ScrollablePicture>,
         #[template_child]
+        pub zoom_level_label: TemplateChild<gtk::Label>,
+        #[template_child]
         pub fullscreen_button: TemplateChild<gtk::Button>,
 
         pub attachment: RefCell<Option<WeakRef<Attachment>>>,
@@ -39,6 +41,20 @@ mod imp {
         fn class_init(klass: &mut Self::Class) {
             Self::bind_template(klass);
             Self::Type::bind_template_callbacks(klass);
+
+            klass.install_action("picture-viewer.zoom-out", None, move |obj, _, _| {
+                let picture = obj.imp().picture.get();
+                picture.set_zoom_level(picture.zoom_level() - 0.1);
+            });
+
+            klass.install_action("picture-viewer.zoom-in", None, move |obj, _, _| {
+                let picture = obj.imp().picture.get();
+                picture.set_zoom_level(picture.zoom_level() + 0.1);
+            });
+
+            klass.install_action("picture-viewer.reset-zoom", None, move |obj, _, _| {
+                obj.imp().picture.reset_zoom_level();
+            });
 
             klass.install_action("picture-viewer.exit", None, move |obj, _, _| {
                 obj.on_exit();
@@ -111,7 +127,10 @@ mod imp {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
-            obj.update_ui();
+            obj.setup_picture();
+
+            obj.update_fullscreen_ui();
+            obj.update_zoom_level_ui();
         }
     }
 
@@ -168,7 +187,7 @@ impl PictureViewer {
 
         let imp = self.imp();
         imp.fullscreened.set(is_fullscreened);
-        self.update_ui();
+        self.update_fullscreen_ui();
         self.notify("fullscreened");
     }
 
@@ -180,7 +199,7 @@ impl PictureViewer {
         self.imp().flap.set_reveal_flap(is_reveal_headerbar);
     }
 
-    fn update_ui(&self) {
+    fn update_fullscreen_ui(&self) {
         let imp = self.imp();
         let is_fullscreened = self.is_fullscreened();
 
@@ -201,6 +220,22 @@ impl PictureViewer {
             imp.fullscreen_button
                 .set_tooltip_text(Some(&gettext("Show the current image in fullscreen mode")));
         }
+    }
+
+    fn update_zoom_level_ui(&self) {
+        let imp = self.imp();
+        let picture = imp.picture.get();
+
+        let zoom_level = picture.zoom_level();
+        imp.zoom_level_label
+            .set_label(&format!("{:.0}%", zoom_level * 100.0));
+
+        self.action_set_enabled("picture-viewer.zoom-out", picture.can_zoom_out());
+        self.action_set_enabled("picture-viewer.zoom-in", picture.can_zoom_in());
+        self.action_set_enabled(
+            "picture-viewer.reset-zoom",
+            !picture.has_default_zoom_level(),
+        );
     }
 
     fn update_content(&self) {
@@ -268,6 +303,14 @@ impl PictureViewer {
         if n_pressed == 2 {
             self.activate_action("win.toggle-fullscreen", None).unwrap();
         }
+    }
+
+    fn setup_picture(&self) {
+        self.imp()
+            .picture
+            .connect_zoom_level_notify(clone!(@weak self as obj => move |_| {
+                obj.update_zoom_level_ui();
+            }));
     }
 }
 
