@@ -264,13 +264,37 @@ class PotfilesSanity(Check):
     @staticmethod
     def _get_ui_files() -> List[Path]:
         output = get_output(
-            "grep -lIr 'translatable=\"yes\"' data/resources/ui/*", shell=True
+            [
+                "find",
+                "data/resources/ui",
+                "-type",
+                "f",
+                "-exec",
+                "grep",
+                "-lI",
+                'translatable="yes"',
+                "{}",
+                ";",
+            ]
         )
         return [Path(line) for line in output.splitlines()]
 
     @staticmethod
     def _get_rust_files() -> List[Path]:
-        output = get_output(r"grep -lIrE 'gettext[!]?\(' src/*", shell=True)
+        output = get_output(
+            [
+                "find",
+                "src",
+                "-type",
+                "f",
+                "-exec",
+                "grep",
+                "-lIE",
+                r"gettext[!]?\(",
+                "{}",
+                ";",
+            ]
+        )
         return [Path(line) for line in output.splitlines()]
 
 
@@ -508,8 +532,8 @@ def run_and_get_output(args: List[str]) -> Tuple[int, str]:
     return (process.returncode, "\n".join([stdout, stderr]).strip())
 
 
-def get_output(*args, **kwargs) -> str:
-    process = subprocess.run(*args, capture_output=True, **kwargs)
+def get_output(args: List[str]) -> str:
+    process = subprocess.run(args, capture_output=True, check=True)
     return process.stdout.decode("utf-8").strip()
 
 
