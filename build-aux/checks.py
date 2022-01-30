@@ -137,7 +137,7 @@ class PotfilesAlphabetically(Check):
     """Check if files in POTFILES are sorted alphabetically.
 
     This assumes the following:
-        - POTFILES is located at 'po/POTFILES.in'
+        - POTFILES is located at `po/POTFILES.in`
     """
 
     def subject(self):
@@ -202,9 +202,9 @@ class PotfilesSanity(Check):
         - Only detects UI (Glade) or Rust files
 
     This assumes the following:
-        - POTFILES is located at 'po/POTFILES.in'
-        - UI (Glade) files are located in 'data/resources/ui' and use 'translatable="yes"'
-        - Rust files are located in 'src' and use '*gettext' methods or macros
+        - POTFILES is located at `po/POTFILES.in`
+        - UI (Glade) files are located in `data/resources/ui` and use `translatable="yes"`
+        - Rust files are located in `src` and use `*gettext` methods or macros
     """
 
     def subject(self):
@@ -327,7 +327,7 @@ class LeftoverDebugPrints(Check):
 
         if n_leftovers > 0:
             message = [
-                f"{ERROR}: Found {n_leftovers} leftover debug print{'s'[:n_leftovers^1]}"
+                f"{ERROR}: Found {n_leftovers} leftover debug print{'s'[:n_leftovers^1]}:"
             ]
 
             for leftover in leftovers:
@@ -344,14 +344,25 @@ class LeftoverDebugPrints(Check):
     @staticmethod
     def _get_matches(pattern: str) -> List[Match]:
         output = get_output(
-            f"""awk -v s="{pattern}" 'i=index($0, s) {{print FILENAME":"FNR":"i":"$0}}' src/*""",
-            shell=True,
+            [
+                "find",
+                "src",
+                "-type",
+                "f",
+                "-exec",
+                "awk",
+                "-v",
+                f"s={pattern}",
+                "i=index($0, s) { print FILENAME, FNR, i }",
+                "{}",
+                ";",
+            ]
         )
 
         matches = []
 
         for line in output.splitlines():
-            path, line_number, column_number, _matched_line = line.split(":", 3)
+            path, line_number, column_number = line.split()
             matches.append(
                 LeftoverDebugPrints.Match(
                     Path(path), int(line_number), int(column_number), pattern
