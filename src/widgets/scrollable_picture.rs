@@ -242,24 +242,22 @@ impl ScrollablePicture {
     fn set_zoom_at_center(&self, new_zoom: f64, zoom_center: Point) {
         let imp = self.imp();
 
-        let zoom = self.zoom_level();
         self.imp()
             .zoom_level
-            .set(new_zoom.clamp((MIN_ZOOM_LEVEL).min(zoom), (MAX_ZOOM_LEVEL).max(zoom)));
+            .set(new_zoom.clamp(MIN_ZOOM_LEVEL, MAX_ZOOM_LEVEL));
         self.notify("zoom-level");
 
         let hadj = self.hadjustment().unwrap();
         let vadj = self.vadjustment().unwrap();
 
-        let image = self.from_image_coords(imp.initial_zoom_center.borrow().unwrap());
+        let initial_zoom_center = self.from_image_coords(imp.initial_zoom_center.borrow().unwrap());
         let new_scroll = Point::new(
-            image.x + hadj.value() - zoom_center.x,
-            image.y + vadj.value() - zoom_center.y,
+            initial_zoom_center.x + hadj.value() - zoom_center.x,
+            initial_zoom_center.y + vadj.value() - zoom_center.y,
         );
         imp.queued_scroll.replace(Some(new_scroll));
 
         self.queue_allocate();
-        self.queue_draw();
     }
 
     fn set_hadjustment_inner(&self, hadjustment: Option<gtk::Adjustment>) {
@@ -273,8 +271,8 @@ impl ScrollablePicture {
 
         if let Some(ref adjustment) = hadjustment {
             let signal_id =
-                adjustment.connect_value_changed(clone!(@weak self as this => move |_| {
-                    this.queue_draw();
+                adjustment.connect_value_changed(clone!(@weak self as obj => move |_| {
+                    obj.queue_draw();
                 }));
             imp.hadjustment_signal_id.replace(Some(signal_id));
         }
@@ -293,8 +291,8 @@ impl ScrollablePicture {
 
         if let Some(ref adjustment) = vadjustment {
             let signal_id =
-                adjustment.connect_value_changed(clone!(@weak self as this => move |_| {
-                    this.queue_draw();
+                adjustment.connect_value_changed(clone!(@weak self as obj => move |_| {
+                    obj.queue_draw();
                 }));
             imp.vadjustment_signal_id.replace(Some(signal_id));
         }
