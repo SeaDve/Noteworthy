@@ -323,11 +323,7 @@ class Resources(Check):
 
 
 class LeftoverDebugPrints(Check):
-    """Checks for leftover debug prints in the src directory
-
-    This assumes the following:
-        - The path to file does not contain a ":"
-    """
+    """Checks for leftover debug prints in the src directory."""
 
     @dataclass
     class Match:
@@ -341,12 +337,7 @@ class LeftoverDebugPrints(Check):
         return f"no leftover {joined}"
 
     def run(self):
-        leftovers = []
-
-        for pattern in self._get_patterns():
-            for match in self._get_matches(pattern):
-                leftovers.append(match)
-
+        leftovers = self._get_matches(self._get_patterns())
         n_leftovers = len(leftovers)
 
         if n_leftovers > 0:
@@ -366,7 +357,9 @@ class LeftoverDebugPrints(Check):
         return ["dbg!", "println!", "print!"]
 
     @staticmethod
-    def _get_matches(pattern: str) -> List[Match]:
+    def _get_matches(patterns: List[str]) -> List[Match]:
+        to_find = "|".join(patterns)
+
         output = get_output(
             [
                 "find",
@@ -375,9 +368,7 @@ class LeftoverDebugPrints(Check):
                 "f",
                 "-exec",
                 "awk",
-                "-v",
-                f"s={pattern}",
-                "i=index($0, s) { print FILENAME, FNR, i }",
+                f"match($0, /{to_find}/, p) {{ print FILENAME, FNR, index($0, $1), p[0] }}",
                 "{}",
                 ";",
             ]
@@ -386,7 +377,7 @@ class LeftoverDebugPrints(Check):
         matches = []
 
         for line in output.splitlines():
-            path, line_number, column_number = line.split()
+            path, line_number, column_number, pattern = line.split()
             matches.append(
                 LeftoverDebugPrints.Match(
                     Path(path), int(line_number), int(column_number), pattern
