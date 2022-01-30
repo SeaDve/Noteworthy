@@ -186,7 +186,7 @@ impl ScrollablePicture {
             .replace(paintable.map(|paintable| paintable.clone().upcast()));
 
         self.set_zoom_level(DEFAULT_ZOOM_LEVEL);
-        imp.queued_scroll.replace(Some(Point::zero()));
+        imp.queued_scroll.replace(Some(Point::ZERO));
         self.queue_allocate();
 
         self.notify("paintable");
