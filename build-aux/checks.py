@@ -356,7 +356,7 @@ class LeftoverDebugPrints(Check):
 
             for leftover in leftovers:
                 message.append(
-                    f"Found `{leftover.pattern}` at {leftover.path}:{leftover.line_number}:{leftover.column_number}"
+                    f"leftover `{leftover.pattern}` at {leftover.path}:{leftover.line_number}:{leftover.column_number}"
                 )
 
             raise FailedCheckError(error_message="\n".join(message))
