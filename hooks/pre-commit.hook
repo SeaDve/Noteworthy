@@ -13,7 +13,7 @@ ABORTING = f"  {BOLD_RED}ABORTING{ENDC}"
 
 
 def main() -> int:
-    print(f"{RUNNING} pre-commit hook (To ignore, run `git commit --no-verify`")
+    print(f"{RUNNING} pre-commit hook (To ignore, run `git commit --no-verify`)")
 
     ret = checks.main(None)
 
