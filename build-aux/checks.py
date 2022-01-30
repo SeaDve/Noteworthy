@@ -6,6 +6,7 @@ import subprocess
 import sys
 import time
 from argparse import Namespace
+from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Tuple
 from xml.etree import ElementTree
@@ -297,6 +298,69 @@ class Resources(Check):
                 )
 
 
+class LeftoverDebugPrints(Check):
+    """Checks for leftover debug prints in the src directory
+
+    This assumes the following:
+        - The path to file does not contain a ":"
+    """
+
+    @dataclass
+    class Match:
+        path: Path
+        line_number: int
+        column_number: int
+        pattern: str
+
+    def subject(self):
+        joined = ", ".join(self._get_patterns())
+        return f"no leftover {joined}"
+
+    def run(self):
+        leftovers = []
+
+        for pattern in self._get_patterns():
+            for match in self._get_matches(pattern):
+                leftovers.append(match)
+
+        n_leftovers = len(leftovers)
+
+        if n_leftovers > 0:
+            message = [
+                f"{ERROR}: Found {n_leftovers} leftover debug print{'s'[:n_leftovers^1]}"
+            ]
+
+            for leftover in leftovers:
+                message.append(
+                    f"Found `{leftover.pattern}` at {leftover.path}:{leftover.line_number}:{leftover.column_number}"
+                )
+
+            raise FailedCheckError(error_message="\n".join(message))
+
+    @staticmethod
+    def _get_patterns() -> List[str]:
+        return ["dbg!", "println!", "print!"]
+
+    @staticmethod
+    def _get_matches(pattern: str) -> List[Match]:
+        output = get_output(
+            f"""awk -v s="{pattern}" 'i=index($0, s) {{print FILENAME":"FNR":"i":"$0}}' src/*""",
+            shell=True,
+        )
+
+        matches = []
+
+        for line in output.splitlines():
+            path, line_number, column_number, _matched_line = line.split(":", 3)
+            matches.append(
+                LeftoverDebugPrints.Match(
+                    Path(path), int(line_number), int(column_number), pattern
+                )
+            )
+
+        return matches
+
+
 class Runner:
     _checks: List[Check] = []
     _successful_checks: List[Check] = []
@@ -453,6 +517,7 @@ def main(args: Optional[Namespace]) -> int:
     runner.add(potfiles_alphabetically)
 
     runner.add(Resources())
+    runner.add(LeftoverDebugPrints())
 
     if runner.run_all():
         return os.EX_OK

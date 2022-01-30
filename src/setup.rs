@@ -235,15 +235,11 @@ impl Setup {
         let imp = self.imp();
         let mut config = imp.config.borrow_mut();
 
-        dbg!(&config);
-
         let is_automatic = imp.is_automatic_switch.state();
         config.is_automatic = Some(is_automatic);
 
         let provider = imp::GitHost::from_u8(imp.git_host_provider_row.selected() as u8);
         config.provider = Some(provider);
-
-        dbg!(&config);
     }
 
     fn create_repo(&self) {
@@ -253,9 +249,9 @@ impl Setup {
         let clone_url = imp.clone_url_entry.text();
         config.clone_url = Some(clone_url.to_string());
 
-        dbg!(NoteRepository::validate_remote_url(&clone_url));
-
-        dbg!(&config);
+        if !NoteRepository::validate_remote_url(&clone_url) {
+            log::warn!("Invalid remote url `{}`", clone_url);
+        }
     }
 }
 
