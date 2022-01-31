@@ -371,7 +371,7 @@ class LeftoverDebugPrints(Check):
                 "f",
                 "-exec",
                 "awk",
-                f"match($0, /{to_find}/, p) {{ print FILENAME, FNR, index($0, $1), p[0] }}",
+                f"match($0, /{to_find}/, p) {{ print FILENAME, FNR, index($0, p[0]), p[0] }}",
                 "{}",
                 ";",
             ]
