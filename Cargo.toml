@@ -20,7 +20,7 @@ adw = { package = "libadwaita", version = "0.1.0" }
 anyhow = "1.0.53"
 indexmap = { version = "1.8.0", features = ["serde"] }
 chrono = { version = "0.4.19", features = ["serde"] }
-serde = { version = "1.0.135", features = ["derive"] }
+serde = { version = "1.0.136", features = ["derive"] }
 serde_yaml = "0.8.23"
 gray_matter = "0.2.1"
 

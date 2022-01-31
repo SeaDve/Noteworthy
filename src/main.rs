@@ -46,7 +46,6 @@ fn main() {
 
     glib::set_application_name(&gettext("Noteworthy"));
 
-    gtk::init().expect("Unable to start GTK4");
     gst::init().expect("Unable to start GStreamer");
 
     gstgtk4::plugin_register_static().expect("Failed to register gstgtk4 plugin");
