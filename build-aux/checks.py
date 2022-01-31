@@ -350,7 +350,10 @@ class LeftoverDebugPrints(Check):
                     f"leftover `{leftover.pattern}` at {leftover.path}:{leftover.line_number}:{leftover.column_number}"
                 )
 
-            raise FailedCheckError(error_message="\n".join(message))
+            raise FailedCheckError(
+                error_message="\n".join(message),
+                suggestion_message="Please use `log::*` macros instead for logging",
+            )
 
     @staticmethod
     def _get_patterns() -> List[str]:
