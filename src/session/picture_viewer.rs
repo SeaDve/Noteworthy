@@ -226,7 +226,10 @@ impl PictureViewer {
         let imp = self.imp();
         let picture = imp.picture.get();
 
+        // FIXME For some reason a call to this cause some error of 'Trying to snapshot
+        // GtkScrolledWindow without a current allocation
         let zoom_level = picture.zoom_level();
+
         imp.zoom_level_label
             .set_label(&format!("{:.0}%", zoom_level * 100.0));
 
