@@ -1,4 +1,3 @@
-use adw::subclass::prelude::*;
 use gtk::{
     glib::{self, clone, closure},
     prelude::*,

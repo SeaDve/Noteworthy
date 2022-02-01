@@ -1,8 +1,8 @@
-use adw::subclass::prelude::*;
 use gtk::{
     gio,
     glib::{self, clone},
     prelude::*,
+    subclass::prelude::*,
 };
 use indexmap::IndexMap;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};

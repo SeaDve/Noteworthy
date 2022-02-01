@@ -1,5 +1,4 @@
-use adw::subclass::prelude::*;
-use gtk::{gio, glib, prelude::*};
+use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 
 use std::cell::RefCell;
 

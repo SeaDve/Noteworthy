@@ -1,7 +1,7 @@
-use adw::subclass::prelude::*;
 use gtk::{
     glib::{self, clone},
     prelude::*,
+    subclass::prelude::*,
 };
 
 use std::{cell::RefCell, collections::HashMap};
