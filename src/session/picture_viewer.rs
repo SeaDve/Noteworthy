@@ -224,8 +224,17 @@ impl PictureViewer {
         let imp = self.imp();
         let picture = imp.picture.get();
 
-        // FIXME For some reason a call to this cause some error of 'Trying to snapshot
-        // GtkScrolledWindow without a current allocation
+        // FIXME having to call this DOESNT MAKE ANY SENSE!!! Not setting the zoom_level_label's
+        // label to current zoom_level, makes this not needed. Otherwise, without this
+        // queue_allocate, there will be `Trying to snapshot GtkScrolledWindow without a
+        // current allocation`
+        picture
+            .parent()
+            .unwrap()
+            .downcast::<gtk::ScrolledWindow>()
+            .unwrap()
+            .queue_allocate();
+
         let zoom_level = picture.zoom_level();
 
         imp.zoom_level_label
