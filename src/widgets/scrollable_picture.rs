@@ -521,7 +521,7 @@ impl ScrollablePicture {
             clone!(@weak self as obj => @default-panic, move |event, _delta_x, delta_y| {
                 if event.current_event_state().contains(gdk::ModifierType::CONTROL_MASK) {
                     if delta_y as i32 > 0 {
-                        obj.zoom_out()
+                        obj.zoom_out();
                     } else {
                         obj.zoom_in();
                     }
