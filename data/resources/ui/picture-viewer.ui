@@ -4,7 +4,7 @@
     <child>
       <object class="AdwFlap" id="flap">
         <property name="orientation">vertical</property>
-        <child type="flap">
+        <property name="flap">
           <object class="AdwHeaderBar">
             <property name="title-widget">
               <object class="AdwWindowTitle">
@@ -56,8 +56,8 @@
               </object>
             </child>
           </object>
-        </child>
-        <child>
+        </property>
+        <property name="content">
           <object class="GtkScrolledWindow">
             <property name="propagate-natural-width">True</property>
             <property name="propagate-natural-height">True</property>
@@ -66,7 +66,7 @@
               </object>
             </property>
           </object>
-        </child>
+        </property>
       </object>
     </child>
     <child>
