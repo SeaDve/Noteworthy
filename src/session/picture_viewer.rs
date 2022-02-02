@@ -43,13 +43,11 @@ mod imp {
             Self::Type::bind_template_callbacks(klass);
 
             klass.install_action("picture-viewer.zoom-out", None, move |obj, _, _| {
-                let picture = obj.imp().picture.get();
-                picture.set_zoom_level(picture.zoom_level() - 0.1);
+                obj.imp().picture.get().zoom_out();
             });
 
             klass.install_action("picture-viewer.zoom-in", None, move |obj, _, _| {
-                let picture = obj.imp().picture.get();
-                picture.set_zoom_level(picture.zoom_level() + 0.1);
+                obj.imp().picture.get().zoom_in();
             });
 
             klass.install_action("picture-viewer.reset-zoom", None, move |obj, _, _| {

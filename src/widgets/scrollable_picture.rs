@@ -34,7 +34,7 @@ mod imp {
         pub scale_factor: Cell<i32>,
         pub initial_zoom: Cell<f64>,
         pub initial_zoom_center: Cell<Option<Point>>,
-        pub queued_scroll: Cell<Option<Point>>,
+        pub drag_anchor: Cell<Option<Point>>,
         pub hadjustment_signal_id: RefCell<Option<glib::SignalHandlerId>>,
         pub vadjustment_signal_id: RefCell<Option<glib::SignalHandlerId>>,
     }
@@ -186,8 +186,7 @@ impl ScrollablePicture {
             .replace(paintable.map(|paintable| paintable.clone().upcast()));
 
         self.reset_zoom_level();
-        imp.queued_scroll.set(Some(Point::ZERO));
-        self.queue_allocate();
+        self.scroll_to(Point::ZERO);
 
         self.notify("paintable");
     }
@@ -218,6 +217,14 @@ impl ScrollablePicture {
         self.connect_notify_local(Some("zoom-level"), move |obj, _| f(obj))
     }
 
+    pub fn zoom_in(&self) {
+        self.set_zoom_level(self.zoom_level() + 0.1);
+    }
+
+    pub fn zoom_out(&self) {
+        self.set_zoom_level(self.zoom_level() - 0.1);
+    }
+
     pub fn reset_zoom_level(&self) {
         self.set_zoom_level(DEFAULT_ZOOM_LEVEL);
     }
@@ -231,7 +238,15 @@ impl ScrollablePicture {
     }
 
     pub fn has_default_zoom_level(&self) -> bool {
-        self.zoom_level() == DEFAULT_ZOOM_LEVEL
+        (self.zoom_level() - DEFAULT_ZOOM_LEVEL).abs() < f64::EPSILON
+    }
+
+    fn scroll_to(&self, widget_coords: Point) {
+        let hadj = self.hadjustment().unwrap();
+        let vadj = self.vadjustment().unwrap();
+
+        hadj.set_value(widget_coords.x);
+        vadj.set_value(widget_coords.y);
     }
 
     fn is_image_movable(&self) -> bool {
@@ -273,12 +288,13 @@ impl ScrollablePicture {
         let hadj = self.hadjustment().unwrap();
         let vadj = self.vadjustment().unwrap();
 
-        let initial_zoom_center = self.from_image_coords(imp.initial_zoom_center.get().unwrap());
+        let initial_zoom_center =
+            self.image_coords_to_widget_coords(imp.initial_zoom_center.get().unwrap());
         let new_scroll = Point::new(
             initial_zoom_center.x + hadj.value() - zoom_center.x,
             initial_zoom_center.y + vadj.value() - zoom_center.y,
         );
-        imp.queued_scroll.set(Some(new_scroll));
+        self.scroll_to(new_scroll);
 
         self.queue_allocate();
     }
@@ -327,10 +343,10 @@ impl ScrollablePicture {
         let imp = self.imp();
         imp.initial_zoom.set(self.zoom_level());
         imp.initial_zoom_center
-            .set(Some(self.to_image_coords(zoom_center)));
+            .set(Some(self.widget_coords_to_image_coords(zoom_center)));
     }
 
-    fn from_image_coords(&self, image_coords: Point) -> Point {
+    fn image_coords_to_widget_coords(&self, image_coords: Point) -> Point {
         let hadj = self.hadjustment().unwrap();
         let vadj = self.vadjustment().unwrap();
 
@@ -349,7 +365,7 @@ impl ScrollablePicture {
         Point::new(view_x, view_y)
     }
 
-    fn to_image_coords(&self, view_coords: Point) -> Point {
+    fn widget_coords_to_image_coords(&self, view_coords: Point) -> Point {
         let hadj = self.hadjustment().unwrap();
         let vadj = self.vadjustment().unwrap();
 
@@ -410,21 +426,14 @@ impl ScrollablePicture {
     }
 
     fn on_size_allocate(&self, width: i32, height: i32, _baseline: i32) {
-        let imp = self.imp();
-
         if let Some(paintable) = self.paintable() {
-            let zoom = self.effective_zoom_level();
-
             let hadj = self.hadjustment().unwrap();
             let vadj = self.vadjustment().unwrap();
 
-            let queued_scroll = imp
-                .queued_scroll
-                .take()
-                .unwrap_or_else(|| Point::new(hadj.value(), vadj.value()));
+            let zoom = self.effective_zoom_level();
 
             hadj.configure(
-                queued_scroll.x,
+                hadj.value(),
                 0.0,
                 (width as f64).max(paintable.intrinsic_width() as f64 * zoom),
                 0.1 * width as f64,
@@ -432,7 +441,7 @@ impl ScrollablePicture {
                 width as f64,
             );
             vadj.configure(
-                queued_scroll.y,
+                vadj.value(),
                 0.0,
                 (height as f64).max(paintable.intrinsic_height() as f64 * zoom),
                 0.1 * height as f64,
@@ -449,12 +458,6 @@ impl ScrollablePicture {
             let change = obj.scale_factor() as f64 / imp.scale_factor.get() as f64;
             imp.zoom_level.set(obj.zoom_level() * change);
             obj.notify("zoom-level");
-
-            let hadj = obj.hadjustment().unwrap();
-            let vadj = obj.vadjustment().unwrap();
-
-            let new_scroll = Point::new(hadj.value(), vadj.value());
-            imp.queued_scroll.set(Some(new_scroll));
 
             imp.scale_factor.set(obj.scale_factor());
 
@@ -478,6 +481,11 @@ impl ScrollablePicture {
 
         let gesture_drag = gtk::GestureDrag::new();
         gesture_drag.connect_drag_begin(clone!(@weak self as obj => move |_, _, _| {
+            let hadj = obj.hadjustment().unwrap();
+            let vadj = obj.vadjustment().unwrap();
+
+            obj.imp().drag_anchor.set(Some(Point::new(hadj.value() as f64, vadj.value() as f64)));
+
             if obj.is_image_movable() {
                 if let Some(cursor) = gdk::Cursor::from_name("move", None) {
                     obj.set_cursor(Some(&cursor));
@@ -486,11 +494,12 @@ impl ScrollablePicture {
         }));
         gesture_drag.connect_drag_update(
             clone!(@weak self as obj => move |_, offset_x, offset_y| {
-                obj.imp().queued_scroll.set(Some(Point::new(-offset_x, -offset_y)));
-                obj.queue_allocate();
+                let drag_anchor = obj.imp().drag_anchor.get().unwrap();
+                obj.scroll_to(Point::new(drag_anchor.x - offset_x, drag_anchor.y - offset_y));
             }),
         );
         gesture_drag.connect_drag_end(clone!(@weak self as obj => move |_, _, _| {
+            obj.imp().drag_anchor.set(None);
             obj.set_cursor(None);
         }));
         self.add_controller(&gesture_drag);
@@ -512,8 +521,11 @@ impl ScrollablePicture {
         scroll_controller.connect_scroll(
             clone!(@weak self as obj => @default-panic, move |event, _delta_x, delta_y| {
                 if event.current_event_state().contains(gdk::ModifierType::CONTROL_MASK) {
-                    let zoom = - delta_y * 0.1 + obj.zoom_level();
-                    obj.set_zoom_level(zoom);
+                    if delta_y as i32 > 0 {
+                        obj.zoom_out()
+                    } else {
+                        obj.zoom_in();
+                    }
                     gtk::Inhibit(true)
                 } else {
                     gtk::Inhibit(false)
