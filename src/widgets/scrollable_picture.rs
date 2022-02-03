@@ -30,11 +30,11 @@ mod imp {
         pub vscroll_policy: Cell<Option<gtk::ScrollablePolicy>>,
         pub vadjustment: RefCell<Option<gtk::Adjustment>>,
 
-        pub pointer_position: Cell<Option<Point>>,
-        pub scale_factor: Cell<i32>,
-        pub initial_zoom: Cell<f64>,
+        pub initial_zoom_level: Cell<f64>,
         pub initial_zoom_center: Cell<Option<Point>>,
+        pub pointer_position: Cell<Option<Point>>,
         pub drag_anchor: Cell<Option<Point>>,
+        pub previous_scale_factor: Cell<i32>,
         pub hadjustment_signal_id: RefCell<Option<glib::SignalHandlerId>>,
         pub vadjustment_signal_id: RefCell<Option<glib::SignalHandlerId>>,
     }
@@ -49,8 +49,7 @@ mod imp {
         fn new() -> Self {
             Self {
                 zoom_level: Cell::new(DEFAULT_ZOOM_LEVEL),
-                scale_factor: Cell::new(1),
-                initial_zoom: Cell::new(DEFAULT_ZOOM_LEVEL),
+                initial_zoom_level: Cell::new(DEFAULT_ZOOM_LEVEL),
                 ..Default::default()
             }
         }
@@ -139,6 +138,8 @@ mod imp {
 
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
+
+            self.previous_scale_factor.set(obj.scale_factor());
 
             obj.set_overflow(gtk::Overflow::Hidden);
 
@@ -299,7 +300,7 @@ impl ScrollablePicture {
 
     fn begin_zoom(&self, zoom_center: Point) {
         let imp = self.imp();
-        imp.initial_zoom.set(self.zoom_level());
+        imp.initial_zoom_level.set(self.zoom_level());
         imp.initial_zoom_center
             .set(Some(self.widget_coords_to_image_coords(zoom_center)));
     }
@@ -475,11 +476,11 @@ impl ScrollablePicture {
         self.connect_scale_factor_notify(|obj| {
             let imp = obj.imp();
 
-            let change = obj.scale_factor() as f64 / imp.scale_factor.get() as f64;
+            let change = obj.scale_factor() as f64 / imp.previous_scale_factor.get() as f64;
             imp.zoom_level.set(obj.zoom_level() * change);
             obj.notify("zoom-level");
 
-            imp.scale_factor.set(obj.scale_factor());
+            imp.previous_scale_factor.set(obj.scale_factor());
 
             obj.queue_allocate();
         });
@@ -495,7 +496,7 @@ impl ScrollablePicture {
         }));
         gesture_zoom.connect_scale_changed(clone!(@weak self as obj => move |gesture, scale| {
             let view_center = Point::from_tuple(gesture.bounding_box_center().unwrap());
-            obj.set_zoom_at_center(obj.imp().initial_zoom.get() * scale, view_center);
+            obj.set_zoom_at_center(obj.imp().initial_zoom_level.get() * scale, view_center);
         }));
         self.add_controller(&gesture_zoom);
 
