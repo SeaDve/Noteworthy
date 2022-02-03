@@ -197,7 +197,7 @@ impl ScrollablePicture {
 
     pub fn set_zoom_level(&self, zoom_level: f64) {
         let zoom_center =
-            self.imp().pointer_position.take().unwrap_or_else(|| {
+            self.imp().pointer_position.get().unwrap_or_else(|| {
                 Point::new(self.width() as f64 / 2.0, self.height() as f64 / 2.0)
             });
 
