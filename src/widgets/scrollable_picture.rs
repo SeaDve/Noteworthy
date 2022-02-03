@@ -280,6 +280,13 @@ impl ScrollablePicture {
             .unwrap_or(gtk::ScrollablePolicy::Minimum)
     }
 
+    fn begin_zoom(&self, zoom_center: Point) {
+        let imp = self.imp();
+        imp.initial_zoom.set(self.zoom_level());
+        imp.initial_zoom_center
+            .set(Some(self.widget_coords_to_image_coords(zoom_center)));
+    }
+
     fn set_zoom_at_center(&self, new_zoom: f64, zoom_center: Point) {
         let imp = self.imp();
 
@@ -340,13 +347,6 @@ impl ScrollablePicture {
         }
 
         imp.vadjustment.replace(vadjustment);
-    }
-
-    fn begin_zoom(&self, zoom_center: Point) {
-        let imp = self.imp();
-        imp.initial_zoom.set(self.zoom_level());
-        imp.initial_zoom_center
-            .set(Some(self.widget_coords_to_image_coords(zoom_center)));
     }
 
     fn image_coords_to_widget_coords(&self, image_coords: Point) -> Point {
