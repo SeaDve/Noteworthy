@@ -51,7 +51,7 @@ mod imp {
             });
 
             klass.install_action("picture-viewer.reset-zoom", None, move |obj, _, _| {
-                obj.imp().picture.reset_zoom_level();
+                obj.imp().picture.set_zoom_level_to_fit();
             });
 
             klass.install_action("picture-viewer.exit", None, move |obj, _, _| {
@@ -244,7 +244,7 @@ impl PictureViewer {
         self.action_set_enabled("picture-viewer.zoom-in", picture.can_zoom_in());
         self.action_set_enabled(
             "picture-viewer.reset-zoom",
-            !picture.has_default_zoom_level(),
+            !picture.is_zoom_level_set_to_fit(),
         );
     }
 

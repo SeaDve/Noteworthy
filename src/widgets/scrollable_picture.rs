@@ -185,14 +185,11 @@ impl ScrollablePicture {
             return;
         }
 
-        let imp = self.imp();
-        imp.paintable
+        self.imp()
+            .paintable
             .replace(paintable.map(|paintable| paintable.clone().upcast()));
-
-        self.reset_zoom_level();
-        self.scroll_to(Point::ZERO);
-
         self.notify("paintable");
+        self.set_zoom_level_to_fit();
     }
 
     pub fn paintable(&self) -> Option<gdk::Paintable> {
@@ -228,10 +225,6 @@ impl ScrollablePicture {
         self.set_zoom_level(self.zoom_level() - 0.1);
     }
 
-    pub fn reset_zoom_level(&self) {
-        self.set_zoom_level(DEFAULT_ZOOM_LEVEL);
-    }
-
     pub fn can_zoom_out(&self) -> bool {
         self.zoom_level() > MIN_ZOOM_LEVEL
     }
@@ -240,8 +233,32 @@ impl ScrollablePicture {
         self.zoom_level() < MAX_ZOOM_LEVEL
     }
 
-    pub fn has_default_zoom_level(&self) -> bool {
-        (self.zoom_level() - DEFAULT_ZOOM_LEVEL).abs() < f64::EPSILON
+    /// Sets zoom level so the image is in the largest possible size without hiding any of its parts
+    pub fn set_zoom_level_to_fit(&self) {
+        if let Some(paintable) = self.paintable() {
+            let best_fit_zoom_level = best_fit_zoom_level(
+                self.width(),
+                self.height(),
+                paintable.intrinsic_width(),
+                paintable.intrinsic_height(),
+            );
+            self.set_zoom_level(best_fit_zoom_level);
+        }
+    }
+
+    /// Is the current zoom level at the largest possible size without hiding any of its parts
+    pub fn is_zoom_level_set_to_fit(&self) -> bool {
+        if let Some(paintable) = self.paintable() {
+            let best_fit_zoom_level = best_fit_zoom_level(
+                self.width(),
+                self.height(),
+                paintable.intrinsic_width(),
+                paintable.intrinsic_height(),
+            );
+            (self.zoom_level() - best_fit_zoom_level).abs() < f64::EPSILON
+        } else {
+            true
+        }
     }
 
     fn scroll_to(&self, widget_coords: Point) {
@@ -543,6 +560,40 @@ impl Default for ScrollablePicture {
     fn default() -> Self {
         Self::new()
     }
+}
+
+// https://gitlab.gnome.org/GNOME/eog/-/blob/master/src/zoom.c
+fn zoom_fit_size(dest_width: i32, dest_height: i32, src_width: i32, src_height: i32) -> (i32, i32) {
+    if src_width == 0 || src_height == 0 {
+        return (0, 0);
+    }
+
+    let height = (src_height * dest_width) as f64 / src_width as f64 + 0.5;
+
+    if height > dest_height as f64 {
+        let width = (src_width * dest_height) as f64 / src_height as f64 + 0.5;
+        return (width.floor() as i32, dest_height);
+    }
+
+    (dest_width, height.floor() as i32)
+}
+
+// https://gitlab.gnome.org/GNOME/eog/-/blob/master/src/zoom.c
+fn best_fit_zoom_level(dest_width: i32, dest_height: i32, src_width: i32, src_height: i32) -> f64 {
+    if src_width == 0 || src_height == 0 {
+        return 1.0;
+    }
+
+    if dest_width == 0 || dest_height == 0 {
+        return 0.0;
+    }
+
+    let (width, height) = zoom_fit_size(dest_width, dest_height, src_width, src_height);
+
+    let w_factor = width as f64 / src_width as f64;
+    let h_factor = height as f64 / src_height as f64;
+
+    return w_factor.min(h_factor);
 }
 
 fn translate(width: f32, height: f32, paintable: &gdk::Paintable, zoom: f32) -> (f32, f32) {
