@@ -54,6 +54,10 @@ mod imp {
                 ..Default::default()
             }
         }
+
+        fn class_init(klass: &mut Self::Class) {
+            klass.set_accessible_role(gtk::AccessibleRole::Img);
+        }
     }
 
     impl ObjectImpl for ScrollablePicture {
