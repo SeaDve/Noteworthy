@@ -3,9 +3,11 @@
     "runtime": "org.gnome.Platform",
     "runtime-version": "41",
     "sdk": "org.gnome.Sdk",
-    "sdk-extensions": ["org.freedesktop.Sdk.Extension.rust-stable"],
+    "sdk-extensions": [
+        "org.freedesktop.Sdk.Extension.rust-stable"
+    ],
     "command": "noteworthy",
-    "finish-args" : [
+    "finish-args": [
         "--device=dri",
         "--share=network",
         "--socket=fallback-x11",
@@ -17,9 +19,9 @@
         "--env=G_MESSAGES_DEBUG=none",
         "--filesystem=xdg-run/pipewire-0"
     ],
-    "build-options" : {
-        "append-path" : "/usr/lib/sdk/rust-stable/bin",
-        "build-args" : [
+    "build-options": {
+        "append-path": "/usr/lib/sdk/rust-stable/bin",
+        "build-args": [
             "--share=network"
         ]
     },
@@ -27,7 +29,9 @@
         {
             "name": "libsass",
             "buildsystem": "meson",
-            "cleanup": ["*"],
+            "cleanup": [
+                "*"
+            ],
             "sources": [
                 {
                     "type": "git",
@@ -39,7 +43,9 @@
         {
             "name": "sassc",
             "buildsystem": "meson",
-            "cleanup": ["*"],
+            "cleanup": [
+                "*"
+            ],
             "sources": [
                 {
                     "type": "git",
@@ -60,8 +66,8 @@
             ]
         },
         {
-            "name" : "libadwaita",
-            "buildsystem" : "meson",
+            "name": "libadwaita",
+            "buildsystem": "meson",
             "config-opts": [
                 "-Dtests=false",
                 "-Dexamples=false",
@@ -71,25 +77,25 @@
                 "/include",
                 "/lib/pkgconfig"
             ],
-            "sources" : [
+            "sources": [
                 {
-                    "type" : "git",
-                    "url" : "https://gitlab.gnome.org/GNOME/libadwaita.git",
-                    "tag" : "1.0.1"
+                    "type": "git",
+                    "url": "https://gitlab.gnome.org/GNOME/libadwaita.git",
+                    "tag": "1.0.1"
                 }
             ]
         },
         {
-            "name" : "gtksourceview",
-            "buildsystem" : "meson",
+            "name": "gtksourceview",
+            "buildsystem": "meson",
             "config-opts": [
                 "-Dvapi=false"
             ],
-            "sources" : [
+            "sources": [
                 {
-                    "type" : "git",
-                    "url" : "https://gitlab.gnome.org/GNOME/gtksourceview.git",
-                    "tag" : "5.3.0"
+                    "type": "git",
+                    "url": "https://gitlab.gnome.org/GNOME/gtksourceview.git",
+                    "tag": "5.3.0"
                 }
             ]
         },
@@ -97,7 +103,9 @@
             "name": "noteworthy",
             "buildsystem": "meson",
             "run-tests": true,
-            "config-opts": ["-Dprofile=development"],
+            "config-opts": [
+                "-Dprofile=development"
+            ],
             "sources": [
                 {
                     "type": "dir",
