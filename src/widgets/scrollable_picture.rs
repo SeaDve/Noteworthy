@@ -249,7 +249,7 @@ impl ScrollablePicture {
 
     /// Is the current zoom level at the largest possible size without hiding any of its parts
     pub fn is_zoom_level_set_to_fit(&self) -> bool {
-        if let Some(paintable) = self.paintable() {
+        self.paintable().map_or(false, |paintable| {
             let best_fit_zoom_level = best_fit_zoom_level(
                 self.width(),
                 self.height(),
@@ -257,9 +257,7 @@ impl ScrollablePicture {
                 paintable.intrinsic_height(),
             );
             (self.zoom_level() - best_fit_zoom_level).abs() < f64::EPSILON
-        } else {
-            true
-        }
+        })
     }
 
     fn scroll_to(&self, widget_coords: Point) {
@@ -594,7 +592,7 @@ fn best_fit_zoom_level(dest_width: i32, dest_height: i32, src_width: i32, src_he
     let w_factor = width as f64 / src_width as f64;
     let h_factor = height as f64 / src_height as f64;
 
-    return w_factor.min(h_factor);
+    w_factor.min(h_factor)
 }
 
 fn translate(width: f32, height: f32, paintable: &gdk::Paintable, zoom: f32) -> (f32, f32) {
