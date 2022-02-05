@@ -33,7 +33,7 @@
 
 ## Installation Instructions
 
-Noteworthy is under heavy development. Thus, it is currently not recommended to 
+Noteworthy is under heavy development. Thus, it is currently not recommended to
 be used for day-to-day tasks. However, it is possible to download the nightly
 build artifact from the [Actions page](https://github.com/SeaDve/Noteworthy/actions/),
 then install it locally by running `flatpak install noteworthy.flatpak`.
@@ -48,7 +48,7 @@ It can use Flatpak manifests to create a consistent building and running
 environment cross-distro. Thus, it is highly recommended you use it.
 
 1. Download [GNOME Builder](https://flathub.org/apps/details/org.gnome.Builder).
-2. In Builder, click the "Clone Repository" button at the bottom, using 
+2. In Builder, click the "Clone Repository" button at the bottom, using
 `https://github.com/SeaDve/Noteworthy.git` as the URL.
 3. Click the build button at the top once the project is loaded.
 
