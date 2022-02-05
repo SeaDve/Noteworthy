@@ -57,6 +57,11 @@
         {
             "name": "gtk",
             "buildsystem": "meson",
+            "config-opts" : [
+                "-Dbuild-examples=false",
+                "-Dbuild-tests=false",
+                "-Dintrospection=disabled"
+            ],
             "sources": [
                 {
                     "type": "git",
