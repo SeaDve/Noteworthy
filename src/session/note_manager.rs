@@ -225,10 +225,7 @@ impl NoteManager {
 
         let data: Data = match file.load_contents_future().await {
             Ok((file_content, _)) => {
-                log::info!(
-                    "Data file found at `{}` is loaded successfully",
-                    data_file_path.display()
-                );
+                log::info!("Data file found at `{}` is loaded successfully", file.uri(),);
                 serde_yaml::from_slice(&file_content).unwrap_or_default()
             }
             Err(err) => {

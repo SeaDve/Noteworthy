@@ -301,8 +301,8 @@ impl std::fmt::Display for Note {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Note at path `{}` with title `{}`",
-            self.file().path().unwrap().display(),
+            "Note at `{}` with title `{}`",
+            self.file().uri(),
             self.metadata().title()
         )
     }

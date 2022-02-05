@@ -101,7 +101,7 @@ impl FileImporterButton {
             let file_path = file.path().unwrap();
             let file_byte_size = fs::metadata(&file_path)
                 .map(|metadata| metadata.len())
-                .with_context(|| format!("Failed to read file at `{}`", file_path.display()))?;
+                .with_context(|| format!("Failed to read `{}`", file.uri()))?;
 
             // TODO maybe make this less strict or remove this restriction
             // or maybe just warn the user that they are trying to save a large file

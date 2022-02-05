@@ -88,17 +88,14 @@ impl NoteList {
                 file_path
             };
 
-            log::info!("Loading file `{}`", file_path.display());
-
             let file = gio::File::for_path(&file_path);
 
             if FileType::for_file(&file) != FileType::Markdown {
-                log::info!(
-                    "The file `{}` doesn't have an md extension, skipping...",
-                    file_path.display()
-                );
+                log::info!("`{}` doesn't have an md extension, skipping...", file.uri());
                 continue;
             }
+
+            log::info!("Loading `{}`", file.uri());
 
             // TODO consider using GtkSourceFile here
             // So we could use GtkSourceFileLoader and GtkSourceFileSaver to handle
