@@ -111,7 +111,12 @@ class Typos(Check):
 
     def version(self):
         try:
-            return get_output(["typos", "--version"])
+            return_code, output = self._run_typos(["--version"])
+
+            if return_code != 0:
+                return None
+
+            return output
         except FileNotFoundError:
             return None
 
@@ -120,7 +125,7 @@ class Typos(Check):
 
     def run(self):
         try:
-            return_code, output = run_and_get_output(["typos", "--color", "always"])
+            return_code, output = self._run_typos(["--color", "always"])
         except FileNotFoundError:
             raise MissingDependencyError(
                 "typos", install_command="cargo install typos-cli"
@@ -131,6 +136,14 @@ class Typos(Check):
                 error_message=output,
                 suggestion_message="Try running `typos -w`",
             )
+
+    @staticmethod
+    def _run_typos(args: List[str]) -> Tuple[int, str]:
+        try:
+            return run_and_get_output(["typos", *args])
+        except FileNotFoundError:
+            typos_full_path = os.path.expanduser("~/.cargo/bin/typos")
+            return run_and_get_output([typos_full_path, *args])
 
 
 class PotfilesAlphabetically(Check):
