@@ -21,35 +21,6 @@
                 <property name="action-name">picture-viewer.exit</property>
               </object>
             </child>
-            <child type="start">
-              <object class="GtkBox">
-                <style>
-                  <class name="linked"/>
-                </style>
-                <child>
-                  <object class="GtkButton">
-                    <property name="action-name">picture-viewer.zoom-out</property>
-                    <property name="icon-name">zoom-out-symbolic</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkButton">
-                    <property name="action-name">picture-viewer.reset-zoom</property>
-                    <child>
-                      <object class="GtkLabel" id="zoom_level_label">
-                        <property name="width-chars">5</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkButton">
-                    <property name="action-name">picture-viewer.zoom-in</property>
-                    <property name="icon-name">zoom-in-symbolic</property>
-                  </object>
-                </child>
-              </object>
-            </child>
             <child type="end">
               <object class="GtkButton" id="fullscreen_button">
                 <property name="action-name">win.toggle-fullscreen</property>
@@ -58,13 +29,68 @@
           </object>
         </property>
         <property name="content">
-          <object class="GtkScrolledWindow">
-            <property name="propagate-natural-width">True</property>
-            <property name="propagate-natural-height">True</property>
+          <object class="GtkOverlay">
             <property name="child">
-              <object class="NwtyScrollablePicture" id="picture">
+              <object class="GtkScrolledWindow">
+                <property name="propagate-natural-width">True</property>
+                <property name="propagate-natural-height">True</property>
+                <property name="child">
+                  <object class="NwtyScrollablePicture" id="picture">
+                  </object>
+                </property>
               </object>
             </property>
+            <child type="overlay">
+              <object class="GtkBox">
+                <property name="orientation">vertical</property>
+                <property name="valign">end</property>
+                <property name="halign">end</property>
+                <property name="spacing">12</property>
+                <property name="margin-start">30</property>
+                <property name="margin-end">30</property>
+                <property name="margin-top">30</property>
+                <property name="margin-bottom">30</property>
+                <child>
+                  <object class="GtkRevealer" id="zoom_buttons_revealer">
+                    <property name="transition-type">slide-up</property>
+                    <property name="reveal-child">True</property>
+                    <property name="child">
+                      <object class="GtkBox">
+                        <property name="orientation">vertical</property>
+                        <style>
+                          <class name="linked"/>
+                        </style>
+                        <child>
+                          <object class="GtkButton">
+                            <property name="icon-name">zoom-in-symbolic</property>
+                            <property name="action-name">picture-viewer.zoom-in</property>
+                            <style >
+                              <class name="osd"/>
+                            </style>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkButton">
+                            <property name="icon-name">zoom-out-symbolic</property>
+                            <property name="action-name">picture-viewer.zoom-out</property>
+                            <style >
+                              <class name="osd"/>
+                            </style>
+                          </object>
+                        </child>
+                      </object>
+                    </property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton" id="zoom_fit_best_button">
+                    <style >
+                      <class name="osd"/>
+                    </style>
+                  </object>
+                </child>
+              </object>
+            </child>
           </object>
         </property>
       </object>

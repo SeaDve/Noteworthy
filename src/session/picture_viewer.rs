@@ -24,7 +24,9 @@ mod imp {
         #[template_child]
         pub picture: TemplateChild<ScrollablePicture>,
         #[template_child]
-        pub zoom_level_label: TemplateChild<gtk::Label>,
+        pub zoom_buttons_revealer: TemplateChild<gtk::Revealer>,
+        #[template_child]
+        pub zoom_fit_best_button: TemplateChild<gtk::Button>,
         #[template_child]
         pub fullscreen_button: TemplateChild<gtk::Button>,
 
@@ -50,7 +52,7 @@ mod imp {
                 obj.imp().picture.get().zoom_in();
             });
 
-            klass.install_action("picture-viewer.reset-zoom", None, move |obj, _, _| {
+            klass.install_action("picture-viewer.zoom-best-fit", None, move |obj, _, _| {
                 obj.imp().picture.set_zoom_level_to_fit();
             });
 
@@ -222,10 +224,10 @@ impl PictureViewer {
 
     fn update_zoom_level_ui(&self) {
         let imp = self.imp();
+
         let picture = imp.picture.get();
 
-        // FIXME having to call this DOESN'T MAKE ANY SENSE!!! Not setting the zoom_level_label's
-        // label to current zoom_level, makes this not needed. Otherwise, without this
+        // FIXME having to call this DOESN'T MAKE ANY SENSE!!! Without this
         // queue_allocate, there will be `Trying to snapshot GtkScrolledWindow without a
         // current allocation`
         picture
@@ -235,15 +237,26 @@ impl PictureViewer {
             .unwrap()
             .queue_allocate();
 
-        let zoom_level = picture.zoom_level();
+        // TODO make min zoom level of scrollable picture the best fit
+        // rename various functions and vars to zoom_best_fit instead of set_to_fit
 
-        imp.zoom_level_label
-            .set_label(&format!("{:.0}%", zoom_level * 100.0));
+        if picture.is_zoom_level_set_to_fit() {
+            imp.zoom_fit_best_button.set_icon_name("zoom-in-symbolic");
+            imp.zoom_fit_best_button
+                .set_action_name(Some("picture-viewer.zoom-in"));
+            imp.zoom_buttons_revealer.set_reveal_child(false);
+        } else {
+            imp.zoom_fit_best_button
+                .set_icon_name("zoom-fit-best-symbolic");
+            imp.zoom_fit_best_button
+                .set_action_name(Some("picture-viewer.zoom-best-fit"));
+            imp.zoom_buttons_revealer.set_reveal_child(true);
+        }
 
         self.action_set_enabled("picture-viewer.zoom-out", picture.can_zoom_out());
         self.action_set_enabled("picture-viewer.zoom-in", picture.can_zoom_in());
         self.action_set_enabled(
-            "picture-viewer.reset-zoom",
+            "picture-viewer.zoom-best-fit",
             !picture.is_zoom_level_set_to_fit(),
         );
     }
