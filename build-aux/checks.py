@@ -5,6 +5,7 @@ import os
 import subprocess
 import sys
 import time
+from abc import ABC, abstractmethod
 from argparse import Namespace
 from dataclasses import dataclass
 from pathlib import Path
@@ -25,8 +26,18 @@ RUNNING = f"   {BOLD_GREEN}RUNNING{ENDC}"
 ERROR = f"{RED}error{ENDC}"
 
 
-class MissingDependencyError(Exception):
-    def __init__(self, whats_missing: str, install_command=None):
+class CheckError(Exception, ABC):
+    @abstractmethod
+    def message(self) -> str:
+        raise NotImplementedError
+
+    @abstractmethod
+    def suggestion(self) -> str:
+        raise NotImplementedError
+
+
+class MissingDependencyError(CheckError):
+    def __init__(self, whats_missing: str, install_command: Optional[str] = None):
         self._whats_missing = whats_missing
         self._install_command = install_command
 
@@ -42,19 +53,23 @@ class MissingDependencyError(Exception):
         return message
 
 
-class FailedCheckError(Exception):
-    def __init__(self, error_message=None, suggestion_message=None):
+class FailedCheckError(CheckError):
+    def __init__(
+        self,
+        error_message: str,
+        suggestion_message: str,
+    ):
         self._error_message = error_message
         self._suggestion_message = suggestion_message
 
-    def message(self) -> Optional[str]:
+    def message(self) -> str:
         return self._error_message
 
-    def suggestion(self) -> Optional[str]:
+    def suggestion(self) -> str:
         return self._suggestion_message
 
 
-class Check:
+class Check(ABC):
     _prerequisite_checks: List[Check] = []
 
     def __init__(self, prerequisite_checks: List[Check] = [], skip: bool = False):
@@ -67,13 +82,16 @@ class Check:
     def get_should_be_skipped(self) -> bool:
         return self._skip
 
+    @abstractmethod
     def version(self) -> Optional[str]:
-        return None
+        raise NotImplementedError
 
+    @abstractmethod
     def subject(self) -> str:
         raise NotImplementedError
 
-    def run(self):
+    @abstractmethod
+    def run(self) -> None:
         raise NotImplementedError
 
 
@@ -153,6 +171,9 @@ class PotfilesAlphabetically(Check):
         - POTFILES is located at `po/POTFILES.in`
     """
 
+    def version(self):
+        return None
+
     def subject(self):
         return "po/POTFILES.in alphabetical order"
 
@@ -162,7 +183,8 @@ class PotfilesAlphabetically(Check):
         for file, sorted_file in zip(files, sorted(files)):
             if file != sorted_file:
                 raise FailedCheckError(
-                    error_message=f"{ERROR}: Found file `{file}` before `{sorted_file}` in POTFILES.in"
+                    error_message=f"{ERROR}: Found file `{file}` before `{sorted_file}` in POTFILES.in",
+                    suggestion_message="Please sort the POTFILES files alphabetically",
                 )
 
     @staticmethod
@@ -177,6 +199,9 @@ class PotfilesExist(Check):
     This assumes the following:
         - POTFILES is located at 'po/POTFILES.in'
     """
+
+    def version(self):
+        return None
 
     def subject(self):
         return "po/POTFILES.in all files exist"
@@ -193,11 +218,14 @@ class PotfilesExist(Check):
             for file in files:
                 message.append(str(file))
 
-            raise FailedCheckError(error_message="\n".join(message))
+            raise FailedCheckError(
+                error_message="\n".join(message),
+                suggestion_message="Make sure that all files in POTFILES exist",
+            )
 
     @staticmethod
     def _get_non_existent_files() -> List[Path]:
-        files = []
+        files: List[Path] = []
 
         with open("po/POTFILES.in") as potfiles_file:
             for line in potfiles_file.readlines():
@@ -220,6 +248,9 @@ class PotfilesSanity(Check):
         - Rust files are located in `src` and use `*gettext` methods or macros
     """
 
+    def version(self):
+        None
+
     def subject(self):
         return "po/POTFILES.in sanity"
 
@@ -237,7 +268,7 @@ class PotfilesSanity(Check):
         n_potfiles_without_translatable = len(potfiles_without_translatable)
         n_files_that_should_be_potfile = len(files_that_should_be_potfile)
 
-        message = []
+        message: List[str] = []
 
         if n_potfiles_without_translatable > 0:
             message.append(
@@ -259,11 +290,14 @@ class PotfilesSanity(Check):
                 message.append(str(file))
 
         if n_potfiles_without_translatable > 0 or n_files_that_should_be_potfile > 0:
-            raise FailedCheckError(error_message="\n".join(message))
+            raise FailedCheckError(
+                error_message="\n".join(message),
+                suggestion_message="Make sure that POTFILES lists all and only the necessary files",
+            )
 
     @staticmethod
     def _get_rust_or_ui_potfiles() -> List[Path]:
-        potfiles = []
+        potfiles: List[Path] = []
 
         with open("po/POTFILES.in") as potfiles_file:
             for line in potfiles_file.readlines():
@@ -319,19 +353,27 @@ class Resources(Check):
         - only one gresource in the file
     """
 
+    def version(self):
+        return None
+
     def subject(self):
         return "data/resources/resources.gresource.xml"
 
     def run(self):
         tree = ElementTree.parse("data/resources/resources.gresource.xml")
         gresource = tree.find("gresource")
-        files = [element.text for element in gresource.findall("file")]
+
+        if gresource is None:
+            return
+
+        files = [element.text for element in gresource.findall("file") if element.text]
         sorted_files = sorted(files, key=lambda f: Path(f).with_suffix(""))
 
         for file, sorted_file in zip(files, sorted_files):
             if file != sorted_file:
                 raise FailedCheckError(
-                    error_message=f"{ERROR}: Found file `{file}` before `{sorted_file}` in resources.gresource.xml"
+                    error_message=f"{ERROR}: Found file `{file}` before `{sorted_file}` in resources.gresource.xml",
+                    suggestion_message="Please sort the resources alphabetically",
                 )
 
 
@@ -344,6 +386,9 @@ class LeftoverDebugPrints(Check):
         line_number: int
         column_number: int
         pattern: str
+
+    def version(self):
+        return None
 
     def subject(self):
         joined = ", ".join(self._get_patterns())
@@ -390,7 +435,7 @@ class LeftoverDebugPrints(Check):
             ]
         )
 
-        matches = []
+        matches: List[LeftoverDebugPrints.Match] = []
 
         for line in output.splitlines():
             path, line_number, column_number, pattern = line.split()
@@ -406,9 +451,9 @@ class LeftoverDebugPrints(Check):
 class Runner:
     _checks: List[Check] = []
     _successful_checks: List[Check] = []
-    _failed_checks: List[Tuple[Check, Exception]] = []
+    _failed_checks: List[Tuple[Check, CheckError]] = []
 
-    def __init__(self, verbose=False):
+    def __init__(self, verbose: bool = False):
         self._verbose = verbose
 
     def add(self, check: Check):
