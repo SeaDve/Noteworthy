@@ -484,10 +484,7 @@ class Runner:
 
             try:
                 check.run()
-            except FailedCheckError as e:
-                self._failed_checks.append((check, e))
-                self._print_result(check, FAILED)
-            except MissingDependencyError as e:
+            except CheckError as e:
                 self._failed_checks.append((check, e))
                 self._print_result(check, FAILED)
             else:
