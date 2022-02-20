@@ -612,7 +612,7 @@ def main(args: Optional[Namespace]) -> int:
         return 1
 
 
-if __name__ == "__main__":
+def parse_args() -> Namespace:
     from argparse import ArgumentParser
 
     parser = ArgumentParser(
@@ -630,6 +630,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "-st", "--skip-typos", action="store_true", help="Whether to skip running typos"
     )
-    args = parser.parse_args()
 
-    sys.exit(main(args))
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    sys.exit(main(parse_args()))
