@@ -249,7 +249,7 @@ class PotfilesSanity(Check):
     """
 
     def version(self):
-        None
+        return None
 
     def subject(self):
         return "po/POTFILES.in sanity"
