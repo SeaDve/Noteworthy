@@ -70,18 +70,6 @@ class FailedCheckError(CheckError):
 
 
 class Check(ABC):
-    _prerequisite_checks: List[Check] = []
-
-    def __init__(self, prerequisite_checks: List[Check] = [], skip: bool = False):
-        self._prerequisite_checks = prerequisite_checks
-        self._skip = skip
-
-    def get_prerequisite_checks(self) -> List[Check]:
-        return self._prerequisite_checks
-
-    def get_should_be_skipped(self) -> bool:
-        return self._skip
-
     @abstractmethod
     def version(self) -> Optional[str]:
         raise NotImplementedError
@@ -449,20 +437,29 @@ class LeftoverDebugPrints(Check):
 
 
 class Runner:
-    _checks: List[Check] = []
+    """Runs the checks"""
+
+    @dataclass
+    class CheckItem:
+        check: Check
+        skip: bool
+        prerequisites: List[Check]
+
+    _check_items: List[CheckItem] = []
     _successful_checks: List[Check] = []
     _failed_checks: List[Tuple[Check, CheckError]] = []
 
     def __init__(self, verbose: bool = False):
         self._verbose = verbose
 
-    def add(self, check: Check):
-        self._checks.append(check)
+    def add(self, check: Check, skip: bool = False, prerequisites: List[Check] = []):
+        check_item = Runner.CheckItem(check, skip, prerequisites)
+        self._check_items.append(check_item)
 
     def run_all(self) -> bool:
         """Returns true if there are no failed checks. There should be only skipped or successful checks."""
 
-        n_checks = len(self._checks)
+        n_checks = len(self._check_items)
 
         print(f"{RUNNING} checks at {os.getcwd()}")
         print("")
@@ -471,25 +468,25 @@ class Runner:
         n_skipped = 0
         start_time = time.time()
 
-        for check in self._checks:
-            if check.get_should_be_skipped():
+        for item in self._check_items:
+            if item.skip:
                 n_skipped += 1
-                self._print_result(check, f"{SKIPPED} (via command flag)")
+                self._print_result(item.check, f"{SKIPPED} (via command flag)")
                 continue
 
-            if not self._has_complete_prerequisite(check):
+            if not self._has_complete_prerequisite(item):
                 n_skipped += 1
-                self._print_has_incomplete_prerequisite(check)
+                self._print_has_incomplete_prerequisite(item)
                 continue
 
             try:
-                check.run()
+                item.check.run()
             except CheckError as e:
-                self._failed_checks.append((check, e))
-                self._print_result(check, FAILED)
+                self._failed_checks.append((item.check, e))
+                self._print_result(item.check, FAILED)
             else:
-                self._successful_checks.append(check)
-                self._print_result(check, OK)
+                self._successful_checks.append(item.check)
+                self._print_result(item.check, OK)
 
         check_duration = time.time() - start_time
         n_successful_checks = len(self._successful_checks)
@@ -506,23 +503,23 @@ class Runner:
 
         return n_failed == 0
 
-    def _has_complete_prerequisite(self, check: Check) -> bool:
-        for prerequisite_check in check.get_prerequisite_checks():
+    def _has_complete_prerequisite(self, item: CheckItem) -> bool:
+        for prerequisite_check in item.prerequisites:
             if prerequisite_check not in self._successful_checks:
                 return False
         return True
 
-    def _print_has_incomplete_prerequisite(self, check: Check):
+    def _print_has_incomplete_prerequisite(self, item: CheckItem):
         prerequisites_to_print = [
             prerequisite.subject()
-            for prerequisite in check.get_prerequisite_checks()
+            for prerequisite in item.prerequisites
             if prerequisite not in self._successful_checks
         ]
 
         requires_message = ", ".join(prerequisites_to_print)
 
         self._print_result(
-            check,
+            item.check,
             f"{SKIPPED} (requires: {requires_message})",
         )
 
@@ -588,17 +585,17 @@ def get_output(args: List[str]) -> str:
 
 def main(args: Optional[Namespace]) -> int:
     runner = Runner(verbose=args.verbose if args else False)
-    runner.add(Rustfmt(skip=args.skip_rustfmt if args else False))
-    runner.add(Typos(skip=args.skip_typos if args else False))
+    runner.add(Rustfmt(), skip=args.skip_rustfmt if args else False)
+    runner.add(Typos(), skip=args.skip_typos if args else False)
 
     potfiles_exist = PotfilesExist()
-    potfiles_sanity = PotfilesSanity(prerequisite_checks=[potfiles_exist])
-    potfiles_alphabetically = PotfilesAlphabetically(
-        prerequisite_checks=[potfiles_exist, potfiles_sanity]
-    )
+    potfiles_sanity = PotfilesSanity()
     runner.add(potfiles_exist)
-    runner.add(potfiles_sanity)
-    runner.add(potfiles_alphabetically)
+    runner.add(potfiles_sanity, prerequisites=[potfiles_exist])
+    runner.add(
+        PotfilesAlphabetically(),
+        prerequisites=[potfiles_exist, potfiles_sanity],
+    )
 
     runner.add(Resources())
     runner.add(LeftoverDebugPrints())
