@@ -437,7 +437,7 @@ class LeftoverDebugPrints(Check):
 
 
 class Runner:
-    """Runs the checks"""
+    """Runs the checks."""
 
     @dataclass
     class CheckItem:
@@ -567,7 +567,7 @@ class Runner:
         result = OK if n_failed == 0 else FAILED
 
         print(
-            f"test result: {result}. {n_successful} passed; {n_failed} failed; {n_skipped} skipped; finished in {duration:.2f}s"
+            f"check result: {result}. {n_successful} passed; {n_failed} failed; {n_skipped} skipped; finished in {duration:.2f}s"
         )
 
 
