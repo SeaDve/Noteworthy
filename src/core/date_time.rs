@@ -2,7 +2,7 @@ use chrono::Local;
 use gtk::glib;
 use serde::{Deserialize, Serialize};
 
-/// A boxed [`DateTime`](chrono::DateTime<Local>)
+/// A boxed [`DateTime<Local>`](chrono::DateTime<Local>)
 #[derive(
     Debug, Clone, Copy, glib::Boxed, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord,
 )]
