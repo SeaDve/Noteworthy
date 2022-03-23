@@ -1,7 +1,7 @@
 {
     "app-id": "io.github.seadve.Noteworthy.Devel",
     "runtime": "org.gnome.Platform",
-    "runtime-version": "41",
+    "runtime-version": "42",
     "sdk": "org.gnome.Sdk",
     "sdk-extensions": [
         "org.freedesktop.Sdk.Extension.rust-stable"
@@ -20,90 +20,9 @@
         "--filesystem=xdg-run/pipewire-0"
     ],
     "build-options": {
-        "append-path": "/usr/lib/sdk/rust-stable/bin",
-        "build-args": [
-            "--share=network"
-        ]
+        "append-path": "/usr/lib/sdk/rust-stable/bin"
     },
     "modules": [
-        {
-            "name": "libsass",
-            "buildsystem": "meson",
-            "cleanup": [
-                "*"
-            ],
-            "sources": [
-                {
-                    "type": "git",
-                    "url": "https://github.com/lazka/libsass.git",
-                    "branch": "meson"
-                }
-            ]
-        },
-        {
-            "name": "sassc",
-            "buildsystem": "meson",
-            "cleanup": [
-                "*"
-            ],
-            "sources": [
-                {
-                    "type": "git",
-                    "url": "https://github.com/lazka/sassc.git",
-                    "branch": "meson"
-                }
-            ]
-        },
-        {
-            "name": "gtk",
-            "buildsystem": "meson",
-            "config-opts": [
-                "-Dbuild-examples=false",
-                "-Dbuild-tests=false",
-                "-Dintrospection=disabled"
-            ],
-            "sources": [
-                {
-                    "type": "git",
-                    "url": "https://gitlab.gnome.org/GNOME/gtk.git",
-                    "tag": "4.6.0"
-                }
-            ]
-        },
-        {
-            "name": "libadwaita",
-            "buildsystem": "meson",
-            "config-opts": [
-                "-Dtests=false",
-                "-Dexamples=false",
-                "-Dvapi=false"
-            ],
-            "cleanup": [
-                "/include",
-                "/lib/pkgconfig"
-            ],
-            "sources": [
-                {
-                    "type": "git",
-                    "url": "https://gitlab.gnome.org/GNOME/libadwaita.git",
-                    "tag": "1.0.1"
-                }
-            ]
-        },
-        {
-            "name": "gtksourceview",
-            "buildsystem": "meson",
-            "config-opts": [
-                "-Dvapi=false"
-            ],
-            "sources": [
-                {
-                    "type": "git",
-                    "url": "https://gitlab.gnome.org/GNOME/gtksourceview.git",
-                    "tag": "5.3.0"
-                }
-            ]
-        },
         {
             "name": "noteworthy",
             "buildsystem": "meson",
