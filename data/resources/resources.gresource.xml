@@ -3,7 +3,6 @@
   <gresource prefix="/io/github/seadve/Noteworthy/">
     <file compressed="true" preprocess="xml-stripblanks">icons/scalable/status/editor-symbolic.svg</file>
     <file compressed="true" preprocess="xml-stripblanks">icons/scalable/status/external-link-symbolic.svg</file>
-    <file compressed="true" preprocess="xml-stripblanks">icons/scalable/status/sidebar-toggle-right-symbolic.svg</file>
     <file compressed="true" preprocess="xml-stripblanks">icons/scalable/status/tag-symbolic.svg</file>
     <file compressed="true">style.css</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/camera.ui</file>

@@ -18,7 +18,7 @@
         </child>
         <child type="end">
           <object class="GtkToggleButton" id="view_flap_button">
-            <property name="icon-name">sidebar-toggle-right-symbolic</property>
+            <property name="icon-name">sidebar-show-right-symbolic</property>
             <property name="active" bind-source="view_flap" bind-property="reveal-flap" bind-flags="sync-create | bidirectional"/>
           </object>
         </child>
