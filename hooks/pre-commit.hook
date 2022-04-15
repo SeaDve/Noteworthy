@@ -8,24 +8,24 @@ RUNNING="   ${BOLD_GREEN}RUNNING${ENDC}"
 CREATING="  ${BOLD_GREEN}CREATING${ENDC}"
 ABORTING="  ${BOLD_RED}ABORTING${ENDC}"
 
-SCRIPT=$(curl https://raw.githubusercontent.com/SeaDve/scripts/main/checks.py)
+script=$(curl https://raw.githubusercontent.com/SeaDve/scripts/main/checks.py)
 
 if [ $? -ne 0 ]
 then
-  echo -e "${ABORTING} commit. Needs internet connection to download check script. To ignore, rerun commit with '--no-verify'"
   echo
+  echo -e "${ABORTING} commit. Needs internet connection to download the check script. To ignore, rerun commit with '--no-verify'"
   exit 1
 fi
 
-echo "$SCRIPT" | python -
+printf '%s' "$script" | python -
 
-if [ $? -eq 0 ]
+if [ $? -ne 0 ]
 then
-  echo -e "${CREATING} commit"
   echo
-  exit 0
-else
   echo -e "${ABORTING} commit, please fix the above issues. To ignore, rerun commit with '--no-verify'"
-  echo
   exit 1
 fi
+
+echo
+echo -e "${CREATING} commit"
+exit 0
