@@ -12,7 +12,6 @@
 #![warn(clippy::implicit_clone)]
 #![warn(clippy::struct_excessive_bools)]
 #![warn(clippy::trivially_copy_pass_by_ref)]
-#![warn(clippy::option_if_let_else)]
 #![warn(clippy::unreadable_literal)]
 #![warn(clippy::if_not_else)]
 #![warn(clippy::doc_markdown)]
