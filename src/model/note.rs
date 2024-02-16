@@ -161,7 +161,7 @@ impl Note {
         }
 
         // FIXME replace with non hacky implementation
-        let mut bytes = serde_yaml::to_vec(&self.metadata())?;
+        let mut bytes = serde_yaml::to_string(&self.metadata())?.into_bytes();
 
         let delimiter = "---\n";
         bytes.append(&mut delimiter.into());

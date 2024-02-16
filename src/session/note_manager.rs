@@ -260,7 +260,7 @@ impl NoteManager {
         let data = Data {
             tag_list: self.tag_list(),
         };
-        let data_bytes = serde_yaml::to_vec(&data)?;
+        let data_bytes = serde_yaml::to_string(&data)?.into_bytes();
 
         // FIXME consider making backup on all replace_contents
         gio::File::for_path(self.data_file_path())
