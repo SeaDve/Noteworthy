@@ -331,7 +331,7 @@ impl NoteManager {
             match delta {
                 git2::Delta::Added => {
                     log::info!("Sync: Found added files `{}`; appending...", path.display());
-                    let file = gio::File::for_path(&path);
+                    let file = gio::File::for_path(path);
                     let added_note = Note::load(&file).await?;
                     note_list.append(added_note);
                 }

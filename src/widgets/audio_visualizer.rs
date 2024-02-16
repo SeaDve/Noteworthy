@@ -78,7 +78,7 @@ impl AudioVisualizer {
         let width = self.width() as f32;
         let height = self.height() as f32;
 
-        let h_center = width as f32 / 2.0;
+        let h_center = width / 2.0;
         let v_center = height / 2.0;
 
         let mut pointer_a = h_center;

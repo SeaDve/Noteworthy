@@ -111,7 +111,7 @@ glib::wrapper! {
 impl NoteRepository {
     pub async fn init(base_path: &gio::File) -> anyhow::Result<Self> {
         let repository_path = base_path.path().unwrap();
-        let repository = spawn_blocking!(move || Repository::init(&repository_path)).await?;
+        let repository = spawn_blocking!(move || Repository::init(repository_path)).await?;
         Ok(Self::new(base_path, repository))
     }
 

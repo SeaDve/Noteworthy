@@ -192,10 +192,10 @@ impl Repository {
     }
 
     // From https://github.com/GitJournal/git_bindings/blob/master/gj_common/gitjournal.c
-    pub fn merge<'a>(
+    pub fn merge(
         &self,
         source_branch: &str,
-        fetch_commit: Option<git2::AnnotatedCommit<'a>>,
+        fetch_commit: Option<git2::AnnotatedCommit<'_>>,
         author_name: &str,
         author_email: &str,
     ) -> anyhow::Result<()> {

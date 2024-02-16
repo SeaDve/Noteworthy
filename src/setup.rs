@@ -184,7 +184,7 @@ impl Setup {
     }
 
     async fn setup_offline_session(&self) -> Session {
-        let notes_folder = gio::File::for_path(&utils::default_notes_dir());
+        let notes_folder = gio::File::for_path(utils::default_notes_dir());
         if let Err(err) = notes_folder
             .make_directory_future(glib::PRIORITY_HIGH_IDLE)
             .await
