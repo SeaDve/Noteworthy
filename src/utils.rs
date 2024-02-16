@@ -24,7 +24,7 @@ macro_rules! spawn {
 #[macro_export]
 macro_rules! spawn_blocking {
     ($function:expr) => {
-        crate::THREAD_POOL.push_future($function).unwrap()
+        $crate::THREAD_POOL.push_future($function).unwrap()
     };
 }
 
